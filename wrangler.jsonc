@@ -17,7 +17,14 @@
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
+	"d1_databases": [
+		{
+			"binding": "reservation_station_db",
+			"database_name": "reservation-station-db",
+			"database_id": "80a14df4-e3e6-4682-8dca-b5d84322c0f6"
+		}
+	]
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
