@@ -12,15 +12,15 @@
  */
 
 export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		const url = new URL(request.url);
-		switch (url.pathname) {
-			case '/message':
-				return new Response('Hello, World!');
-			case '/random':
-				return new Response(crypto.randomUUID());
-			default:
-				return new Response('Not Found', { status: 404 });
+	async fetch(request, env) {
+		const { pathname } = new URL(request.url);
+
+		if (pathname === '/api/beverages') {
+			// If you did not use `DB` as your binding name, change it here
+			const { results } = await env.reservation_station_db.prepare('SELECT * FROM Customers WHERE CompanyName = ?').bind('Bs Beverages').run();
+			return Response.json(results);
 		}
+
+		return new Response('Call /api/beverages to see everyone who works at Bs Beverages');
 	},
 } satisfies ExportedHandler<Env>;
