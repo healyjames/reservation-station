@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { Tenant } from '../db/schema';
-import { crypto } from 'node:crypto';
 
 const tenants = new Hono<{ Bindings: Env }>();
 
