@@ -6,7 +6,7 @@ declare namespace Cloudflare {
 		mainModule: typeof import("./src/index");
 	}
 	interface Env {
-		reservation_station_db: D1Database;
+		maximum_bookings_db: D1Database;
 	}
 }
 interface Env extends Cloudflare.Env {}

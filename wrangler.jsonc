@@ -4,10 +4,13 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "reservation-station",
+	"name": "maximum-bookings",
 	"main": "src/index.ts",
 	"compatibility_date": "2026-03-10",
-	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"compatibility_flags": [
+		"nodejs_compat",
+		"global_fetch_strictly_public"
+	],
 	"assets": {
 		// The path to the directory containing the `index.html` file to be served at `/`
 		"directory": "./public",
@@ -18,8 +21,13 @@
 	"d1_databases": [
 		{
 			"binding": "reservation_station_db",
-			"database_name": "reservation-station-db",
+			"database_name": "maximum-bookings-db",
 			"database_id": "80a14df4-e3e6-4682-8dca-b5d84322c0f6",
+		},
+		{
+			"binding": "maximum_bookings_db",
+			"database_name": "maximum-bookings-db",
+			"database_id": "7522dda9-3ddb-4a39-bbd5-1b7bf230b67f"
 		},
 	],
 	/**

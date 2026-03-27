@@ -17,7 +17,8 @@ export default {
 
 		if (pathname === '/api/beverages') {
 			// If you did not use `DB` as your binding name, change it here
-			const { results } = await env.reservation_station_db.prepare('SELECT * FROM Customers WHERE CompanyName = ?').bind('Bs Beverages').run();
+			// const { results } = await env.maximum_bookings_db.prepare('SELECT * FROM Customers WHERE CompanyName = ?').bind('Bs Beverages').run();
+			const { results } = await env.maximum_bookings_db.prepare('SELECT * FROM Reservations').run();
 			return Response.json(results);
 		}
 
