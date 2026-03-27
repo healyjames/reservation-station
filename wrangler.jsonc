@@ -20,7 +20,7 @@
 	},
 	"d1_databases": [
 		{
-			"binding": "reservation_station_db",
+			"binding": "maximum-bookings_db",
 			"database_name": "maximum-bookings-db",
 			"database_id": "80a14df4-e3e6-4682-8dca-b5d84322c0f6",
 		},
