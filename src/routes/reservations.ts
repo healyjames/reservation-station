@@ -1,7 +1,30 @@
+import { z } from 'zod';
 import { Hono } from 'hono';
-import { Reservation, RESERVATION_UPDATABLE_FIELDS } from '../db/schema';
+import { Reservation, CreateReservationSchema, UpdateReservationSchema, CreateReservation, RESERVATION_UPDATABLE_FIELDS } from '../db/schema';
 
 const reservations = new Hono<{ Bindings: Env }>();
+
+// GET /api/reservations/availability?tenant_id=&date= — check remaining covers
+reservations.get('/availability', async (c) => {
+	const tenantId = c.req.query('tenant_id');
+	const date = c.req.query('date');
+	if (!tenantId || !date) return c.json({ error: 'tenant_id and date required' }, 400);
+
+	const tenant = await c.env.maximum_bookings_db
+		.prepare('SELECT max_covers FROM Tenants WHERE id = ?')
+		.bind(tenantId)
+		.first<{ max_covers: number }>();
+
+	const { results } = await c.env.maximum_bookings_db
+		.prepare('SELECT COALESCE(SUM(guests), 0) as total FROM Reservations WHERE tenant_id = ? AND reservation_date = ?')
+		.bind(tenantId, date)
+		.run<{ total: number }>();
+
+	const booked = results[0]?.total ?? 0;
+	const remaining = (tenant?.max_covers ?? 0) - booked;
+
+	return c.json({ date, booked, remaining, max_covers: tenant?.max_covers });
+});
 
 // GET /api/reservations — list, optionally filter by tenant + date
 reservations.get('/', async (c) => {
@@ -41,8 +64,12 @@ reservations.get('/:id', async (c) => {
 
 // POST /api/reservations — create a reservation (with capacity check)
 reservations.post('/', async (c) => {
-	const body = await c.req.json<Omit<Reservation, 'id' | 'created_date' | 'modified_date'>>();
+	const parsed = CreateReservationSchema.safeParse(await c.req.json());
+	if (!parsed.success) return c.json({ error: z.prettifyError(parsed.error) }, 400); // TODO: Add error logging
+
+	const body: CreateReservation = parsed.data
 	const id = crypto.randomUUID();
+	const now = new Date().toISOString();
 
 	// Capacity guard — count existing guests on this date for this tenant
 	const { results: existing } = await c.env.maximum_bookings_db
@@ -58,9 +85,9 @@ reservations.post('/', async (c) => {
 	if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
 
 	// Block same-day bookings if configured
-	const today = new Date().toISOString().split('T')[0];
+	const today = now.split('T')[0];
 	if (tenant.block_current_day && body.reservation_date === today) {
-		return c.json({ error: 'Same-day bookings are not allowed' }, 422);
+		return c.json({ error: 'Same-day bookings are not allowed', block_current_day: tenant.block_current_day, tenant_id: body.tenant_id }, 422);
 	}
 
 	const currentTotal = existing[0]?.total ?? 0;
@@ -86,16 +113,22 @@ reservations.post('/', async (c) => {
 			body.reservation_time,
 			body.guests,
 			body.dietary_requirements ?? null,
+      now, // created_date
+			now, // modified_date
 		)
 		.run();
 
-	return c.json({ id, ...body }, 201);
+	return c.json({ ...body, id }, 201);
+
 });
 
 // PATCH /api/reservations/:id — update a reservation
 reservations.patch('/:id', async (c) => {
 	const id = c.req.param('id');
-	const body = await c.req.json<Partial<Reservation>>();
+	const parsed = UpdateReservationSchema.safeParse(await c.req.json());
+	if (!parsed.success) return c.json({ error: z.prettifyError(parsed.error) }, 400); // TODO: Add error logging
+
+	const body = parsed.data;
 
 	// Always bump modified_date
 	const updateBody = { ...body, modified_date: new Date().toISOString() };
@@ -123,28 +156,6 @@ reservations.delete('/:id', async (c) => {
 	const id = c.req.param('id');
 	await c.env.maximum_bookings_db.prepare('DELETE FROM Reservations WHERE id = ?').bind(id).run();
 	return c.json({ success: true });
-});
-
-// GET /api/reservations/availability?tenant_id=&date= — check remaining covers
-reservations.get('/availability', async (c) => {
-	const tenantId = c.req.query('tenant_id');
-	const date = c.req.query('date');
-	if (!tenantId || !date) return c.json({ error: 'tenant_id and date required' }, 400);
-
-	const tenant = await c.env.maximum_bookings_db
-		.prepare('SELECT max_covers FROM Tenants WHERE id = ?')
-		.bind(tenantId)
-		.first<{ max_covers: number }>();
-
-	const { results } = await c.env.maximum_bookings_db
-		.prepare('SELECT COALESCE(SUM(guests), 0) as total FROM Reservations WHERE tenant_id = ? AND reservation_date = ?')
-		.bind(tenantId, date)
-		.run<{ total: number }>();
-
-	const booked = results[0]?.total ?? 0;
-	const remaining = (tenant?.max_covers ?? 0) - booked;
-
-	return c.json({ date, booked, remaining, max_covers: tenant?.max_covers });
 });
 
 export default reservations;
