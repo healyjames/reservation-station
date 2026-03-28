@@ -1,26 +1,31 @@
-export interface Tenant {
-	id: string;
-	name: string;
-	max_guests: number;
-	max_covers: number;
-	status: 'active' | 'cancelled';
-	block_current_day: boolean;
-}
+import z from 'zod';
 
-export interface Reservation {
-	id: string;
-	tenant_id: string;
-	first_name: string;
-	surname: string;
-	telephone: string;
-	email: string;
-	reservation_date: string; // YYYY-MM-DD
-	reservation_time: string; // HH:MM
-	guests: number;
-	dietary_requirements?: string;
-	created_date?: string;
-	modified_date?: string;
-}
+export const TenantSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	max_guests: z.number().int().nonnegative(),
+	max_covers: z.number().int().nonnegative(),
+	status: z.enum(['active', 'cancelled']),
+	block_current_day: z.boolean(),
+});
+
+export const ReservationSchema = z.object({
+	id: z.string(),
+	tenant_id: z.string(),
+	first_name: z.string(),
+	surname: z.string(),
+	telephone: z.string(),
+	email: z.string(),
+	reservation_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
+	reservation_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format (HH:MM)'),
+	guests: z.number().int().positive(),
+	dietary_requirements: z.string().optional(),
+	created_date: z.string().optional(),
+	modified_date: z.string().optional(),
+});
+
+export type Tenant = z.infer<typeof TenantSchema>;
+export type Reservation = z.infer<typeof ReservationSchema>;
 
 export const TENANT_UPDATABLE_FIELDS: (keyof Tenant)[] = ['name', 'max_guests', 'max_covers', 'status', 'block_current_day'];
 
