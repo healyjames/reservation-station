@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Hono } from 'hono';
-import { Reservation, CreateReservationSchema, UpdateReservationSchema, CreateReservation, RESERVATION_UPDATABLE_FIELDS } from '../db/schema';
+import { Reservation, CreateReservationSchema, UpdateReservationSchema, CreateReservation } from '../db/schema';
 
 const reservations = new Hono<{ Bindings: Env }>();
 
@@ -100,7 +100,7 @@ reservations.post('/', async (c) => {
 			`INSERT INTO Reservations
         (id, tenant_id, first_name, surname, telephone, email,
          reservation_date, reservation_time, guests, dietary_requirements)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		)
 		.bind(
 			id,
@@ -118,7 +118,7 @@ reservations.post('/', async (c) => {
 		)
 		.run();
 
-	return c.json({ ...body, id }, 201);
+  return c.json({ ...body, id, created_date: now, modified_date: now }, 201);
 
 });
 
@@ -131,17 +131,14 @@ reservations.patch('/:id', async (c) => {
 	const body = parsed.data;
 
 	// Always bump modified_date
-	const updateBody = { ...body, modified_date: new Date().toISOString() };
-  const sanitised = Object.fromEntries(
-		Object.entries(updateBody).filter(([k]) => RESERVATION_UPDATABLE_FIELDS.includes(k as keyof Reservation)),
-	);
+	const data = { ...body, modified_date: new Date().toISOString() };
 
-  if (!Object.keys(sanitised).length) return c.json({ error: 'No valid fields to update' }, 400);
+  if (!Object.keys(data).length) return c.json({ error: 'No valid fields to update' }, 400);
 
-  const fields = Object.keys(sanitised)
+  const fields = Object.keys(data)
 		.map((k) => `${k} = ?`)
 		.join(', ');
-	const values = Object.values(sanitised);
+	const values = Object.values(data);
 
 	await c.env.maximum_bookings_db
 		.prepare(`UPDATE Reservations SET ${fields} WHERE id = ?`)
@@ -154,7 +151,9 @@ reservations.patch('/:id', async (c) => {
 // DELETE /api/reservations/:id — cancel/delete a reservation
 reservations.delete('/:id', async (c) => {
 	const id = c.req.param('id');
-	await c.env.maximum_bookings_db.prepare('DELETE FROM Reservations WHERE id = ?').bind(id).run();
+	const result = await c.env.maximum_bookings_db.prepare('DELETE FROM Reservations WHERE id = ?').bind(id).run();
+
+  if (result.meta.changes === 0) return c.json({ error: 'Reservation not found' }, 404);
 	return c.json({ success: true });
 });
 

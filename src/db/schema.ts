@@ -3,8 +3,8 @@ import z from 'zod';
 export const TenantSchema = z.object({
 	id: z.uuid(),
 	name: z.string(),
-	max_guests: z.number().int().positive(),
-	max_covers: z.number().int().positive(),
+	max_guests: z.number().int().nonnegative(),
+	max_covers: z.number().int().nonnegative(),
 	status: z.enum(['active', 'cancelled']),
 	block_current_day: z.boolean(),
 	created_date: z.string().optional(),
@@ -57,17 +57,3 @@ export type UpdateTenant = z.infer<typeof UpdateTenantSchema>;
 export type Reservation = z.infer<typeof ReservationSchema>;
 export type CreateReservation = z.infer<typeof CreateReservationSchema>;
 export type UpdateReservation = z.infer<typeof UpdateReservationSchema>;
-
-export const TENANT_UPDATABLE_FIELDS: (keyof Tenant)[] = ['name', 'max_guests', 'max_covers', 'status', 'block_current_day', 'modified_date'];
-
-export const RESERVATION_UPDATABLE_FIELDS: (keyof Reservation)[] = [
-	'first_name',
-	'surname',
-	'telephone',
-	'email',
-	'reservation_date',
-	'reservation_time',
-	'guests',
-	'dietary_requirements',
-  'modified_date',
-];
