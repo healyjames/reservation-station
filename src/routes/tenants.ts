@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { Tenant } from '../db/schema';
+import { Tenant, TENANT_UPDATABLE_FIELDS } from '../db/schema';
 
 const tenants = new Hono<{ Bindings: Env }>();
 
@@ -36,22 +36,24 @@ tenants.post('/', async (c) => {
 
 // PATCH /api/tenants/:id — update a tenant
 tenants.patch('/:id', async (c) => {
-	const id = c.req.param('id');
-	const body = await c.req.json<Partial<Tenant>>();
+  const id = c.req.param('id');
+  const body = await c.req.json<Partial<Tenant>>();
 
-	const fields = Object.keys(body)
-		.map((k) => `${k} = ?`)
-		.join(', ');
-	const values = Object.values(body);
+  const sanitised = Object.fromEntries(
+    Object.entries(body).filter(([k]) => TENANT_UPDATABLE_FIELDS.includes(k as keyof Tenant))
+  );
 
-	if (!fields.length) return c.json({ error: 'No fields to update' }, 400);
+  if (!Object.keys(sanitised).length) return c.json({ error: 'No valid fields to update' }, 400);
 
-	await c.env.maximum_bookings_db
-		.prepare(`UPDATE Tenants SET ${fields} WHERE id = ?`)
-		.bind(...values, id)
-		.run();
+  const fields = Object.keys(sanitised).map((k) => `${k} = ?`).join(', ');
+  const values = Object.values(sanitised);
 
-	return c.json({ success: true });
+  await c.env.maximum_bookings_db
+    .prepare(`UPDATE Tenants SET ${fields} WHERE id = ?`)
+    .bind(...values, id)
+    .run();
+
+  return c.json({ success: true });
 });
 
 // DELETE /api/tenants/:id — delete a tenant (cascades to reservations)

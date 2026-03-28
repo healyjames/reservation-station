@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { Reservation } from '../db/schema';
+import { Reservation, RESERVATION_UPDATABLE_FIELDS } from '../db/schema';
 
 const reservations = new Hono<{ Bindings: Env }>();
 
@@ -99,10 +99,16 @@ reservations.patch('/:id', async (c) => {
 
 	// Always bump modified_date
 	const updateBody = { ...body, modified_date: new Date().toISOString() };
-	const fields = Object.keys(updateBody)
+  const sanitised = Object.fromEntries(
+		Object.entries(updateBody).filter(([k]) => RESERVATION_UPDATABLE_FIELDS.includes(k as keyof Reservation)),
+	);
+
+  if (!Object.keys(sanitised).length) return c.json({ error: 'No valid fields to update' }, 400);
+
+  const fields = Object.keys(sanitised)
 		.map((k) => `${k} = ?`)
 		.join(', ');
-	const values = Object.values(updateBody);
+	const values = Object.values(sanitised);
 
 	await c.env.maximum_bookings_db
 		.prepare(`UPDATE Reservations SET ${fields} WHERE id = ?`)
