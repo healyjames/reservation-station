@@ -58,7 +58,7 @@ export type Reservation = z.infer<typeof ReservationSchema>;
 export type CreateReservation = z.infer<typeof CreateReservationSchema>;
 export type UpdateReservation = z.infer<typeof UpdateReservationSchema>;
 
-export const TENANT_UPDATABLE_FIELDS: (keyof Tenant)[] = ['name', 'max_guests', 'max_covers', 'status', 'block_current_day'];
+export const TENANT_UPDATABLE_FIELDS: (keyof Tenant)[] = ['name', 'max_guests', 'max_covers', 'status', 'block_current_day', 'modified_date'];
 
 export const RESERVATION_UPDATABLE_FIELDS: (keyof Reservation)[] = [
 	'first_name',
@@ -69,4 +69,5 @@ export const RESERVATION_UPDATABLE_FIELDS: (keyof Reservation)[] = [
 	'reservation_time',
 	'guests',
 	'dietary_requirements',
+  'modified_date',
 ];

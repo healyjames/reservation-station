@@ -1,5 +1,6 @@
+import { z } from 'zod';
 import { Hono } from 'hono';
-import { Tenant, TENANT_UPDATABLE_FIELDS } from '../db/schema';
+import { Tenant, UpdateTenantSchema, UpdateTenant, TENANT_UPDATABLE_FIELDS } from '../db/schema';
 
 const tenants = new Hono<{ Bindings: Env }>();
 
@@ -36,12 +37,16 @@ tenants.post('/', async (c) => {
 
 // PATCH /api/tenants/:id — update a tenant
 tenants.patch('/:id', async (c) => {
-  const id = c.req.param('id');
-  const body = await c.req.json<Partial<Tenant>>();
+  const parsed = UpdateTenantSchema.safeParse(await c.req.json());
+	if (!parsed.success) return c.json({ error: z.prettifyError(parsed.error) }, 400); // TODO: Add error logging
 
-  const sanitised = Object.fromEntries(
-    Object.entries(body).filter(([k]) => TENANT_UPDATABLE_FIELDS.includes(k as keyof Tenant))
-  );
+  const id = c.req.param('id');
+	const body = parsed.data;
+
+	// Always bump modified_date
+	const updateBody = { ...body, modified_date: new Date().toISOString() };
+
+  const sanitised = Object.fromEntries(Object.entries(updateBody).filter(([k]) => TENANT_UPDATABLE_FIELDS.includes(k as keyof Tenant)));
 
   if (!Object.keys(sanitised).length) return c.json({ error: 'No valid fields to update' }, 400);
 
