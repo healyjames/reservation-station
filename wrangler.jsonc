@@ -22,7 +22,7 @@
 		{
 			"binding": "maximum_bookings_db",
 			"database_name": "maximum_bookings_db",
-			"database_id": "7522dda9-3ddb-4a39-bbd5-1b7bf230b67f",
+			"database_id": "c651aac0-88f4-4332-8a87-1136a575c861",
 			"migrations_dir": "./migrations",
 		},
 	],
