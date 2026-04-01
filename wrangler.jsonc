@@ -20,14 +20,10 @@
 	},
 	"d1_databases": [
 		{
-			"binding": "maximum-bookings_db",
-			"database_name": "maximum-bookings-db",
-			"database_id": "7522dda9-3ddb-4a39-bbd5-1b7bf230b67f",
-		},
-		{
 			"binding": "maximum_bookings_db",
-			"database_name": "maximum-bookings-db",
-			"database_id": "7522dda9-3ddb-4a39-bbd5-1b7bf230b67f"
+			"database_name": "maximum_bookings_db",
+			"database_id": "7522dda9-3ddb-4a39-bbd5-1b7bf230b67f",
+			"migrations_dir": "./migrations",
 		},
 	],
 	/**
