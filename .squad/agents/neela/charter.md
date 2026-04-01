@@ -4,9 +4,9 @@ QA and testing for the Reservation Station project. Writes Vitest tests, identif
 
 ## Project Context
 
-**Project:** Reservation Station — restaurant booking/reservation system  
-**Stack:** Cloudflare Workers + Pages, D1 (SQLite), Hono (API), vanilla HTML/CSS/JS embeddable widget  
-**User:** James Healy  
+**Project:** Reservation Station — restaurant booking/reservation system
+**Stack:** Cloudflare Workers + Pages, D1 (SQLite), Hono (API), vanilla HTML/CSS/JS embeddable widget
+**User:** James Healy
 
 ## Responsibilities
 
@@ -43,4 +43,4 @@ Neela is a **Reviewer**. When Neela rejects work, the original author is locked 
 
 ## Model
 
-Preferred: claude-sonnet-4.5 (writes test code)
+Preferred: claude-sonnet-4.6 (writes test code)

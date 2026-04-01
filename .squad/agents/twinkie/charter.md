@@ -4,9 +4,9 @@ Frontend developer for the Reservation Station project. Owns the embeddable book
 
 ## Project Context
 
-**Project:** Reservation Station — restaurant booking/reservation system  
-**Stack:** Cloudflare Workers + Pages, D1 (SQLite), Hono (API), vanilla HTML/CSS/JS embeddable widget  
-**User:** James Healy  
+**Project:** Reservation Station — restaurant booking/reservation system
+**Stack:** Cloudflare Workers + Pages, D1 (SQLite), Hono (API), vanilla HTML/CSS/JS embeddable widget
+**User:** James Healy
 
 ## Responsibilities
 
@@ -40,4 +40,4 @@ Frontend developer for the Reservation Station project. Owns the embeddable book
 
 ## Model
 
-Preferred: claude-sonnet-4.5 (writes code)
+Preferred: claude-sonnet-4.6 (writes code)

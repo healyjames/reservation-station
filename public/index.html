@@ -1,32 +1,591 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Hello, World!</title>
-	</head>
-	<body>
-		<h1 id="heading"></h1>
-		<p>This page comes from a static asset stored at `public/index.html` as configured in `wrangler.jsonc`.</p>
-		<button id="button" type="button">Fetch a random UUID</button>
-		<output id="random" for="button"></output>
-		<script>
-			fetch('/message')
-				.then((resp) => resp.text())
-				.then((text) => {
-					const h1 = document.getElementById('heading');
-					h1.textContent = text;
-				});
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Make a Reservation — Reservation Station</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <style>
+      /* Load Lora from Google Fonts and expose it as SecondaryFont */
+      @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
-			const button = document.getElementById("button");
-			button.addEventListener("click", () => {
-				fetch('/api/beverages')
-					.then((resp) => resp.text())
-					.then((text) => {
-						const random = document.getElementById('random');
-						random.textContent = text;
-					});
-			});
-		</script>
-	</body>
+      /* SecondaryFont declaration — sourced from the Google Fonts-loaded Lora */
+      @font-face {
+        font-family: 'SecondaryFont';
+        src: local('Lora'), local('Lora-Regular');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'SecondaryFont';
+        src: local('Lora'), local('Lora-Medium');
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'SecondaryFont';
+        src: local('Lora'), local('Lora-SemiBold');
+        font-weight: 600;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'SecondaryFont';
+        src: local('Lora'), local('Lora-Bold');
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      :root {
+        --primary: #8b2635;
+        --primary-lighter: #b5475a;
+        --primary-lightest: #f5e8ea;
+        --primary-darker: #5c1521;
+        --background: #f3ede8;
+        --background-light: #faf7f5;
+        --background-darker: #c8b8ae;
+        --foreground: #1c1412;
+        --grey-lightest: #f5f5f5;
+        --error-light: #fee2e2;
+        --error-dark: #991b1b;
+        --success-light: #d1fae5;
+        --success-dark: #065f46;
+      }
+
+      /* ============================================================
+         BASE RESET
+         ============================================================ */
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+
+      /* ============================================================
+         PROVIDED CSS — do not modify
+         ============================================================ */
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+      }
+
+      @media screen and (min-width: 768px) {
+        form {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 0.5rem 1rem;
+          align-items: start;
+        }
+
+        form button {
+          grid-column: 1 / -1;
+          justify-self: start;
+        }
+      }
+
+      .calendar-container {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: -20px 20px 60px var(--background-darker), 20px -20px 60px white;
+        margin-bottom: 32px;
+        font-family: 'SecondaryFont';
+      }
+
+      .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+
+      .calendar-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: var(--foreground);
+      }
+
+      .calendar-nav {
+        display: flex;
+        gap: 12px;
+      }
+
+      .calendar-nav button {
+        background: var(--background-light);
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.2s;
+      }
+
+      .calendar-nav button:hover {
+        background: var(--background);
+      }
+
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+      }
+
+      .day-name {
+        text-align: center;
+        font-weight: 600;
+        padding: 12px 0;
+        color: #666;
+        font-size: 0.875rem;
+      }
+
+      .calendar-day {
+        aspect-ratio: 1;
+        border: 2px solid #e0e0e0;
+        background: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.2s;
+        font-weight: 500;
+      }
+
+      .calendar-day:not(.empty):not(.past):hover {
+        background: var(--primary-lightest);
+        border-color: var(--primary);
+        transform: scale(1.05);
+      }
+
+      .calendar-day.selected {
+        background: var(--primary-lightest);
+        border-color: var(--primary);
+      }
+
+      .calendar-day.past {
+        background: #f5f5f5;
+        color: #999;
+        cursor: not-allowed;
+        border-color: #f0f0f0;
+      }
+
+      .calendar-day.empty {
+        border: none;
+        cursor: default;
+      }
+
+      .form-container {
+        background: white;
+        border-radius: 12px;
+        padding: 32px;
+        box-shadow: -20px 20px 60px var(--background-darker), 20px -20px 60px white;
+        animation: slideIn 0.3s ease-out;
+        font-family: 'SecondaryFont';
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+        box-sizing: border-box;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+
+      .form-group input[aria-invalid="true"],
+      .form-group select[aria-invalid="true"] {
+        border-color: var(--error-dark);
+      }
+
+      .error-message {
+        background-color: var(--error-light);
+        color: var(--error-dark);
+      }
+
+      .message {
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-family: 'SecondaryFont';
+        padding: 1.5rem 2.5rem;
+      }
+
+      .message-header {
+        display: flex;
+        font-size: 1.2rem;
+        font-weight: 600;
+        svg {
+          margin-right: 8px;
+        }
+      }
+
+      .success-message {
+        background: var(--success-light);
+        color: var(--success-dark);
+      }
+
+      .success-header {
+        h4 {
+          color: var(--success-dark);
+        }
+      }
+
+      .error-header {
+        h4 {
+          color: var(--error-dark);
+        }
+      }
+
+      .button-secondary {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        width: 100%;
+      }
+
+      .button-secondary:hover:not(:disabled) {
+        background: var(--primary-darker);
+      }
+
+      .button-secondary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .selected-date-display {
+        background: var(--grey-lightest);
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        text-align: center;
+      }
+
+      .selected-date-display strong {
+        color: var(--primary);
+      }
+
+      /* ============================================================
+         ADDITIONAL STYLES
+         ============================================================ */
+
+      /* Resolve SecondaryFont to Lora for environments where local() isn't matched */
+      .calendar-container,
+      .form-container,
+      .message {
+        font-family: 'Lora', 'SecondaryFont', Georgia, serif;
+      }
+
+      /* Today: distinct border + dot indicator (not the same as selected) */
+      .calendar-day.today {
+        border-color: var(--primary-lighter);
+        color: var(--primary-darker);
+        font-weight: 700;
+        position: relative;
+      }
+
+      .calendar-day.today::after {
+        content: '';
+        position: absolute;
+        bottom: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--primary);
+      }
+
+      /* Keep dot visible when today is also selected */
+      .calendar-day.today.selected::after {
+        background: var(--primary-darker);
+      }
+
+      /* Selected: add a colour ring so it's clearly chosen */
+      .calendar-day.selected {
+        background: var(--primary-lightest);
+        border-color: var(--primary);
+        color: var(--primary-darker);
+        font-weight: 700;
+      }
+
+      /* Disabled nav button */
+      .calendar-nav button:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
+      /* ============================================================
+         PAGE CHROME
+         ============================================================ */
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--background);
+        font-family: 'Lora', Georgia, serif;
+        color: var(--foreground);
+        padding: 40px 16px 64px;
+      }
+
+      .page-wrapper {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .page-heading {
+        text-align: center;
+        margin-bottom: 36px;
+      }
+
+      .page-heading .brand {
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--primary-lighter);
+        margin: 0 0 10px;
+      }
+
+      .page-heading h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--foreground);
+        margin: 0 0 10px;
+        line-height: 1.15;
+      }
+
+      .page-heading p {
+        margin: 0;
+        color: #776055;
+        font-size: 0.95rem;
+        font-style: italic;
+      }
+
+      /* Responsive: tighten on small screens */
+      @media (max-width: 480px) {
+        .page-heading h1 {
+          font-size: 1.7rem;
+        }
+
+        .calendar-container {
+          padding: 16px;
+        }
+
+        .calendar-grid {
+          gap: 4px;
+        }
+
+        .calendar-day {
+          font-size: 0.85rem;
+        }
+
+        .day-name {
+          font-size: 0.75rem;
+          padding: 8px 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-wrapper">
+      <header class="page-heading">
+        <p class="brand">Reservation Station</p>
+        <h1>Make a Reservation</h1>
+        <p>Choose a date for your visit</p>
+      </header>
+
+      <div class="calendar-container" role="region" aria-label="Date picker">
+        <div class="calendar-header">
+          <h2 id="calendar-title"></h2>
+          <div class="calendar-nav">
+            <button id="prev-month" aria-label="Previous month" disabled>&#8592;</button>
+            <button id="next-month" aria-label="Next month">&#8594;</button>
+          </div>
+        </div>
+        <div class="calendar-grid" id="calendar-grid" role="grid"></div>
+      </div>
+
+      <div class="selected-date-display" id="selected-date-display" aria-live="polite">
+        Select a date to continue
+      </div>
+    </div>
+
+    <script>
+      const MONTHS = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      // Week starts Monday
+      const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+      const _today = new Date();
+      const todayYear  = _today.getFullYear();
+      const todayMonth = _today.getMonth();
+      const todayDay   = _today.getDate();
+
+      let currentYear  = todayYear;
+      let currentMonth = todayMonth;
+      let selectedDate = null;
+
+      function isBeforeToday(year, month, day) {
+        if (year !== todayYear)  return year < todayYear;
+        if (month !== todayMonth) return month < todayMonth;
+        return day < todayDay;
+      }
+
+      function renderCalendar(year, month) {
+        const titleEl  = document.getElementById('calendar-title');
+        const gridEl   = document.getElementById('calendar-grid');
+        const prevBtn  = document.getElementById('prev-month');
+
+        titleEl.textContent = `${MONTHS[month]} ${year}`;
+
+        // Disable prev when already on the current month
+        const onCurrentMonth = year === todayYear && month === todayMonth;
+        prevBtn.disabled = onCurrentMonth;
+
+        gridEl.innerHTML = '';
+
+        // Day-of-week header row
+        DAY_NAMES.forEach(name => {
+          const cell = document.createElement('div');
+          cell.className = 'day-name';
+          cell.setAttribute('role', 'columnheader');
+          cell.setAttribute('aria-label', name);
+          cell.textContent = name;
+          gridEl.appendChild(cell);
+        });
+
+        // Leading empty cells so day 1 lands on the right column.
+        // getDay(): 0=Sun, 1=Mon … 6=Sat → convert to Mon-first offset.
+        const firstDayOfWeek = new Date(year, month, 1).getDay();
+        const leadingEmpties = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+        for (let i = 0; i < leadingEmpties; i++) {
+          const cell = document.createElement('div');
+          cell.className = 'calendar-day empty';
+          cell.setAttribute('aria-hidden', 'true');
+          gridEl.appendChild(cell);
+        }
+
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const cell = document.createElement('div');
+          cell.className = 'calendar-day';
+          cell.textContent = day;
+
+          const isToday   = year === todayYear && month === todayMonth && day === todayDay;
+          const isPast    = isBeforeToday(year, month, day);
+          const isSelected = selectedDate &&
+                             selectedDate.year  === year  &&
+                             selectedDate.month === month &&
+                             selectedDate.day   === day;
+
+          if (isToday)    cell.classList.add('today');
+          if (isPast)     cell.classList.add('past');
+          if (isSelected) cell.classList.add('selected');
+
+          if (isPast) {
+            cell.setAttribute('aria-disabled', 'true');
+            cell.setAttribute('role', 'gridcell');
+          } else {
+            const dateLabel = new Date(year, month, day).toLocaleDateString('en-GB', {
+              weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+            });
+            cell.setAttribute('role', 'button');
+            cell.setAttribute('aria-label', dateLabel);
+            cell.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+            cell.setAttribute('tabindex', '0');
+
+            cell.addEventListener('click', () => selectDay(year, month, day));
+            cell.addEventListener('keydown', e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                selectDay(year, month, day);
+              }
+            });
+          }
+
+          gridEl.appendChild(cell);
+        }
+      }
+
+      function selectDay(year, month, day) {
+        selectedDate = { year, month, day };
+
+        const formatted = new Date(year, month, day).toLocaleDateString('en-GB', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+        const display = document.getElementById('selected-date-display');
+        display.innerHTML = `<strong>${formatted}</strong>`;
+
+        renderCalendar(currentYear, currentMonth);
+      }
+
+      document.getElementById('prev-month').addEventListener('click', () => {
+        if (currentYear === todayYear && currentMonth === todayMonth) return;
+        currentMonth -= 1;
+        if (currentMonth < 0) { currentMonth = 11; currentYear -= 1; }
+        renderCalendar(currentYear, currentMonth);
+      });
+
+      document.getElementById('next-month').addEventListener('click', () => {
+        currentMonth += 1;
+        if (currentMonth > 11) { currentMonth = 0; currentYear += 1; }
+        renderCalendar(currentYear, currentMonth);
+      });
+
+      renderCalendar(currentYear, currentMonth);
+    </script>
+  </body>
 </html>
