@@ -1,0 +1,11 @@
+{
+  "assignments": [
+    {
+      "assignment_id": "reservation-station-2026-04-01",
+      "universe": "fast-and-furious-tokyo-drift",
+      "created_at": "2026-04-01T19:34:37Z",
+      "agents": ["Han", "Sean", "Twinkie", "Neela"],
+      "project": "reservation-station"
+    }
+  ]
+}
