@@ -18,6 +18,24 @@ Frontend Dev on the Reservation Station project. Owns the embeddable booking wid
 - Must handle cross-origin API calls to the Workers API
 - CSS custom properties for host-site theming
 
+### Asset split refactor (2026-04-01)
+
+`public/index.html` was split from a monolithic ~713-line file into three separate assets (no build step):
+
+**New file structure:**
+```
+public/
+  index.html       (~30 lines — clean HTML, no inline CSS or JS)
+  styles.css       (all styles, including @import for Google Fonts)
+  js/
+    theme.js       (blocking script in <head>; reads ?theme=/?mode=, applies CSS custom props before first paint)
+    calendar.js    (ES module via type="module"; all vars are module-scoped, not global; self-initialises inline)
+```
+
+**Module approach:**
+- `theme.js` is a plain script (no `type="module"`) so it blocks rendering — required to prevent flash of incorrect theme
+- `calendar.js` uses `type="module"` for implicit defer + clean module scope; no exports needed since it self-initialises by running at top level (DOM is ready because module scripts are deferred)
+
 ### Calendar widget — standalone date picker (2026-04-01)
 
 **Built:** `public/index.html` — fully self-contained responsive date picker calendar page.

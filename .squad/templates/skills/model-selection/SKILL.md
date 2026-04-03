@@ -29,7 +29,7 @@ Resolution is **first-match-wins** — the highest layer with a value wins.
 | **1** | Session Directive | User said "use X" in current session | Session-only |
 | **2** | Charter Preference | Agent's `charter.md` → `## Model` section | Persistent (in charter) |
 | **3** | Task-Aware Auto | Code → sonnet, docs → haiku, visual → opus | Computed per-spawn |
-| **4** | Default | `claude-haiku-4.5` | Hardcoded fallback |
+| **4** | Default | `claude-sonnet-4.6` | Hardcoded fallback |
 
 **Key principle:** Layer 0 (persistent config) beats everything. If the user said "always use opus" and it was saved to config.json, every agent gets opus regardless of role or task type. This is intentional — the user explicitly chose quality over cost.
 
@@ -52,8 +52,8 @@ Resolution is **first-match-wins** — the highest layer with a value wins.
    - Code (implementation, tests, refactoring, bug fixes) → `claude-sonnet-4.6`
    - Prompts, agent designs → `claude-sonnet-4.6`
    - Visual/design with image analysis → `claude-opus-4.6`
-   - Non-code (docs, planning, triage, changelogs) → `claude-haiku-4.5`
-6. FALLBACK Layer 4: `claude-haiku-4.5`
+   - Non-code (docs, planning, triage, changelogs) → `claude-sonnet-4.6`
+6. FALLBACK Layer 4: `claude-sonnet-4.6`
 7. INCLUDE model in spawn acknowledgment: `🔧 {Name} ({resolved_model}) — {task}`
 
 ### When User Sets a Preference
@@ -95,7 +95,7 @@ After resolving the model and including it in the spawn template, this skill is 
   "defaultModel": "claude-opus-4.6",
   "agentModelOverrides": {
     "fenster": "claude-sonnet-4.6",
-    "mcmanus": "claude-haiku-4.5"
+    "mcmanus": "claude-sonnet-4.6"
   }
 }
 ```
@@ -111,7 +111,7 @@ If a model is unavailable (rate limit, plan restriction), retry within the same 
 ```
 Premium:  claude-opus-4.6 → claude-opus-4.6-fast → claude-opus-4.5 → claude-sonnet-4.6
 Standard: claude-sonnet-4.6 → gpt-5.4 → claude-sonnet-4.5 → gpt-5.3-codex → claude-sonnet-4
-Fast:     claude-haiku-4.5 → gpt-5.1-codex-mini → gpt-4.1 → gpt-5-mini
+Fast:     claude-sonnet-4.6 → gpt-5.1-codex-mini → gpt-4.1 → gpt-5-mini
 ```
 
 **Never fall UP in tier.** A fast task won't land on a premium model via fallback.

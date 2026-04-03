@@ -1,0 +1,394 @@
+/* Load Lora from Google Fonts and expose it as SecondaryFont */
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+/* SecondaryFont declaration — sourced from the Google Fonts-loaded Lora */
+@font-face {
+  font-family: 'SecondaryFont';
+  src: local('Lora'), local('Lora-Regular');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SecondaryFont';
+  src: local('Lora'), local('Lora-Medium');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SecondaryFont';
+  src: local('Lora'), local('Lora-SemiBold');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SecondaryFont';
+  src: local('Lora'), local('Lora-Bold');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --primary: #818cf8;
+  --primary-lighter: #a5b4fc;
+  --primary-lightest: #374151;
+  --primary-darker: #4f46e5;
+  --background: #0f172a;
+  --background-light: #1e293b;
+  --background-darker: #152032;
+  --foreground: #e2e8f0;
+  --grey-lightest: #2d3748;
+  --error-light: #fee2e2;
+  --error-dark: #991b1b;
+  --success-light: #d1fae5;
+  --success-dark: #065f46;
+}
+
+/* ============================================================
+   BASE RESET
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   PROVIDED CSS — do not modify
+   ============================================================ */
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+@media screen and (min-width: 768px) {
+  form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem 1rem;
+    align-items: start;
+  }
+
+  form button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+.calendar-container {
+  background: var(--background);
+  padding: 24px;
+  font-family: 'SecondaryFont';
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.calendar-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--foreground);
+}
+
+.calendar-nav {
+  display: flex;
+  gap: 12px;
+}
+
+.calendar-nav button {
+  background: var(--background-light);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.calendar-nav button:hover {
+  background: var(--background);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.day-name {
+  text-align: center;
+  font-weight: 600;
+  padding: 12px 0;
+  color: var(--foreground);
+  opacity: 0.6;
+  font-size: 0.875rem;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  border: 2px solid var(--background-darker);
+  background: var(--background-light);
+  color: var(--foreground);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.calendar-day:not(.empty):not(.past):hover {
+  background: var(--primary-lightest);
+  border-color: var(--primary);
+  transform: scale(1.05);
+}
+
+.calendar-day.selected {
+  background: var(--primary-lightest);
+  border-color: var(--primary);
+}
+
+.calendar-day.past {
+  background: var(--background);
+  color: var(--foreground);
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: var(--background-darker);
+}
+
+.calendar-day.empty {
+  border: none;
+  cursor: default;
+}
+
+.form-container {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: -20px 20px 60px var(--background-darker), 20px -20px 60px white;
+  animation: slideIn 0.3s ease-out;
+  font-family: 'SecondaryFont';
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.form-group input[aria-invalid="true"],
+.form-group select[aria-invalid="true"] {
+  border-color: var(--error-dark);
+}
+
+.error-message {
+  background-color: var(--error-light);
+  color: var(--error-dark);
+}
+
+.message {
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-family: 'SecondaryFont';
+  padding: 1.5rem 2.5rem;
+}
+
+.message-header {
+  display: flex;
+  font-size: 1.2rem;
+  font-weight: 600;
+  svg {
+    margin-right: 8px;
+  }
+}
+
+.success-message {
+  background: var(--success-light);
+  color: var(--success-dark);
+}
+
+.success-header {
+  h4 {
+    color: var(--success-dark);
+  }
+}
+
+.error-header {
+  h4 {
+    color: var(--error-dark);
+  }
+}
+
+.button-secondary {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  width: 100%;
+}
+
+.button-secondary:hover:not(:disabled) {
+  background: var(--primary-darker);
+}
+
+.button-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.selected-date-display {
+  background: var(--grey-lightest);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.selected-date-display strong {
+  color: var(--primary);
+}
+
+/* ============================================================
+   ADDITIONAL STYLES
+   ============================================================ */
+
+/* Resolve SecondaryFont to Lora for environments where local() isn't matched */
+.calendar-container,
+.form-container,
+.message {
+  font-family: 'Lora', 'SecondaryFont', Georgia, serif;
+}
+
+/* Today: distinct border + dot indicator (not the same as selected) */
+.calendar-day.today {
+  border-color: var(--primary-lighter);
+  color: var(--primary);
+  font-weight: 700;
+  position: relative;
+}
+
+.calendar-day.today::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+/* Keep dot visible when today is also selected */
+.calendar-day.today.selected::after {
+  background: var(--primary);
+}
+
+/* Selected: add a colour ring so it's clearly chosen */
+.calendar-day.selected {
+  background: var(--primary-lightest);
+  border-color: var(--primary);
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+/* Disabled nav button */
+.calendar-nav button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ============================================================
+   PAGE CHROME
+   ============================================================ */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--background);
+  font-family: 'Lora', Georgia, serif;
+  color: var(--foreground);
+}
+
+.calendar-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* Responsive: tighten on small screens */
+@media (max-width: 480px) {
+  .calendar-container {
+    padding: 16px;
+  }
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .calendar-day {
+    font-size: 0.85rem;
+  }
+
+  .day-name {
+    font-size: 0.75rem;
+    padding: 8px 0;
+  }
+}
