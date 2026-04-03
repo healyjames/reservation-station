@@ -96,11 +96,8 @@
       }
 
       .calendar-container {
-        background: white;
-        border-radius: 12px;
+        background: var(--background);
         padding: 24px;
-        box-shadow: -20px 20px 60px var(--background-darker), 20px -20px 60px white;
-        margin-bottom: 32px;
         font-family: 'SecondaryFont';
       }
 
@@ -368,55 +365,22 @@
       /* ============================================================
          PAGE CHROME
          ============================================================ */
-      body {
+      html, body {
         margin: 0;
-        min-height: 100vh;
+        padding: 0;
+        height: 100%;
         background: var(--background);
         font-family: 'Lora', Georgia, serif;
         color: var(--foreground);
-        padding: 40px 16px 64px;
       }
 
-      .page-wrapper {
-        max-width: 600px;
-        margin: 0 auto;
-      }
-
-      .page-heading {
-        text-align: center;
-        margin-bottom: 36px;
-      }
-
-      .page-heading .brand {
-        font-size: 0.8rem;
-        font-weight: 600;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--primary-lighter);
-        margin: 0 0 10px;
-      }
-
-      .page-heading h1 {
-        font-size: 2.2rem;
-        font-weight: 700;
-        color: var(--foreground);
-        margin: 0 0 10px;
-        line-height: 1.15;
-      }
-
-      .page-heading p {
-        margin: 0;
-        color: #776055;
-        font-size: 0.95rem;
-        font-style: italic;
+      .calendar-container {
+        height: 100%;
+        width: 100%;
       }
 
       /* Responsive: tighten on small screens */
       @media (max-width: 480px) {
-        .page-heading h1 {
-          font-size: 1.7rem;
-        }
-
         .calendar-container {
           padding: 16px;
         }
@@ -437,23 +401,15 @@
     </style>
   </head>
   <body>
-    <div class="page-wrapper">
-      <header class="page-heading">
-        <p class="brand">Reservation Station</p>
-        <h1>Make a Reservation</h1>
-        <p>Choose a date for your visit</p>
-      </header>
-
-      <div class="calendar-container" role="region" aria-label="Date picker">
-        <div class="calendar-header">
-          <h2 id="calendar-title"></h2>
-          <div class="calendar-nav">
-            <button id="prev-month" aria-label="Previous month" disabled>&#8592;</button>
-            <button id="next-month" aria-label="Next month">&#8594;</button>
-          </div>
+    <div class="calendar-container" role="region" aria-label="Date picker">
+      <div class="calendar-header">
+        <h2 id="calendar-title"></h2>
+        <div class="calendar-nav">
+          <button id="prev-month" aria-label="Previous month" disabled>&#8592;</button>
+          <button id="next-month" aria-label="Next month">&#8594;</button>
         </div>
-        <div class="calendar-grid" id="calendar-grid" role="grid"></div>
       </div>
+      <div class="calendar-grid" id="calendar-grid" role="grid"></div>
 
       <div class="selected-date-display" id="selected-date-display" aria-live="polite">
         Select a date to continue
