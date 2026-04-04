@@ -1,4 +1,4 @@
-import { tenantConfig } from './tenant.js';
+import { tenantConfig } from './tenants.js';
 
 // Booking form state
 let formState = {
@@ -98,12 +98,12 @@ function renderStep1(container) {
       <form id="booking-form-step1">
         <div class="form-group">
           <label for="guests">Number of Guests</label>
-          <input 
-            type="number" 
-            id="guests" 
-            name="guests" 
-            min="1" 
-            max="${tenantConfig?.max_guests ?? 20}" 
+          <input
+            type="number"
+            id="guests"
+            name="guests"
+            min="1"
+            max="${tenantConfig?.max_guests ?? 20}"
             value="${formState.formData.guests}"
             required
           />
@@ -183,10 +183,10 @@ function renderStep2(container) {
       <form id="booking-form-step2" novalidate>
         <div class="form-group">
           <label for="firstName">First Name *</label>
-          <input 
-            type="text" 
-            id="firstName" 
-            name="firstName" 
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
             maxlength="50"
             value="${formState.formData.firstName}"
             autocomplete="given-name"
@@ -197,10 +197,10 @@ function renderStep2(container) {
 
         <div class="form-group">
           <label for="surname">Surname *</label>
-          <input 
-            type="text" 
-            id="surname" 
-            name="surname" 
+          <input
+            type="text"
+            id="surname"
+            name="surname"
             maxlength="50"
             value="${formState.formData.surname}"
             autocomplete="family-name"
@@ -211,10 +211,10 @@ function renderStep2(container) {
 
         <div class="form-group">
           <label for="email">Email *</label>
-          <input 
-            type="email" 
-            id="email" 
-            name="email" 
+          <input
+            type="email"
+            id="email"
+            name="email"
             value="${formState.formData.email}"
             autocomplete="email"
             required
@@ -224,10 +224,10 @@ function renderStep2(container) {
 
         <div class="form-group">
           <label for="telephone">Phone Number *</label>
-          <input 
-            type="tel" 
-            id="telephone" 
-            name="telephone" 
+          <input
+            type="tel"
+            id="telephone"
+            name="telephone"
             value="${formState.formData.telephone}"
             autocomplete="tel"
             placeholder="+44 7700 900000"
@@ -238,9 +238,9 @@ function renderStep2(container) {
 
         <div class="form-group full-width">
           <label for="dietary">Dietary Requirements (Optional)</label>
-          <textarea 
-            id="dietary" 
-            name="dietary" 
+          <textarea
+            id="dietary"
+            name="dietary"
             rows="3"
             maxlength="500"
             placeholder="Let us know about any allergies or dietary preferences..."
@@ -428,7 +428,7 @@ function showError(container, message) {
 function showSuccess() {
   const container = document.getElementById('booking-container');
   const dateDisplay = formatDateForDisplay(formState.selectedDate);
-  
+
   container.innerHTML = `
     <div class="booking-form-content">
       <div class="message success-message">
@@ -486,7 +486,7 @@ function renderCurrentStep() {
 function hideBookingForm() {
   const bookingContainer = document.getElementById('booking-container');
   const calendarContainer = document.getElementById('calendar-container');
-  
+
   bookingContainer.hidden = true;
   calendarContainer.hidden = false;
 }

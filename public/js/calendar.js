@@ -1,4 +1,4 @@
-import { loadTenant, tenantConfig } from './tenant.js';
+import { loadTenant, tenantConfig } from './tenants.js';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
