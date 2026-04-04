@@ -3,6 +3,7 @@ import z from 'zod';
 export const TenantSchema = z.object({
 	id: z.uuid(),
 	name: z.string(),
+	tenant_code: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/, 'tenant_code must be lowercase alphanumeric with hyphens only'),
 	max_guests: z.number().int().nonnegative(),
 	max_covers: z.number().int().nonnegative(),
 	status: z.enum(['active', 'cancelled']),

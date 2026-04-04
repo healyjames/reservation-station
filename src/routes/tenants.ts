@@ -13,7 +13,7 @@ tenants.get('/', async (c) => {
 // GET /api/tenants/:id — get single tenant
 tenants.get('/:id', async (c) => {
 	const id = c.req.param('id');
-	const tenant = await c.env.maximum_bookings_db.prepare('SELECT * FROM Tenants WHERE id = ?').bind(id).first<Tenant>();
+	const tenant = await c.env.maximum_bookings_db.prepare('SELECT * FROM Tenants WHERE tenant_code = ?').bind(id).first<Tenant>();
 
 	if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
 	return c.json(tenant);
@@ -30,10 +30,10 @@ tenants.post('/', async (c) => {
 
 	await c.env.maximum_bookings_db
 		.prepare(
-			`INSERT INTO Tenants (id, name, max_guests, max_covers, status, block_current_day, created_date, modified_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			`INSERT INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, block_current_day, created_date, modified_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		)
-		.bind(id, body.name, body.max_guests, body.max_covers, body.status, body.block_current_day, now, now)
+		.bind(id, body.name, body.tenant_code, body.max_guests, body.max_covers, body.status, body.block_current_day, now, now)
 		.run();
 
 	return c.json({ id, ...body, created_date: now, modified_date: now }, 201);

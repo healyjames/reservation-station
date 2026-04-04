@@ -1,3 +1,5 @@
+import { loadTenant, tenantConfig } from './tenant.js';
+
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
@@ -63,16 +65,18 @@ function renderCalendar(year, month) {
 
     const isToday   = year === todayYear && month === todayMonth && day === todayDay;
     const isPast    = isBeforeToday(year, month, day);
+    const isBlockedToday = isToday && tenantConfig?.block_current_day === true;
+    const isDisabled = isPast || isBlockedToday;
     const isSelected = selectedDate &&
                        selectedDate.year  === year  &&
                        selectedDate.month === month &&
                        selectedDate.day   === day;
 
     if (isToday)    cell.classList.add('today');
-    if (isPast)     cell.classList.add('past');
+    if (isDisabled) cell.classList.add('past');
     if (isSelected) cell.classList.add('selected');
 
-    if (isPast) {
+    if (isDisabled) {
       cell.setAttribute('aria-disabled', 'true');
       cell.setAttribute('role', 'gridcell');
     } else {
@@ -127,4 +131,19 @@ document.getElementById('next-month').addEventListener('click', () => {
   renderCalendar(currentYear, currentMonth);
 });
 
-renderCalendar(currentYear, currentMonth);
+// Load tenant config then initialise the calendar
+(async () => {
+  await loadTenant();
+
+  if (!tenantConfig) {
+    const container = document.getElementById('calendar-container');
+    container.innerHTML = `
+      <div class="error-container" style="display:block; margin: 24px;">
+        Unable to load booking configuration. Please check the URL and try again.
+      </div>
+    `;
+    return;
+  }
+
+  renderCalendar(currentYear, currentMonth);
+})();

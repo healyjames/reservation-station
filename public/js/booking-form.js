@@ -1,3 +1,5 @@
+import { tenantConfig } from './tenant.js';
+
 // Booking form state
 let formState = {
   step: 1,
@@ -20,13 +22,6 @@ for (let hour = 12; hour <= 21; hour++) {
   if (hour < 21 || hour === 21) {
     TIME_SLOTS.push(`${hour.toString().padStart(2, '0')}:30`);
   }
-}
-
-// Get tenant ID from URL or body data attribute
-function getTenantId() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const bodyTenantId = document.body.getAttribute('data-tenant-id');
-  return bodyTenantId || urlParams.get('tenant_id');
 }
 
 // Format date as YYYY-MM-DD
@@ -58,7 +53,10 @@ function isValidPhone(v) {
 
 // Validate step 1 (guests and time)
 function validateStep1() {
-  return formState.formData.guests >= 1 && formState.formData.time !== '';
+  const maxGuests = tenantConfig?.max_guests ?? 20;
+  return formState.formData.guests >= 1 &&
+         formState.formData.guests <= maxGuests &&
+         formState.formData.time !== '';
 }
 
 // Validate step 2 (all required fields + format)
@@ -105,7 +103,7 @@ function renderStep1(container) {
             id="guests" 
             name="guests" 
             min="1" 
-            max="20" 
+            max="${tenantConfig?.max_guests ?? 20}" 
             value="${formState.formData.guests}"
             required
           />
@@ -363,7 +361,7 @@ function renderStep2(container) {
     runAllValidations();
     if (bookNowBtn.disabled) return;
 
-    const tenantId = getTenantId();
+    const tenantId = tenantConfig?.id;
     if (!tenantId) {
       showError(errorContainer, 'Configuration error: Missing tenant ID. Please contact support.');
       return;
@@ -495,14 +493,27 @@ function hideBookingForm() {
 
 // Show booking form (called from calendar.js)
 export function showBookingForm(selectedDate) {
-  formState.selectedDate = selectedDate;
-  formState.step = 1;
-  
   const bookingContainer = document.getElementById('booking-container');
   const calendarContainer = document.getElementById('calendar-container');
-  
+
+  if (!tenantConfig) {
+    bookingContainer.innerHTML = `
+      <div class="booking-form-content">
+        <div class="error-container" style="display: block;">
+          Unable to load booking configuration. Please check the URL and try again.
+        </div>
+      </div>
+    `;
+    bookingContainer.removeAttribute('hidden');
+    calendarContainer.hidden = true;
+    return;
+  }
+
+  formState.selectedDate = selectedDate;
+  formState.step = 1;
+
   calendarContainer.hidden = true;
   bookingContainer.removeAttribute('hidden');
-  
+
   renderCurrentStep();
 }
