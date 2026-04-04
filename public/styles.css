@@ -392,3 +392,191 @@ html, body {
     padding: 8px 0;
   }
 }
+
+/* ============================================================
+   BOOKING FORM STYLES — Dark Theme
+   ============================================================ */
+
+#booking-container {
+  background: var(--background);
+  padding: 24px;
+  font-family: 'Lora', 'SecondaryFont', Georgia, serif;
+  height: 100%;
+  width: 100%;
+}
+
+.booking-form-content {
+  animation: slideIn 0.3s ease-out;
+}
+
+.booking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.booking-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--foreground);
+}
+
+.step-indicator {
+  background: var(--background-light);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--primary-lighter);
+  font-weight: 600;
+}
+
+.field-error {
+  display: block;
+  font-size: 0.8rem;
+  color: #f87171;
+  margin-top: 4px;
+}
+
+input[aria-invalid='true'],
+textarea[aria-invalid='true'] {
+  border-color: #f87171 !important;
+}
+
+.selected-date-info {
+  background: var(--background-light);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  border: 2px solid var(--background-darker);
+}
+
+.date-label {
+  font-size: 0.875rem;
+  color: var(--foreground);
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+
+.date-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+
+.change-date-btn {
+  background: transparent;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.change-date-btn:hover {
+  background: var(--primary-lightest);
+}
+
+/* Dark theme form inputs */
+#booking-container .form-group {
+  margin-bottom: 20px;
+}
+
+#booking-container .form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--foreground);
+  font-size: 0.875rem;
+}
+
+#booking-container .form-group input,
+#booking-container .form-group select,
+#booking-container .form-group textarea {
+  width: 100%;
+  padding: 12px;
+  background: var(--background-light);
+  border: 2px solid var(--background-darker);
+  border-radius: 8px;
+  font-size: 1rem;
+  color: var(--foreground);
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+#booking-container .form-group input:focus,
+#booking-container .form-group select:focus,
+#booking-container .form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+#booking-container .form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+#booking-container .form-group input::placeholder,
+#booking-container .form-group textarea::placeholder {
+  color: var(--foreground);
+  opacity: 0.4;
+}
+
+/* Form navigation */
+.form-navigation {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 24px;
+}
+
+.calendar-nav-btn {
+  background: var(--background-light);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--foreground);
+  transition: all 0.2s;
+}
+
+.calendar-nav-btn:hover:not(:disabled) {
+  background: var(--background);
+}
+
+.calendar-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.form-navigation .button-secondary {
+  flex: 1;
+}
+
+/* Error container */
+.error-container {
+  margin-bottom: 16px;
+}
+
+/* Responsive booking form */
+@media (max-width: 480px) {
+  #booking-container {
+    padding: 16px;
+  }
+  
+  .booking-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .step-indicator {
+    align-self: stretch;
+    text-align: center;
+  }
+}

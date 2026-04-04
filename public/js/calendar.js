@@ -107,6 +107,11 @@ function selectDay(year, month, day) {
   display.innerHTML = `<strong>${formatted}</strong>`;
 
   renderCalendar(currentYear, currentMonth);
+
+  // Import and show booking form
+  import('./booking-form.js').then(module => {
+    module.showBookingForm({ year, month, day });
+  });
 }
 
 document.getElementById('prev-month').addEventListener('click', () => {

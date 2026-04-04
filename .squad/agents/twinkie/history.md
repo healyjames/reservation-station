@@ -54,3 +54,44 @@ public/
 
 **File paths:**
 - `public/index.html` — replaced boilerplate with calendar widget preview
+
+### Multi-step booking form (2026-04-01)
+
+**Built:** `public/js/booking-form.js` — two-step booking form that replaces calendar after date selection.
+
+**Flow:**
+- User picks date on calendar → calendar hides, booking form shows
+- Step 1: Booking details (guests, time, change date button)
+- Step 2: Personal details (name, email, phone, dietary requirements)
+- Submit → POST to `/api/reservations`
+- Success → confirmation message with "Make Another Booking" button
+
+**Key patterns:**
+- Module-scoped `formState` object tracks step, selectedDate, and all form data
+- ES module export: `showBookingForm(selectedDate)` called by calendar.js via dynamic import
+- Navigation: re-used `.calendar-nav button` styles for arrow buttons; "Change date" button calls `hideBookingForm()` to return to calendar
+- Time slots: generated programmatically 12:00 to 21:30 in 30-min intervals
+- Step validation: Step 1 requires guests ≥ 1 and time selected; Step 2 requires firstName, surname, email, telephone (non-empty)
+- Real-time validation: input event listeners update button disabled states immediately
+- Tenant ID resolution: `getTenantId()` checks `data-tenant-id` on `<body>` first, then falls back to URL query param `?tenant_id=`
+- Error handling: inline error messages above submit button; network errors and API errors handled separately
+- Success state: replaces form with confirmation message including booking details and reset button
+
+**Dark theme form styling:**
+- All form inputs use dark theme (background-light, primary focus border, foreground text)
+- `.form-group` overrides scoped to `#booking-container` to avoid conflicts with existing white `.form-container`
+- Step indicator shows "Step X of 2" with primary-lighter color on background-light
+- Selected date info box with "Change date" button styled like calendar nav
+- Responsive: stacks header vertically on small screens
+
+**DOM structure:**
+- Added `id="calendar-container"` to existing `.calendar-container` div in index.html
+- Added `<div id="booking-container" hidden></div>` after calendar container
+- Added `<script type="module" src="/js/booking-form.js"></script>` to index.html
+- Form built dynamically via `.innerHTML` in `renderStep1()` and `renderStep2()`
+
+**Files modified:**
+- `public/index.html` — added IDs and booking container
+- `public/js/calendar.js` — added dynamic import call in `selectDay()`
+- `public/styles.css` — added dark theme form styles at end
+- `public/js/booking-form.js` — new module (created)

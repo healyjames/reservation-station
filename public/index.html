@@ -10,7 +10,7 @@
     <script src="/js/theme.js"></script>
   </head>
   <body>
-    <div class="calendar-container" role="region" aria-label="Date picker">
+    <div id="calendar-container" class="calendar-container" role="region" aria-label="Date picker">
       <div class="calendar-header">
         <h2 id="calendar-title"></h2>
         <div class="calendar-nav">
@@ -25,6 +25,9 @@
       </div>
     </div>
 
+    <div id="booking-container" hidden></div>
+
     <script type="module" src="/js/calendar.js"></script>
+    <script type="module" src="/js/booking-form.js"></script>
   </body>
 </html>
