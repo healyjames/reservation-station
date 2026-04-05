@@ -51,7 +51,7 @@ Resolution is **first-match-wins** — the highest layer with a value wins.
 5. CHECK Layer 3: Determine task type:
    - Code (implementation, tests, refactoring, bug fixes) → `claude-sonnet-4.6`
    - Prompts, agent designs → `claude-sonnet-4.6`
-   - Visual/design with image analysis → `claude-opus-4.6`
+   - Visual/design with image analysis → `claude-sonnet-4.6`
    - Non-code (docs, planning, triage, changelogs) → `claude-sonnet-4.6`
 6. FALLBACK Layer 4: `claude-sonnet-4.6`
 7. INCLUDE model in spawn acknowledgment: `🔧 {Name} ({resolved_model}) — {task}`
@@ -92,7 +92,7 @@ After resolving the model and including it in the spawn template, this skill is 
 ```json
 {
   "version": 1,
-  "defaultModel": "claude-opus-4.6",
+  "defaultModel": "claude-sonnet-4.6",
   "agentModelOverrides": {
     "fenster": "claude-sonnet-4.6",
     "mcmanus": "claude-sonnet-4.6"
@@ -109,8 +109,8 @@ After resolving the model and including it in the spawn template, this skill is 
 If a model is unavailable (rate limit, plan restriction), retry within the same tier:
 
 ```
-Premium:  claude-opus-4.6 → claude-opus-4.6-fast → claude-opus-4.5 → claude-sonnet-4.6
-Standard: claude-sonnet-4.6 → gpt-5.4 → claude-sonnet-4.5 → gpt-5.3-codex → claude-sonnet-4
+Premium:  claude-sonnet-4.6 → claude-sonnet-4.6-fast → claude-sonnet-4.6 → claude-sonnet-4.6
+Standard: claude-sonnet-4.6 → gpt-5.4 → claude-sonnet-4.6 → gpt-5.3-codex → claude-sonnet-4
 Fast:     claude-sonnet-4.6 → gpt-5.1-codex-mini → gpt-4.1 → gpt-5-mini
 ```
 

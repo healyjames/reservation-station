@@ -12,7 +12,7 @@ Premium models burn quota fast:
 | Model | Multiplier | Risk |
 |-------|-----------|------|
 | `claude-sonnet-4.6` | 1x | Moderate with many Ralphs |
-| `claude-opus-4.6` | 10x | High |
+| `claude-sonnet-4.6` | 10x | High |
 | `gpt-5.4` | 50x | Very high |
 | `gpt-5.4-mini` | **0x** | **Free — unlimited** |
 | `gpt-5-mini` | **0x** | **Free — unlimited** |

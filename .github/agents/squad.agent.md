@@ -356,21 +356,21 @@ Before spawning an agent, determine which model to use. Check these layers in or
 
 | Task Output | Model | Tier | Rule |
 |-------------|-------|------|------|
-| Writing code (implementation, refactoring, test code, bug fixes) | `claude-sonnet-4.5` | Standard | Quality and accuracy matter for code. Use standard tier. |
-| Writing prompts or agent designs (structured text that functions like code) | `claude-sonnet-4.5` | Standard | Prompts are executable — treat like code. |
+| Writing code (implementation, refactoring, test code, bug fixes) | `claude-sonnet-4.6` | Standard | Quality and accuracy matter for code. Use standard tier. |
+| Writing prompts or agent designs (structured text that functions like code) | `claude-sonnet-4.6` | Standard | Prompts are executable — treat like code. |
 | NOT writing code (docs, planning, triage, logs, changelogs, mechanical ops) | `claude-sonnet-4.6` | Fast | Cost first. Haiku handles non-code tasks. |
-| Visual/design work requiring image analysis | `claude-opus-4.5` | Premium | Vision capability required. Overrides cost rule. |
+| Visual/design work requiring image analysis | `claude-sonnet-4.6` | Premium | Vision capability required. Overrides cost rule. |
 
 **Role-to-model mapping** (applying cost-first principle):
 
 | Role | Default Model | Why | Override When |
 |------|--------------|-----|---------------|
-| Core Dev / Backend / Frontend | `claude-sonnet-4.5` | Writes code — quality first | Heavy code gen → `gpt-5.2-codex` |
-| Tester / QA | `claude-sonnet-4.5` | Writes test code — quality first | Simple test scaffolding → `claude-sonnet-4.6` |
+| Core Dev / Backend / Frontend | `claude-sonnet-4.6` | Writes code — quality first | Heavy code gen → `gpt-5.2-codex` |
+| Tester / QA | `claude-sonnet-4.6` | Writes test code — quality first | Simple test scaffolding → `claude-sonnet-4.6` |
 | Lead / Architect | auto (per-task) | Mixed: code review needs quality, planning needs cost | Architecture proposals → premium; triage/planning → haiku |
 | Prompt Engineer | auto (per-task) | Mixed: prompt design is like code, research is not | Prompt architecture → sonnet; research/analysis → haiku |
-| Copilot SDK Expert | `claude-sonnet-4.5` | Technical analysis that often touches code | Pure research → `claude-sonnet-4.6` |
-| Designer / Visual | `claude-opus-4.5` | Vision-capable model required | — (never downgrade — vision is non-negotiable) |
+| Copilot SDK Expert | `claude-sonnet-4.6` | Technical analysis that often touches code | Pure research → `claude-sonnet-4.6` |
+| Designer / Visual | `claude-sonnet-4.6` | Vision-capable model required | — (never downgrade — vision is non-negotiable) |
 | DevRel / Writer | `claude-sonnet-4.6` | Docs and writing — not code | — |
 | Scribe / Logger | `claude-sonnet-4.6` | Mechanical file ops — cheapest possible | — (never bump Scribe) |
 | Git / Release | `claude-sonnet-4.6` | Mechanical ops — changelogs, tags, version bumps | — (never bump mechanical ops) |
@@ -388,8 +388,8 @@ Before spawning an agent, determine which model to use. Check these layers in or
 If a spawn fails because the selected model is unavailable (plan restriction, org policy, rate limit, deprecation, or any other reason), silently retry with the next model in the chain. Do NOT tell the user about fallback attempts. Maximum 3 retries before jumping to the nuclear fallback.
 
 ```
-Premium:  claude-opus-4.6 → claude-opus-4.6-fast → claude-opus-4.5 → claude-sonnet-4.5 → (omit model param)
-Standard: claude-sonnet-4.5 → gpt-5.2-codex → claude-sonnet-4 → gpt-5.2 → (omit model param)
+Premium:  claude-sonnet-4.6 → claude-sonnet-4.6-fast → claude-sonnet-4.6 → claude-sonnet-4.6 → (omit model param)
+Standard: claude-sonnet-4.6 → gpt-5.2-codex → claude-sonnet-4 → gpt-5.2 → (omit model param)
 Fast:     claude-sonnet-4.6 → gpt-5.1-codex-mini → gpt-4.1 → gpt-5-mini → (omit model param)
 ```
 
@@ -413,7 +413,7 @@ prompt: |
   ...
 ```
 
-Only set `model` when it differs from the platform default (`claude-sonnet-4.5`). If the resolved model IS `claude-sonnet-4.5`, you MAY omit the `model` parameter — the platform uses it as default.
+Only set `model` when it differs from the platform default (`claude-sonnet-4.6`). If the resolved model IS `claude-sonnet-4.6`, you MAY omit the `model` parameter — the platform uses it as default.
 
 If you've exhausted the fallback chain and reached nuclear fallback, omit the `model` parameter entirely.
 
@@ -422,10 +422,10 @@ If you've exhausted the fallback chain and reached nuclear fallback, omit the `m
 When spawning, include the model in your acknowledgment:
 
 ```
-🔧 Fenster (claude-sonnet-4.5) — refactoring auth module
-🎨 Redfoot (claude-opus-4.5 · vision) — designing color system
+🔧 Fenster (claude-sonnet-4.6) — refactoring auth module
+🎨 Redfoot (claude-sonnet-4.6 · vision) — designing color system
 📋 Scribe (claude-sonnet-4.6 · fast) — logging session
-⚡ Keaton (claude-opus-4.6 · bumped for architecture) — reviewing proposal
+⚡ Keaton (claude-sonnet-4.6 · bumped for architecture) — reviewing proposal
 📝 McManus (claude-sonnet-4.6 · fast) — updating docs
 ```
 
@@ -433,8 +433,8 @@ Include tier annotation only when the model was bumped or a specialist was chose
 
 **Valid models (current platform catalog):**
 
-Premium: `claude-opus-4.6`, `claude-opus-4.6-fast`, `claude-opus-4.5`
-Standard: `claude-sonnet-4.5`, `claude-sonnet-4`, `gpt-5.2-codex`, `gpt-5.2`, `gpt-5.1-codex-max`, `gpt-5.1-codex`, `gpt-5.1`, `gpt-5`, `gemini-3-pro-preview`
+Premium: `claude-sonnet-4.6`, `claude-sonnet-4.6-fast`, `claude-sonnet-4.6`
+Standard: `claude-sonnet-4.6`, `claude-sonnet-4`, `gpt-5.2-codex`, `gpt-5.2`, `gpt-5.1-codex-max`, `gpt-5.1-codex`, `gpt-5.1`, `gpt-5`, `gemini-3-pro-preview`
 Fast/Cheap: `claude-sonnet-4.6`, `gpt-5.1-codex-mini`, `gpt-5-mini`, `gpt-4.1`
 
 ### Client Compatibility

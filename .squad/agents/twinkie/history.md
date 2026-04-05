@@ -95,3 +95,31 @@ public/
 - `public/js/calendar.js` — added dynamic import call in `selectDay()`
 - `public/styles.css` — added dark theme form styles at end
 - `public/js/booking-form.js` — new module (created)
+
+### Blocked time slots filtering (2026-04-01)
+
+**Added:** Dynamic time slot filtering based on restaurant capacity using backend `blocked-times` endpoint.
+
+**Flow:**
+- When booking form opens, fetch blocked times for selected date + default guest count (2)
+- When guest count changes, re-fetch blocked times and filter dropdown dynamically
+- If selected time becomes blocked, reset it and force re-selection
+- If all times blocked, show friendly message instead of empty dropdown
+
+**Key patterns:**
+- `formState.blockedTimes` array stores current blocked time strings (HH:MM format)
+- `fetchBlockedTimes(date, guests)` async function hits `/api/reservations/blocked-times?tenant_id={id}&date={YYYY-MM-DD}&guests={n}`, fails gracefully (returns `[]` on error = fail-open UX)
+- `showBookingForm(selectedDate)` made async to fetch initial blocked times before rendering
+- Guests change handler re-fetches + re-renders entire step 1 (clean state sync)
+- Time dropdown filters `TIME_SLOTS.filter(slot => !formState.blockedTimes.includes(slot))`
+- No-availability message: `<p class="no-availability">` with helpful suggestion to try fewer guests or different date
+- `resetForm()` includes `blockedTimes: []` cleanup
+
+**UX decisions:**
+- Fail open: network/API errors show all slots rather than blocking user
+- Immediate feedback: guest count change triggers instant re-fetch and dropdown update
+- Clear messaging: when fully blocked, suggest actionable alternatives (fewer guests / different date)
+- Selection preservation: time choice only reset if it becomes newly blocked, otherwise retained across guest changes
+
+**Files modified:**
+- `public/js/booking-form.js` — added blocked times fetching, filtering, and dynamic re-rendering
