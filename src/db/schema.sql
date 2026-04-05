@@ -39,7 +39,7 @@ CREATE INDEX idx_tenants_code ON Tenants(tenant_code);
 INSERT INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, block_current_day, concurrent_guests_time_limit) VALUES
 ('6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'The Red Cow',        'redcow',        6,  50,  'active', 0, 120),
 ('59986b7d-a829-4315-9b49-f643ec83cf47', 'The Crown & Anchor', 'crownandanchor', 8,  80,  'active', 0, 120),
-('bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'The Oak Tavern',     'oaktavern',      10, 100, 'active', 1, 120);
+('bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'The Oak Tavern',     'oaktavern',      10, 50, 'active', 1, 120);
 
 INSERT INTO Reservations (id, tenant_id, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements, created_date, modified_date) VALUES
 ('theredcow-1', '6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'John',     'Smith',   '7123456789', 'john.smith@email.com',      '2026-04-01', '18:00', 2, NULL,          '2026-04-01 18:45:39', '2026-04-01 18:45:39'),
@@ -56,4 +56,12 @@ INSERT INTO Reservations (id, tenant_id, first_name, surname, telephone, email, 
 ('theoakandtavern-2',   'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Mia',      'Allen',   '7222222222', 'mia.allen@email.com',       '2026-04-01', '19:45', 2, 'Vegetarian', '2026-04-01 18:46:08', '2026-04-01 18:46:08'),
 ('theoakandtavern-3',   'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Benjamin', 'Young',   '7333333333', 'ben.young@email.com',       '2026-04-02', '20:15', 6, NULL,          '2026-04-01 18:46:08', '2026-04-01 18:46:08'),
 ('theoakandtavern-4',   'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Charlotte','King',    '7444444444', 'charlotte.king@email.com',  '2026-04-03', '18:30', 4, 'Dairy-free', '2026-04-01 18:46:08', '2026-04-01 18:46:08'),
-('theoakandtavern-5',   'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Lucas',    'Scott',   '7555555555', 'lucas.scott@email.com',     '2026-04-04', '19:00', 3, NULL,          '2026-04-01 18:46:08', '2026-04-01 18:46:08');
+('theoakandtavern-5',   'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Lucas',    'Scott',   '7555555555', 'lucas.scott@email.com',     '2026-04-04', '19:00', 3, NULL,          '2026-04-01 18:46:08', '2026-04-01 18:46:08'),
+-- Oak Tavern concurrent capacity test scenario (2027-06-15)
+-- max_guests=10 concurrent within 120-min window
+-- Lunch cluster: 13:00(4) + 13:30(4) = 8 concurrent — one more big group would tip it
+-- Adding ≥3 guests to any slot within 120 min of 13:00-13:30 would exceed limit
+('theoaktavern-test-1', 'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Grace',  'Taylor', '7600000001', 'grace.taylor@test.com',  '2027-06-15', '13:00', 4, NULL, '2026-04-05 07:00:00', '2026-04-05 07:00:00'),
+('theoaktavern-test-2', 'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Henry',  'Evans',  '7600000002', 'henry.evans@test.com',   '2027-06-15', '13:30', 4, NULL, '2026-04-05 07:00:00', '2026-04-05 07:00:00'),
+('theoaktavern-test-3', 'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Isabel', 'Brown',  '7600000003', 'isabel.brown@test.com',  '2027-06-15', '19:00', 3, NULL, '2026-04-05 07:00:00', '2026-04-05 07:00:00'),
+('theoaktavern-test-4', 'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Jack',   'Wilson', '7600000004', 'jack.wilson@test.com',   '2027-06-15', '20:00', 2, NULL, '2026-04-05 07:00:00', '2026-04-05 07:00:00');
