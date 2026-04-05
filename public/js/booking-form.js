@@ -82,7 +82,7 @@ function renderStep1(container) {
   const dateDisplay = formatDateForDisplay(formState.selectedDate);
   const availableSlots = TIME_SLOTS.filter(slot => !formState.blockedTimes.includes(slot));
 
-  const timeSelectHTML = availableSlots.length > 0 
+  const timeSelectHTML = availableSlots.length > 0
     ? `<select id="time" name="time" required>
         <option value="">Select a time</option>
         ${availableSlots.map(slot => `
@@ -161,14 +161,36 @@ function renderStep1(container) {
 
   guestsInput.addEventListener('change', async (e) => {
     formState.formData.guests = parseInt(e.target.value) || 1;
-    // Re-check blocked times for new guest count
     formState.blockedTimes = await fetchBlockedTimes(formState.selectedDate, formState.formData.guests);
-    // Reset time selection if it's now blocked
     if (formState.blockedTimes.includes(formState.formData.time)) {
       formState.formData.time = '';
     }
-    // Re-render step 1 to update the time dropdown
-    renderCurrentStep();
+
+    // Update only the time dropdown to avoid re-rendering the whole step
+    const timeFormGroup = container.querySelector('#time')?.closest('.form-group')
+      ?? container.querySelectorAll('.form-group')[1];
+    const availableSlots = TIME_SLOTS.filter(slot => !formState.blockedTimes.includes(slot));
+    timeFormGroup.innerHTML = `
+      <label for="time">Dining Time</label>
+      ${availableSlots.length > 0
+        ? `<select id="time" name="time" required>
+            <option value="">Select a time</option>
+            ${availableSlots.map(slot => `
+              <option value="${slot}" ${formState.formData.time === slot ? 'selected' : ''}>${slot}</option>
+            `).join('')}
+          </select>`
+        : `<p class="no-availability" style="color: var(--primary-lighter); margin: 0;">No times available for this date with ${formState.formData.guests} guests. Try a different date or fewer guests.</p>`
+      }
+    `;
+
+    const newTimeSelect = timeFormGroup.querySelector('#time');
+    if (newTimeSelect) {
+      newTimeSelect.addEventListener('change', (ev) => {
+        formState.formData.time = ev.target.value;
+        updateNextButton();
+      });
+    }
+    updateNextButton();
   });
 
   if (timeSelect) {
