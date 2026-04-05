@@ -54,7 +54,7 @@ function isValidPhone(v) {
 // Validate step 1 (guests and time)
 function validateStep1() {
   const maxGuests = tenantConfig?.max_guests ?? 20;
-  return formState.formData.guests >= 1 &&
+  return formState.formData.guests >= 2 &&
          formState.formData.guests <= maxGuests &&
          formState.formData.time !== '';
 }
@@ -98,15 +98,14 @@ function renderStep1(container) {
       <form id="booking-form-step1">
         <div class="form-group">
           <label for="guests">Number of Guests</label>
-          <input
-            type="number"
-            id="guests"
-            name="guests"
-            min="1"
-            max="${tenantConfig?.max_guests ?? 20}"
-            value="${formState.formData.guests}"
-            required
-          />
+          <select id="guests" name="guests" required>
+            ${Array.from(
+              { length: (tenantConfig?.max_guests ?? 20) - 1 },
+              (_, i) => i + 2
+            ).map(n => `
+              <option value="${n}" ${formState.formData.guests === n ? 'selected' : ''}>${n}</option>
+            `).join('')}
+          </select>
         </div>
 
         <div class="form-group">
@@ -148,7 +147,7 @@ function renderStep1(container) {
     nextBtnFooter.disabled = !valid;
   }
 
-  guestsInput.addEventListener('input', (e) => {
+  guestsInput.addEventListener('change', (e) => {
     formState.formData.guests = parseInt(e.target.value) || 1;
     updateNextButton();
   });
