@@ -1,32 +1,29 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Hello, World!</title>
-	</head>
-	<body>
-		<h1 id="heading"></h1>
-		<p>This page comes from a static asset stored at `public/index.html` as configured in `wrangler.jsonc`.</p>
-		<button id="button" type="button">Fetch a random UUID</button>
-		<output id="random" for="button"></output>
-		<script>
-			fetch('/message')
-				.then((resp) => resp.text())
-				.then((text) => {
-					const h1 = document.getElementById('heading');
-					h1.textContent = text;
-				});
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Make a Reservation — Reservation Station</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/js/theme.js"></script>
+  </head>
+  <body>
+    <div id="calendar-container" class="calendar-container" role="region" aria-label="Date picker">
+      <div class="calendar-header">
+        <h2 id="calendar-title"></h2>
+        <div class="calendar-nav">
+          <button id="prev-month" aria-label="Previous month" disabled>&#8592;</button>
+          <button id="next-month" aria-label="Next month">&#8594;</button>
+        </div>
+      </div>
+      <div class="calendar-grid" id="calendar-grid" role="grid"></div>
+    </div>
 
-			const button = document.getElementById("button");
-			button.addEventListener("click", () => {
-				fetch('/api/beverages')
-					.then((resp) => resp.text())
-					.then((text) => {
-						const random = document.getElementById('random');
-						random.textContent = text;
-					});
-			});
-		</script>
-	</body>
+    <div id="booking-container" hidden></div>
+
+    <script type="module" src="/js/calendar.js"></script>
+    <script type="module" src="/js/booking-form.js"></script>
+  </body>
 </html>

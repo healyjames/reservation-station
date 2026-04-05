@@ -1,0 +1,6 @@
+{
+  "universe_allowlist": ["fast-and-furious-tokyo-drift"],
+  "max_agents_before_overflow": 12,
+  "allow_overflow": true,
+  "overflow_strategy": "diegetic-expansion"
+}

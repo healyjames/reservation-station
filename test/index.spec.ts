@@ -10,8 +10,8 @@ const RES_ID = '00000000-0000-4000-8000-000000000010';
 async function seedTenant(overrides: Record<string, unknown> = {}) {
 	await env.maximum_bookings_db
 		.prepare(
-			`INSERT OR REPLACE INTO Tenants (id, name, max_guests, max_covers, status, block_current_day)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+			`INSERT OR REPLACE INTO Tenants (id, name, max_guests, max_covers, status, block_current_day, concurrent_guests_time_limit)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		)
 		.bind(
 			overrides.id ?? TENANT_ID,
@@ -20,6 +20,7 @@ async function seedTenant(overrides: Record<string, unknown> = {}) {
 			overrides.max_covers ?? 20,
 			overrides.status ?? 'active',
 			overrides.block_current_day ?? 0,
+			overrides.concurrent_guests_time_limit ?? 120,
 		)
 		.run();
 }
@@ -430,6 +431,151 @@ describe('Reservations', () => {
 			const body = (await res.json()) as any;
 			expect(body.booked).toBe(0);
 			expect(body.remaining).toBe(20);
+		});
+	});
+
+	// GET /api/reservations/blocked-times
+	describe('GET /api/reservations/blocked-times', () => {
+		it('returns 400 when required params are missing', async () => {
+			// Missing tenant_id
+			let res = await exports.default.fetch(`http://localhost/api/reservations/blocked-times?date=2099-08-01&guests=4`);
+			expect(res.status).toBe(400);
+
+			// Missing date
+			res = await exports.default.fetch(`http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&guests=4`);
+			expect(res.status).toBe(400);
+
+			// Missing guests
+			res = await exports.default.fetch(`http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-08-01`);
+			expect(res.status).toBe(400);
+		});
+
+		it('returns 404 for unknown tenant', async () => {
+			const res = await exports.default.fetch(
+				`http://localhost/api/reservations/blocked-times?tenant_id=00000000-0000-4000-8000-999999999999&date=2099-08-01&guests=4`,
+			);
+			expect(res.status).toBe(404);
+		});
+
+		it('returns empty blocked_times when no reservations exist', async () => {
+			await seedTenant({ max_guests: 10, concurrent_guests_time_limit: 120 });
+			const res = await exports.default.fetch(
+				`http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-08-01&guests=4`,
+			);
+			const body = (await res.json()) as any;
+			expect(res.status).toBe(200);
+			expect(body.blocked_times).toEqual([]);
+			expect(body.time_limit_minutes).toBe(120);
+		});
+
+		it('returns empty blocked_times when max_guests is 0 (no limit)', async () => {
+			await seedTenant({ max_guests: 0, concurrent_guests_time_limit: 120 });
+			await seedReservation({ reservation_date: '2099-08-01', reservation_time: '14:00', guests: 10 });
+			const res = await exports.default.fetch(
+				`http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-08-01&guests=5`,
+			);
+			const body = (await res.json()) as any;
+			expect(res.status).toBe(200);
+			expect(body.blocked_times).toEqual([]);
+		});
+
+		it('blocks a slot when concurrent guests would exceed max_guests', async () => {
+			await seedTenant({ max_guests: 6, concurrent_guests_time_limit: 120 });
+			await seedReservation({ reservation_date: '2099-08-01', reservation_time: '14:00', guests: 5 });
+			const res = await exports.default.fetch(
+				`http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-08-01&guests=3`,
+			);
+			const body = (await res.json()) as any;
+			expect(res.status).toBe(200);
+			expect(body.blocked_times).toContain('14:00');
+		});
+
+		it('does not block a slot when concurrent guests are within limit', async () => {
+			await seedTenant({ max_guests: 10, concurrent_guests_time_limit: 120 });
+			await seedReservation({ reservation_date: '2099-08-01', reservation_time: '14:00', guests: 3 });
+			const res = await exports.default.fetch(
+				`http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-08-01&guests=2`,
+			);
+			const body = (await res.json()) as any;
+			expect(res.status).toBe(200);
+			expect(body.blocked_times).toEqual([]);
+		});
+
+		it('respects concurrent_guests_time_limit — distant slots are not blocked', async () => {
+			await seedTenant({ max_guests: 6, concurrent_guests_time_limit: 60 });
+			await seedReservation({ reservation_date: '2099-08-01', reservation_time: '14:00', guests: 5 });
+			const res = await exports.default.fetch(
+				`http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-08-01&guests=3`,
+			);
+			const body = (await res.json()) as any;
+			expect(res.status).toBe(200);
+			expect(body.blocked_times).toContain('14:00');
+			expect(body.blocked_times).not.toContain('12:00');
+		});
+	});
+
+	// GET /api/reservations/blocked-times — Oak Tavern real-world scenario
+	describe('GET /api/reservations/blocked-times — Oak Tavern scenario', () => {
+		it('lunch cluster — slots within window are blocked for large groups', async () => {
+			await seedTenant({ max_guests: 10, concurrent_guests_time_limit: 120 });
+			await seedReservation({ id: RES_ID, reservation_date: '2099-06-15', reservation_time: '13:00', guests: 4 });
+			await seedReservation({ id: '00000000-0000-4000-8000-000000000020', reservation_date: '2099-06-15', reservation_time: '13:30', guests: 4 });
+			const res = await exports.default.fetch(
+				`http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-06-15&guests=3`,
+			);
+			const body = (await res.json()) as any;
+			expect(res.status).toBe(200);
+			expect(body.blocked_times).toContain('13:00'); // 4+4+3=11 > 10
+			expect(body.blocked_times).toContain('13:30');
+			expect(body.blocked_times).toContain('14:00'); // within 120 min of both bookings: 4+4+3=11 > 10
+		});
+
+		it('lunch cluster — slots within window are OK for small groups (1 guest)', async () => {
+			await seedTenant({ max_guests: 10, concurrent_guests_time_limit: 120 });
+			await seedReservation({ id: RES_ID, reservation_date: '2099-06-15', reservation_time: '13:00', guests: 4 });
+			await seedReservation({ id: '00000000-0000-4000-8000-000000000020', reservation_date: '2099-06-15', reservation_time: '13:30', guests: 4 });
+			const res = await exports.default.fetch(
+				`http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-06-15&guests=1`,
+			);
+			const body = (await res.json()) as any;
+			expect(res.status).toBe(200);
+			expect(body.blocked_times).not.toContain('13:00'); // 4+4+1=9 <= 10
+			expect(body.blocked_times).not.toContain('13:30');
+		});
+
+		it('evening slots are not affected by lunch cluster', async () => {
+			await seedTenant({ max_guests: 10, concurrent_guests_time_limit: 120 });
+			await seedReservation({ id: RES_ID, reservation_date: '2099-06-15', reservation_time: '13:00', guests: 4 });
+			await seedReservation({ id: '00000000-0000-4000-8000-000000000020', reservation_date: '2099-06-15', reservation_time: '13:30', guests: 4 });
+			const res = await exports.default.fetch(
+				`http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-06-15&guests=3`,
+			);
+			const body = (await res.json()) as any;
+			expect(res.status).toBe(200);
+			expect(body.blocked_times).not.toContain('16:00'); // 180 min from 13:00, 150 min from 13:30 — both ≥ 120
+			expect(body.blocked_times).not.toContain('19:00');
+			expect(body.blocked_times).not.toContain('20:00');
+		});
+
+		it('multiple reservations pushed close to limit — exact boundary', async () => {
+			await seedTenant({ max_guests: 10, concurrent_guests_time_limit: 120 });
+			await seedReservation({ id: RES_ID, reservation_date: '2099-06-15', reservation_time: '13:00', guests: 4 });
+			await seedReservation({ id: '00000000-0000-4000-8000-000000000020', reservation_date: '2099-06-15', reservation_time: '13:30', guests: 3 });
+			await seedReservation({ id: '00000000-0000-4000-8000-000000000021', reservation_date: '2099-06-15', reservation_time: '14:00', guests: 2 });
+			// 4+3+2=9 concurrent; 9+1=10 which is NOT > 10 — should NOT be blocked
+			const resA = await exports.default.fetch(
+				`http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-06-15&guests=1`,
+			);
+			const bodyA = (await resA.json()) as any;
+			expect(resA.status).toBe(200);
+			expect(bodyA.blocked_times).not.toContain('13:30');
+			// 4+3+2=9 concurrent; 9+2=11 > 10 — should be blocked
+			const resB = await exports.default.fetch(
+				`http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-06-15&guests=2`,
+			);
+			const bodyB = (await resB.json()) as any;
+			expect(resB.status).toBe(200);
+			expect(bodyB.blocked_times).toContain('13:30');
 		});
 	});
 });
