@@ -148,9 +148,9 @@
   };
 
   var params = new URLSearchParams(window.location.search);
-  var themeName = params.get('theme') || 'clean-slate';
+  var themeName = params.get('theme') || 'caffeine';
   var mode = params.get('mode') === 'light' ? 'light' : 'dark';
-  var themeSet = THEMES[themeName] || THEMES['clean-slate'];
+  var themeSet = THEMES[themeName] || THEMES['caffeine'];
   var theme = themeSet[mode];
   var root = document.documentElement;
   Object.keys(theme).forEach(function (prop) {

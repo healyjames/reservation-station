@@ -1,33 +1,16 @@
-/* Load Lora from Google Fonts and expose it as SecondaryFont */
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@font-face {
+  font-family: 'Google Sans';
+  src: url('/fonts/GoogleSans-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
 
-/* SecondaryFont declaration — sourced from the Google Fonts-loaded Lora */
 @font-face {
-  font-family: 'SecondaryFont';
-  src: local('Lora'), local('Lora-Regular');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'SecondaryFont';
-  src: local('Lora'), local('Lora-Medium');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'SecondaryFont';
-  src: local('Lora'), local('Lora-SemiBold');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'SecondaryFont';
-  src: local('Lora'), local('Lora-Bold');
-  font-weight: 700;
-  font-style: normal;
+  font-family: 'Google Sans';
+  src: url('/fonts/GoogleSans-Italic-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
   font-display: swap;
 }
 
@@ -89,7 +72,7 @@
 .calendar-container {
   background: var(--background);
   padding: 24px;
-  font-family: 'SecondaryFont';
+  font-family: 'Google Sans', sans-serif;
 }
 
 .calendar-header {
@@ -184,7 +167,7 @@
   padding: 32px;
   box-shadow: -20px 20px 60px var(--background-darker), 20px -20px 60px white;
   animation: slideIn 0.3s ease-out;
-  font-family: 'SecondaryFont';
+  font-family: 'Google Sans', sans-serif;
 }
 
 @keyframes slideIn {
@@ -241,7 +224,7 @@
 .message {
   border-radius: 8px;
   margin-bottom: 20px;
-  font-family: 'SecondaryFont';
+  font-family: 'Google Sans', sans-serif;
   padding: 1.5rem 2.5rem;
 }
 
@@ -297,11 +280,10 @@
    ADDITIONAL STYLES
    ============================================================ */
 
-/* Resolve SecondaryFont to Lora for environments where local() isn't matched */
 .calendar-container,
 .form-container,
 .message {
-  font-family: 'Lora', 'SecondaryFont', Georgia, serif;
+  font-family: 'Google Sans', sans-serif;
 }
 
 /* Today: distinct border + dot indicator (not the same as selected) */
@@ -352,7 +334,7 @@ html, body {
   padding: 0;
   height: 100%;
   background: var(--background);
-  font-family: 'Lora', Georgia, serif;
+  font-family: 'Google Sans', sans-serif;
   color: var(--foreground);
 }
 
@@ -388,7 +370,7 @@ html, body {
 #booking-container {
   background: var(--background);
   padding: 24px;
-  font-family: 'Lora', 'SecondaryFont', Georgia, serif;
+  font-family: 'Google Sans', sans-serif;
   height: 100%;
   width: 100%;
 }
