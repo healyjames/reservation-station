@@ -7,7 +7,8 @@ CREATE TABLE Tenants (
     max_guests INTEGER NOT NULL DEFAULT 0,
     max_covers INTEGER NOT NULL DEFAULT 0,
     status TEXT NOT NULL CHECK (status IN ('active', 'cancelled')) DEFAULT 'active',
-    block_current_day BOOLEAN NOT NULL DEFAULT FALSE
+    block_current_day BOOLEAN NOT NULL DEFAULT FALSE,
+    concurrent_guests_time_limit INTEGER NOT NULL DEFAULT 120
 );
 
 DROP TABLE IF EXISTS Reservations;
@@ -35,10 +36,10 @@ CREATE TABLE Reservations (
 CREATE INDEX idx_booking_tenant ON Reservations(tenant_id);
 CREATE INDEX idx_tenants_code ON Tenants(tenant_code);
 
-INSERT INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, block_current_day) VALUES
-('6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'The Red Cow',        'redcow',        6,  50,  'active', 0),
-('59986b7d-a829-4315-9b49-f643ec83cf47', 'The Crown & Anchor', 'crownandanchor', 8,  80,  'active', 0),
-('bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'The Oak Tavern',     'oaktavern',      10, 100, 'active', 1);
+INSERT INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, block_current_day, concurrent_guests_time_limit) VALUES
+('6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'The Red Cow',        'redcow',        6,  50,  'active', 0, 120),
+('59986b7d-a829-4315-9b49-f643ec83cf47', 'The Crown & Anchor', 'crownandanchor', 8,  80,  'active', 0, 120),
+('bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'The Oak Tavern',     'oaktavern',      10, 100, 'active', 1, 120);
 
 INSERT INTO Reservations (id, tenant_id, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements, created_date, modified_date) VALUES
 ('theredcow-1', '6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'John',     'Smith',   '7123456789', 'john.smith@email.com',      '2026-04-01', '18:00', 2, NULL,          '2026-04-01 18:45:39', '2026-04-01 18:45:39'),

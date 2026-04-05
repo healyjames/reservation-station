@@ -4,6 +4,7 @@ import { tenantConfig } from './tenants.js';
 let formState = {
   step: 1,
   selectedDate: null,
+  blockedTimes: [],
   formData: {
     guests: 2,
     time: '',
@@ -42,6 +43,21 @@ function formatDateForDisplay(date) {
   });
 }
 
+// Fetch blocked times for a given date and guest count
+async function fetchBlockedTimes(date, guests) {
+  const tenantId = tenantConfig?.id;
+  if (!tenantId) return [];
+  try {
+    const dateStr = formatDateForAPI(date);
+    const res = await fetch(`/api/reservations/blocked-times?tenant_id=${tenantId}&date=${dateStr}&guests=${guests}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.blocked_times ?? [];
+  } catch {
+    return [];
+  }
+}
+
 // Validate step 1 (guests and time)
 function validateStep1() {
   const maxGuests = tenantConfig?.max_guests ?? 20;
@@ -64,6 +80,18 @@ function validateStep2() {
 // Render step 1: Booking details
 function renderStep1(container) {
   const dateDisplay = formatDateForDisplay(formState.selectedDate);
+  const availableSlots = TIME_SLOTS.filter(slot => !formState.blockedTimes.includes(slot));
+
+  const timeSelectHTML = availableSlots.length > 0 
+    ? `<select id="time" name="time" required>
+        <option value="">Select a time</option>
+        ${availableSlots.map(slot => `
+          <option value="${slot}" ${formState.formData.time === slot ? 'selected' : ''}>
+            ${slot}
+          </option>
+        `).join('')}
+      </select>`
+    : `<p class="no-availability" style="color: var(--primary-lighter); margin: 0;">No times available for this date with ${formState.formData.guests} guests. Try a different date or fewer guests.</p>`;
 
   container.innerHTML = `
     <div class="booking-form-content">
@@ -101,14 +129,7 @@ function renderStep1(container) {
 
         <div class="form-group">
           <label for="time">Dining Time</label>
-          <select id="time" name="time" required>
-            <option value="">Select a time</option>
-            ${TIME_SLOTS.map(slot => `
-              <option value="${slot}" ${formState.formData.time === slot ? 'selected' : ''}>
-                ${slot}
-              </option>
-            `).join('')}
-          </select>
+          ${timeSelectHTML}
         </div>
 
         <button type="button" class="button-secondary full-width" id="next-step-btn-footer" ${validateStep1() ? '' : 'disabled'}>
@@ -138,15 +159,24 @@ function renderStep1(container) {
     nextBtnFooter.disabled = !valid;
   }
 
-  guestsInput.addEventListener('change', (e) => {
+  guestsInput.addEventListener('change', async (e) => {
     formState.formData.guests = parseInt(e.target.value) || 1;
-    updateNextButton();
+    // Re-check blocked times for new guest count
+    formState.blockedTimes = await fetchBlockedTimes(formState.selectedDate, formState.formData.guests);
+    // Reset time selection if it's now blocked
+    if (formState.blockedTimes.includes(formState.formData.time)) {
+      formState.formData.time = '';
+    }
+    // Re-render step 1 to update the time dropdown
+    renderCurrentStep();
   });
 
-  timeSelect.addEventListener('change', (e) => {
-    formState.formData.time = e.target.value;
-    updateNextButton();
-  });
+  if (timeSelect) {
+    timeSelect.addEventListener('change', (e) => {
+      formState.formData.time = e.target.value;
+      updateNextButton();
+    });
+  }
 
   nextBtn.addEventListener('click', advanceToStep2);
   nextBtnFooter.addEventListener('click', advanceToStep2);
@@ -378,6 +408,7 @@ function resetForm() {
   formState = {
     step: 1,
     selectedDate: null,
+    blockedTimes: [],
     formData: {
       guests: 2,
       time: '',
@@ -410,7 +441,7 @@ function hideBookingForm() {
 }
 
 // Show booking form (called from calendar.js)
-export function showBookingForm(selectedDate) {
+export async function showBookingForm(selectedDate) {
   const bookingContainer = document.getElementById('booking-container');
   const calendarContainer = document.getElementById('calendar-container');
 
@@ -429,6 +460,7 @@ export function showBookingForm(selectedDate) {
 
   formState.selectedDate = selectedDate;
   formState.step = 1;
+  formState.blockedTimes = await fetchBlockedTimes(selectedDate, formState.formData.guests);
 
   calendarContainer.hidden = true;
   bookingContainer.removeAttribute('hidden');
