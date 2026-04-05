@@ -104,12 +104,6 @@ function renderCalendar(year, month) {
 function selectDay(year, month, day) {
   selectedDate = { year, month, day };
 
-  const formatted = new Date(year, month, day).toLocaleDateString('en-GB', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-  });
-  const display = document.getElementById('selected-date-display');
-  display.innerHTML = `<strong>${formatted}</strong>`;
-
   renderCalendar(currentYear, currentMonth);
 
   // Import and show booking form

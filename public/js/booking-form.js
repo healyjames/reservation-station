@@ -42,15 +42,6 @@ function formatDateForDisplay(date) {
   });
 }
 
-// Format validators (match API schema constraints)
-function isValidEmail(v) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
-}
-function isValidPhone(v) {
-  const digits = v.replace(/\D/g, '');
-  return digits.length >= 7 && digits.length <= 15 && /^[+\d\s\-(). ]+$/.test(v.trim());
-}
-
 // Validate step 1 (guests and time)
 function validateStep1() {
   const maxGuests = tenantConfig?.max_guests ?? 20;
@@ -59,14 +50,14 @@ function validateStep1() {
          formState.formData.time !== '';
 }
 
-// Validate step 2 (all required fields + format)
+// Validate step 2 (required fields non-empty — format is enforced by HTML5)
 function validateStep2() {
   const { firstName, surname, email, telephone } = formState.formData;
   return (
     firstName.trim().length > 0 &&
     surname.trim().length > 0 &&
-    isValidEmail(email) &&
-    isValidPhone(telephone)
+    email.trim().length > 0 &&
+    telephone.trim().length > 0
   );
 }
 
@@ -179,7 +170,7 @@ function renderStep2(container) {
         </div>
       </div>
 
-      <form id="booking-form-step2" novalidate>
+      <form id="booking-form-step2">
         <div class="form-group">
           <label for="firstName">First Name *</label>
           <input
@@ -191,7 +182,7 @@ function renderStep2(container) {
             autocomplete="given-name"
             required
           />
-          <span class="field-error" id="firstName-error" hidden></span>
+          <span class="field-error">This field is required</span>
         </div>
 
         <div class="form-group">
@@ -205,7 +196,7 @@ function renderStep2(container) {
             autocomplete="family-name"
             required
           />
-          <span class="field-error" id="surname-error" hidden></span>
+          <span class="field-error">This field is required</span>
         </div>
 
         <div class="form-group">
@@ -218,7 +209,7 @@ function renderStep2(container) {
             autocomplete="email"
             required
           />
-          <span class="field-error" id="email-error" hidden></span>
+          <span class="field-error">Please enter a valid email address</span>
         </div>
 
         <div class="form-group">
@@ -230,9 +221,11 @@ function renderStep2(container) {
             value="${formState.formData.telephone}"
             autocomplete="tel"
             placeholder="+44 7700 900000"
+            pattern="\+?[\d\s\-]{7,15}"
+            title="Please enter a valid phone number (7–15 digits, e.g. +44 7700 900000)"
             required
           />
-          <span class="field-error" id="telephone-error" hidden></span>
+          <span class="field-error">Please enter a valid phone number (e.g. +44 7700 900000)</span>
         </div>
 
         <div class="form-group full-width">
@@ -266,84 +259,14 @@ function renderStep2(container) {
   const prevBtn         = container.querySelector('#prev-step-btn');
   const errorContainer  = container.querySelector('#error-container');
 
-  const firstNameError  = container.querySelector('#firstName-error');
-  const surnameError    = container.querySelector('#surname-error');
-  const emailError      = container.querySelector('#email-error');
-  const telephoneError  = container.querySelector('#telephone-error');
-
-  // Track which fields have been blurred (so "required" only shows after leaving)
-  const touched = new Set();
-
-  function setError(input, errorEl, message) {
-    errorEl.textContent = message;
-    errorEl.hidden = false;
-    input.setAttribute('aria-invalid', 'true');
-  }
-
-  function clearError(input, errorEl) {
-    errorEl.hidden = true;
-    input.removeAttribute('aria-invalid');
-  }
-
-  function validateRequired(input, errorEl) {
-    if (input.value.trim().length === 0) {
-      if (touched.has(input.id)) setError(input, errorEl, 'This field is required');
-      else clearError(input, errorEl);
-      return false;
-    }
-    clearError(input, errorEl);
-    return true;
-  }
-
-  function validateEmail(input, errorEl) {
-    if (input.value.trim().length === 0) {
-      if (touched.has(input.id)) setError(input, errorEl, 'This field is required');
-      else clearError(input, errorEl);
-      return false;
-    }
-    if (!isValidEmail(input.value)) {
-      setError(input, errorEl, 'Please enter a valid email address');
-      return false;
-    }
-    clearError(input, errorEl);
-    return true;
-  }
-
-  function validatePhone(input, errorEl) {
-    if (input.value.trim().length === 0) {
-      if (touched.has(input.id)) setError(input, errorEl, 'This field is required');
-      else clearError(input, errorEl);
-      return false;
-    }
-    if (!isValidPhone(input.value)) {
-      setError(input, errorEl, 'Please enter a valid phone number');
-      return false;
-    }
-    clearError(input, errorEl);
-    return true;
-  }
-
-  // Run all field validations and update the button state
   function runAllValidations() {
-    const firstNameOk = validateRequired(firstNameInput, firstNameError);
-    const surnameOk   = validateRequired(surnameInput, surnameError);
-    const emailOk     = validateEmail(emailInput, emailError);
-    const phoneOk     = validatePhone(telephoneInput, telephoneError);
-    bookNowBtn.disabled = !(firstNameOk && surnameOk && emailOk && phoneOk);
+    bookNowBtn.disabled = !form.checkValidity();
   }
 
-  // Input: validate format immediately; blur: mark touched then revalidate
   firstNameInput.addEventListener('input',  (e) => { formState.formData.firstName  = e.target.value; runAllValidations(); });
-  firstNameInput.addEventListener('blur',   ()  => { touched.add('firstName');  runAllValidations(); });
-
   surnameInput.addEventListener('input',    (e) => { formState.formData.surname    = e.target.value; runAllValidations(); });
-  surnameInput.addEventListener('blur',     ()  => { touched.add('surname');    runAllValidations(); });
-
   emailInput.addEventListener('input',      (e) => { formState.formData.email      = e.target.value; runAllValidations(); });
-  emailInput.addEventListener('blur',       ()  => { touched.add('email');      runAllValidations(); });
-
   telephoneInput.addEventListener('input',  (e) => { formState.formData.telephone  = e.target.value; runAllValidations(); });
-  telephoneInput.addEventListener('blur',   ()  => { touched.add('telephone');  runAllValidations(); });
 
   dietaryTextarea.addEventListener('input', (e) => { formState.formData.dietary = e.target.value; });
 
@@ -354,11 +277,7 @@ function renderStep2(container) {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-
-    // Mark all fields touched so any remaining errors surface
-    ['firstName', 'surname', 'email', 'telephone'].forEach(id => touched.add(id));
-    runAllValidations();
-    if (bookNowBtn.disabled) return;
+    if (!form.checkValidity()) return;
 
     const tenantId = tenantConfig?.id;
     if (!tenantId) {
