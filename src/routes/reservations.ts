@@ -5,7 +5,6 @@ import { generateTimeSlots, calculateConcurrentGuests, SlotReservation } from '.
 
 const reservations = new Hono<{ Bindings: Env }>();
 
-// GET /api/reservations/blocked-times?tenant_id=&date=&guests= — check blocked time slots
 reservations.get('/blocked-times', async (c) => {
 	const tenantId = c.req.query('tenant_id');
 	const date = c.req.query('date');
@@ -52,7 +51,6 @@ reservations.get('/blocked-times', async (c) => {
 	});
 });
 
-// GET /api/reservations/availability?tenant_id=&date= — per-slot concurrent guest counts
 reservations.get('/availability', async (c) => {
 	const tenantId = c.req.query('tenant_id');
 	const dateParam = c.req.query('date');
@@ -92,10 +90,9 @@ reservations.get('/availability', async (c) => {
 	});
 });
 
-// GET /api/reservations — list, optionally filter by tenant + date
 reservations.get('/', async (c) => {
 	const tenantId = c.req.query('tenant_id');
-	const date = c.req.query('date'); // YYYY-MM-DD
+	const date = c.req.query('date');
 
 	let query = 'SELECT * FROM Reservations WHERE 1=1';
 	const bindings: string[] = [];
@@ -119,7 +116,6 @@ reservations.get('/', async (c) => {
 	return c.json(results);
 });
 
-// GET /api/reservations/:id — single reservation
 reservations.get('/:id', async (c) => {
 	const id = c.req.param('id');
 	const row = await c.env.maximum_bookings_db.prepare('SELECT * FROM Reservations WHERE id = ?').bind(id).first<Reservation>();
@@ -128,99 +124,118 @@ reservations.get('/:id', async (c) => {
 	return c.json(row);
 });
 
-// POST /api/reservations — create a reservation (with capacity check)
 reservations.post('/', async (c) => {
-	const parsed = CreateReservationSchema.safeParse(await c.req.json());
-	if (!parsed.success) return c.json({ error: z.prettifyError(parsed.error) }, 400); // TODO: Add error logging
+	const msg = await c.req.json().catch(() => null);
+	const parsed = CreateReservationSchema.safeParse(msg);
+	if (!parsed.success) {
+		console.error('[reservations] POST validation failed', { error: z.prettifyError(parsed.error), tenant_id: msg?.tenant_id });
+		return c.json({ error: z.prettifyError(parsed.error) }, 400);
+	}
 
-	const body: CreateReservation = parsed.data
+	const data: CreateReservation = parsed.data;
 	const id = crypto.randomUUID();
 	const now = new Date().toISOString();
 
-	// Capacity guard — count existing guests on this date for this tenant
 	const { results: existing } = await c.env.maximum_bookings_db
 		.prepare('SELECT COALESCE(SUM(guests), 0) as total FROM Reservations WHERE tenant_id = ? AND reservation_date = ?')
-		.bind(body.tenant_id, body.reservation_date)
+		.bind(data.tenant_id, data.reservation_date)
 		.run<{ total: number }>();
 
 	const tenant = await c.env.maximum_bookings_db
 		.prepare('SELECT max_covers, block_current_day FROM Tenants WHERE id = ?')
-		.bind(body.tenant_id)
+		.bind(data.tenant_id)
 		.first<{ max_covers: number; block_current_day: boolean }>();
 
-	if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
+	if (!tenant) {
+		console.error('[reservations] POST tenant not found', { tenant_id: data.tenant_id });
+		return c.json({ error: 'Tenant not found' }, 404);
+	}
 
-	// Block same-day bookings if configured
 	const today = now.split('T')[0];
-	if (tenant.block_current_day && body.reservation_date === today) {
-		return c.json({ error: 'Same-day bookings are not allowed', block_current_day: tenant.block_current_day, tenant_id: body.tenant_id }, 422);
+	if (tenant.block_current_day && data.reservation_date === today) {
+		return c.json({ error: 'Same-day bookings are not allowed', block_current_day: tenant.block_current_day, tenant_id: data.tenant_id }, 422);
 	}
 
 	const currentTotal = existing[0]?.total ?? 0;
-	if (tenant.max_covers > 0 && currentTotal + body.guests > tenant.max_covers) {
+	if (tenant.max_covers > 0 && currentTotal + data.guests > tenant.max_covers) {
 		return c.json({ error: 'Exceeds maximum covers for this date' }, 422);
 	}
 
-	await c.env.maximum_bookings_db
-		.prepare(
-			`INSERT INTO Reservations
+	try {
+		await c.env.maximum_bookings_db
+			.prepare(
+				`INSERT INTO Reservations
         (id, tenant_id, first_name, surname, telephone, email,
          reservation_date, reservation_time, guests, dietary_requirements,
          created_date, modified_date)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		)
-		.bind(
-			id,
-			body.tenant_id,
-			body.first_name,
-			body.surname,
-			body.telephone,
-			body.email,
-			body.reservation_date,
-			body.reservation_time,
-			body.guests,
-			body.dietary_requirements ?? null,
-      now, // created_date
-			now, // modified_date
-		)
-		.run();
+			)
+			.bind(
+				id,
+				data.tenant_id,
+				data.first_name,
+				data.surname,
+				data.telephone,
+				data.email,
+				data.reservation_date,
+				data.reservation_time,
+				data.guests,
+				data.dietary_requirements ?? null,
+				now,
+				now,
+			)
+			.run();
+	} catch (err) {
+		console.error('[reservations] POST insert failed', { err, tenant_id: data.tenant_id, reservation_id: id });
+		return c.json({ error: 'Failed to create reservation' }, 500);
+	}
 
-  return c.json({ ...body, id, created_date: now, modified_date: now }, 201);
-
+	return c.json({ ...data, id, created_date: now, modified_date: now }, 201);
 });
 
-// PATCH /api/reservations/:id — update a reservation
 reservations.patch('/:id', async (c) => {
 	const id = c.req.param('id');
-	const parsed = UpdateReservationSchema.safeParse(await c.req.json());
-	if (!parsed.success) return c.json({ error: z.prettifyError(parsed.error) }, 400); // TODO: Add error logging
+	const msg = await c.req.json().catch(() => null);
+	const parsed = UpdateReservationSchema.safeParse(msg);
+	if (!parsed.success) {
+		console.error('[reservations] PATCH validation failed', { error: z.prettifyError(parsed.error), id });
+		return c.json({ error: z.prettifyError(parsed.error) }, 400);
+	}
 
 	const body = parsed.data;
-
-	// Always bump modified_date
 	const data = { ...body, modified_date: new Date().toISOString() };
 
-  if (!Object.keys(data).length) return c.json({ error: 'No valid fields to update' }, 400);
+	if (!Object.keys(data).length) return c.json({ error: 'No valid fields to update' }, 400);
 
-  const fields = Object.keys(data)
+	const fields = Object.keys(data)
 		.map((k) => `${k} = ?`)
 		.join(', ');
 	const values = Object.values(data);
 
-	await c.env.maximum_bookings_db
-		.prepare(`UPDATE Reservations SET ${fields} WHERE id = ?`)
-		.bind(...values, id)
-		.run();
+	try {
+		await c.env.maximum_bookings_db
+			.prepare(`UPDATE Reservations SET ${fields} WHERE id = ?`)
+			.bind(...values, id)
+			.run();
+	} catch (err) {
+		console.error('[reservations] PATCH update failed', { err, id });
+		return c.json({ error: 'Failed to update reservation' }, 500);
+	}
 
 	return c.json({ success: true });
 });
 
-// DELETE /api/reservations/:id — cancel/delete a reservation
 reservations.delete('/:id', async (c) => {
 	const id = c.req.param('id');
-	const result = await c.env.maximum_bookings_db.prepare('DELETE FROM Reservations WHERE id = ?').bind(id).run();
 
-  if (result.meta.changes === 0) return c.json({ error: 'Reservation not found' }, 404);
+	try {
+		const result = await c.env.maximum_bookings_db.prepare('DELETE FROM Reservations WHERE id = ?').bind(id).run();
+		if (result.meta.changes === 0) return c.json({ error: 'Reservation not found' }, 404);
+	} catch (err) {
+		console.error('[reservations] DELETE failed', { err, id });
+		return c.json({ error: 'Failed to delete reservation' }, 500);
+	}
+
 	return c.json({ success: true });
 });
 
