@@ -25,6 +25,37 @@ for (let hour = 12; hour <= 21; hour++) {
   }
 }
 
+// Returns true if the given date object matches today's date
+function isToday(date) {
+  const now = new Date();
+  return date.year === now.getFullYear() &&
+         date.month === now.getMonth() &&
+         date.day === now.getDate();
+}
+
+// Returns the earliest bookable time slot for today:
+// current time + 30 mins, rounded up to the next 30-min boundary.
+// e.g. 18:30 → "19:00", 18:42 → "19:30"
+function getEarliestTodaySlot() {
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const thresholdMinutes = Math.ceil((currentMinutes + 30) / 30) * 30;
+  const hours = Math.floor(thresholdMinutes / 60);
+  const mins = thresholdMinutes % 60;
+  return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+}
+
+// Returns available slots for the current form state,
+// excluding blocked times and (for today) past/too-soon times.
+function getAvailableSlots() {
+  let slots = TIME_SLOTS.filter(slot => !formState.blockedTimes.includes(slot));
+  if (isToday(formState.selectedDate)) {
+    const earliest = getEarliestTodaySlot();
+    slots = slots.filter(slot => slot >= earliest);
+  }
+  return slots;
+}
+
 // Format date as YYYY-MM-DD
 function formatDateForAPI(date) {
   const year = date.year;
@@ -80,7 +111,12 @@ function validateStep2() {
 // Render step 1: Booking details
 function renderStep1(container) {
   const dateDisplay = formatDateForDisplay(formState.selectedDate);
-  const availableSlots = TIME_SLOTS.filter(slot => !formState.blockedTimes.includes(slot));
+  const availableSlots = getAvailableSlots();
+
+  // Clear selected time if it's no longer available (e.g. today's slots shifted)
+  if (formState.formData.time && !availableSlots.includes(formState.formData.time)) {
+    formState.formData.time = '';
+  }
 
   const timeSelectHTML = availableSlots.length > 0
     ? `<select id="time" name="time" required>
@@ -128,7 +164,7 @@ function renderStep1(container) {
         </div>
 
         <div class="form-group">
-          <label for="time">Dining Time</label>
+          <label for="time">Time</label>
           ${timeSelectHTML}
         </div>
 
@@ -169,9 +205,9 @@ function renderStep1(container) {
     // Update only the time dropdown to avoid re-rendering the whole step
     const timeFormGroup = container.querySelector('#time')?.closest('.form-group')
       ?? container.querySelectorAll('.form-group')[1];
-    const availableSlots = TIME_SLOTS.filter(slot => !formState.blockedTimes.includes(slot));
+    const availableSlots = getAvailableSlots();
     timeFormGroup.innerHTML = `
-      <label for="time">Dining Time</label>
+      <label for="time">Time</label>
       ${availableSlots.length > 0
         ? `<select id="time" name="time" required>
             <option value="">Select a time</option>
@@ -409,8 +445,8 @@ function showSuccess() {
           </svg>
           <h4>Booking Confirmed!</h4>
         </div>
-        <p>Your reservation for ${formState.formData.guests} guest${formState.formData.guests > 1 ? 's' : ''} on ${dateDisplay} at ${formState.formData.time} has been confirmed.</p>
-        <p>We've sent a confirmation email to ${formState.formData.email}.</p>
+        <p>Your reservation for <strong>${formState.formData.guests} guest${formState.formData.guests > 1 ? 's' : ''}</strong> on <strong>${dateDisplay}</strong> at <strong>${formState.formData.time}</strong> has been confirmed.</p>
+        <p>We've sent a confirmation email to <strong>${formState.formData.email}</strong>.</p>
       </div>
       <button type="button" class="button-secondary" id="new-booking-btn">
         Make Another Booking

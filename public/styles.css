@@ -230,11 +230,15 @@
 
 .message-header {
   display: flex;
+	align-items: center;
   font-size: 1.2rem;
   font-weight: 600;
   svg {
     margin-right: 8px;
   }
+	h4 {
+		margin: 0;
+	}
 }
 
 .success-message {

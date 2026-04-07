@@ -16,6 +16,14 @@ Backend Dev on the Reservation Station project. Owns the Hono API, D1 database s
 
 ## Learnings
 
+- **README API reference**: Replaced the brief `### Tenant API` bullet list with a full `## API Reference` section covering all 12 endpoints across tenants and reservations. Key accuracy points: `GET /api/tenants/:id` matches on `tenant_code` (not UUID); `PATCH`/`DELETE` for tenants use UUID; availability endpoint returns per-slot `{ time, concurrent_guests, available_capacity }` array; slots run `12:00`–`21:30` in 30-min intervals; `concurrent_guests_time_limit` defaults to 120 mins.
+
+- **Logging strategy**: Only log on genuine error conditions using `console.error`. Format: `[route-file] VERB description` with a context object containing relevant IDs. Validation failures, unexpected 404s (tenant missing inside POST /reservations), and D1 write errors are logged. Business-rule rejections (422) and expected 404s (GET not-found) are silent. Hono `logger()` middleware removed — too noisy for production Workers tail logs.
+- **Body parsing for error context**: When a validation failure needs to log raw body fields (e.g. `tenant_id`), parse the body separately with `.catch(() => null)` before passing to `safeParse`, so the raw value is available even when schema validation fails.
+- **D1 write error handling**: All write operations (INSERT, UPDATE, DELETE) are wrapped in try/catch. On catch, log with context and return 500. Not-found on DELETE is checked via `result.meta.changes === 0` — this is an expected 404, not an error, so no logging.
+
+
+
 - Project kickoff: 2026-04-01
 - Stack: Cloudflare Workers + Pages, D1 (SQLite), Hono
 - Consistent API response shape: `{ success, data, error }`
