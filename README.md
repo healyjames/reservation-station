@@ -1,4 +1,4 @@
-# maximum-bookings
+# Maximum Bookings
 
 A multi-tenant restaurant reservation system built on Cloudflare's developer platform. Tenants (restaurants, pubs, cafes etc) are configured via the API; guests book a table through a vanilla JS frontend served as static assets.
 
