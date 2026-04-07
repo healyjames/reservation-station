@@ -3,7 +3,7 @@ name: "external-comms"
 description: "PAO workflow for scanning, drafting, and presenting community responses with human review gate"
 domain: "community, communication, workflow"
 confidence: "low"
-source: "manual (RFC #426 — PAO External Communications)"
+source: "manual (RFC #426 - PAO External Communications)"
 tools:
   - name: "github-mcp-server-list_issues"
     description: "List open issues for scan candidates and lightweight triage"
@@ -24,9 +24,9 @@ tools:
 Phase 1 is **draft-only mode**.
 
 - PAO scans issues and discussions, drafts responses with the humanizer skill, and presents a review table for human approval.
-- **Human review gate is mandatory** — PAO never posts autonomously.
+- **Human review gate is mandatory** - PAO never posts autonomously.
 - Every action is logged to `.squad/comms/audit/`.
-- This workflow is triggered manually only ("PAO, check community") — no automated or Ralph-triggered activation in Phase 1.
+- This workflow is triggered manually only ("PAO, check community") - no automated or Ralph-triggered activation in Phase 1.
 
 ## Patterns
 
@@ -39,7 +39,7 @@ Find unanswered community items with GitHub MCP tools first, or `gh issue list` 
 - Limit to items created in the last 7 days.
 - Exclude items labeled `squad:internal` or `wontfix`.
 - Include discussions **and** issues in the same sweep.
-- Phase 1 scope is **issues and discussions only** — do not draft PR replies.
+- Phase 1 scope is **issues and discussions only** - do not draft PR replies.
 
 ### Discussion Handling (Phase 1)
 
@@ -120,7 +120,7 @@ Before drafting, PAO MUST verify complete thread coverage:
 Show drafts for review in this exact format:
 
 ```text
-📝 PAO — Community Response Drafts
+📝 PAO - Community Response Drafts
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 | # | Item | Author | Type | Confidence | Read | Preview |
@@ -139,12 +139,12 @@ Each full draft must begin with the thread summary line:
 
 Wait for explicit human direction before anything is posted.
 
-- `pao approve 1 3` — approve drafts 1 and 3
-- `pao edit 2` — edit draft 2
-- `pao skip` — skip all
-- `banana` — freeze all pending (safe word)
+- `pao approve 1 3` - approve drafts 1 and 3
+- `pao edit 2` - edit draft 2
+- `pao skip` - skip all
+- `banana` - freeze all pending (safe word)
 
-### Rollback — Bad Post Recovery
+### Rollback - Bad Post Recovery
 
 If a posted response turns out to be wrong, inappropriate, or needs correction:
 
@@ -155,7 +155,7 @@ If a posted response turns out to be wrong, inappropriate, or needs correction:
 3. **Draft replacement** (if needed): PAO drafts a corrected response, goes through normal review cycle
 4. **Postmortem:** If the error reveals a pattern gap, update humanizer anti-patterns or add a new test case
 
-**Safe word — `banana`:**
+**Safe word - `banana`:**
 - Immediately freezes all pending drafts in the review queue
 - No new scans or drafts until `pao resume` is issued
 - Audit entry logged with halter identity and reason
@@ -173,7 +173,7 @@ After approval:
 Log every action.
 
 - Location: `.squad/comms/audit/{timestamp}.md`
-- Required fields vary by action — see `.squad/comms/templates/audit-entry.md` Conditional Fields table
+- Required fields vary by action - see `.squad/comms/templates/audit-entry.md` Conditional Fields table
 - Universal required fields: `timestamp`, `action`
 - All other fields are conditional on the action type
 
@@ -190,7 +190,7 @@ gh issue list --state open --json number,title,author,labels,comments --limit 20
 ### Example review table
 
 ```text
-📝 PAO — Community Response Drafts
+📝 PAO - Community Response Drafts
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 | # | Item | Author | Type | Confidence | Read | Preview |
@@ -232,15 +232,15 @@ Let us know if you can share the command you ran right before the failure.
 https://github.com/bradygaster/squad/issues/426#issuecomment-123456
 ```
 
-### T1 — Welcome
+### T1 - Welcome
 
 ```text
 Hey {author}! Welcome to Squad 👋 Thanks for opening this.
 {specific acknowledgment or first answer}
-Let us know if you have questions — happy to help!
+Let us know if you have questions - happy to help!
 ```
 
-### T2 — Troubleshooting
+### T2 - Troubleshooting
 
 ```text
 Thanks for the detailed report, {author}!
@@ -249,23 +249,23 @@ Here's what we think is happening: {explanation}
 Let us know if that helps, or if you're seeing something different.
 ```
 
-### T3 — Feature Guidance
+### T3 - Feature Guidance
 
 ```text
 Great question! {context on current state}
 {guidance or workaround}
-We've noted this as a potential improvement — {tracking info if applicable}.
+We've noted this as a potential improvement - {tracking info if applicable}.
 ```
 
-### T4 — Redirect
+### T4 - Redirect
 
 ```text
 Thanks for reaching out! This one is actually better suited for {correct location}.
 {brief explanation of why}
-Feel free to open it there — they'll be able to help!
+Feel free to open it there - they'll be able to help!
 ```
 
-### T5 — Acknowledgment
+### T5 - Acknowledgment
 
 ```text
 Good catch, {author}. We've confirmed this is a real issue.
@@ -273,24 +273,24 @@ Good catch, {author}. We've confirmed this is a real issue.
 We'll update this thread when we have a fix. Thanks for flagging it!
 ```
 
-### T6 — Closing
+### T6 - Closing
 
 ```text
 This should be resolved in {version/PR}! 🎉
 {brief summary of what changed}
-Thanks for reporting this, {author} — it made Squad better.
+Thanks for reporting this, {author} - it made Squad better.
 ```
 
-### T7 — Technical Uncertainty
+### T7 - Technical Uncertainty
 
 ```text
 Interesting find, {author}. We're not 100% sure what's causing this yet.
 Here's what we've ruled out: {list}
-We'd love more context if you have it — {specific ask}.
+We'd love more context if you have it - {specific ask}.
 We'll dig deeper and update this thread.
 ```
 
-### T8 — Empathetic Disagreement
+### T8 - Empathetic Disagreement
 
 ```text
 We hear you, {author}. That's a fair concern.
@@ -299,10 +299,10 @@ The current design choice was driven by {reason}. We know it's not ideal for eve
 
 {what alternatives exist or what trade-off was made}
 
-If you have ideas for how to make this work better for your scenario, we'd love to hear them — open a discussion or drop your thoughts here!
+If you have ideas for how to make this work better for your scenario, we'd love to hear them - open a discussion or drop your thoughts here!
 ```
 
-### T9 — Information Request
+### T9 - Information Request
 
 ```text
 Thanks for reporting this, {author}!
@@ -317,7 +317,7 @@ That context will help us narrow down what's happening. Appreciate it!
 
 ## Anti-Patterns
 
-- ❌ Posting without human review (NEVER — this is the cardinal rule)
+- ❌ Posting without human review (NEVER - this is the cardinal rule)
 - ❌ Drafting without reading full thread (context is everything)
 - ❌ Ignoring confidence flags (🔴 items need Flight/human review)
 - ❌ Scanning closed issues (only open items)

@@ -1,4 +1,4 @@
-name: Squad Docs — Build & Deploy
+name: Squad Docs - Build & Deploy
 
 on:
   workflow_dispatch:

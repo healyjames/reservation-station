@@ -1,6 +1,6 @@
 # Project Context
 
-- **Project:** reservation-station
+- **Project:** maximum-bookings
 - **Created:** 2026-04-01
 
 ## Core Context

@@ -13,8 +13,8 @@ History files (.md files tracking decisions, spawns, outcomes) are read cold by 
 ## Patterns
 
 - **Record the final outcome**, not the initial request.
-- **Wait for confirmation** before writing to history — don't log intermediate states.
-- **If a decision reverses**, update the entry immediately — don't leave stale data.
+- **Wait for confirmation** before writing to history - don't log intermediate states.
+- **If a decision reverses**, update the entry immediately - don't leave stale data.
 - **One read = one truth.** A future agent should never need to cross-reference other files to understand what actually happened.
 
 ## Examples
@@ -32,5 +32,5 @@ History files (.md files tracking decisions, spawns, outcomes) are read cold by 
 
 - Writing intermediate or "for now" states to disk
 - Attributing decisions without confirming final direction
-- Treating history like a draft — history is the source of truth
+- Treating history like a draft - history is the source of truth
 - Assuming readers will cross-reference or verify; they won't

@@ -20,7 +20,7 @@ source: "manual"
 
 ## Context
 
-Economy mode shifts Layer 3 (Task-Aware Auto-Selection) to lower-cost alternatives. It does NOT override persistent config (`defaultModel`, `agentModelOverrides`) or per-agent charter preferences — those represent explicit user intent and always take priority.
+Economy mode shifts Layer 3 (Task-Aware Auto-Selection) to lower-cost alternatives. It does NOT override persistent config (`defaultModel`, `agentModelOverrides`) or per-agent charter preferences - those represent explicit user intent and always take priority.
 
 Use this skill when the user wants to reduce costs across an entire session or permanently, without manually specifying models for each agent.
 
@@ -53,7 +53,7 @@ When economy mode is **active**, Layer 3 auto-selection uses this table instead 
 ### On Session Start
 
 1. READ `.squad/config.json`
-2. CHECK for `economyMode: true` — if present, activate economy mode for the session
+2. CHECK for `economyMode: true` - if present, activate economy mode for the session
 3. STORE economy mode state in session context
 
 ### On User Phrase Trigger
@@ -61,20 +61,20 @@ When economy mode is **active**, Layer 3 auto-selection uses this table instead 
 **Session-only (no config change):** "use economy mode", "save costs", "go cheap"
 
 1. SET economy mode active for this session
-2. ACKNOWLEDGE: `✅ Economy mode active — using cost-optimized models this session. (Layer 0 and Layer 2 preferences still apply)`
+2. ACKNOWLEDGE: `✅ Economy mode active - using cost-optimized models this session. (Layer 0 and Layer 2 preferences still apply)`
 
 **Persistent:** "always use economy mode", "save economy mode"
 
 1. WRITE `economyMode: true` to `.squad/config.json` (merge, don't overwrite other fields)
-2. ACKNOWLEDGE: `✅ Economy mode saved — cost-optimized models will be used until disabled.`
+2. ACKNOWLEDGE: `✅ Economy mode saved - cost-optimized models will be used until disabled.`
 
 ### On Every Agent Spawn (Economy Mode Active)
 
-1. CHECK Layer 0a/0b first (agentModelOverrides, defaultModel) — if set, use that. Economy mode does NOT override Layer 0.
-2. CHECK Layer 1 (session directive for a specific model) — if set, use that. Economy mode does NOT override explicit session directives.
-3. CHECK Layer 2 (charter preference) — if set, use that. Economy mode does NOT override charter preferences.
+1. CHECK Layer 0a/0b first (agentModelOverrides, defaultModel) - if set, use that. Economy mode does NOT override Layer 0.
+2. CHECK Layer 1 (session directive for a specific model) - if set, use that. Economy mode does NOT override explicit session directives.
+3. CHECK Layer 2 (charter preference) - if set, use that. Economy mode does NOT override charter preferences.
 4. APPLY economy table at Layer 3 instead of normal table.
-5. INCLUDE `💰` in spawn acknowledgment: `🔧 {Name} ({model} · 💰 economy) — {task}`
+5. INCLUDE `💰` in spawn acknowledgment: `🔧 {Name} ({model} · 💰 economy) - {task}`
 
 ### On Deactivation
 
@@ -82,7 +82,7 @@ When economy mode is **active**, Layer 3 auto-selection uses this table instead 
 
 1. REMOVE `economyMode` from `.squad/config.json` (if it was persisted)
 2. CLEAR session economy mode state
-3. ACKNOWLEDGE: `✅ Economy mode disabled — returning to standard model selection.`
+3. ACKNOWLEDGE: `✅ Economy mode disabled - returning to standard model selection.`
 
 ### STOP
 
@@ -103,12 +103,12 @@ After updating economy mode state and including the `💰` indicator in spawn ac
 }
 ```
 
-- `economyMode` — when `true`, Layer 3 uses the economy table. Optional; absent = economy mode off.
-- Combines with `defaultModel` and `agentModelOverrides` — Layer 0 always wins.
+- `economyMode` - when `true`, Layer 3 uses the economy table. Optional; absent = economy mode off.
+- Combines with `defaultModel` and `agentModelOverrides` - Layer 0 always wins.
 
 ## Anti-Patterns
 
 - **Don't override Layer 0 in economy mode.** If the user set `defaultModel: "claude-sonnet-4.6"`, they want quality. Economy mode only affects Layer 3 auto-selection.
 - **Don't silently apply economy mode.** Always acknowledge when activated or deactivated.
 - **Don't treat economy mode as permanent by default.** Session phrases activate session-only; only "always" or `config.json` persist it.
-- **Don't bump premium tasks down too far.** Architecture and security reviews shift from opus to sonnet in economy mode — they do NOT go to fast/cheap models.
+- **Don't bump premium tasks down too far.** Architecture and security reviews shift from opus to sonnet in economy mode - they do NOT go to fast/cheap models.

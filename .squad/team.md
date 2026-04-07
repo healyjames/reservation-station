@@ -1,6 +1,6 @@
 # Squad Team
 
-> reservation-station
+> maximum-bookings
 
 ## Coordinator
 
@@ -21,7 +21,7 @@
 
 ## Project Context
 
-- **Project:** Reservation Station — restaurant booking/reservation system
+- **Project:** Maximum Bookings - restaurant booking/reservation system
 - **Stack:** Cloudflare Workers + Pages, D1 (SQLite), Hono (API), vanilla HTML/CSS/JS embeddable widget
 - **User:** James Healy
 - **Universe:** Fast and Furious: Tokyo Drift

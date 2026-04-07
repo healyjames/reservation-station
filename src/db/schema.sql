@@ -59,7 +59,7 @@ INSERT INTO Reservations (id, tenant_id, first_name, surname, telephone, email, 
 ('theoakandtavern-5',   'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Lucas',    'Scott',   '7555555555', 'lucas.scott@email.com',     '2026-04-04', '19:00', 3, NULL,          '2026-04-01 18:46:08', '2026-04-01 18:46:08'),
 -- Oak Tavern concurrent capacity test scenario (2027-06-15)
 -- max_guests=10 concurrent within 120-min window
--- Lunch cluster: 13:00(4) + 13:30(4) = 8 concurrent — one more big group would tip it
+-- Lunch cluster: 13:00(4) + 13:30(4) = 8 concurrent - one more big group would tip it
 -- Adding ≥3 guests to any slot within 120 min of 13:00-13:30 would exceed limit
 ('theoaktavern-test-1', 'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Grace',  'Taylor', '7600000001', 'grace.taylor@test.com',  '2027-06-15', '13:00', 4, NULL, '2026-04-05 07:00:00', '2026-04-05 07:00:00'),
 ('theoaktavern-test-2', 'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Henry',  'Evans',  '7600000002', 'henry.evans@test.com',   '2027-06-15', '13:30', 4, NULL, '2026-04-05 07:00:00', '2026-04-05 07:00:00'),

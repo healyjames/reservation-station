@@ -1,6 +1,6 @@
 # KEDA External Scaler for GitHub Issue-Driven Agent Autoscaling
 
-> Scale agent pods to zero when idle, up when work arrives — driven by GitHub Issues.
+> Scale agent pods to zero when idle, up when work arrives - driven by GitHub Issues.
 
 ## Overview
 
@@ -76,7 +76,7 @@ kubectl get events -n squad --watch
 
 | Open Issues | Target Replicas | Behavior |
 |------------|----------------|----------|
-| 0 | 0 | Scale to zero — save resources |
+| 0 | 0 | Scale to zero - save resources |
 | 1–3 | 1 | Single agent handles work |
 | 4–10 | 2 | Scale up for parallel processing |
 | 10+ | 3 (max) | Maximum parallelism |
@@ -138,9 +138,9 @@ GitHub API                    KEDA                    Kubernetes
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `github.owner` | — | Repository owner |
-| `github.repo` | — | Repository name |
-| `github.token` | — | GitHub PAT with `repo` scope |
+| `github.owner` | - | Repository owner |
+| `github.repo` | - | Repository name |
+| `github.token` | - | GitHub PAT with `repo` scope |
 | `github.labels` | `squad:copilot` | Comma-separated label filter |
 | `scaler.port` | `6000` | gRPC server port |
 | `scaler.pollInterval` | `30s` | GitHub API polling interval |
@@ -158,7 +158,7 @@ The scaler is maintained as a standalone project. PRs and issues welcome.
 
 ## References
 
-- [KEDA External Scalers](https://keda.sh/docs/latest/concepts/external-scalers/) — KEDA documentation
-- [Squad on AKS](https://github.com/tamirdresher/squad-on-aks) — Full Kubernetes deployment example
-- [Machine Capabilities](machine-capabilities.md) — Capability-based routing (#514)
-- [Cooperative Rate Limiting](cooperative-rate-limiting.md) — Multi-agent rate management (#515)
+- [KEDA External Scalers](https://keda.sh/docs/latest/concepts/external-scalers/) - KEDA documentation
+- [Squad on AKS](https://github.com/tamirdresher/squad-on-aks) - Full Kubernetes deployment example
+- [Machine Capabilities](machine-capabilities.md) - Capability-based routing (#514)
+- [Cooperative Rate Limiting](cooperative-rate-limiting.md) - Multi-agent rate management (#515)

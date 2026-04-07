@@ -1,4 +1,4 @@
-# Ralph Circuit Breaker — Model Rate Limit Fallback
+# Ralph Circuit Breaker - Model Rate Limit Fallback
 
 > Classic circuit breaker pattern (Hystrix / Polly / Resilience4j) applied to Copilot model selection.
 > When the preferred model hits rate limits, Ralph automatically degrades to free-tier models, then self-heals.
@@ -14,9 +14,9 @@ Premium models burn quota fast:
 | `claude-sonnet-4.6` | 1x | Moderate with many Ralphs |
 | `claude-sonnet-4.6` | 10x | High |
 | `gpt-5.4` | 50x | Very high |
-| `gpt-5.4-mini` | **0x** | **Free — unlimited** |
-| `gpt-5-mini` | **0x** | **Free — unlimited** |
-| `gpt-4.1` | **0x** | **Free — unlimited** |
+| `gpt-5.4-mini` | **0x** | **Free - unlimited** |
+| `gpt-5-mini` | **0x** | **Free - unlimited** |
+| `gpt-4.1` | **0x** | **Free - unlimited** |
 
 ## Circuit Breaker States
 
@@ -39,7 +39,7 @@ Premium models burn quota fast:
 - Every successful response confirms circuit stays closed
 - On rate limit error → transition to OPEN
 
-### OPEN (rate limited — fallback active)
+### OPEN (rate limited - fallback active)
 - Fall back through the free-tier model chain:
   1. `gpt-5.4-mini`
   2. `gpt-5-mini`
@@ -149,7 +149,7 @@ function Get-CurrentModel {
                     return $cb.preferredModel
                 }
             }
-            # Still in cooldown — use fallback
+            # Still in cooldown - use fallback
             $idx = [Math]::Min($cb.currentFallbackIndex, $cb.fallbackChain.Count - 1)
             return $cb.fallbackChain[$idx]
         }
@@ -185,7 +185,7 @@ function Update-CircuitBreakerOnSuccess {
             $cb.metrics.totalRecoveries++
             $cb.metrics.lastRecoveryAt = (Get-Date).ToString("o")
             Save-CircuitBreakerState -State $cb -StateFile $StateFile
-            Write-Host "  [circuit-breaker] RECOVERED — back to preferred model ($($cb.preferredModel))" -ForegroundColor Green
+            Write-Host "  [circuit-breaker] RECOVERED - back to preferred model ($($cb.preferredModel))" -ForegroundColor Green
             return
         }
         Save-CircuitBreakerState -State $cb -StateFile $StateFile
@@ -193,7 +193,7 @@ function Update-CircuitBreakerOnSuccess {
         return
     }
 
-    # closed state — nothing to do
+    # closed state - nothing to do
 }
 ```
 
@@ -219,16 +219,16 @@ function Update-CircuitBreakerOnRateLimit {
         Save-CircuitBreakerState -State $cb -StateFile $StateFile
 
         $fallbackModel = $cb.fallbackChain[0]
-        Write-Host "  [circuit-breaker] RATE LIMITED — falling back to $fallbackModel (cooldown: $($cb.cooldownMinutes)m)" -ForegroundColor Red
+        Write-Host "  [circuit-breaker] RATE LIMITED - falling back to $fallbackModel (cooldown: $($cb.cooldownMinutes)m)" -ForegroundColor Red
         return
     }
 
     if ($cb.state -eq "open") {
-        # Already open — try next fallback in chain if current one also fails
+        # Already open - try next fallback in chain if current one also fails
         if ($cb.currentFallbackIndex -lt ($cb.fallbackChain.Count - 1)) {
             $cb.currentFallbackIndex++
             $nextModel = $cb.fallbackChain[$cb.currentFallbackIndex]
-            Write-Host "  [circuit-breaker] Fallback also limited — trying $nextModel" -ForegroundColor Red
+            Write-Host "  [circuit-breaker] Fallback also limited - trying $nextModel" -ForegroundColor Red
         }
         # Reset cooldown timer
         $cb.openedAt = (Get-Date).ToString("o")
@@ -279,7 +279,7 @@ while ($true) {
             # Retry immediately with fallback model
             continue
         }
-        # Other errors — handle normally
+        # Other errors - handle normally
         throw
     }
 
@@ -301,10 +301,10 @@ Override defaults by editing `.squad/ralph-circuit-breaker.json`:
 
 The state file tracks operational metrics:
 
-- **totalFallbacks** — How many times the circuit opened
-- **totalRecoveries** — How many times it recovered to preferred model
-- **lastFallbackAt** — ISO timestamp of last rate limit event
-- **lastRecoveryAt** — ISO timestamp of last successful recovery
+- **totalFallbacks** - How many times the circuit opened
+- **totalRecoveries** - How many times it recovered to preferred model
+- **lastFallbackAt** - ISO timestamp of last rate limit event
+- **lastRecoveryAt** - ISO timestamp of last successful recovery
 
 Query metrics with:
 ```powershell

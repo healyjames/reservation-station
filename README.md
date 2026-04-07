@@ -22,8 +22,8 @@ A multi-tenant restaurant reservation system built on Cloudflare's developer pla
 
 The Worker serves two things from a single deployment:
 
-- **Static frontend** — HTML/CSS/JS from `./public`, served at `/` via [Cloudflare Assets](https://developers.cloudflare.com/workers/static-assets/)
-- **REST API** — Hono routes at `/api/*` backed by a [D1](https://developers.cloudflare.com/d1/) database
+- **Static frontend** - HTML/CSS/JS from `./public`, served at `/` via [Cloudflare Assets](https://developers.cloudflare.com/workers/static-assets/)
+- **REST API** - Hono routes at `/api/*` backed by a [D1](https://developers.cloudflare.com/d1/) database
 
 ### Project Structure
 
@@ -42,7 +42,7 @@ public/
   index.html
   styles.css
   js/
-    tenants.js      # Tenant config — shared singleton
+    tenants.js      # Tenant config - shared singleton
     calendar.js     # Calendar UI + page entry point
     booking-form.js # Multi-step booking form
     theme.js        # Theme utilities
@@ -66,7 +66,7 @@ The app is multi-tenant. Each tenant represents a venue and is identified by a `
 https://your-worker.workers.dev/?tenant=the-oak-room
 ```
 
-On load, `calendar.js` calls `loadTenant()` which fetches the config and stores it as the exported `tenantConfig` object — an ES module singleton shared across all JS modules.
+On load, `calendar.js` calls `loadTenant()` which fetches the config and stores it as the exported `tenantConfig` object - an ES module singleton shared across all JS modules.
 
 ### Tenant Fields
 
@@ -99,16 +99,16 @@ if (!tenantConfig) {
 **How the booking form uses it:**
 
 ```js
-// Guests dropdown — options from 2 to max_guests
+// Guests dropdown - options from 2 to max_guests
 Array.from(
   { length: (tenantConfig?.max_guests ?? 20) - 1 },
   (_, i) => i + 2
 )
 
-// Calendar — disable today if block_current_day is set
+// Calendar - disable today if block_current_day is set
 const isBlockedToday = isToday && tenantConfig?.block_current_day === true;
 
-// Reservation submission — tenant ID comes from config
+// Reservation submission - tenant ID comes from config
 const requestBody = {
   tenant_id: tenantConfig.id,
   // ...
@@ -159,7 +159,7 @@ Returns a single tenant matched by `tenant_code`.
 |-----------|------|-------------|
 | `tenant_code` | `string` | The tenant's URL slug (e.g. `the-oak-room`) |
 
-**Response `200`** — tenant object (see above)
+**Response `200`** - tenant object (see above)
 
 **Errors**
 
@@ -178,14 +178,14 @@ Creates a new tenant.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | `string` | ✅ | Display name |
-| `tenant_code` | `string` | ✅ | URL slug — lowercase alphanumeric + hyphens, max 50 chars |
+| `tenant_code` | `string` | ✅ | URL slug - lowercase alphanumeric + hyphens, max 50 chars |
 | `max_guests` | `integer ≥ 0` | ✅ | Upper bound for the guests dropdown; `0` = no limit |
 | `max_covers` | `integer ≥ 0` | ✅ | Total covers per day; `0` = no limit |
 | `status` | `"active" \| "cancelled"` | ✅ | Tenant status |
 | `block_current_day` | `boolean` | ✅ | Disables same-day bookings when `true` |
 | `concurrent_guests_time_limit` | `integer > 0` | ❌ | Overlap window in minutes (default `120`) |
 
-**Response `201`** — created tenant object (all fields including `id`, `created_date`, `modified_date`)
+**Response `201`** - created tenant object (all fields including `id`, `created_date`, `modified_date`)
 
 **Errors**
 
@@ -206,7 +206,7 @@ Partially updates a tenant. All body fields are optional; supply only what you w
 |-----------|------|-------------|
 | `id` | `uuid` | Tenant UUID |
 
-**Request body** — any subset of the `POST` fields (all optional)
+**Request body** - any subset of the `POST` fields (all optional)
 
 **Response `200`**
 ```json
@@ -325,7 +325,7 @@ Returns reservations, optionally filtered. Results are ordered by `reservation_d
 | `tenant_id` | `uuid` | ❌ | Filter by tenant |
 | `date` | `string` | ❌ | Filter by date (`YYYY-MM-DD`) |
 
-**Response `200`** — array of reservation objects
+**Response `200`** - array of reservation objects
 
 ```json
 [
@@ -358,7 +358,7 @@ Returns a single reservation by UUID.
 |-----------|------|-------------|
 | `id` | `uuid` | Reservation UUID |
 
-**Response `200`** — reservation object (see above)
+**Response `200`** - reservation object (see above)
 
 **Errors**
 
@@ -386,7 +386,7 @@ Creates a new reservation. Enforces the `max_covers` daily limit and the `block_
 | `guests` | `integer > 0` | ✅ | Party size |
 | `dietary_requirements` | `string` | ❌ | Max 500 chars |
 
-**Response `201`** — created reservation object (all fields including `id`, `created_date`, `modified_date`)
+**Response `201`** - created reservation object (all fields including `id`, `created_date`, `modified_date`)
 
 **Errors**
 
@@ -409,7 +409,7 @@ Partially updates a reservation. `tenant_id` cannot be changed.
 |-----------|------|-------------|
 | `id` | `uuid` | Reservation UUID |
 
-**Request body** — any subset of `first_name`, `surname`, `telephone`, `email`, `reservation_date`, `reservation_time`, `guests`, `dietary_requirements` (all optional)
+**Request body** - any subset of `first_name`, `surname`, `telephone`, `email`, `reservation_date`, `reservation_time`, `guests`, `dietary_requirements` (all optional)
 
 **Response `200`**
 ```json

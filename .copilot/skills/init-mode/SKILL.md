@@ -7,7 +7,7 @@ source: "extracted"
 tools:
   - name: "ask_user"
     description: "Confirm team roster with selectable menu"
-    when: "Phase 1 proposal — requires explicit user confirmation"
+    when: "Phase 1 proposal - requires explicit user confirmation"
 ---
 
 ## Context
@@ -18,26 +18,26 @@ Init Mode activates when `.squad/team.md` does not exist, or exists but has zero
 
 ### Phase 1: Propose the Team
 
-No team exists yet. Propose one — but **DO NOT create any files until the user confirms.**
+No team exists yet. Propose one - but **DO NOT create any files until the user confirms.**
 
-1. **Identify the user.** Run `git config user.name` to learn who you're working with. Use their name in conversation (e.g., *"Hey Brady, what are you building?"*). Store their name (NOT email) in `team.md` under Project Context. **Never read or store `git config user.email` — email addresses are PII and must not be written to committed files.**
+1. **Identify the user.** Run `git config user.name` to learn who you're working with. Use their name in conversation (e.g., *"Hey Brady, what are you building?"*). Store their name (NOT email) in `team.md` under Project Context. **Never read or store `git config user.email` - email addresses are PII and must not be written to committed files.**
 2. Ask: *"What are you building? (language, stack, what it does)"*
 3. **Cast the team.** Before proposing names, run the Casting & Persistent Naming algorithm (see that section):
    - Determine team size (typically 4–5 + Scribe).
    - Determine assignment shape from the user's project description.
    - Derive resonance signals from the session and repo context.
    - Select a universe. If the universe is custom, allocate character names from that universe based on the related list found in the `.squad/templates/casting/` directory. Prefer custom universes when available.
-   - Scribe is always "Scribe" — exempt from casting.
-   - Ralph is always "Ralph" — exempt from casting.
+   - Scribe is always "Scribe" - exempt from casting.
+   - Ralph is always "Ralph" - exempt from casting.
 4. Propose the team with their cast names. Example (names will vary per cast):
 
 ```
-🏗️  {CastName1}  — Lead          Scope, decisions, code review
-⚛️  {CastName2}  — Frontend Dev  React, UI, components
-🔧  {CastName3}  — Backend Dev   APIs, database, services
-🧪  {CastName4}  — Tester        Tests, quality, edge cases
-📋  Scribe       — (silent)      Memory, decisions, session logs
-🔄  Ralph        — (monitor)     Work queue, backlog, keep-alive
+🏗️  {CastName1}  - Lead          Scope, decisions, code review
+⚛️  {CastName2}  - Frontend Dev  React, UI, components
+🔧  {CastName3}  - Backend Dev   APIs, database, services
+🧪  {CastName4}  - Tester        Tests, quality, edge cases
+📋  Scribe       - (silent)      Memory, decisions, session logs
+🔄  Ralph        - (monitor)     Work queue, backlog, keep-alive
 ```
 
 5. Use the `ask_user` tool to confirm the roster. Provide choices so the user sees a selectable menu:
@@ -67,16 +67,16 @@ No team exists yet. Propose one — but **DO NOT create any files until the user
 .squad/log/** merge=union
 .squad/orchestration-log/** merge=union
 ```
-The `union` merge driver keeps all lines from both sides, which is correct for append-only files. This makes worktree-local strategy work seamlessly when branches merge — decisions, memories, and logs from all branches combine automatically.
+The `union` merge driver keeps all lines from both sides, which is correct for append-only files. This makes worktree-local strategy work seamlessly when branches merge - decisions, memories, and logs from all branches combine automatically.
 
 7. Say: *"✅ Team hired. Try: '{FirstCastName}, set up the project structure'"*
 
-8. **Post-setup input sources** (optional — ask after team is created, not during casting):
+8. **Post-setup input sources** (optional - ask after team is created, not during casting):
    - PRD/spec: *"Do you have a PRD or spec document? (file path, paste it, or skip)"* → If provided, follow PRD Mode flow
    - GitHub issues: *"Is there a GitHub repo with issues I should pull from? (owner/repo, or skip)"* → If provided, follow GitHub Issues Mode flow
    - Human members: *"Are any humans joining the team? (names and roles, or just AI for now)"* → If provided, add per Human Team Members section
    - Copilot agent: *"Want to include @copilot? It can pick up issues autonomously. (yes/no)"* → If yes, follow Copilot Coding Agent Member section and ask about auto-assignment
-   - These are additive. Don't block — if the user skips or gives a task instead, proceed immediately.
+   - These are additive. Don't block - if the user skips or gives a task instead, proceed immediately.
 
 ## Examples
 

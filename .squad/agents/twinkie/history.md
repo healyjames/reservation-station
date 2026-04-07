@@ -1,20 +1,20 @@
-# Twinkie — History
+# Twinkie - History
 
 ## Core Context
 
-Frontend Dev on the Reservation Station project. Owns the embeddable booking widget — vanilla HTML/CSS/JS, no framework.
+Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget - vanilla HTML/CSS/JS, no framework.
 
 **User:** James Healy
 **Team:** Han (Lead), Sean (Backend), Twinkie (Frontend), Neela (Tester), Scribe, Ralph
 
 ## Key File Paths
 
-- `public/` — widget assets
+- `public/` - widget assets
 
 ## Learnings
 
 - Project kickoff: 2026-04-01
-- Widget must be embeddable on any site — no framework, pure HTML/CSS/JS
+- Widget must be embeddable on any site - no framework, pure HTML/CSS/JS
 - Must handle cross-origin API calls to the Workers API
 - CSS custom properties for host-site theming
 
@@ -25,7 +25,7 @@ Frontend Dev on the Reservation Station project. Owns the embeddable booking wid
 **New file structure:**
 ```
 public/
-  index.html       (~30 lines — clean HTML, no inline CSS or JS)
+  index.html       (~30 lines - clean HTML, no inline CSS or JS)
   styles.css       (all styles, including @import for Google Fonts)
   js/
     theme.js       (blocking script in <head>; reads ?theme=/?mode=, applies CSS custom props before first paint)
@@ -33,31 +33,31 @@ public/
 ```
 
 **Module approach:**
-- `theme.js` is a plain script (no `type="module"`) so it blocks rendering — required to prevent flash of incorrect theme
+- `theme.js` is a plain script (no `type="module"`) so it blocks rendering - required to prevent flash of incorrect theme
 - `calendar.js` uses `type="module"` for implicit defer + clean module scope; no exports needed since it self-initialises by running at top level (DOM is ready because module scripts are deferred)
 
-### Calendar widget — standalone date picker (2026-04-01)
+### Calendar widget - standalone date picker (2026-04-01)
 
-**Built:** `public/index.html` — fully self-contained responsive date picker calendar page.
+**Built:** `public/index.html` - fully self-contained responsive date picker calendar page.
 
 **Key patterns used:**
 - `renderCalendar(year, month)` renders the full grid on each call (clear + rebuild); state held in `currentYear`, `currentMonth`, `selectedDate`
 - Week starts Monday: `getDay()` returns Sun=0 so leading empties = `(getDay() === 0) ? 6 : getDay() - 1`
 - Today detection: compare year/month/day only against a snapshot of `new Date()` captured at script load
-- Past detection: `isBeforeToday(year, month, day)` — no time comparison, date-only
+- Past detection: `isBeforeToday(year, month, day)` - no time comparison, date-only
 - `.today` class uses a dot indicator (`::after` pseudo-element) so it's visually distinct from `.selected`
 - Prev nav button: disabled (and `pointer-events: none`) when `year === todayYear && month === todayMonth`
 - Keyboard: `tabindex="0"` + `keydown` listener for Enter/Space on selectable days; `aria-pressed` reflects selection state; `aria-live="polite"` on the date display
 - `SecondaryFont` declared via `@font-face { src: local('Google+Sans') }` backed by a Google Fonts `@import`; CSS override `font-family: 'Google+Sans', 'SecondaryFont', Georgia, serif` ensures Google+Sans renders correctly regardless of local() availability
-- Warm burgundy colour palette (`--primary: #8b2635`) with cream background — restaurant-appropriate
+- Warm burgundy colour palette (`--primary: #8b2635`) with cream background - restaurant-appropriate
 - Responsive: tighter grid gaps + smaller font on `max-width: 480px`
 
 **File paths:**
-- `public/index.html` — replaced boilerplate with calendar widget preview
+- `public/index.html` - replaced boilerplate with calendar widget preview
 
 ### Multi-step booking form (2026-04-01)
 
-**Built:** `public/js/booking-form.js` — two-step booking form that replaces calendar after date selection.
+**Built:** `public/js/booking-form.js` - two-step booking form that replaces calendar after date selection.
 
 **Flow:**
 - User picks date on calendar → calendar hides, booking form shows
@@ -91,10 +91,10 @@ public/
 - Form built dynamically via `.innerHTML` in `renderStep1()` and `renderStep2()`
 
 **Files modified:**
-- `public/index.html` — added IDs and booking container
-- `public/js/calendar.js` — added dynamic import call in `selectDay()`
-- `public/styles.css` — added dark theme form styles at end
-- `public/js/booking-form.js` — new module (created)
+- `public/index.html` - added IDs and booking container
+- `public/js/calendar.js` - added dynamic import call in `selectDay()`
+- `public/styles.css` - added dark theme form styles at end
+- `public/js/booking-form.js` - new module (created)
 
 ### Blocked time slots filtering (2026-04-01)
 
@@ -122,4 +122,4 @@ public/
 - Selection preservation: time choice only reset if it becomes newly blocked, otherwise retained across guest changes
 
 **Files modified:**
-- `public/js/booking-form.js` — added blocked times fetching, filtering, and dynamic re-rendering
+- `public/js/booking-form.js` - added blocked times fetching, filtering, and dynamic re-rendering

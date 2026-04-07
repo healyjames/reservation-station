@@ -13,8 +13,8 @@ Squad uses a three-branch model. **All feature work starts from `dev`, not `main
 | Branch | Purpose | Publishes |
 |--------|---------|-----------|
 | `main` | Released, tagged, in-npm code only | `npm publish` on tag |
-| `dev` | Integration branch — all feature work lands here | `npm publish --tag preview` on merge |
-| `insiders` | Early-access channel — synced from dev | `npm publish --tag insiders` on sync |
+| `dev` | Integration branch - all feature work lands here | `npm publish --tag preview` on merge |
+| `insiders` | Early-access channel - synced from dev | `npm publish --tag insiders` on sync |
 
 ## Branch Naming Convention
 
@@ -67,8 +67,8 @@ When the coordinator routes multiple issues simultaneously (e.g., "fix bugs X, Y
 
 | Scenario | Strategy |
 |----------|----------|
-| Single issue | Standard workflow above — no worktree needed |
-| 2+ simultaneous issues in same repo | Worktrees — one per issue |
+| Single issue | Standard workflow above - no worktree needed |
+| 2+ simultaneous issues in same repo | Worktrees - one per issue |
 | Work spanning multiple repos | Separate clones as siblings (see Multi-Repo below) |
 
 ### Setup
@@ -79,7 +79,7 @@ From the main clone (must be on dev or any branch):
 # Ensure dev is current
 git fetch origin dev
 
-# Create a worktree per issue — siblings to the main clone
+# Create a worktree per issue - siblings to the main clone
 git worktree add ../squad-195 -b squad/195-fix-stamp-bug origin/dev
 git worktree add ../squad-193 -b squad/193-refactor-loader origin/dev
 ```
@@ -98,7 +98,7 @@ Each agent operates inside its worktree exactly like the single-issue workflow:
 ```bash
 cd ../squad-195
 
-# Work normally — commits, tests, pushes
+# Work normally - commits, tests, pushes
 git add -A && git commit -m "fix: stamp bug (#195)"
 git push -u origin squad/195-fix-stamp-bug
 
@@ -113,7 +113,7 @@ All PRs target `dev` independently. Agents never interfere with each other's fil
 The `.squad/` directory exists in each worktree as a copy. This is safe because:
 - `.gitattributes` declares `merge=union` on append-only files (history.md, decisions.md, logs)
 - Each agent appends to its own section; union merge reconciles on PR merge to dev
-- **Rule:** Never rewrite or reorder `.squad/` files in a worktree — append only
+- **Rule:** Never rewrite or reorder `.squad/` files in a worktree - append only
 
 ### Cleanup After Merge
 
@@ -176,7 +176,7 @@ cd ../squad-pr && npm link squad-sdk
 cd ../squad-sdk && pip install -e .
 ```
 
-**Important:** Remove local links before committing. `npm link` and `go replace` are dev-only — CI must use published packages or PR-specific refs.
+**Important:** Remove local links before committing. `npm link` and `go replace` are dev-only - CI must use published packages or PR-specific refs.
 
 ### Worktrees + Multi-Repo
 

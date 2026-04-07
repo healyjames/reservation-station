@@ -8,7 +8,7 @@ name: Squad Heartbeat (Ralph)
 
 on:
   schedule:
-    # Every 30 minutes — adjust via cron expression as needed
+    # Every 30 minutes - adjust via cron expression as needed
     - cron: '*/30 * * * *'
 
   # React to completed work or new squad work
@@ -38,10 +38,10 @@ jobs:
             echo "has_script=true" >> $GITHUB_OUTPUT
           else
             echo "has_script=false" >> $GITHUB_OUTPUT
-            echo "⚠️ ralph-triage.js not found — run 'squad upgrade' to install"
+            echo "⚠️ ralph-triage.js not found - run 'squad upgrade' to install"
           fi
 
-      - name: Ralph — Smart triage
+      - name: Ralph - Smart triage
         if: steps.check-script.outputs.has_script == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -50,7 +50,7 @@ jobs:
             --squad-dir .squad \
             --output triage-results.json
 
-      - name: Ralph — Apply triage decisions
+      - name: Ralph - Apply triage decisions
         if: steps.check-script.outputs.has_script == 'true' && hashFiles('triage-results.json') != ''
         uses: actions/github-script@v7
         with:
@@ -58,16 +58,16 @@ jobs:
             const fs = require('fs');
             const path = 'triage-results.json';
             if (!fs.existsSync(path)) {
-              core.info('No triage results — board is clear');
+              core.info('No triage results - board is clear');
               return;
             }
-            
+
             const results = JSON.parse(fs.readFileSync(path, 'utf8'));
             if (results.length === 0) {
-              core.info('📋 Board is clear — Ralph found no untriaged issues');
+              core.info('📋 Board is clear - Ralph found no untriaged issues');
               return;
             }
-            
+
             for (const decision of results) {
               try {
                 await github.rest.issues.addLabels({
@@ -76,13 +76,13 @@ jobs:
                   issue_number: decision.issueNumber,
                   labels: [decision.label]
                 });
-                
+
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: decision.issueNumber,
                   body: [
-                    '### 🔄 Ralph — Auto-Triage',
+                    '### 🔄 Ralph - Auto-Triage',
                     '',
                     `**Assigned to:** ${decision.assignTo}`,
                     `**Reason:** ${decision.reason}`,
@@ -92,17 +92,17 @@ jobs:
                     '> To reassign, swap the `squad:*` label.'
                   ].join('\n')
                 });
-                
+
                 core.info(`Triaged #${decision.issueNumber} → ${decision.assignTo} (${decision.source})`);
               } catch (e) {
                 core.warning(`Failed to triage #${decision.issueNumber}: ${e.message}`);
               }
             }
-            
+
             core.info(`🔄 Ralph triaged ${results.length} issue(s)`);
 
       # Copilot auto-assign step (uses PAT if available)
-      - name: Ralph — Assign @copilot issues
+      - name: Ralph - Assign @copilot issues
         if: success()
         uses: actions/github-script@v7
         with:

@@ -1,4 +1,4 @@
-// Tenant config — loaded once on page init and shared across modules
+// Tenant config - loaded once on page init and shared across modules
 export let tenantConfig = null;
 
 export async function loadTenant() {
@@ -6,7 +6,7 @@ export async function loadTenant() {
   const tenantId = params.get('tenant');
 
   if (!tenantId) {
-    console.warn('[ReservationStation] No ?tenant= param in URL — some features will be unavailable.');
+    console.warn('[ReservationStation] No ?tenant= param in URL - some features will be unavailable.');
     return null;
   }
 

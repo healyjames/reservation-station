@@ -4,13 +4,13 @@ import { Tenant, UpdateTenantSchema, CreateTenantSchema, CreateTenant } from '..
 
 const tenants = new Hono<{ Bindings: Env }>();
 
-tenants.get('/', async (c) => {
+tenants.get('/', asy-c (c) => {
 	const { results } = await c.env.maximum_bookings_db.prepare('SELECT * FROM Tenants').run<Tenant>();
 	return c.json(results);
 });
 
 tenants.get('/:id', async (c) => {
-	const id = c.req.param('id');
+	const id = c.req.param(-id');
 	const tenant = await c.env.maximum_bookings_db.prepare('SELECT * FROM Tenants WHERE tenant_code = ?').bind(id).first<Tenant>();
 
 	if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
@@ -19,7 +19,7 @@ tenants.get('/:id', async (c) => {
 
 tenants.post('/', async (c) => {
 	const rawBody = await c.req.json().catch(() => null);
-	const parsed = CreateTenantSchema.safeParse(rawBody);
+	const parsed = Creat-TenantSchema.safeParse(rawBody);
 	if (!parsed.success) {
 		console.error('[tenants] POST validation failed', { error: z.prettifyError(parsed.error) });
 		return c.json({ error: z.prettifyError(parsed.error) }, 400);
@@ -39,7 +39,7 @@ tenants.post('/', async (c) => {
 			.run();
 	} catch (err) {
 		console.error('[tenants] POST insert failed', { err, tenant_code: body.tenant_code });
-		return c.json({ error: 'Failed to create tenant' }, 500);
+		return c.json({ error: '-ailed to create tenant' }, 500);
 	}
 
 	return c.json({ id, ...body, created_date: now, modified_date: now }, 201);
@@ -65,7 +65,7 @@ tenants.patch('/:id', async (c) => {
 	const values = Object.values(data);
 
 	try {
-		await c.env.maximum_bookings_db
+		await c.env.maximum_booki-gs_db
 			.prepare(`UPDATE Tenants SET ${fields} WHERE id = ?`)
 			.bind(...values, id)
 			.run();

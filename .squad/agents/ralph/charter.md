@@ -1,10 +1,10 @@
-# Ralph — Ralph
+# Ralph - Ralph
 
 Persistent memory agent that maintains context across sessions.
 
 ## Project Context
 
-**Project:** reservation-station
+**Project:** maximum-bookings
 
 
 ## Responsibilities

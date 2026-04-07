@@ -15,7 +15,7 @@ Squad runs on Windows, macOS, and Linux. Several bugs have been traced to platfo
 ### Filenames & Timestamps
 - **Never use colons in filenames:** ISO 8601 format `2026-03-15T05:30:00Z` is illegal on Windows
 - **Use `safeTimestamp()` utility:** Replaces colons with hyphens → `2026-03-15T05-30-00Z`
-- **Centralize formatting:** Don't inline `.toISOString().replace(/:/g, '-')` — use the utility
+- **Centralize formatting:** Don't inline `.toISOString().replace(/:/g, '-')` - use the utility
 
 ### Git Commands
 - **Never use `git -C {path}`:** Unreliable with Windows paths (backslashes, spaces, drive letters)

@@ -28,7 +28,7 @@ jobs:
             }
 
             if (!fs.existsSync(teamFile)) {
-              core.info('No .squad/team.md or .ai-team/team.md found — skipping label sync');
+              core.info('No .squad/team.md or .ai-team/team.md found - skipping label sync');
               return;
             }
 
@@ -85,16 +85,16 @@ jobs:
             const TYPE_LABELS = [
               { name: 'type:feature', color: 'DDD1F2', description: 'New capability' },
               { name: 'type:bug', color: 'FF0422', description: 'Something broken' },
-              { name: 'type:spike', color: 'F2DDD4', description: 'Research/investigation — produces a plan, not code' },
+              { name: 'type:spike', color: 'F2DDD4', description: 'Research/investigation - produces a plan, not code' },
               { name: 'type:docs', color: 'D4E5F7', description: 'Documentation work' },
               { name: 'type:chore', color: 'D4E5F7', description: 'Maintenance, refactoring, cleanup' },
               { name: 'type:epic', color: 'CC4455', description: 'Parent issue that decomposes into sub-issues' }
             ];
 
-            // High-signal labels — these MUST visually dominate all others
+            // High-signal labels - these MUST visually dominate all others
             const SIGNAL_LABELS = [
               { name: 'bug', color: 'FF0422', description: 'Something isn\'t working' },
-              { name: 'feedback', color: '00E5FF', description: 'User feedback — high signal, needs attention' }
+              { name: 'feedback', color: '00E5FF', description: 'User feedback - high signal, needs attention' }
             ];
 
             const PRIORITY_LABELS = [
@@ -105,7 +105,7 @@ jobs:
 
             // Ensure the base "squad" triage label exists
             const labels = [
-              { name: 'squad', color: SQUAD_COLOR, description: 'Squad triage inbox — Lead will assign to a member' }
+              { name: 'squad', color: SQUAD_COLOR, description: 'Squad triage inbox - Lead will assign to a member' }
             ];
 
             for (const member of members) {
@@ -140,7 +140,7 @@ jobs:
                   repo: context.repo.repo,
                   name: label.name
                 });
-                // Label exists — update it
+                // Label exists - update it
                 await github.rest.issues.updateLabel({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -151,7 +151,7 @@ jobs:
                 core.info(`Updated label: ${label.name}`);
               } catch (err) {
                 if (err.status === 404) {
-                  // Label doesn't exist — create it
+                  // Label doesn't exist - create it
                   await github.rest.issues.createLabel({
                     owner: context.repo.owner,
                     repo: context.repo.repo,

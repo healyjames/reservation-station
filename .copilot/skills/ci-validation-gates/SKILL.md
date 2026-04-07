@@ -1,19 +1,19 @@
 ---
 name: "ci-validation-gates"
-description: "Defensive CI/CD patterns: semver validation, token checks, retry logic, draft detection — earned from v0.8.22"
+description: "Defensive CI/CD patterns: semver validation, token checks, retry logic, draft detection - earned from v0.8.22"
 domain: "ci-cd"
 confidence: "high"
-source: "extracted from Drucker and Trejo charters — earned knowledge from v0.8.22 release incident"
+source: "extracted from Drucker and Trejo charters - earned knowledge from v0.8.22 release incident"
 ---
 
 ## Context
 
-CI workflows must be defensive. These patterns were learned from the v0.8.22 release disaster where invalid semver, wrong token types, missing retry logic, and draft releases caused a multi-hour outage. Both Drucker (CI/CD) and Trejo (Release Manager) carried this knowledge in their charters — now centralized here.
+CI workflows must be defensive. These patterns were learned from the v0.8.22 release disaster where invalid semver, wrong token types, missing retry logic, and draft releases caused a multi-hour outage. Both Drucker (CI/CD) and Trejo (Release Manager) carried this knowledge in their charters - now centralized here.
 
 ## Patterns
 
 ### Semver Validation Gate
-Every publish workflow MUST validate version format before `npm publish`. 4-part versions (e.g., 0.8.21.4) are NOT valid semver — npm mangles them.
+Every publish workflow MUST validate version format before `npm publish`. 4-part versions (e.g., 0.8.21.4) are NOT valid semver - npm mangles them.
 
 ```yaml
 - name: Validate semver
@@ -30,7 +30,7 @@ Every publish workflow MUST validate version format before `npm publish`. 4-part
 
 ### NPM Token Type Verification
 NPM_TOKEN MUST be an Automation token, not a User token with 2FA:
-- User tokens require OTP — CI can't provide it → EOTP error
+- User tokens require OTP - CI can't provide it → EOTP error
 - Create Automation tokens at npmjs.com → Settings → Access Tokens → Automation
 - Verify before first publish in any workflow
 
@@ -64,7 +64,7 @@ Draft releases don't emit `release: published` event. Workflows MUST:
 - If using workflow_dispatch: verify release is published via GitHub API before proceeding
 
 ### Build Script Protection
-Set `SKIP_BUILD_BUMP=1` (or `$env:SKIP_BUILD_BUMP = "1"` on Windows) before ANY release build. bump-build.mjs is for dev builds ONLY — it silently mutates versions.
+Set `SKIP_BUILD_BUMP=1` (or `$env:SKIP_BUILD_BUMP = "1"` on Windows) before ANY release build. bump-build.mjs is for dev builds ONLY - it silently mutates versions.
 
 ## Known Failure Modes (v0.8.22 Incident)
 
@@ -80,5 +80,5 @@ Set `SKIP_BUILD_BUMP=1` (or `$env:SKIP_BUILD_BUMP = "1"` on Windows) before ANY 
 - ❌ Publishing without semver validation gate
 - ❌ Single-shot verification without retry
 - ❌ Hard-coded secrets in workflows
-- ❌ Silent CI failures — every error needs actionable output with remediation
+- ❌ Silent CI failures - every error needs actionable output with remediation
 - ❌ Assuming npm publish is instantly queryable

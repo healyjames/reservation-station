@@ -12,7 +12,7 @@ tools:
 
 ## Context
 
-Many developers use GitHub through an Enterprise Managed User (EMU) account at work while maintaining a personal GitHub account for open-source contributions. AI agents spawned by Squad inherit the shell's default `gh` authentication — which is usually the EMU account. This causes failures when agents try to push to personal repos, create PRs on forks, or interact with resources outside the enterprise org.
+Many developers use GitHub through an Enterprise Managed User (EMU) account at work while maintaining a personal GitHub account for open-source contributions. AI agents spawned by Squad inherit the shell's default `gh` authentication - which is usually the EMU account. This causes failures when agents try to push to personal repos, create PRs on forks, or interact with resources outside the enterprise org.
 
 This skill teaches agents how to detect the active identity, switch contexts safely, and avoid mixing credentials across operations.
 
@@ -27,8 +27,8 @@ gh auth status
 ```
 
 Look for:
-- `Logged in to github.com as USERNAME` — the active account
-- `Token scopes: ...` — what permissions are available
+- `Logged in to github.com as USERNAME` - the active account
+- `Token scopes: ...` - what permissions are available
 - Multiple accounts will show separate entries
 
 ### Extract a Specific Account's Token
@@ -132,7 +132,7 @@ $token = gh auth token --user personaluser
 git remote set-url origin https://personaluser:$token@github.com/personaluser/personaluser.github.io.git
 git push origin main
 
-# Clean up — don't leave token in remote URL
+# Clean up - don't leave token in remote URL
 git remote set-url origin https://github.com/personaluser/personaluser.github.io.git
 ```
 
@@ -155,7 +155,7 @@ gh pr create --repo bradygaster/squad --head personaluser:contrib/fix-docs `
 ```bash
 # BAD: Agent assumes default gh auth works for personal repos
 git push origin main
-# ERROR: Permission denied — EMU account has no access to personal repo
+# ERROR: Permission denied - EMU account has no access to personal repo
 
 # BAD: Hardcoding tokens in scripts
 git push https://personaluser:ghp_xxxxxxxxxxxx@github.com/personaluser/repo.git main

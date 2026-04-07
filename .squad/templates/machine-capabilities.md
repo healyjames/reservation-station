@@ -36,7 +36,7 @@ Add `needs:*` labels to issues that require specific capabilities:
 | `needs:onedrive` | Requires OneDrive sync |
 | `needs:teams-mcp` | Requires Teams MCP tools |
 
-Custom capabilities are supported — any `needs:X` label works if `X` is in the machine's `capabilities` array.
+Custom capabilities are supported - any `needs:X` label works if `X` is in the machine's `capabilities` array.
 
 ### 3. Run Ralph
 
@@ -46,7 +46,7 @@ squad watch --interval 5
 
 Ralph will log skipped issues:
 ```
-⏭️ Skipping #42 "Train ML model" — missing: gpu
+⏭️ Skipping #42 "Train ML model" - missing: gpu
 ✓ Triaged #43 "Fix CSS layout" → Picard (routing-rule)
 ```
 

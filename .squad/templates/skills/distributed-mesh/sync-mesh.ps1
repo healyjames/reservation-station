@@ -1,4 +1,4 @@
-# sync-mesh.ps1 — Materialize remote squad state locally
+# sync-mesh.ps1 - Materialize remote squad state locally
 #
 # Reads mesh.json, fetches remote squads into local directories.
 # Run before agent reads. No daemon. No service. ~40 lines.
@@ -18,11 +18,11 @@ if ($Init) {
         Write-Host "❌ $MeshJson not found"
         exit 1
     }
-    
+
     Write-Host "🚀 Initializing mesh state repository..."
     $config = Get-Content $MeshJson -Raw | ConvertFrom-Json
     $squads = $config.squads.PSObject.Properties.Name
-    
+
     # Create squad directories with placeholder SUMMARY.md
     foreach ($squad in $squads) {
         if (-not (Test-Path $squad)) {
@@ -31,7 +31,7 @@ if ($Init) {
         } else {
             Write-Host "  • $squad/ exists (skipped)"
         }
-        
+
         $summaryPath = "$squad/SUMMARY.md"
         if (-not (Test-Path $summaryPath)) {
             "# $squad`n`n_No state published yet._" | Set-Content $summaryPath
@@ -40,7 +40,7 @@ if ($Init) {
             Write-Host "  • $summaryPath exists (skipped)"
         }
     }
-    
+
     # Generate root README.md
     if (-not (Test-Path "README.md")) {
         $readme = @"
@@ -65,7 +65,7 @@ State is synchronized using ``sync-mesh.sh`` or ``sync-mesh.ps1``.
     } else {
         Write-Host "  • README.md exists (skipped)"
     }
-    
+
     Write-Host ""
     Write-Host "✅ Mesh state repository initialized"
     exit 0
@@ -73,7 +73,7 @@ State is synchronized using ``sync-mesh.sh`` or ``sync-mesh.ps1``.
 
 $config = Get-Content $MeshJson -Raw | ConvertFrom-Json
 
-# Zone 2: Remote-trusted — git clone/pull
+# Zone 2: Remote-trusted - git clone/pull
 foreach ($entry in $config.squads.PSObject.Properties | Where-Object { $_.Value.zone -eq "remote-trusted" }) {
     $squad  = $entry.Name
     $source = $entry.Value.source
@@ -90,7 +90,7 @@ foreach ($entry in $config.squads.PSObject.Properties | Where-Object { $_.Value.
     }
 }
 
-# Zone 3: Remote-opaque — fetch published contracts
+# Zone 3: Remote-opaque - fetch published contracts
 foreach ($entry in $config.squads.PSObject.Properties | Where-Object { $_.Value.zone -eq "remote-opaque" }) {
     $squad  = $entry.Name
     $source = $entry.Value.source
@@ -105,7 +105,7 @@ foreach ($entry in $config.squads.PSObject.Properties | Where-Object { $_.Value.
         if ($token) { $params.Headers = @{ Authorization = "Bearer $token" } }
     }
     try { Invoke-WebRequest @params -ErrorAction Stop }
-    catch { "# ${squad} — unavailable ($(Get-Date))" | Set-Content "$target/SUMMARY.md" }
+    catch { "# ${squad} - unavailable ($(Get-Date))" | Set-Content "$target/SUMMARY.md" }
 }
 
 Write-Host "✓ Mesh sync complete"

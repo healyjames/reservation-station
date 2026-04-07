@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Ralph Triage Script — Standalone CJS implementation
+ * Ralph Triage Script - Standalone CJS implementation
  *
  * ⚠️ SYNC NOTICE: This file ports triage logic from the SDK source:
  *   packages/squad-sdk/src/ralph/triage.ts
@@ -188,7 +188,7 @@ function triageIssue(issue, rules, modules, roster) {
 
   return {
     agent: lead,
-    reason: 'No module, routing, or role keyword match — routed to Lead/Architect',
+    reason: 'No module, routing, or role keyword match - routed to Lead/Architect',
     source: 'lead-fallback',
     confidence: 'low',
   };
@@ -265,7 +265,7 @@ function splitKeywords(examplesCell) {
 
 function normalizeOptionalOwner(owner) {
   if (!owner) return null;
-  if (/^[-—–]+$/.test(owner)) return null;
+  if (/^[--–]+$/.test(owner)) return null;
   return owner;
 }
 

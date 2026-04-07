@@ -97,7 +97,7 @@ function validateStep1() {
          formState.formData.time !== '';
 }
 
-// Validate step 2 (required fields non-empty — format is enforced by HTML5)
+// Validate step 2 (required fields non-empty - format is enforced by HTML5)
 function validateStep2() {
   const { firstName, surname, email, telephone } = formState.formData;
   return (
