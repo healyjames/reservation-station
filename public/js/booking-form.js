@@ -445,8 +445,8 @@ function showSuccess() {
           </svg>
           <h4>Booking Confirmed!</h4>
         </div>
-        <p>Your reservation for ${formState.formData.guests} guest${formState.formData.guests > 1 ? 's' : ''} on ${dateDisplay} at ${formState.formData.time} has been confirmed.</p>
-        <p>We've sent a confirmation email to ${formState.formData.email}.</p>
+        <p>Your reservation for <strong>${formState.formData.guests} guest${formState.formData.guests > 1 ? 's' : ''}</strong> on <strong>${dateDisplay}</strong> at <strong>${formState.formData.time}</strong> has been confirmed.</p>
+        <p>We've sent a confirmation email to <strong>${formState.formData.email}</strong>.</p>
       </div>
       <button type="button" class="button-secondary" id="new-booking-btn">
         Make Another Booking
