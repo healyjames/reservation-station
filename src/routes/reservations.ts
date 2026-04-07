@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { Hono } from 'hono';
 import { Reservation, CreateReservationSchema, UpdateReservationSchema, CreateReservation } from '../db/schema';
+import { generateTimeSlots, calculateConcurrentGuests, SlotReservation } from '../utils/slots';
 
 const reservations = new Hono<{ Bindings: Env }>();
 
@@ -19,7 +20,6 @@ reservations.get('/blocked-times', async (c) => {
 		return c.json({ error: 'guests must be a positive integer' }, 400);
 	}
 
-	// Fetch tenant configuration
 	const tenant = await c.env.maximum_bookings_db
 		.prepare('SELECT max_guests, concurrent_guests_time_limit FROM Tenants WHERE id = ?')
 		.bind(tenantId)
@@ -29,48 +29,19 @@ reservations.get('/blocked-times', async (c) => {
 		return c.json({ error: 'Tenant not found' }, 404);
 	}
 
-	// If max_guests is 0, no limit configured
 	if (tenant.max_guests === 0) {
 		return c.json({ blocked_times: [], time_limit_minutes: tenant.concurrent_guests_time_limit });
 	}
 
-	// Fetch all reservations for this tenant and date
-	const { results: reservations } = await c.env.maximum_bookings_db
+	const { results: slotReservations } = await c.env.maximum_bookings_db
 		.prepare('SELECT reservation_time, guests FROM Reservations WHERE tenant_id = ? AND reservation_date = ?')
 		.bind(tenantId, date)
-		.run<{ reservation_time: string; guests: number }>();
+		.run<SlotReservation>();
 
-	// Helper function to convert time to minutes
-	function toMinutes(time: string): number {
-		const [h, m] = time.split(':').map(Number);
-		return h * 60 + m;
-	}
-
-	// Generate time slots
-	const TIME_SLOTS: string[] = [];
-	for (let hour = 12; hour <= 21; hour++) {
-		TIME_SLOTS.push(`${hour.toString().padStart(2, '0')}:00`);
-		TIME_SLOTS.push(`${hour.toString().padStart(2, '0')}:30`);
-	}
-
-	// Calculate blocked slots
 	const blockedTimes: string[] = [];
-	for (const slot of TIME_SLOTS) {
-		const slotMinutes = toMinutes(slot);
-
-		// Calculate concurrent guests at this slot
-		const concurrentGuests = reservations.reduce((sum, r) => {
-			const reservationMinutes = toMinutes(r.reservation_time);
-			const timeDiff = Math.abs(slotMinutes - reservationMinutes);
-
-			if (timeDiff < tenant.concurrent_guests_time_limit) {
-				return sum + r.guests;
-			}
-			return sum;
-		}, 0);
-
-		// Check if this slot would exceed capacity
-		if (concurrentGuests + requestedGuests > tenant.max_guests) {
+	for (const slot of generateTimeSlots()) {
+		const concurrent = calculateConcurrentGuests(slot, slotReservations, tenant.concurrent_guests_time_limit);
+		if (concurrent + requestedGuests > tenant.max_guests) {
 			blockedTimes.push(slot);
 		}
 	}
@@ -81,7 +52,7 @@ reservations.get('/blocked-times', async (c) => {
 	});
 });
 
-// GET /api/reservations/availability?tenant_id=&date= — check remaining covers
+// GET /api/reservations/availability?tenant_id=&date= — per-slot concurrent guest counts
 reservations.get('/availability', async (c) => {
 	const tenantId = c.req.query('tenant_id');
 	const dateParam = c.req.query('date');
@@ -93,21 +64,32 @@ reservations.get('/availability', async (c) => {
 	const date = parsedDate.toISOString().split('T')[0];
 
 	const tenant = await c.env.maximum_bookings_db
-		.prepare('SELECT max_covers FROM Tenants WHERE id = ?')
+		.prepare('SELECT max_covers, concurrent_guests_time_limit FROM Tenants WHERE id = ?')
 		.bind(tenantId)
-		.first<{ max_covers: number }>();
+		.first<{ max_covers: number; concurrent_guests_time_limit: number }>();
 
 	if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
 
-	const { results } = await c.env.maximum_bookings_db
-		.prepare('SELECT COALESCE(SUM(guests), 0) as total FROM Reservations WHERE tenant_id = ? AND reservation_date = ?')
+	const { results: slotReservations } = await c.env.maximum_bookings_db
+		.prepare('SELECT reservation_time, guests FROM Reservations WHERE tenant_id = ? AND reservation_date = ?')
 		.bind(tenantId, date)
-		.run<{ total: number }>();
+		.run<SlotReservation>();
 
-	const booked = results[0]?.total ?? 0;
-	const remaining = tenant.max_covers - booked;
+	const slots = generateTimeSlots().map((time) => {
+		const concurrent_guests = calculateConcurrentGuests(time, slotReservations, tenant.concurrent_guests_time_limit);
+		return {
+			time,
+			concurrent_guests,
+			available_capacity: Math.max(0, tenant.max_covers - concurrent_guests),
+		};
+	});
 
-	return c.json({ date, booked, remaining, max_covers: tenant.max_covers });
+	return c.json({
+		date,
+		max_covers: tenant.max_covers,
+		time_limit_minutes: tenant.concurrent_guests_time_limit,
+		slots,
+	});
 });
 
 // GET /api/reservations — list, optionally filter by tenant + date
