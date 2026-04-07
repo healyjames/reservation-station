@@ -176,7 +176,8 @@ reservations.post('/', async (c) => {
 		.prepare(
 			`INSERT INTO Reservations
         (id, tenant_id, first_name, surname, telephone, email,
-         reservation_date, reservation_time, guests, dietary_requirements)
+         reservation_date, reservation_time, guests, dietary_requirements,
+         created_date, modified_date)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		)
 		.bind(
