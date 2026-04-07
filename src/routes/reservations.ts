@@ -57,12 +57,12 @@ reservations.get('/blocked-times', async (c) => {
 	const blockedTimes: string[] = [];
 	for (const slot of TIME_SLOTS) {
 		const slotMinutes = toMinutes(slot);
-		
+
 		// Calculate concurrent guests at this slot
 		const concurrentGuests = reservations.reduce((sum, r) => {
 			const reservationMinutes = toMinutes(r.reservation_time);
 			const timeDiff = Math.abs(slotMinutes - reservationMinutes);
-			
+
 			if (timeDiff < tenant.concurrent_guests_time_limit) {
 				return sum + r.guests;
 			}
@@ -84,13 +84,20 @@ reservations.get('/blocked-times', async (c) => {
 // GET /api/reservations/availability?tenant_id=&date= — check remaining covers
 reservations.get('/availability', async (c) => {
 	const tenantId = c.req.query('tenant_id');
-	const date = c.req.query('date');
-	if (!tenantId || !date) return c.json({ error: 'tenant_id and date required' }, 400);
+	const dateParam = c.req.query('date');
+	if (!tenantId) return c.json({ error: 'tenant_id required' }, 400);
+	if (!dateParam) return c.json({ error: 'date required' }, 400);
+
+	const parsedDate = new Date(dateParam);
+	if (isNaN(parsedDate.getTime())) return c.json({ error: 'Invalid date. Expected YYYY-MM-DD' }, 400);
+	const date = parsedDate.toISOString().split('T')[0];
 
 	const tenant = await c.env.maximum_bookings_db
 		.prepare('SELECT max_covers FROM Tenants WHERE id = ?')
 		.bind(tenantId)
 		.first<{ max_covers: number }>();
+
+	if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
 
 	const { results } = await c.env.maximum_bookings_db
 		.prepare('SELECT COALESCE(SUM(guests), 0) as total FROM Reservations WHERE tenant_id = ? AND reservation_date = ?')
@@ -98,9 +105,9 @@ reservations.get('/availability', async (c) => {
 		.run<{ total: number }>();
 
 	const booked = results[0]?.total ?? 0;
-	const remaining = (tenant?.max_covers ?? 0) - booked;
+	const remaining = tenant.max_covers - booked;
 
-	return c.json({ date, booked, remaining, max_covers: tenant?.max_covers });
+	return c.json({ date, booked, remaining, max_covers: tenant.max_covers });
 });
 
 // GET /api/reservations — list, optionally filter by tenant + date
