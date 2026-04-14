@@ -1,44 +1,15 @@
-@font-face {
-  font-family: 'Google Sans';
-  src: url('/fonts/GoogleSans-Variable.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Google Sans';
-  src: url('/fonts/GoogleSans-Italic-Variable.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: italic;
-  font-display: swap;
-}
+@import url('/shared.css');
 
 /* ============================================================
-   ADMIN DESIGN TOKENS — warm burgundy palette
+   ADMIN DESIGN TOKENS
    ============================================================ */
 :root {
-  --primary:          #8b2635;
-  --primary-light:    #b03a4a;
-  --primary-lighter:  #d4717e;
-  --primary-lightest: #fdf0f1;
-  --primary-darker:   #6b1d29;
-
-  --background:       #faf8f8;
   --background-card:  #ffffff;
-  --background-light: #f5f0f0;
 
-  --foreground:       #1a0a0c;
   --foreground-muted: #6b5155;
 
   --border:           #e8d8da;
-  --border-focus:     #8b2635;
-
-  --error-bg:         #fee2e2;
-  --error-text:       #991b1b;
-
-  --success-bg:       #d1fae5;
-  --success-text:     #065f46;
+  --border-focus:     var(--primary);
 
   --info-bg:          #fff7ed;
   --info-text:        #92400e;
@@ -47,9 +18,6 @@
 /* ============================================================
    BASE RESET
    ============================================================ */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
 
 html, body {
   margin: 0;
@@ -65,19 +33,9 @@ html, body {
 /* ============================================================
    UTILITY
    ============================================================ */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
 
 /* ============================================================
-   LOGIN LAYOUT — centered card on a subtle warm background
+   LOGIN LAYOUT— centered card on a subtle warm background
    ============================================================ */
 .login-page {
   min-height: 100vh;
@@ -86,10 +44,6 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(139, 38, 53, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(139, 38, 53, 0.04) 0%, transparent 50%),
-    var(--background);
 }
 
 .login-card {
@@ -99,8 +53,8 @@ html, body {
   border-radius: 16px;
   padding: 2.5rem 2rem;
   box-shadow:
-    0 1px 3px rgba(139, 38, 53, 0.08),
-    0 8px 24px rgba(139, 38, 53, 0.10),
+    0 1px 3px rgba(var(--primary-rgb), 0.08),
+    0 8px 24px rgba(var(--primary-rgb), 0.10),
     0 32px 64px rgba(0, 0, 0, 0.06);
   border: 1px solid var(--border);
 }
@@ -128,7 +82,7 @@ html, body {
   background: var(--primary);
   border-radius: 14px;
   margin-bottom: 1rem;
-  box-shadow: 0 4px 12px rgba(139, 38, 53, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
 }
 
 .login-logo svg {
@@ -169,8 +123,8 @@ html, body {
 }
 
 .alert-error {
-  background: var(--error-bg);
-  color: var(--error-text);
+  background: var(--error-light);
+  color: var(--error-dark);
   border: 1px solid rgba(153, 27, 27, 0.15);
 }
 
@@ -215,11 +169,11 @@ html, body {
 .form-group input:focus {
   outline: none;
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(139, 38, 53, 0.12);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12);
 }
 
 .form-group input[aria-invalid="true"] {
-  border-color: var(--error-text);
+  border-color: var(--error-dark);
 }
 
 /* ============================================================
@@ -238,17 +192,17 @@ html, body {
   cursor: pointer;
   transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
   margin-top: 0.5rem;
-  box-shadow: 0 2px 8px rgba(139, 38, 53, 0.25);
+  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.25);
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--primary-darker);
-  box-shadow: 0 4px 12px rgba(139, 38, 53, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
 }
 
 .btn-primary:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: 0 1px 4px rgba(139, 38, 53, 0.2);
+  box-shadow: 0 1px 4px rgba(var(--primary-rgb), 0.2);
 }
 
 .btn-primary:disabled {
@@ -303,8 +257,8 @@ html, body {
    ALERT VARIANTS — success
    ============================================================ */
 .alert-success {
-  background: var(--success-bg);
-  color: var(--success-text);
+  background: var(--success-light);
+  color: var(--success-dark);
   border: 1px solid rgba(6, 95, 70, 0.15);
 }
 
@@ -721,8 +675,8 @@ html, body {
 }
 
 .btn-delete {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--error-light);
+  color: var(--error-dark);
   border: 1px solid rgba(153, 27, 27, 0.15);
 }
 
@@ -749,7 +703,7 @@ html, body {
 }
 
 .btn-danger {
-  background: #991b1b;
+  background: var(--error-dark);
   color: white;
   border: none;
   border-radius: 8px;
@@ -896,7 +850,7 @@ html, body {
 .modal-form .form-group textarea:focus {
   outline: none;
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(139, 38, 53, 0.12);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12);
 }
 
 .modal-actions {
@@ -962,7 +916,7 @@ html, body {
 .settings-panel .form-group input:focus {
   outline: none;
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(139, 38, 53, 0.12);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12);
 }
 
 .form-group-check {
@@ -1019,8 +973,8 @@ html, body {
 }
 
 .error-text {
-  color: var(--error-text);
-  background: var(--error-bg);
+  color: var(--error-dark);
+  background: var(--error-light);
   border: 1px solid rgba(153, 27, 27, 0.15);
   border-radius: 8px;
   padding: 0.75rem 1rem;

@@ -1,0 +1,153 @@
+@font-face {
+  font-family: 'Google Sans';
+  src: url('/fonts/GoogleSans-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Google Sans';
+  src: url('/fonts/GoogleSans-Italic-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ============================================================
+   BASE RESET
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   COLOUR PALETTE
+   ============================================================ */
+:root {
+  /** Base colors */
+  --clr-dark-a0:  #000000;
+  --clr-light-a0: #ffffff;
+
+  /** Theme primary colors */
+  --clr-primary-a0:  #6969ae;
+  --clr-primary-a10: #7a78b7;
+  --clr-primary-a20: #8a88c0;
+  --clr-primary-a30: #9b98c9;
+  --clr-primary-a40: #aca9d2;
+  --clr-primary-a50: #bcb9db;
+  --clr-primary-a60: #cdcae4;
+  --clr-primary-a70: #dddced;
+  --clr-primary-a80: #eeedf6;
+  --clr-primary-a90: #ffffff;
+
+  /** Theme surface colors */
+  --clr-surface-a0:  #121212;
+  --clr-surface-a10: #282828;
+  --clr-surface-a20: #3f3f3f;
+  --clr-surface-a30: #575757;
+  --clr-surface-a40: #717171;
+  --clr-surface-a50: #8b8b8b;
+  --clr-surface-a60: #a7a7a7;
+  --clr-surface-a70: #c4c4c4;
+
+  /** Theme tonal surface colors */
+  --clr-surface-tonal-a0:  #34334b;
+  --clr-surface-tonal-a10: #48475d;
+  --clr-surface-tonal-a20: #5d5b70;
+  --clr-surface-tonal-a30: #727183;
+  --clr-surface-tonal-a40: #888796;
+  --clr-surface-tonal-a50: #9f9eab;
+  --clr-surface-tonal-a60: #b6b5bf;
+  --clr-surface-tonal-a70: #cecdd4;
+
+  /** Success colors */
+  --clr-success-a0:  #22946e;
+  --clr-success-a10: #47d5a6;
+  --clr-success-a20: #9ae8ce;
+
+  /** Warning colors */
+  --clr-warning-a0:  #a87a2a;
+  --clr-warning-a10: #d7ac61;
+  --clr-warning-a20: #ecd7b2;
+
+  /** Danger colors */
+  --clr-danger-a0:  #9c2121;
+  --clr-danger-a10: #d94a4a;
+  --clr-danger-a20: #eb9e9e;
+
+  /** Info colors */
+  --clr-info-a0:  #21498a;
+  --clr-info-a10: #4077d1;
+  --clr-info-a20: #92b2e5;
+}
+
+/* ============================================================
+   SEMANTIC TOKENS
+   ============================================================ */
+:root {
+  /* Primary */
+  --primary-darkest:  var(--clr-primary-a0);
+  --primary-darker:   var(--clr-primary-a10);
+  --primary-dark:     var(--clr-primary-a20);
+  --primary:          var(--clr-primary-a30);
+  --primary-rgb:      155, 152, 201;
+  --primary-light:    var(--clr-primary-a40);
+  --primary-lighter:  var(--clr-primary-a50);
+  --primary-lightest: var(--clr-primary-a60);
+
+  /* Background */
+  --background-darkest:  var(--clr-surface-a0);
+  --background-darker:   var(--clr-surface-tonal-a0);
+  --background-dark:     var(--clr-surface-tonal-a10);
+  --background:          var(--clr-surface-tonal-a10);
+  --background-light:    var(--clr-surface-tonal-a20);
+  --background-lighter:  var(--clr-surface-tonal-a30);
+  --background-lightest: var(--clr-surface-tonal-a40);
+
+  /* Foreground */
+  --foreground-darkest:  var(--clr-surface-tonal-a40);
+  --foreground-darker:   var(--clr-surface-tonal-a50);
+  --foreground-dark:     var(--clr-surface-tonal-a60);
+  --foreground:          var(--clr-surface-tonal-a70);
+  --foreground-light:    var(--clr-primary-a70);
+  --foreground-lighter:  var(--clr-primary-a80);
+  --foreground-lightest: var(--clr-light-a0);
+
+  /* Error / Danger */
+  --error-dark:    var(--clr-danger-a0);
+  --error:         var(--clr-danger-a10);
+  --error-light:   var(--clr-danger-a20);
+
+  /* Success */
+  --success-dark:  var(--clr-success-a0);
+  --success:       var(--clr-success-a10);
+  --success-light: var(--clr-success-a20);
+
+  /* Warning */
+  --warning-dark:  var(--clr-warning-a0);
+  --warning:       var(--clr-warning-a10);
+  --warning-light: var(--clr-warning-a20);
+
+  /* Info */
+  --info-dark:  var(--clr-info-a0);
+  --info:       var(--clr-info-a10);
+  --info-light: var(--clr-info-a20);
+
+  /* Legacy */
+  --grey-lightest: var(--clr-surface-a10);
+}
+
+/* ============================================================
+   SHARED UTILITIES
+   ============================================================ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
