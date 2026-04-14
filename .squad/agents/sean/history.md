@@ -24,7 +24,17 @@ Backend Dev on the Maximum Bookings project. Owns the Hono API, D1 database sche
 
 
 
-- Project kickoff: 2026-04-01
+- **Phase 1 auth foundation**: Added `AdminUsers` table (migration `0002`), PBKDF2 password hashing + HMAC-SHA256 JWT via Web Crypto API (`src/utils/auth.ts`), `POST /api/auth/login` route with rate limiting (10 failures → 15-min lock on `AdminUsers.locked_until`), `adminAuth` JWT middleware, and `scripts/seed-admin.ts` for generating INSERT SQL. `JWT_SECRET` is a Wrangler secret — declared in `src/types/env.d.ts` until `npx wrangler types` regenerates `worker-configuration.d.ts`. Auth responses follow `{ success, data?, error? }` envelope.
+
+- **Phase 2 admin routes**: Created `src/routes/admin.ts` with all 5 admin endpoints (`GET /me`, `PATCH /me`, `GET /reservations`, `PATCH /reservations/:id`, `DELETE /reservations/:id`), all protected by `adminAuth` middleware. Key patterns: `tenantId` always comes from `c.get('tenantId')` (JWT), never from request body or query params. Tenant isolation enforced at application layer (pre-fetch + ownership check) AND at SQL layer (`WHERE id = ? AND tenant_id = ?`). 404 is returned for both "not found" and "wrong tenant" to prevent resource enumeration. `UpdateTenantSchema` already omits `id`, `created_date`, `modified_date` but not `tenant_code` — strip `tenant_code` explicitly before building the UPDATE query. Also added optional `expiresInSeconds` param to `signJWT` (defaulting to 8h) because the test suite needed it to produce expired tokens.
+
+
+- **No code comments directive (2026-04-07):** James directed that inline comments, explanatory comments, and JSDoc are not to be added to code changes unless the code is genuinely too complex to understand without one. Apply to all future code edits.
+
+- **Planning artifacts location (2026-04-12):** Planning docs and design notes go in `.squad/temp/` — not in the Copilot session state directory.
+
+- **Neela's phase 8 test requirements (drove phase 2 changes):** Tests depend on `signJWT` accepting an optional `expiresInSeconds` parameter (pass `-1` for an already-expired token). Tenant isolation for `PATCH`/`DELETE` must return 404, not 403, to avoid resource enumeration — tests verify the record is unmodified in the DB. `hashPassword` must be importable from `src/utils/auth` for test-time seed generation.
+
 - Stack: Cloudflare Workers + Pages, D1 (SQLite), Hono
 - Consistent API response shape: `{ success, data, error }`
 - CORS must be handled for cross-origin widget requests

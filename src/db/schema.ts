@@ -59,3 +59,22 @@ export type UpdateTenant = z.infer<typeof UpdateTenantSchema>;
 export type Reservation = z.infer<typeof ReservationSchema>;
 export type CreateReservation = z.infer<typeof CreateReservationSchema>;
 export type UpdateReservation = z.infer<typeof UpdateReservationSchema>;
+
+export const AdminUserSchema = z.object({
+	id: z.uuid(),
+	tenant_id: z.uuid(),
+	email: z.email(),
+	password_hash: z.string(),
+	failed_attempts: z.number().int().nonnegative().default(0),
+	locked_until: z.string().nullable().optional(),
+	created_date: z.string().optional(),
+	modified_date: z.string().optional(),
+});
+
+export const LoginSchema = z.object({
+	email: z.email(),
+	password: z.string().min(1),
+});
+
+export type AdminUser = z.infer<typeof AdminUserSchema>;
+export type LoginPayload = z.infer<typeof LoginSchema>;

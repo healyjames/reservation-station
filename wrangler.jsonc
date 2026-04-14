@@ -38,12 +38,16 @@
 	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
 	 */
 	/**
-	 * Environment Variables
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-	 * Note: Use secrets to store sensitive data.
-	 * https://developers.cloudflare.com/workers/configuration/secrets/
+	 * Secrets
+	 * Set via: npx wrangler secret put JWT_SECRET
+	 * For local dev, add JWT_SECRET=<value> to .dev.vars
+	 * After running `wrangler secret put`, run `npx wrangler types` to regenerate
+	 * worker-configuration.d.ts — until then, src/types/env.d.ts provides the type.
 	 */
-	// "vars": {  "MY_VARIABLE": "production_value" }
+	// "vars": { "MY_VARIABLE": "production_value" }
+	/**
+	 * D1 Databases (see binding above)
+	 */
 	/**
 	 * Service Bindings (communicate between multiple Workers)
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings

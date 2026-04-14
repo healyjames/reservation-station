@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Sign In — Maximum Bookings</title>
+    <link rel="stylesheet" href="/admin/styles/admin.css" />
+    <script>
+      if (localStorage.getItem('admin_token')) {
+        window.location.replace('/admin/dashboard.html');
+      }
+    </script>
+  </head>
+  <body class="login-page">
+
+    <main class="login-card" role="main">
+      <header class="login-header">
+        <div class="login-logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+          </svg>
+        </div>
+        <h1>Staff Sign In</h1>
+        <p>Maximum Bookings Admin</p>
+      </header>
+
+      <div
+        id="expired-banner"
+        class="alert alert-info"
+        role="status"
+        aria-hidden="true"
+      >
+        Your session has expired. Please sign in again.
+      </div>
+
+      <div
+        id="error-banner"
+        class="alert alert-error"
+        role="alert"
+        aria-live="assertive"
+        aria-hidden="true"
+      ></div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="email">Email address</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            autocomplete="username"
+            required
+            placeholder="you@example.com"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="current-password"
+            required
+            placeholder="••••••••"
+          />
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn-primary">
+          Sign in
+        </button>
+      </form>
+
+      <footer class="login-footer no-print">
+        <p>Staff access only. Not a member? Contact your manager.</p>
+      </footer>
+    </main>
+
+    <script src="/admin/js/auth.js"></script>
+    <script>
+      (function () {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('expired') === '1') {
+          const banner = document.getElementById('expired-banner');
+          banner.setAttribute('aria-hidden', 'false');
+          banner.classList.add('visible');
+        }
+
+        const form      = document.getElementById('login-form');
+        const emailEl   = document.getElementById('email');
+        const passwordEl = document.getElementById('password');
+        const submitBtn = document.getElementById('submit-btn');
+        const errorBanner = document.getElementById('error-banner');
+
+        function showError(message) {
+          errorBanner.textContent = message;
+          errorBanner.setAttribute('aria-hidden', 'false');
+          errorBanner.classList.add('visible');
+          emailEl.setAttribute('aria-invalid', 'true');
+          passwordEl.setAttribute('aria-invalid', 'true');
+        }
+
+        function clearError() {
+          errorBanner.textContent = '';
+          errorBanner.setAttribute('aria-hidden', 'true');
+          errorBanner.classList.remove('visible');
+          emailEl.removeAttribute('aria-invalid');
+          passwordEl.removeAttribute('aria-invalid');
+        }
+
+        function setLoading(loading) {
+          submitBtn.disabled = loading;
+          if (loading) {
+            submitBtn.classList.add('loading');
+          } else {
+            submitBtn.classList.remove('loading');
+          }
+        }
+
+        [emailEl, passwordEl].forEach(el => {
+          el.addEventListener('input', clearError);
+        });
+
+        form.addEventListener('submit', async function (e) {
+          e.preventDefault();
+          clearError();
+
+          const email    = emailEl.value.trim();
+          const password = passwordEl.value;
+
+          if (!email || !password) {
+            showError('Please enter your email and password.');
+            return;
+          }
+
+          setLoading(true);
+
+          try {
+            const data = await AdminAuth.login(email, password);
+
+            localStorage.setItem('admin_token', data.token);
+            localStorage.setItem('admin_tenant', JSON.stringify(data.tenant));
+
+            window.location.replace('/admin/dashboard.html');
+          } catch (err) {
+            setLoading(false);
+
+            if (!err.status) {
+              showError('Unable to connect. Please check your connection.');
+              return;
+            }
+
+            if (err.status === 401) {
+              showError('Invalid email or password.');
+              return;
+            }
+
+            if (err.status === 429) {
+              showError('Too many failed attempts. Please try again later.');
+              return;
+            }
+
+            showError('Something went wrong. Please try again.');
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

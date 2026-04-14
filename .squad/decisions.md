@@ -47,6 +47,46 @@
 **What:** Added `concurrent_guests_time_limit INTEGER NOT NULL DEFAULT 120` to Tenants table. New endpoint `GET /api/reservations/blocked-times` computes which time slots would exceed `max_guests` within the time window using `|slotMinutes - reservationMinutes| < concurrent_guests_time_limit`. Returns `{ blocked_times, time_limit_minutes }`. Frontend fetches on date selection and guest count change.
 **Why:** `max_guests` is concurrent capacity. Without a time window, the system had no way to calculate overlapping occupancy. Configurable per tenant to match table turnover patterns.
 
+### 2026-04-07T18:48:55Z: No code comments
+**By:** James Healy (via Copilot)
+**What:** Do not add comments to code changes. No inline comments, no explanatory comments, no JSDoc — unless code is genuinely complex enough that it cannot be understood without a comment.
+**Why:** User request — captured for team memory.
+
+### 2026-04-12T19:44:31Z: Planning artifacts location
+**By:** James Healy (via Copilot)
+**What:** Planning artifacts and working markdown files (plans, design docs, research notes) must be stored in `.squad/temp/` — never in the Copilot session state directory (`~/.copilot/session-state/`).
+**Why:** User request — keeps planning docs with the repo and visible to the team.
+
+### 2026-04-06: API logging strategy
+**By:** Sean (Backend Dev)
+**What:** Removed Hono `logger()` middleware. `console.error` only on genuine errors (D1 write failures, unexpected missing tenant inside POST /reservations). Validation failures log with `z.prettifyError` plus raw body IDs. Business-rule rejections (422) and expected 404s are silent. Log format: `[route-file] VERB description` with context object.
+**Why:** James's requirement to log only when things go wrong. Cloudflare Workers tail logs are the target; `console.error` is the correct primitive. No external logging service.
+
+### 2026-04-05: Admin auth foundation
+**By:** Sean (Backend Dev)
+**What:** Added `AdminUsers` table (migration `0002`) with `failed_attempts` + `locked_until` for in-table rate limiting (10 failures → 15-min lock). PBKDF2-SHA-256 (100k iterations) password hashing and HMAC-SHA256 JWTs via Web Crypto API (`src/utils/auth.ts`). `POST /api/auth/login` route. `adminAuth` JWT middleware sets `userId` + `tenantId` on Hono context. `JWT_SECRET` is a Wrangler secret declared in `src/types/env.d.ts` until `npx wrangler types` is re-run. Auth responses use `{ success, data?, error? }` envelope.
+**Why:** Admin dashboard requires authenticated access; pure Web Crypto avoids external dependencies; in-table rate limiting is simpler than a separate attempts table.
+
+### 2026-04-05: Admin API routes
+**By:** Sean (Backend Dev)
+**What:** Created `src/routes/admin.ts` with `GET/PATCH /me` and `GET/PATCH/DELETE /reservations`, all protected by `adminAuth` middleware. `tenantId` read exclusively from JWT — never from request body, query params, or URL. Double tenant isolation: application-layer pre-fetch + SQL `WHERE id = ? AND tenant_id = ?`. 404 returned for both not-found and wrong-tenant (prevents resource enumeration). `tenant_code` stripped on `PATCH /me`. `signJWT` extended with optional `expiresInSeconds` (default 8h).
+**Why:** Tenant impersonation prevention; resource enumeration protection; `expiresInSeconds` extension required by the test suite.
+
+### 2026-04-05: Admin login UI
+**By:** Twinkie (Frontend Dev)
+**What:** Created `public/admin/` with `index.html` (login page), `styles/admin.css` (warm burgundy design tokens, separate from public widget's stylesheet), `js/auth.js` (`window.AdminAuth` IIFE global). Blocking inline redirect in `<head>` for already-authenticated users. CSS-only loading spinner. Inline error banner with `aria-live="assertive"`. No `window.alert()`.
+**Why:** No bundler; IIFE global required for synchronous `requireAuth()` execution; separate CSS tokens prevent coupling between admin and public widget stylesheets.
+
+### 2026-04-05: Admin dashboard (phases 4–7)
+**By:** Twinkie (Frontend Dev)
+**What:** Created `public/admin/dashboard.html`, `dashboard.js`, `booking-modal.js`, `settings.js`. Native `<dialog>` for modal (browser handles focus trap + Escape). Table + cards dual-render, CSS toggles at 640px breakpoint (clean print always uses table). Settings tab lazy-initialised on first activation. Date arithmetic via `new Date(y, m-1, d)` to avoid timezone drift. Tenant name pre-populated from localStorage cache. `block_current_day` sent as integer `1`/`0`.
+**Why:** `<dialog>` handles focus trap and Escape natively; dual render enables clean print; lazy init avoids double `/api/admin/me` call at startup.
+
+### 2026-04-05: Admin test suite (phase 8)
+**By:** Neela (Tester)
+**What:** Created `test/auth.spec.ts` (10 tests) and `test/admin.spec.ts` (13 tests). `hashPassword` imported at test runtime for seeds (no stale pre-computed hashes). `getAuthToken()` calls real login endpoint. `signJWT` called with `expiresInSeconds: -1` for expired-token test. Tenant isolation returns 404 (not 403). `PATCH /me` immutability verified by DB assertion. Distinct UUID constants per test file to avoid cross-file collisions.
+**Why:** Tests written before implementation to drive Sean's phase 1+2 spec; real hash avoids staleness; 404 for isolation prevents resource enumeration.
+
 ## Governance
 
 - All meaningful changes require team consensus

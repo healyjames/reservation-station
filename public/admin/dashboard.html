@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard — Maximum Bookings</title>
+    <link rel="stylesheet" href="/admin/styles/admin.css" />
+    <script>
+      if (!localStorage.getItem('admin_token')) {
+        window.location.replace('/admin/?expired=1');
+      }
+    </script>
+  </head>
+  <body class="dashboard-page">
+
+    <header class="dashboard-header no-print">
+      <div class="header-brand">
+        <div class="header-logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+          </svg>
+        </div>
+        <span class="header-venue-name" id="venue-name">Dashboard</span>
+      </div>
+      <button class="btn-logout" id="logout-btn">Sign out</button>
+    </header>
+
+    <nav class="nav-tabs no-print" role="tablist" aria-label="Dashboard navigation">
+      <button
+        role="tab"
+        class="tab-btn active"
+        aria-selected="true"
+        data-tab="bookings"
+      >Bookings</button>
+      <button
+        role="tab"
+        class="tab-btn"
+        aria-selected="false"
+        data-tab="settings"
+      >Settings</button>
+    </nav>
+
+    <main id="main-content">
+
+      <div id="bookings-view" class="tab-view" role="tabpanel" aria-labelledby="tab-bookings">
+
+        <div class="date-controls no-print">
+          <button class="btn-date-nav" id="prev-day" aria-label="Previous day">&#8249;</button>
+          <span class="current-date" id="current-date-display" aria-live="polite" aria-atomic="true"></span>
+          <button class="btn-date-nav" id="next-day" aria-label="Next day">&#8250;</button>
+          <button class="btn-today" id="today-btn">Today</button>
+        </div>
+
+        <div class="summary-bar" id="summary-bar" aria-live="polite" aria-atomic="true">
+          <span id="summary-text">Loading…</span>
+          <div class="capacity-track" aria-hidden="true">
+            <div class="capacity-fill" id="capacity-fill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="print-header print-only">
+          <h2 id="print-date-heading"></h2>
+          <p id="print-venue-name"></p>
+        </div>
+
+        <div class="print-btn-row no-print">
+          <button class="btn-print" id="print-btn">&#128424; Print day sheet</button>
+        </div>
+
+        <div id="bookings-list" aria-live="polite" aria-busy="true"></div>
+
+      </div>
+
+      <div id="settings-view" class="tab-view" role="tabpanel" hidden></div>
+
+    </main>
+
+    <script src="/admin/js/auth.js"></script>
+    <script src="/admin/js/booking-modal.js"></script>
+    <script src="/admin/js/settings.js"></script>
+    <script src="/admin/js/dashboard.js"></script>
+  </body>
+</html>
