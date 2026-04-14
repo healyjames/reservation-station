@@ -21,7 +21,7 @@ How to decide who handles what.
 | Code review | Han | Review PRs, check quality, suggest improvements |
 | Testing | Neela | Write tests, find edge cases, verify fixes |
 | Scope & priorities | Han | What to build next, trade-offs, decisions |
-| Session logging | Scribe | Automatic - never needs routing |
+| Work queue, backlog, session continuity | Ralph | What to pick up next, what's blocked |
 
 ## Issue Routing
 
@@ -46,7 +46,6 @@ How to decide who handles what.
 5. **When two agents could handle it**, pick the one whose domain is the primary concern.
 6. **"Team, ..." → fan-out.** Spawn all relevant agents in parallel as `mode: "background"`.
 7. **Anticipate downstream work.** If a feature is being built, spawn the tester to write test cases from requirements simultaneously.
-8. **Issue-labeled work** - when a `squad:{member}` label is applied to an issue, route to that member. The Lead handles all `squad` (base label) triage.
 
 ## Default Code Change Routing
 
