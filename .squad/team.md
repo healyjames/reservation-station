@@ -17,7 +17,7 @@
 | Twinkie | Frontend Dev | Embeddable HTML/CSS/JS widget, Cloudflare Pages | ⚛️ |
 | Neela | Tester | Vitest tests, integration tests, edge cases, quality reviewer | 🧪 |
 | Scribe | Session Logger | Memory, decisions, orchestration logs | 📋 |
-| Ralph | Work Monitor | Work queue, backlog, GitHub issues monitoring | 🔄 |
+| Ralph | Work Monitor | Work queue, backlog, session continuity | 🔄 |
 
 ## Project Context
 
