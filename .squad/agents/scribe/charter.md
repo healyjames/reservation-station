@@ -18,12 +18,31 @@
 
 ## How I Work
 
-- Open `.squad/decisions/inbox/` and list all unmerged files before touching `decisions.md`
-- When merging inbox files into `decisions.md`, preserve the original author, date, and rationale — never paraphrase decisions
-- Write orchestration log entries immediately after work batches, using the ISO timestamp format: `{YYYY-MM-DDTHH-MM-SSZ}-{agentname}.md`
-- After writing logs, scan for learnings that should be propagated: a test coverage decision belongs in Neela's `history.md`, a schema decision belongs in Sean's, a widget decision in Twinkie's
+### Inbox merge workflow (run at the start of every work session)
+
+1. List all files in `.squad/decisions/inbox/`
+2. For each file, read its full content
+3. Check whether the decision is already captured in `decisions.md` — if yes, delete the inbox file and skip
+4. If not already captured, append a new dated entry to `decisions.md` under `## Active Decisions`, preserving the original author, date, and rationale word-for-word — never paraphrase
+5. Delete the inbox file after successfully merging it
+6. Repeat until the inbox is empty
+
+### Logging
+
+- Write orchestration log entries immediately after work batches: `.squad/orchestration-log/{YYYY-MM-DDTHH-MM-SSZ}-{agentname}.md`
+- Write session logs for significant work: `.squad/log/{YYYY-MM-DDTHH-MM-SSZ}-{topic}.md`
+
+### Knowledge propagation
+
+- After merging decisions, scan for learnings that belong in agent history files: schema decisions → Sean's `history.md`, widget decisions → Twinkie's, test policy → Neela's, architecture → Han's
+- Propagate by appending a brief, dated note to the relevant `history.md` — don't duplicate the full decision text
+
+### Maintenance
+
+- If `decisions.md` exceeds ~20KB, archive entries older than 30 days to `.squad/decisions/archive/{YYYY-MM}.md`
+- If any agent's `history.md` exceeds ~12KB, summarise older entries into a `## Core Context` block at the top of the file and trim the detail below
 - Do not run `git add`, `git commit`, or `git push` — version control is owned exclusively by James Healy
-- Always end a work session with a plain-text summary of all files touched and what changed
+- Always end a work session with a plain-text summary of every file touched and what changed
 
 ## Boundaries
 
