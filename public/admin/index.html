@@ -11,70 +11,80 @@
       }
     </script>
   </head>
-  <body class="login-page">
+  <body>
 
-    <main class="login-card" role="main">
-      <header class="login-header">
-        <div class="login-logo" aria-hidden="true">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
-          </svg>
+    <div class="login-layout">
+
+      <main class="login-panel" role="main">
+        <div class="login-panel-inner">
+
+          <header class="login-header">
+            <div class="login-logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+              </svg>
+            </div>
+            <h1>Staff Sign In</h1>
+            <p>Maximum Bookings Admin</p>
+          </header>
+
+          <div
+            id="expired-banner"
+            class="alert alert-info"
+            role="status"
+            aria-hidden="true"
+          >
+            Your session has expired. Please sign in again.
+          </div>
+
+          <div
+            id="error-banner"
+            class="alert alert-error"
+            role="alert"
+            aria-live="assertive"
+            aria-hidden="true"
+          ></div>
+
+          <form id="login-form" novalidate>
+            <div class="form-group">
+              <label for="email">Email address</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                autocomplete="username"
+                required
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                autocomplete="current-password"
+                required
+                placeholder="••••••••"
+              />
+            </div>
+
+            <button type="submit" id="submit-btn" class="btn-primary">
+              Sign in
+            </button>
+          </form>
+
+          <footer class="login-footer no-print">
+            <p>Staff access only. Not a member? Contact your manager.</p>
+          </footer>
+
         </div>
-        <h1>Staff Sign In</h1>
-        <p>Maximum Bookings Admin</p>
-      </header>
+      </main>
 
-      <div
-        id="expired-banner"
-        class="alert alert-info"
-        role="status"
-        aria-hidden="true"
-      >
-        Your session has expired. Please sign in again.
-      </div>
+      <aside class="login-brand" aria-hidden="true"></aside>
 
-      <div
-        id="error-banner"
-        class="alert alert-error"
-        role="alert"
-        aria-live="assertive"
-        aria-hidden="true"
-      ></div>
-
-      <form id="login-form" novalidate>
-        <div class="form-group">
-          <label for="email">Email address</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            autocomplete="username"
-            required
-            placeholder="you@example.com"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            autocomplete="current-password"
-            required
-            placeholder="••••••••"
-          />
-        </div>
-
-        <button type="submit" id="submit-btn" class="btn-primary">
-          Sign in
-        </button>
-      </form>
-
-      <footer class="login-footer no-print">
-        <p>Staff access only. Not a member? Contact your manager.</p>
-      </footer>
-    </main>
+    </div>
 
     <script src="/admin/js/auth.js"></script>
     <script>
