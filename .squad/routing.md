@@ -57,4 +57,6 @@ When a request doesn't name a specific agent, use this to pick:
 | Widget HTML/CSS/JS, Pages config | Twinkie |
 | Tests, edge case coverage | Neela |
 | Architecture decision, code review, cross-cutting concern | Han |
+| Research, spike investigation, "how does X work?" | Han |
+| Session logging, decisions merging | Scribe |
 | Anything touching 2+ domains | Han + relevant members in parallel |
