@@ -14,6 +14,23 @@ Tester on the Maximum Bookings project. Writes Vitest tests, reviews implementat
 
 ## Learnings
 
+- **Admin Dashboard auth + API tests (Phase 8):** Wrote `test/auth.spec.ts` and `test/admin.spec.ts` from spec before Sean's implementation.
+  - `hashPassword` imported from `../../src/utils/auth` to generate seeds at test runtime - avoids pre-computing PBKDF2 hashes
+  - `signJWT` imported from same module for the expired-token test case (passes `-1` as `expiresInSeconds`)
+  - `getAuthToken()` helper calls the login endpoint to get real tokens - preferred over crafting JWTs manually
+  - JWT payload decoded in tests via `atob(payloadB64)` without verifying signature - valid for checking claims in tests
+  - Tenant isolation for PATCH/DELETE: spec says return 404 (not 403) to avoid revealing the resource exists
+  - Rate limiting: test both "10 failures → locks account" (via repeated HTTP calls) and "lock expired → login succeeds" (via DB seed with past locked_until)
+  - Each test file uses distinct UUID constants so they don't clash with each other or the existing index.spec.ts tests
+  - `PATCH /api/admin/me` immutability test: send `id` and `tenant_id` in body, assert they were silently ignored
+  - Assumption documented in test: omitting `date` from `GET /api/admin/reservations` returns all own-tenant bookings (200) - consistent with public endpoint; if Sean changes this to 400, the test comment explains how to flip it
+
+- **Sean's phase 1+2 complete (2026-04-05):** All auth and admin route implementations are in place. `test/auth.spec.ts` and `test/admin.spec.ts` should now be runnable. Sean added the `expiresInSeconds` optional parameter to `signJWT` as required by the test suite. The `AdminUsers` migration (`0002`) is applied.
+- **API logging strategy (2026-04-06):** Business-rule rejections (422) and expected 404s are silent - not errors. Only D1 write failures and unexpected missing tenants trigger `console.error`. Do not add test assertions against log output for these silent paths.
+- **No code comments directive (2026-04-07):** James directed no inline comments in code unless genuinely necessary. Applies to test files too.
+
+### Original Learnings
+
 - Project kickoff: 2026-04-01
 - Using Vitest (already configured)
 - Key edge cases for booking systems: double-booking, past dates, fully-booked slots, invalid party sizes

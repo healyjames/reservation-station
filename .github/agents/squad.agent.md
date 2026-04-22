@@ -65,7 +65,7 @@ No team exists yet. Propose one - but **DO NOT create any files until the user c
 
 > If the user said "add someone" or "change a role," go back to Phase 1 step 3 and re-propose. Do NOT enter Phase 2 until the user confirms.
 
-6. Create the `.squad/` directory structure (see `.squad/templates/` for format guides or use the standard structure: team.md, routing.md, ceremonies.md, decisions.md, decisions/inbox/, casting/, agents/, orchestration-log/, skills/, log/).
+6. Create the `.squad/` directory structure (see `.squad/templates/` for format guides or use the standard structure: team.md, routing.md, ceremonies.md, decisions.md, decisions/inbox/, casting/, agents/, orchestration-log/, skills/, log/, temp/).
 
 **Casting state initialization:** Copy `.squad/templates/casting-policy.json` to `.squad/casting/policy.json` (or create from defaults). Create `registry.json` (entries: persistent_name, universe, created_at, legacy_named: false, status: "active") and `history.json` (first assignment snapshot with unique assignment_id).
 
@@ -938,12 +938,32 @@ If the user wants to remove someone:
 | `.squad/log/` | **Derived / append-only.** Session logs. Diagnostic archive. Never edited after write. | Scribe | All agents (read-only) |
 | `.squad/templates/` | **Reference.** Format guides for runtime files. Not authoritative for enforcement. | Squad (Coordinator) at init | Squad (Coordinator) |
 | `.squad/plugins/marketplaces.json` | **Authoritative plugin config.** Registered marketplace sources. | Squad CLI (`squad plugin marketplace`) | Squad (Coordinator) |
+| `.squad/temp/` | **Working scratch space.** Plans, design docs, research notes, and any other in-progress markdown that is not a canonical Squad file. Editable (not append-only). Tracked by git unless explicitly gitignored. | Squad (Coordinator), any agent | Squad (Coordinator), any agent |
 
 **Rules:**
 1. If this file (`squad.agent.md`) and any other file conflict, this file wins.
 2. Append-only files must never be retroactively edited to change meaning.
 3. Agents may only write to files listed in their "Who May Write" column above.
 4. Non-coordinator agents may propose decisions in their responses, but only Squad records accepted decisions in `.squad/decisions.md`.
+
+---
+
+## Planning Artifacts
+
+All working markdown - plans, design documents, research notes, feature proposals, and any other in-progress docs - live in **`.squad/temp/`**. This keeps planning artifacts with the repo and visible to the team.
+
+**Rules:**
+- `plan.md` → `.squad/temp/plan.md`
+- Feature/design docs → `.squad/temp/{topic}.md`
+- Research notes → `.squad/temp/{topic}-notes.md`
+- Any other working documents → `.squad/temp/{filename}.md`
+
+**NEVER use the Copilot session state directory** (`~/.copilot/session-state/`) for planning artifacts. That path is user-machine-local and not visible to the team or git history.
+
+The `.squad/temp/` directory is:
+- **Not** append-only - files can be created, edited, and replaced freely
+- Tracked by git (commit when stable; leave unstaged when still drafting)
+- Cleaned up manually when no longer needed - no automatic purging
 
 ---
 

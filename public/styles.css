@@ -1,58 +1,10 @@
-@font-face {
-  font-family: 'Google Sans';
-  src: url('/fonts/GoogleSans-Variable.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Google Sans';
-  src: url('/fonts/GoogleSans-Italic-Variable.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: italic;
-  font-display: swap;
-}
-
-:root {
-  --primary: #818cf8;
-  --primary-lighter: #a5b4fc;
-  --primary-lightest: #374151;
-  --primary-darker: #4f46e5;
-  --background: #0f172a;
-  --background-light: #1e293b;
-  --background-darker: #152032;
-  --foreground: #e2e8f0;
-  --grey-lightest: #2d3748;
-  --error-light: #fee2e2;
-  --error-dark: #991b1b;
-  --success-light: #d1fae5;
-  --success-dark: #065f46;
-}
-
-/* ============================================================
-   BASE RESET
-   ============================================================ */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+@import url('/shared.css');
 
 /* ============================================================
    PROVIDED CSS - do not modify
    ============================================================ */
 .full-width {
   grid-column: 1 / -1;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
 }
 
 @media screen and (min-width: 768px) {
