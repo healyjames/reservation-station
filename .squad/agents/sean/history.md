@@ -24,7 +24,9 @@ Backend Dev on the Maximum Bookings project. Owns the Hono API, D1 database sche
 
 
 
-- **Phase 1 auth foundation**: Added `AdminUsers` table (migration `0002`), PBKDF2 password hashing + HMAC-SHA256 JWT via Web Crypto API (`src/utils/auth.ts`), `POST /api/auth/login` route with rate limiting (10 failures → 15-min lock on `AdminUsers.locked_until`), `adminAuth` JWT middleware, and `scripts/seed-admin.ts` for generating INSERT SQL. `JWT_SECRET` is a Wrangler secret - declared in `src/types/env.d.ts` until `npx wrangler types` regenerates `worker-configuration.d.ts`. Auth responses follow `{ success, data?, error? }` envelope.
+- **seed-admin.ts rewrite**: Replaced the print-SQL-and-copy-paste pattern with direct `execSync` execution of `npx wrangler d1 execute`. Eliminates PowerShell quoting issues with single-quoted SQL values inside double-quoted `--command` strings. Added `LOCAL=true` env var support to toggle `--local` flag for local dev vs production. Script now exits with code 1 on failure and prints a clear ✅/❌ result line. Added `tsx ^4.19.2` to `devDependencies` in `package.json` (was missing; script was always invoked via `npx tsx`).
+
+
 
 - **Phase 2 admin routes**: Created `src/routes/admin.ts` with all 5 admin endpoints (`GET /me`, `PATCH /me`, `GET /reservations`, `PATCH /reservations/:id`, `DELETE /reservations/:id`), all protected by `adminAuth` middleware. Key patterns: `tenantId` always comes from `c.get('tenantId')` (JWT), never from request body or query params. Tenant isolation enforced at application layer (pre-fetch + ownership check) AND at SQL layer (`WHERE id = ? AND tenant_id = ?`). 404 is returned for both "not found" and "wrong tenant" to prevent resource enumeration. `UpdateTenantSchema` already omits `id`, `created_date`, `modified_date` but not `tenant_code` - strip `tenant_code` explicitly before building the UPDATE query. Also added optional `expiresInSeconds` param to `signJWT` (defaulting to 8h) because the test suite needed it to produce expired tokens.
 
