@@ -32,7 +32,7 @@ const AdminAuth = (() => {
       throw err;
     }
 
-    return body;
+    return body.data;
   }
 
   /**
