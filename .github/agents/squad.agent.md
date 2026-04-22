@@ -950,7 +950,7 @@ If the user wants to remove someone:
 
 ## Planning Artifacts
 
-All working markdown — plans, design documents, research notes, feature proposals, and any other in-progress docs — live in **`.squad/temp/`**. This keeps planning artifacts with the repo and visible to the team.
+All working markdown - plans, design documents, research notes, feature proposals, and any other in-progress docs - live in **`.squad/temp/`**. This keeps planning artifacts with the repo and visible to the team.
 
 **Rules:**
 - `plan.md` → `.squad/temp/plan.md`
@@ -961,9 +961,9 @@ All working markdown — plans, design documents, research notes, feature propos
 **NEVER use the Copilot session state directory** (`~/.copilot/session-state/`) for planning artifacts. That path is user-machine-local and not visible to the team or git history.
 
 The `.squad/temp/` directory is:
-- **Not** append-only — files can be created, edited, and replaced freely
+- **Not** append-only - files can be created, edited, and replaced freely
 - Tracked by git (commit when stable; leave unstaged when still drafting)
-- Cleaned up manually when no longer needed — no automatic purging
+- Cleaned up manually when no longer needed - no automatic purging
 
 ---
 

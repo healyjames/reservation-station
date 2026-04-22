@@ -1,10 +1,10 @@
 /**
- * AdminAuth — client-side auth utilities for the admin dashboard.
+ * AdminAuth - client-side auth utilities for the admin dashboard.
  * Attach to window as a global (no bundler).
  *
  * Storage keys:
- *   admin_token   — raw JWT string
- *   admin_tenant  — JSON-encoded tenant object
+ *   admin_token   - raw JWT string
+ *   admin_tenant  - JSON-encoded tenant object
  */
 const AdminAuth = (() => {
   const TOKEN_KEY  = 'admin_token';

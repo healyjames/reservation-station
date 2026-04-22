@@ -95,7 +95,7 @@ describe('POST /api/auth/login', () => {
 		expect(body.error).toBe('Invalid credentials');
 	});
 
-	it('returns 401 for unknown email — same error message as wrong password to avoid enumeration', async () => {
+	it('returns 401 for unknown email - same error message as wrong password to avoid enumeration', async () => {
 		const res = await exports.default.fetch('http://localhost/api/auth/login', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -183,7 +183,7 @@ describe('POST /api/auth/login', () => {
 		});
 		const { token } = (await res.json()) as any;
 
-		// JWTs are not encrypted — decode the payload directly without verifying the signature
+		// JWTs are not encrypted - decode the payload directly without verifying the signature
 		const [, payloadB64] = token.split('.');
 		const payload = JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
 

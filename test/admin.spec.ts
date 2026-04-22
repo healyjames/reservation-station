@@ -167,7 +167,7 @@ describe('GET /api/admin/reservations', () => {
 		expect(body.some((r: any) => r.id === RES_ID)).toBe(true);
 	});
 
-	it('does not return other tenants bookings — tenant isolation enforced', async () => {
+	it('does not return other tenants bookings - tenant isolation enforced', async () => {
 		const token = await getAuthToken();
 		const res = await exports.default.fetch('http://localhost/api/admin/reservations?date=2099-06-01', {
 			headers: { Authorization: `Bearer ${token}` },
@@ -226,7 +226,7 @@ describe('PATCH /api/admin/reservations/:id', () => {
 		expect(row?.dietary_requirements).toBe('Vegan');
 	});
 
-	it('returns 404 when booking belongs to another tenant — resource existence is not revealed', async () => {
+	it('returns 404 when booking belongs to another tenant - resource existence is not revealed', async () => {
 		const token = await getAuthToken();
 		const res = await exports.default.fetch(`http://localhost/api/admin/reservations/${RES_ID_OTHER}`, {
 			method: 'PATCH',
@@ -273,7 +273,7 @@ describe('DELETE /api/admin/reservations/:id', () => {
 		expect(row).toBeNull();
 	});
 
-	it('returns 404 when booking belongs to another tenant — resource existence is not revealed', async () => {
+	it('returns 404 when booking belongs to another tenant - resource existence is not revealed', async () => {
 		const token = await getAuthToken();
 		const res = await exports.default.fetch(`http://localhost/api/admin/reservations/${RES_ID_OTHER}`, {
 			method: 'DELETE',
@@ -322,7 +322,7 @@ describe('PATCH /api/admin/me', () => {
 		expect(row?.max_covers).toBe(30);
 	});
 
-	it('ignores id and tenant_id fields in the request body — they are immutable', async () => {
+	it('ignores id and tenant_id fields in the request body - they are immutable', async () => {
 		const token = await getAuthToken();
 		const spoofedId = '00000000-0000-4000-8000-999999999999';
 		const res = await exports.default.fetch('http://localhost/api/admin/me', {

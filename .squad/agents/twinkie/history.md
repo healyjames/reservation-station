@@ -96,7 +96,7 @@ public/
 - `public/styles.css` - added dark theme form styles at end
 - `public/js/booking-form.js` - new module (created)
 
-### Admin Login UI — Phase 3 (2026-04-01)
+### Admin Login UI - Phase 3 (2026-04-01)
 
 **Built:** Admin login page and auth utilities under `public/admin/`.
 
@@ -112,15 +112,15 @@ public/admin/
 
 **Design tokens:**
 - Admin uses warm burgundy palette (`--primary: #8b2635`), distinct from the public widget's current indigo theme
-- Same Google Sans font via `/fonts/` — loaded with @font-face in admin.css
+- Same Google Sans font via `/fonts/` - loaded with @font-face in admin.css
 - Light background with a centered card (`max-width: 400px`); mobile-first (full-width below 480px)
 
 **Auth flow patterns:**
-- On load: blocking inline `<script>` in `<head>` redirects immediately to `dashboard.html` if `admin_token` exists — prevents flash of login form for already-authenticated users
+- On load: blocking inline `<script>` in `<head>` redirects immediately to `dashboard.html` if `admin_token` exists - prevents flash of login form for already-authenticated users
 - `?expired=1` query param shows an amber "session expired" banner on load
 - Error messages are inline (not alerts): `.alert-error` div with `aria-live="assertive"`
 - Loading state: CSS-only spinner via `.btn-primary.loading::after` pseudo-element + `color: transparent` to hide label text
-- `AdminAuth` is an IIFE that exposes a global on `window` — no bundler needed
+- `AdminAuth` is an IIFE that exposes a global on `window` - no bundler needed
 
 **Error handling:**
 - 401 → "Invalid email or password."
@@ -128,9 +128,9 @@ public/admin/
 - Network error (no `err.status`) → "Unable to connect. Please check your connection."
 - Typing in either field clears the error banner immediately
 
-### Admin Dashboard — Phases 4–7 (2026-04-05)
+### Admin Dashboard - Phases 4–7 (2026-04-05)
 
-**Built:** Full dashboard experience — `public/admin/dashboard.html`, `dashboard.js`, `booking-modal.js`, `settings.js`, plus all supporting CSS added to `admin.css`.
+**Built:** Full dashboard experience - `public/admin/dashboard.html`, `dashboard.js`, `booking-modal.js`, `settings.js`, plus all supporting CSS added to `admin.css`.
 
 **File structure added:**
 ```
@@ -144,17 +144,17 @@ public/admin/
 
 **Key patterns used:**
 
-- Auth guard: blocking `<script>` in `<head>` redirects immediately if no `admin_token` in localStorage — same pattern as login page; `AdminAuth.requireAuth()` called again in JS as belt-and-suspenders
-- Tenant name pre-populated from `AdminAuth.getTenant()` (cached localStorage) on first paint, then overwritten when fresh `/api/admin/me` resolves — prevents blank flash
+- Auth guard: blocking `<script>` in `<head>` redirects immediately if no `admin_token` in localStorage - same pattern as login page; `AdminAuth.requireAuth()` called again in JS as belt-and-suspenders
+- Tenant name pre-populated from `AdminAuth.getTenant()` (cached localStorage) on first paint, then overwritten when fresh `/api/admin/me` resolves - prevents blank flash
 - `<dialog>` element for modal: `showModal()` handles focus trap and Escape natively; backdrop click handled manually by checking `e.target === dialog`; single dialog element created once, reused for both edit and delete
 - Modal is full-screen on mobile (`width: 100vw; border-radius: 0; position: fixed; inset: 0`) via `@media (max-width: 640px)`
 - Booking list: desktop table + mobile cards rendered together (one hidden via CSS); same event listener wiring for both
-- Date navigation: pure date arithmetic via `Date(y, m-1, d)` + `setDate()` — avoids timezone issues from `new Date(string)` parsing
+- Date navigation: pure date arithmetic via `Date(y, m-1, d)` + `setDate()` - avoids timezone issues from `new Date(string)` parsing
 - `updateDaySummary()` hides capacity bar when `max_covers === 0` (unlimited); colour-codes fill at 75% (amber) and 90% (burgundy)
-- Settings tab lazy-initialised on first activation (`settingsInitialized` flag) — avoids `/api/admin/me` double-fetch on page load
+- Settings tab lazy-initialised on first activation (`settingsInitialized` flag) - avoids `/api/admin/me` double-fetch on page load
 - Settings `block_current_day` sent as integer `1`/`0` to match SQLite storage
 - All 401 responses → `AdminAuth.logout()` across all three JS modules
-- No `alert()` anywhere — all errors are inline `.alert-error` elements with `aria-live`
+- No `alert()` anywhere - all errors are inline `.alert-error` elements with `aria-live`
 - Print: table always rendered (shown in print via `display: table !important`), cards always rendered (hidden in print); `.print-only` header with date + venue name shown only when printing
 
 **CSS additions to `admin.css`:**
@@ -164,7 +164,7 @@ public/admin/
 ### Cross-agent notes
 
 - **No code comments directive (2026-04-07):** James directed that inline comments, explanatory comments, and JSDoc are not to be added to code changes unless genuinely necessary. Apply to all JS/HTML/CSS edits.
-- **Planning artifacts location (2026-04-12):** Planning docs and design notes go in `.squad/temp/` — not in the Copilot session state directory.
+- **Planning artifacts location (2026-04-12):** Planning docs and design notes go in `.squad/temp/` - not in the Copilot session state directory.
 - **Admin auth dependency (2026-04-05):** `window.AdminAuth` on the login page depends on `POST /api/auth/login` (Sean's phase 1). All three JS modules (`dashboard.js`, `booking-modal.js`, `settings.js`) route 401 responses through `AdminAuth.logout()` to maintain consistent session expiry handling.
 
 ### Blocked time slots filtering (2026-04-01)

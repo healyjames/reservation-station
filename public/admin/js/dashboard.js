@@ -144,7 +144,7 @@
       <td>${escHtml(r.reservation_time)}</td>
       <td>${escHtml(r.first_name)} ${escHtml(r.surname)}</td>
       <td>${r.guests}</td>
-      <td>${escHtml(r.dietary_requirements || '—')}</td>
+      <td>${escHtml(r.dietary_requirements || '-')}</td>
       <td class="actions-cell no-print">
         <button class="btn-action btn-edit" aria-label="Edit booking for ${escHtml(r.first_name)} ${escHtml(r.surname)}">Edit</button>
         <button class="btn-action btn-delete" aria-label="Delete booking for ${escHtml(r.first_name)} ${escHtml(r.surname)}">Delete</button>

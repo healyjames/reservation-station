@@ -49,13 +49,13 @@
 
 ### 2026-04-07T18:48:55Z: No code comments
 **By:** James Healy (via Copilot)
-**What:** Do not add comments to code changes. No inline comments, no explanatory comments, no JSDoc — unless code is genuinely complex enough that it cannot be understood without a comment.
-**Why:** User request — captured for team memory.
+**What:** Do not add comments to code changes. No inline comments, no explanatory comments, no JSDoc - unless code is genuinely complex enough that it cannot be understood without a comment.
+**Why:** User request - captured for team memory.
 
 ### 2026-04-12T19:44:31Z: Planning artifacts location
 **By:** James Healy (via Copilot)
-**What:** Planning artifacts and working markdown files (plans, design docs, research notes) must be stored in `.squad/temp/` — never in the Copilot session state directory (`~/.copilot/session-state/`).
-**Why:** User request — keeps planning docs with the repo and visible to the team.
+**What:** Planning artifacts and working markdown files (plans, design docs, research notes) must be stored in `.squad/temp/` - never in the Copilot session state directory (`~/.copilot/session-state/`).
+**Why:** User request - keeps planning docs with the repo and visible to the team.
 
 ### 2026-04-06: API logging strategy
 **By:** Sean (Backend Dev)
@@ -69,7 +69,7 @@
 
 ### 2026-04-05: Admin API routes
 **By:** Sean (Backend Dev)
-**What:** Created `src/routes/admin.ts` with `GET/PATCH /me` and `GET/PATCH/DELETE /reservations`, all protected by `adminAuth` middleware. `tenantId` read exclusively from JWT — never from request body, query params, or URL. Double tenant isolation: application-layer pre-fetch + SQL `WHERE id = ? AND tenant_id = ?`. 404 returned for both not-found and wrong-tenant (prevents resource enumeration). `tenant_code` stripped on `PATCH /me`. `signJWT` extended with optional `expiresInSeconds` (default 8h).
+**What:** Created `src/routes/admin.ts` with `GET/PATCH /me` and `GET/PATCH/DELETE /reservations`, all protected by `adminAuth` middleware. `tenantId` read exclusively from JWT - never from request body, query params, or URL. Double tenant isolation: application-layer pre-fetch + SQL `WHERE id = ? AND tenant_id = ?`. 404 returned for both not-found and wrong-tenant (prevents resource enumeration). `tenant_code` stripped on `PATCH /me`. `signJWT` extended with optional `expiresInSeconds` (default 8h).
 **Why:** Tenant impersonation prevention; resource enumeration protection; `expiresInSeconds` extension required by the test suite.
 
 ### 2026-04-05: Admin login UI

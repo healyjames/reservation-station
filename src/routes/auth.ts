@@ -49,7 +49,7 @@ auth.post('/login', async (c) => {
 		return c.json({ success: false, error: 'Invalid credentials' }, 401);
 	}
 
-	// Success — reset rate limit state
+	// Success - reset rate limit state
 	await c.env.maximum_bookings_db
 		.prepare(
 			'UPDATE AdminUsers SET failed_attempts = 0, locked_until = NULL, modified_date = ? WHERE id = ?',

@@ -33,7 +33,7 @@ html, body {
    ============================================================ */
 
 /* ============================================================
-   LOGIN LAYOUT — two-column split (Dribbble-style)
+   LOGIN LAYOUT - two-column split (Dribbble-style)
    ============================================================ */
 .login-layout {
   display: grid;
@@ -254,7 +254,7 @@ html, body {
 }
 
 /* ============================================================
-   TIMEZONE NOTE — small muted text for settings pages
+   TIMEZONE NOTE - small muted text for settings pages
    ============================================================ */
 .tz-note {
   font-size: 0.8rem;
@@ -264,7 +264,7 @@ html, body {
 }
 
 /* ============================================================
-   ALERT VARIANTS — success
+   ALERT VARIANTS - success
    ============================================================ */
 .alert-success {
   background: var(--success-light);
@@ -273,7 +273,7 @@ html, body {
 }
 
 /* ============================================================
-   PRINT UTILITY — shown only when printing
+   PRINT UTILITY - shown only when printing
    ============================================================ */
 .print-only {
   display: none;
@@ -554,7 +554,7 @@ html, body {
 }
 
 /* ============================================================
-   BOOKING TABLE — desktop
+   BOOKING TABLE - desktop
    ============================================================ */
 .booking-table {
   width: 100%;
@@ -601,7 +601,7 @@ html, body {
 }
 
 /* ============================================================
-   BOOKING CARDS — mobile (hidden on desktop)
+   BOOKING CARDS - mobile (hidden on desktop)
    ============================================================ */
 .booking-cards {
   display: none;
@@ -658,7 +658,7 @@ html, body {
 }
 
 /* ============================================================
-   ACTION BUTTONS — edit / delete / secondary
+   ACTION BUTTONS - edit / delete / secondary
    ============================================================ */
 .btn-action {
   border: none;
@@ -758,7 +758,7 @@ html, body {
 }
 
 /* ============================================================
-   MODAL — <dialog> element
+   MODAL - <dialog> element
    ============================================================ */
 .booking-modal {
   border: none;
@@ -992,7 +992,7 @@ html, body {
 }
 
 /* ============================================================
-   PRINT HEADER — visible only when printing
+   PRINT HEADER - visible only when printing
    ============================================================ */
 .print-header {
   margin-bottom: 1rem;
@@ -1010,7 +1010,7 @@ html, body {
 }
 
 /* ============================================================
-   MOBILE RESPONSIVE — dashboard
+   MOBILE RESPONSIVE - dashboard
    ============================================================ */
 @media (max-width: 640px) {
   .booking-table {
