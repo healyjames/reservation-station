@@ -32,9 +32,24 @@ CREATE TABLE Reservations (
     FOREIGN KEY (tenant_id) REFERENCES Tenants(id) ON DELETE CASCADE
 );
 
--- Optional: Create an index on tenant_id for faster lookups
+DROP TABLE IF EXISTS AdminUsers;
+
+CREATE TABLE AdminUsers (
+    id          TEXT PRIMARY KEY NOT NULL,
+    tenant_id   TEXT NOT NULL,
+    email       TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    failed_attempts INTEGER NOT NULL DEFAULT 0,
+    locked_until TEXT,
+    created_date TEXT DEFAULT (CURRENT_TIMESTAMP),
+    modified_date TEXT DEFAULT (CURRENT_TIMESTAMP),
+    FOREIGN KEY (tenant_id) REFERENCES Tenants(id) ON DELETE CASCADE
+);
+
 CREATE INDEX idx_booking_tenant ON Reservations(tenant_id);
 CREATE INDEX idx_tenants_code ON Tenants(tenant_code);
+CREATE UNIQUE INDEX idx_admin_users_email ON AdminUsers(email);
+CREATE INDEX idx_admin_users_tenant ON AdminUsers(tenant_id);
 
 INSERT INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, block_current_day, concurrent_guests_time_limit) VALUES
 ('6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'The Red Cow',        'redcow',        6,  50,  'active', 0, 120),
