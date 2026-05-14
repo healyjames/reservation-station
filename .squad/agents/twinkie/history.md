@@ -167,7 +167,24 @@ public/admin/
 - **Planning artifacts location (2026-04-12):** Planning docs and design notes go in `.squad/temp/` - not in the Copilot session state directory.
 - **Admin auth dependency (2026-04-05):** `window.AdminAuth` on the login page depends on `POST /api/auth/login` (Sean's phase 1). All three JS modules (`dashboard.js`, `booking-modal.js`, `settings.js`) route 401 responses through `AdminAuth.logout()` to maintain consistent session expiry handling.
 
-### Blocked time slots filtering (2026-04-01)
+### Spacing & sizing tokens refactor (2026-04-13)
+
+**Added:** `/* SPACING & SIZING TOKENS */` section to `public/shared.css` with 36 new CSS custom properties.
+
+**Token scale:**
+- Space scale: `--space-base: 4px`, then `--space-1` through `--space-16` using `calc()` multiples (only steps 1–6, 8, 10, 12, 16 defined — values that exist in the codebase)
+- Border radius: `--radius-sm` (6px) through `--radius-full` (9999px)
+- Border widths: `--border-width` (1px), `--border-width-md` (2px)
+- Sizing: `--size-touch-sm` (36px), `--size-touch` (44px), `--size-icon-sm/md/lg`, `--size-header` (56px)
+
+**Files updated:** `public/shared.css`, `public/styles.css`, `public/admin/styles/admin.css`
+
+**Decisions:**
+- Off-scale values (6px, 10px padding, rem-based layout spacing) left as-is — token system only covers values that fit cleanly
+- `--radius-full: 9999px` used for pill shapes (was `border-radius: 20px` on `.card-guests`) — pill intent is clearer than a specific px value
+- `border-radius: 50%` (circles) left as-is — not a spacing token
+- Decorative values (box-shadow offsets, animation transforms) left as-is — these are artistic, not layout
+
 
 **Added:** Dynamic time slot filtering based on restaurant capacity using backend `blocked-times` endpoint.
 

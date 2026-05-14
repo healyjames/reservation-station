@@ -82,6 +82,11 @@
 **What:** Created `public/admin/dashboard.html`, `dashboard.js`, `booking-modal.js`, `settings.js`. Native `<dialog>` for modal (browser handles focus trap + Escape). Table + cards dual-render, CSS toggles at 640px breakpoint (clean print always uses table). Settings tab lazy-initialised on first activation. Date arithmetic via `new Date(y, m-1, d)` to avoid timezone drift. Tenant name pre-populated from localStorage cache. `block_current_day` sent as integer `1`/`0`.
 **Why:** `<dialog>` handles focus trap and Escape natively; dual render enables clean print; lazy init avoids double `/api/admin/me` call at startup.
 
+### 2026-04-13: Spacing & sizing token system
+**By:** Twinkie (Frontend Dev)
+**What:** Added a `/* SPACING & SIZING TOKENS */` `:root` block to `public/shared.css` establishing a 4px-base token system (36 tokens). All derived values use `calc()`. Scale steps: 1, 2, 3, 4, 5, 6, 8, 10, 12, 16 (only steps that existed in the codebase). Applied across `public/styles.css` and `public/admin/styles/admin.css`, replacing hardcoded magic numbers.  Token categories: space scale, border radius, border widths, touch/icon/component sizing. Key rules: only clean-scale px values converted; rem-based layout spacing left alone; `--radius-full: 9999px` used for pill shapes (was `border-radius: 20px`); `border-radius: 50%` circles left as-is; decorative values (box-shadow offsets, animation transforms) left as-is.
+**Why:** Scattered hardcoded magic numbers across both CSS files with no consistency system. Token system makes the design scale visible and the base theoretically changeable. Rem tokens rejected — existing widget uses px for spacing and rem for typography; mixing would add confusion.
+
 ### 2026-04-05: Admin test suite (phase 8)
 **By:** Neela (Tester)
 **What:** Created `test/auth.spec.ts` (10 tests) and `test/admin.spec.ts` (13 tests). `hashPassword` imported at test runtime for seeds (no stale pre-computed hashes). `getAuthToken()` calls real login endpoint. `signJWT` called with `expiresInSeconds: -1` for expired-token test. Tenant isolation returns 404 (not 403). `PATCH /me` immutability verified by DB assertion. Distinct UUID constants per test file to avoid cross-file collisions.
