@@ -177,7 +177,19 @@ Converted the admin dashboard from a sticky-header + horizontal-tab layout to a 
 
 
 
-- **No code comments directive (2026-04-07):** James directed that inline comments, explanatory comments, and JSDoc are not to be added to code changes unless genuinely necessary. Apply to all JS/HTML/CSS edits.
+### 2-div layout refactor (2026-04-14)
+
+**Changed:** `public/admin/dashboard.html`, `public/admin/styles/admin.css`
+
+Replaced the 4-cell CSS Grid layout (sidebar-logo / topbar-actions / sidebar-nav / main-content) with a clean 2-div structure: `.sidebar-nav` (left) and `.main-panel` (right). The logo and sign-out button now live in `<header class="main-header">` inside `.main-panel`.
+
+**Key patterns:**
+- `display: grid; grid-template-columns: var(--sidebar-width) 1fr` - still a 2-column grid at desktop, but now just 2 children instead of 4
+- `.main-panel` is a flex column: header (sticky) + main (flex: 1, overflow-y: auto)
+- `display: contents` trick on `.main-panel` at mobile so `.main-header`, `.sidebar-nav`, and `#main-content` participate directly in the outer flex column with `order` control: header (1) → sidebar nav row (2) → content (3)
+- Print: both `.dashboard-layout` and `.main-panel` set to `display: block`
+
+** James directed that inline comments, explanatory comments, and JSDoc are not to be added to code changes unless genuinely necessary. Apply to all JS/HTML/CSS edits.
 - **Planning artifacts location (2026-04-12):** Planning docs and design notes go in `.squad/temp/` - not in the Copilot session state directory.
 - **Admin auth dependency (2026-04-05):** `window.AdminAuth` on the login page depends on `POST /api/auth/login` (Sean's phase 1). All three JS modules (`dashboard.js`, `booking-modal.js`, `settings.js`) route 401 responses through `AdminAuth.logout()` to maintain consistent session expiry handling.
 

@@ -13,25 +13,28 @@
   </head>
   <body class="dashboard-page">
 
-    <div class="dashboard-layout">
+  <div class="dashboard-layout">
 
-      <div class="sidebar-logo no-print">
-        <div class="header-logo" aria-hidden="true">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
-          </svg>
+    <!-- left: sidebar navigation -->
+    <nav class="sidebar-nav no-print" role="tablist" aria-label="Dashboard navigation">
+      <button role="tab" class="tab-btn active" aria-selected="true" data-tab="bookings">Bookings</button>
+      <button role="tab" class="tab-btn" aria-selected="false" data-tab="settings">Settings</button>
+    </nav>
+
+    <!-- right: header + main content -->
+    <div class="main-panel">
+
+      <header class="main-header no-print">
+        <div class="header-brand">
+          <div class="header-logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+            </svg>
+          </div>
+          <span class="header-venue-name" id="venue-name">Dashboard</span>
         </div>
-        <span class="header-venue-name" id="venue-name">Dashboard</span>
-      </div>
-
-      <div class="topbar-actions no-print">
         <button class="btn-logout" id="logout-btn">Sign out</button>
-      </div>
-
-      <nav class="sidebar-nav no-print" role="tablist" aria-label="Dashboard navigation">
-        <button role="tab" class="tab-btn active" aria-selected="true" data-tab="bookings">Bookings</button>
-        <button role="tab" class="tab-btn" aria-selected="false" data-tab="settings">Settings</button>
-      </nav>
+      </header>
 
       <main id="main-content">
 
@@ -69,6 +72,8 @@
       </main>
 
     </div>
+
+  </div>
 
     <script src="/admin/js/auth.js"></script>
     <script src="/admin/js/booking-modal.js"></script>

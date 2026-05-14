@@ -300,13 +300,16 @@ html, body {
   .dashboard-layout {
     display: block;
   }
+  .main-panel {
+    display: block;
+  }
   #main-content {
     overflow: visible;
   }
 }
 
 /* ============================================================
-   DASHBOARD LAYOUT - sidebar grid
+   DASHBOARD LAYOUT - two-column: sidebar + main panel
    ============================================================ */
 .dashboard-page {
   min-height: 100vh;
@@ -317,56 +320,57 @@ html, body {
 .dashboard-layout {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
-  grid-template-rows: var(--size-header) 1fr;
   min-height: 100vh;
 }
 
 /* ============================================================
-   SIDEBAR - logo area (top-left)
-   ============================================================ */
-.sidebar-logo {
-  grid-column: 1;
-  grid-row: 1;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 0 var(--space-4);
-  background: var(--primary);
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* ============================================================
-   TOPBAR - sign out area (top-right)
-   ============================================================ */
-.topbar-actions {
-  grid-column: 2;
-  grid-row: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0 var(--space-8);
-  background: var(--primary);
-}
-
-/* ============================================================
-   SIDEBAR - navigation (bottom-left)
+   SIDEBAR NAVIGATION (left column)
    ============================================================ */
 .sidebar-nav {
   grid-column: 1;
-  grid-row: 2;
   display: flex;
   flex-direction: column;
   background: var(--background-darker);
   border-right: 1px solid rgba(255, 255, 255, 0.05);
   padding: var(--space-2) 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 /* ============================================================
-   MAIN CONTENT AREA (bottom-right)
+   MAIN PANEL (right column)
+   ============================================================ */
+.main-panel {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   MAIN HEADER - logo + sign out (inside main panel)
+   ============================================================ */
+.main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-4);
+  height: var(--size-header);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+	border-bottom: var(--border-width) solid var(--foreground-darkest);
+}
+
+/* ============================================================
+   MAIN CONTENT AREA
    ============================================================ */
 #main-content {
-  grid-column: 2;
-  grid-row: 2;
+  flex: 1;
   overflow-y: auto;
 }
 
@@ -404,9 +408,9 @@ html, body {
 }
 
 .btn-logout {
-  background: var(--primary-dark);
+  background: var(--background-light);
   color: white;
-  border: var(--border-width) solid var(--primary-dark);
+  border: var(--border-width) solid var(--background-light);
   border-radius: var(--radius-xs);
   padding: 0.375rem 0.875rem;
   font-size: 0.875rem;
@@ -420,8 +424,8 @@ html, body {
 }
 
 .btn-logout:hover {
-  background: var(--primary-darker);
-	border-color: var(--primary-darkest);
+  background: var(--background-lighter);
+	border-color: var(--background-lighter);
 }
 
 /* ============================================================
@@ -955,12 +959,12 @@ html, body {
 .settings-panel .form-group input[type="number"] {
   width: 100%;
   padding: 0.625rem 0.875rem;
-  background: var(--background);
-  border: var(--border-width-md) solid var(--border);
+  background: var(--background-light);
+  border: var(--border-width) solid var(--background-light);
   border-radius: var(--radius-xs);
   font-size: 1rem;
   font-family: inherit;
-  color: var(--foreground);
+  color: var(--foreground-lightest);
   transition: border-color 0.15s, box-shadow 0.15s;
   box-sizing: border-box;
 }
@@ -1052,27 +1056,31 @@ html, body {
 }
 
 /* ============================================================
-   RESPONSIVE - tablet/mobile sidebar collapse
+   RESPONSIVE - mobile: sidebar becomes horizontal nav row
    ============================================================ */
 @media (max-width: 768px) {
   .dashboard-layout {
-    grid-template-columns: 1fr auto;
-    grid-template-rows: var(--size-header) auto 1fr;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
   }
 
-  .sidebar-logo {
-    grid-column: 1;
-    grid-row: 1;
+  /* Unwrap .main-panel so its children (header, main) participate
+     directly in the flex column alongside .sidebar-nav */
+  .main-panel {
+    display: contents;
   }
 
-  .topbar-actions {
-    grid-column: 2;
-    grid-row: 1;
+  .main-header {
+    order: 1;
+    position: sticky;
+    top: 0;
   }
 
   .sidebar-nav {
-    grid-column: 1 / -1;
-    grid-row: 2;
+    order: 2;
+    position: static;
+    height: auto;
     flex-direction: row;
     overflow-x: auto;
     padding: 0 var(--space-2);
@@ -1082,8 +1090,9 @@ html, body {
   }
 
   #main-content {
-    grid-column: 1 / -1;
-    grid-row: 3;
+    order: 3;
+    flex: 1;
+    overflow-y: unset;
   }
 
   .tab-btn {
