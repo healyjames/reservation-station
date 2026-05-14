@@ -92,6 +92,11 @@
 **What:** Created `test/auth.spec.ts` (10 tests) and `test/admin.spec.ts` (13 tests). `hashPassword` imported at test runtime for seeds (no stale pre-computed hashes). `getAuthToken()` calls real login endpoint. `signJWT` called with `expiresInSeconds: -1` for expired-token test. Tenant isolation returns 404 (not 403). `PATCH /me` immutability verified by DB assertion. Distinct UUID constants per test file to avoid cross-file collisions.
 **Why:** Tests written before implementation to drive Sean's phase 1+2 spec; real hash avoids staleness; 404 for isolation prevents resource enumeration.
 
+### 2026-04-14: Admin dashboard sidebar grid layout
+**By:** Twinkie (Frontend Dev)
+**What:** Converted admin dashboard from sticky-header + horizontal-tab layout to a 4-cell CSS Grid sidebar layout. `--sidebar-width: 220px` token added to `:root`. Active nav indicator changed from bottom-border to left-border on desktop. New `@media (max-width: 768px)` breakpoint collapses sidebar to a full-width horizontal scroll-nav; existing `640px` breakpoint retained for card/table layout. `@media print` sets `.dashboard-layout { display: block }`. All JS-depended IDs and classes (`#venue-name`, `#logout-btn`, `.tab-btn`, `.tab-view`, `#main-content`) preserved.
+**Why:** Sidebar layout is the standard pattern for admin dashboards. CSS Grid gives explicit named-cell placement. Width tokenised for single-point tunability.
+
 ## Governance
 
 - All meaningful changes require team consensus

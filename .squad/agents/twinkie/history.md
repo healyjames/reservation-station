@@ -161,7 +161,21 @@ public/admin/
 - Dashboard layout, header, nav tabs, date controls, summary bar, capacity bar, booking table, booking cards (mobile), action buttons (edit/delete/danger/secondary), `<dialog>` modal, settings panel, empty/loading/error states, print header, mobile responsive pass at 640px breakpoint
 
 
-### Cross-agent notes
+### Sidebar grid layout refactor (2026-04-14)
+
+**Changed:** `public/admin/dashboard.html`, `public/admin/styles/admin.css`
+
+Converted the admin dashboard from a sticky-header + horizontal-tab layout to a 4-cell CSS Grid sidebar layout. The grid is 2 columns × 2 rows: logo (top-left), sign-out (top-right), sidebar nav (bottom-left), main content (bottom-right).
+
+**Key patterns:**
+- `--sidebar-width: 220px` token added to `:root`; grid defined as `grid-template-columns: var(--sidebar-width) 1fr`
+- Sidebar nav buttons use left-border active indicator (`border-left: 3px solid`) on desktop — standard sidebar nav pattern
+- New `@media (max-width: 768px)` breakpoint collapses sidebar into full-width horizontal scroll-nav row (3-row grid: header / nav-bar / content); existing `640px` breakpoint retained for card/table layout tuning
+- Inside 768px breakpoint, `.tab-btn` reverts to horizontal-tab style (bottom border, auto width) — left-border indicator doesn't apply to a row nav
+- `@media print` sets `.dashboard-layout { display: block }` + `#main-content { overflow: visible }` for reliable print output
+- All JS-consumed IDs and class names preserved unchanged (`#venue-name`, `#logout-btn`, `.tab-btn`, `.tab-view`, etc.)
+
+
 
 - **No code comments directive (2026-04-07):** James directed that inline comments, explanatory comments, and JSDoc are not to be added to code changes unless genuinely necessary. Apply to all JS/HTML/CSS edits.
 - **Planning artifacts location (2026-04-12):** Planning docs and design notes go in `.squad/temp/` - not in the Copilot session state directory.
@@ -173,7 +187,7 @@ public/admin/
 
 **Token scale:**
 - Space scale: `--space-base: 4px`, then `--space-1` through `--space-16` using `calc()` multiples (only steps 1–6, 8, 10, 12, 16 defined — values that exist in the codebase)
-- Border radius: `--radius-sm` (6px) through `--radius-full` (9999px)
+- Border radius: `--radius-xs` (6px) through `--radius-full` (9999px)
 - Border widths: `--border-width` (1px), `--border-width-md` (2px)
 - Sizing: `--size-touch-sm` (36px), `--size-touch` (44px), `--size-icon-sm/md/lg`, `--size-header` (56px)
 

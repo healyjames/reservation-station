@@ -4,6 +4,8 @@
    ADMIN DESIGN TOKENS
    ============================================================ */
 :root {
+  --sidebar-width:    220px;
+
   --background-card:  #ffffff;
 
   --border:           #e8d8da;
@@ -119,7 +121,7 @@ html, body {
    ALERT / BANNER MESSAGES
    ============================================================ */
 .alert {
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xs);
   padding: var(--space-3) var(--space-4);
   font-size: 0.875rem;
   margin-bottom: var(--space-5);
@@ -164,7 +166,7 @@ html, body {
   padding: 0.625rem 0.875rem;
   background: var(--background);
   border: var(--border-width-md) solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xs);
   font-size: 1rem;
   font-family: inherit;
   color: var(--foreground);
@@ -195,7 +197,7 @@ html, body {
   background: var(--primary);
   color: white;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xs);
   font-size: 1rem;
   font-weight: 600;
   font-family: inherit;
@@ -295,33 +297,77 @@ html, body {
   .booking-table {
     display: table !important;
   }
+  .dashboard-layout {
+    display: block;
+  }
+  #main-content {
+    overflow: visible;
+  }
 }
 
 /* ============================================================
-   DASHBOARD LAYOUT
+   DASHBOARD LAYOUT - sidebar grid
    ============================================================ */
 .dashboard-page {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
   background: var(--background);
+  font-family: 'Google Sans', system-ui, sans-serif;
+}
+
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: var(--size-header) 1fr;
+  min-height: 100vh;
 }
 
 /* ============================================================
-   DASHBOARD HEADER
+   SIDEBAR - logo area (top-left)
    ============================================================ */
-.dashboard-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: var(--primary);
-  color: white;
+.sidebar-logo {
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-2);
   padding: 0 var(--space-4);
-  height: var(--size-header);
-  gap: var(--space-3);
+  background: var(--primary);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================
+   TOPBAR - sign out area (top-right)
+   ============================================================ */
+.topbar-actions {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 var(--space-8);
+  background: var(--primary);
+}
+
+/* ============================================================
+   SIDEBAR - navigation (bottom-left)
+   ============================================================ */
+.sidebar-nav {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-darker);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  padding: var(--space-2) 0;
+}
+
+/* ============================================================
+   MAIN CONTENT AREA (bottom-right)
+   ============================================================ */
+#main-content {
+  grid-column: 2;
+  grid-row: 2;
+  overflow-y: auto;
 }
 
 .header-brand {
@@ -338,7 +384,7 @@ html, body {
   width: var(--size-icon-lg);
   height: var(--size-icon-lg);
   background: rgba(255, 255, 255, 0.15);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xs);
   flex-shrink: 0;
 }
 
@@ -358,10 +404,10 @@ html, body {
 }
 
 .btn-logout {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--primary-dark);
   color: white;
-  border: var(--border-width) solid rgba(255, 255, 255, 0.25);
-  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--primary-dark);
+  border-radius: var(--radius-xs);
   padding: 0.375rem 0.875rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -374,50 +420,47 @@ html, body {
 }
 
 .btn-logout:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--primary-darker);
+	border-color: var(--primary-darkest);
 }
 
 /* ============================================================
-   NAV TABS
+   SIDEBAR NAV BUTTONS
    ============================================================ */
-.nav-tabs {
-  display: flex;
-  background: var(--background-card);
-  border-bottom: var(--border-width-md) solid var(--border);
-  padding: 0 var(--space-4);
-  gap: 0;
-}
-
 .tab-btn {
   background: none;
   border: none;
-  border-bottom: var(--border-width-md) solid transparent;
-  margin-bottom: -2px;
-  padding: var(--space-3) var(--space-5);
+  border-left: 3px solid transparent;
+  padding: var(--space-3) var(--space-4);
   font-size: 0.9375rem;
   font-weight: 500;
   font-family: inherit;
   color: var(--foreground);
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
   min-height: var(--size-touch);
+  text-align: left;
+  width: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .tab-btn:hover {
-  color: var(--foreground);
+  background: var(--background-light);
+  color: var(--foreground-lightest);
 }
 
 .tab-btn.active,
 .tab-btn[aria-selected="true"] {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
+  color: var(--primary-lightest);
+  border-left-color: var(--primary-lightest);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* ============================================================
    TAB VIEWS
    ============================================================ */
 .tab-view {
-  flex: 1;
   padding: var(--space-5) var(--space-4);
   max-width: 960px;
   width: 100%;
@@ -437,9 +480,9 @@ html, body {
 }
 
 .btn-date-nav {
-  background: var(--background-card);
-  border: var(--border-width-md) solid var(--border);
-  border-radius: var(--radius-md);
+  background: var(--background);
+  border: var(--border-width) solid var(--background-lightest);
+  border-radius: var(--radius-full);
   width: var(--size-touch);
   height: var(--size-touch);
   font-size: 1.5rem;
@@ -454,8 +497,8 @@ html, body {
 }
 
 .btn-date-nav:hover {
-  border-color: var(--primary);
-  background: var(--primary-lightest);
+  border-color: var(--background-lighter);
+  background: var(--background-lightest);
 }
 
 .current-date {
@@ -468,8 +511,8 @@ html, body {
 
 .btn-today {
   background: none;
-  border: var(--border-width-md) solid var(--border);
-  border-radius: var(--radius-md);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-xs);
   padding: 0 0.875rem;
   height: var(--size-touch);
   font-size: 0.875rem;
@@ -491,7 +534,7 @@ html, body {
 .summary-bar {
   background: var(--background-card);
   border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xs);
   padding: 0.875rem 1rem;
   margin-bottom: var(--space-4);
 }
@@ -538,7 +581,7 @@ html, body {
 .btn-print {
   background: none;
   border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
   padding: 0.4375rem 0.875rem;
   font-size: 0.875rem;
   font-family: inherit;
@@ -560,7 +603,7 @@ html, body {
   border-collapse: collapse;
   background: var(--background-card);
   border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xs);
   overflow: hidden;
   font-size: 0.9375rem;
 }
@@ -611,7 +654,7 @@ html, body {
 .booking-card {
   background: var(--background-card);
   border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xs);
   padding: var(--space-4);
 }
 
@@ -661,7 +704,7 @@ html, body {
    ============================================================ */
 .btn-action {
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
   padding: 0.375rem 0.875rem;
   font-size: 0.8125rem;
   font-weight: 500;
@@ -697,7 +740,7 @@ html, body {
   background: var(--background-light);
   color: var(--foreground);
   border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xs);
   padding: 0.625rem 1.25rem;
   font-size: 1rem;
   font-weight: 500;
@@ -715,7 +758,7 @@ html, body {
   background: var(--error-dark);
   color: white;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xs);
   padding: 0.625rem 1.25rem;
   font-size: 1rem;
   font-weight: 600;
@@ -842,7 +885,7 @@ html, body {
   padding: 0.5625rem 0.75rem;
   background: var(--background);
   border: var(--border-width-md) solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xs);
   font-size: 0.9375rem;
   font-family: inherit;
   color: var(--foreground);
@@ -914,7 +957,7 @@ html, body {
   padding: 0.625rem 0.875rem;
   background: var(--background);
   border: var(--border-width-md) solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xs);
   font-size: 1rem;
   font-family: inherit;
   color: var(--foreground);
@@ -971,7 +1014,7 @@ html, body {
   font-size: 0.9375rem;
   background: var(--background-card);
   border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xs);
 }
 
 .loading-text {
@@ -985,7 +1028,7 @@ html, body {
   color: var(--error-dark);
   background: var(--error-light);
   border: var(--border-width) solid rgba(153, 27, 27, 0.15);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xs);
   padding: var(--space-3) var(--space-4);
   font-size: 0.9rem;
 }
@@ -1006,6 +1049,65 @@ html, body {
   margin: 0;
   font-size: 0.9rem;
   color: var(--foreground);
+}
+
+/* ============================================================
+   RESPONSIVE - tablet/mobile sidebar collapse
+   ============================================================ */
+@media (max-width: 768px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: var(--size-header) auto 1fr;
+  }
+
+  .sidebar-logo {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .topbar-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .sidebar-nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0 var(--space-2);
+    border-right: none;
+    border-bottom: var(--border-width-md) solid var(--border);
+    background: var(--background-card);
+  }
+
+  #main-content {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  .tab-btn {
+    border-left: none;
+    border-bottom: var(--border-width-md) solid transparent;
+    margin-bottom: -2px;
+    width: auto;
+    white-space: nowrap;
+    color: var(--foreground);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .tab-btn:hover {
+    background: none;
+    color: var(--foreground);
+  }
+
+  .tab-btn.active,
+  .tab-btn[aria-selected="true"] {
+    color: var(--primary);
+    border-left-color: transparent;
+    border-bottom-color: var(--primary);
+    background: none;
+  }
 }
 
 /* ============================================================
@@ -1050,7 +1152,6 @@ html, body {
   }
 
   .tab-btn {
-    padding: var(--space-3) var(--space-4);
     font-size: 0.875rem;
   }
 
