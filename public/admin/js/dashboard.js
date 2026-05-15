@@ -65,14 +65,15 @@
 
     const [y, m, d] = date.split('-').map(Number);
     const displayDate = new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long' });
-    document.getElementById('current-date-display').textContent = displayDate;
+    const todayLabel = date === todayString() ? ' <span class="today-label">today</span>' : '';
+    document.getElementById('current-date-display').innerHTML = displayDate + todayLabel;
 
     try {
       const reservations = await apiFetch(`/api/admin/reservations?date=${date}`);
       if (!reservations) return;
 
       currentReservations = reservations;
-      updateDaySummary(reservations, tenantInfo ? tenantInfo.max_covers : 0);
+      updateDaySummary(reservations);
       renderBookingList(reservations);
     } catch (err) {
       listEl.innerHTML = `<p class="error-text">Failed to load bookings: ${escHtml(err.message)}</p>`;
@@ -81,23 +82,9 @@
     }
   }
 
-  function updateDaySummary(reservations, maxCovers) {
+  function updateDaySummary(reservations) {
     const totalGuests = reservations.reduce((sum, r) => sum + (r.guests || 0), 0);
-    const summaryText = document.getElementById('summary-text');
-    const capacityFill = document.getElementById('capacity-fill');
-    const track = capacityFill.parentElement;
-
-    if (!maxCovers || maxCovers === 0) {
-      summaryText.textContent = `${totalGuests} cover${totalGuests !== 1 ? 's' : ''} booked`;
-      track.style.display = 'none';
-    } else {
-      const pct = Math.min(100, Math.round((totalGuests / maxCovers) * 100));
-      summaryText.textContent = `${totalGuests} / ${maxCovers} covers`;
-      track.style.display = '';
-      capacityFill.style.width = `${pct}%`;
-      capacityFill.className = 'capacity-fill' +
-        (pct >= 90 ? ' capacity-full' : pct >= 75 ? ' capacity-high' : '');
-    }
+    document.getElementById('summary-text').textContent = `${totalGuests} cover${totalGuests !== 1 ? 's' : ''}`;
   }
 
   function renderBookingList(reservations) {
