@@ -549,42 +549,47 @@ html, body {
    ============================================================ */
 .booking-table {
   width: 100%;
-  border-collapse: collapse;
-  background: var(--background-card);
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-xs);
+	border-spacing: 0 var(--space-2);
   overflow: hidden;
   font-size: 0.9375rem;
 }
 
 .booking-table thead {
-  background: var(--background-light);
+  background: var(--background-lightest);
+	border: var(--border-width) solid var(--background-lightest);
+  border-radius: var(--radius-xs);
 }
 
 .booking-table th {
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-5) var(--space-4);
   text-align: left;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--foreground);
+  color: var(--foreground-lightest);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  border-bottom: var(--border-width) solid var(--border);
 }
 
 .booking-table td {
-  padding: 0.875rem 1rem;
-  border-bottom: var(--border-width) solid var(--border);
-  color: var(--foreground);
+  padding: var(--space-4) var(--space-4);
+  color: var(--foreground-lightest);
   vertical-align: middle;
+	background: var(--background);
+  border: var(--border-width) solid var(--background);
 }
 
-.booking-table tbody tr:last-child td {
-  border-bottom: none;
+.booking-table thead tr th:first-child {
+  border-top-left-radius: var(--radius-xs);
+  border-bottom-left-radius: var(--radius-xs);
+}
+
+.booking-table thead tr th:last-child {
+  border-top-right-radius: var(--radius-xs);
+  border-bottom-right-radius: var(--radius-xs);
 }
 
 .booking-table tbody tr:hover {
-  background: var(--primary-lightest);
+  background: var(--background-light);
 }
 
 .actions-cell {
