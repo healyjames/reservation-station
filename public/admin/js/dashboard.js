@@ -63,7 +63,9 @@
     listEl.setAttribute('aria-busy', 'true');
     listEl.innerHTML = '<p class="loading-text">Loading…</p>';
 
-    document.getElementById('current-date-display').textContent = date;
+    const [y, m, d] = date.split('-').map(Number);
+    const displayDate = new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long' });
+    document.getElementById('current-date-display').textContent = displayDate;
 
     try {
       const reservations = await apiFetch(`/api/admin/reservations?date=${date}`);

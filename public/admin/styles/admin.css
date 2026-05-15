@@ -456,32 +456,33 @@ html, body {
 }
 
 .btn-date-nav {
-  background: var(--background);
-  border: var(--border-width) solid var(--background);
-  border-radius: var(--radius-full);
+  background: var(--background-light);
+  border: var(--border-width) solid var(--background-light);
+  border-radius: var(--radius-xs);
 	padding: var(--space-2) var(--space-4);
-  font-size: 1.5rem;
-  line-height: 1;
-  color: var(--foreground);
+  color: var(--foreground-lighter);
   cursor: pointer;
   align-items: center;
   justify-content: center;
   transition: border-color 0.15s, background 0.15s;
   flex-shrink: 0;
+	font-family: inherit;
 }
 
 .btn-date-nav:hover {
   border-color: var(--background-lighter);
-  background: var(--background-lightest);
+  background: var(--background-lighter);
+}
+
+.btn-date-nav .arrow {
+	font-size: 1.15rem;
+	line-height: 1;
 }
 
 .current-date {
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: var(--foreground);
-	border: var(--border-width-md) solid var(--foreground);
-  border-radius: var(--radius-xs);
-	padding: var(--space-2) var(--space-4);
+  font-size: 2.4rem;
+  color: var(--foreground-lightest);
+	padding: var(--space-2) 0;
   letter-spacing: 0.01em;
 }
 
@@ -555,9 +556,13 @@ html, body {
 }
 
 .booking-table thead {
-  background: var(--background-lightest);
-	border: var(--border-width) solid var(--background-lightest);
+  background: var(--background-lighter);
+	border: var(--border-width) solid var(--background-lighter);
   border-radius: var(--radius-xs);
+}
+
+.booking-table tbody tr {
+  cursor: pointer;
 }
 
 .booking-table th {
@@ -578,12 +583,12 @@ html, body {
   border: var(--border-width) solid var(--background);
 }
 
-.booking-table thead tr th:first-child {
+.booking-table thead tr th:first-child, .booking-table tbody tr td:first-child {
   border-top-left-radius: var(--radius-xs);
   border-bottom-left-radius: var(--radius-xs);
 }
 
-.booking-table thead tr th:last-child {
+.booking-table thead tr th:last-child, .booking-table tbody tr td:last-child {
   border-top-right-radius: var(--radius-xs);
   border-bottom-right-radius: var(--radius-xs);
 }

@@ -41,10 +41,12 @@
         <div id="bookings-view" class="tab-view" role="tabpanel" aria-labelledby="tab-bookings">
 
 					<div class="bookings-overview">
-						<div class="date-controls">
+						<div class="current-date-container">
 							<div class="current-date" id="current-date-display" aria-live="polite" aria-atomic="true"></div>
-							<button class="btn-date-nav" id="prev-day" aria-label="Previous day">&#8249;</button>
-							<button class="btn-date-nav" id="next-day" aria-label="Next day">&#8250;</button>
+							<div class="date-controls">
+								<button class="btn-date-nav" id="prev-day" aria-label="Previous day"><span class="arrow">&#8249;</span> Prev</button>
+								<button class="btn-date-nav" id="next-day" aria-label="Next day">Next <span class="arrow">&#8250;</span></button>
+							</div>
 						</div>
 
 						<div class="summary-text">
