@@ -561,10 +561,6 @@ html, body {
   border-radius: var(--radius-xs);
 }
 
-.booking-table tbody tr {
-  cursor: pointer;
-}
-
 .booking-table th {
   padding: var(--space-5) var(--space-4);
   text-align: left;
@@ -969,10 +965,10 @@ html, body {
 .empty-state {
   text-align: center;
   padding: 3rem 1rem;
-  color: var(--foreground);
+  color: var(--foreground-lighter);
   font-size: 0.9375rem;
-  background: var(--background-card);
-  border: var(--border-width) solid var(--border);
+  background: var(--background-light);
+  border: var(--border-width-md) solid var(--background-lighter);
   border-radius: var(--radius-xs);
 }
 
@@ -1106,10 +1102,6 @@ html, body {
     gap: 0.375rem;
   }
 
-  .current-date {
-    font-size: 0.9375rem;
-  }
-
   .settings-panel .btn-primary {
     width: 100%;
   }
@@ -1123,10 +1115,4 @@ html, body {
 	display: flex;
 	align-items: flex-end;
 	justify-content: space-between;
-}
-
-@media (max-width: 768px) {
-	.bookings-overview {
-		align-items: baseline;
-	}
 }
