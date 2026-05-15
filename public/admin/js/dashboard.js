@@ -207,6 +207,14 @@
       btn.addEventListener('click', () => switchTab(btn.dataset.tab));
     });
 
+    DatePicker.init(
+      document.getElementById('current-date-display'),
+      (dateStr) => {
+        currentDate = dateStr;
+        loadBookings(currentDate);
+      }
+    );
+
     await loadTenant();
     await loadBookings(currentDate);
   }

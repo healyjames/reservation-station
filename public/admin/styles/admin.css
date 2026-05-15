@@ -499,9 +499,12 @@ html, body {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--primary);
+  color: var(--foreground-lightest);
+	margin-left: 0.5rem;
   vertical-align: middle;
-  margin-left: 0.5rem;
+	background: var(--primary);
+	padding: var(--space-1) var(--space-2);
+	border-radius: var(--radius-full);
 }
 
 .btn-today {
@@ -1092,4 +1095,133 @@ html, body {
 	display: flex;
 	align-items: flex-end;
 	justify-content: space-between;
+}
+
+/* ============================================================
+   DATE PICKER TRIGGER - clickable current date display
+   ============================================================ */
+.current-date {
+  cursor: pointer;
+}
+
+.current-date:hover {
+  opacity: 0.65;
+}
+
+/* ============================================================
+   DATE PICKER POPUP
+   ============================================================ */
+.date-picker-popup {
+  position: fixed;
+  z-index: 500;
+  background: var(--background-darker);
+  border: var(--border-width-md) solid var(--background-darker);
+  border-radius: var(--radius-xs);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.12),
+    0 8px 32px rgba(0, 0, 0, 0.1);
+  min-width: 280px;
+  padding: var(--space-3);
+}
+
+.date-picker-popup[hidden] {
+  display: none;
+}
+
+.date-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-1) var(--space-3);
+}
+
+.date-picker-header span {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--foreground-lightest);
+}
+
+.date-picker-header button {
+  background: var(--background);
+  border: var(--border-width) solid var(--background);
+  border-radius: var(--radius-xs);
+  width: var(--size-touch-sm);
+  height: var(--size-touch-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--foreground);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.date-picker-header button:hover {
+  background: var(--background-light);
+  border-color: var(--primary);
+}
+
+.date-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-1);
+}
+
+.dp-day-name {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--foreground);
+  opacity: 0.55;
+  padding: var(--space-1) 0 var(--space-2);
+}
+
+.dp-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: var(--radius-xs);
+  border: var(--border-width) solid transparent;
+  color: var(--foreground);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.dp-day:not(.empty):hover {
+  background: var(--background-light);
+  border-color: var(--border);
+}
+
+.dp-day.empty {
+  cursor: default;
+  pointer-events: none;
+}
+
+.dp-day.today {
+  color: var(--primary);
+  font-weight: 700;
+  border-color: var(--primary);
+	border-top: none;
+	border-left: none;
+	border-right: none;
+	border-radius: 0;
+}
+
+.dp-day.past {
+  opacity: 0.45;
+}
+
+.dp-day.selected {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  font-weight: 700;
+}
+
+.dp-day.selected:hover {
+  background: var(--primary-darker);
+  border-color: var(--primary-darker);
 }

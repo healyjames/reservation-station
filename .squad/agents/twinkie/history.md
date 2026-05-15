@@ -18,8 +18,6 @@ Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget
 - Must handle cross-origin API calls to the Workers API
 - CSS custom properties for host-site theming
 
-### Asset split refactor (2026-04-01)
-
 `public/index.html` was split from a monolithic ~713-line file into three separate assets (no build step):
 
 **New file structure:**
@@ -237,3 +235,26 @@ Replaced the 4-cell CSS Grid layout (sidebar-logo / topbar-actions / sidebar-nav
 
 **Files modified:**
 - `public/js/booking-form.js` - added blocked times fetching, filtering, and dynamic re-rendering
+
+### Admin date picker & calendar-core extraction (2026-05-14)
+
+**Built:** Clickable date display on admin dashboard that pops up a mini calendar for date navigation.
+
+**New files:**
+- `public/js/calendar-core.js` — shared ES module exporting `MONTHS`, `DAY_NAMES`, `renderCalendarGrid(gridEl, year, month, options)`
+- `public/admin/js/date-picker.js` — plain IIFE script, exposes `window.DatePicker`
+
+**Updated files:**
+- `public/js/calendar.js` — imports from `calendar-core.js`; passes `cellClass: 'calendar-day'`, `headerClass: 'day-name'` to preserve existing widget CSS
+- `public/admin/dashboard.html` — added `<script src="/admin/js/date-picker.js">` before `dashboard.js`
+- `public/admin/js/dashboard.js` — `DatePicker.init()` wired in `init()` before `loadBookings`
+- `public/admin/styles/admin.css` — date picker trigger hover/underline styles, popup card, grid, and `.dp-day` variants
+
+**Key patterns:**
+
+- `renderCalendarGrid` is class-name agnostic via `cellClass`/`headerClass` options — defaults `dp-day`/`dp-day-name` for admin, overridden to `calendar-day`/`day-name` for the public widget. The `past` modifier is always applied by date comparison; `isDisabled` controls clickability separately.
+- `date-picker.js` is NOT an ES module — admin uses plain `<script src>` tags. Dynamic `import('/js/calendar-core.js')` inside an IIFE works in all modern browsers.
+- Popup appended to `document.body`, `position: fixed` — avoids stacking context issues.
+- Popup positioned via `triggerEl.getBoundingClientRect()` on each open to stay aligned.
+- Admin allows selecting any date (past or future) — `isDisabled: () => false` (default). Past cells get `.past` class (muted opacity) but remain clickable.
+- `loadBookings` overwrites `#current-date-display.innerHTML` on each load; popup is in `document.body`, not inside the trigger, so it survives those resets.
