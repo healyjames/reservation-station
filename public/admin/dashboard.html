@@ -16,7 +16,7 @@
   <div class="dashboard-layout">
 
     <!-- left: sidebar navigation -->
-    <nav class="sidebar-nav no-print" role="tablist" aria-label="Dashboard navigation">
+    <nav class="sidebar-nav" role="tablist" aria-label="Dashboard navigation">
       <button role="tab" class="tab-btn active" aria-selected="true" data-tab="bookings">Bookings</button>
       <button role="tab" class="tab-btn" aria-selected="false" data-tab="settings">Settings</button>
     </nav>
@@ -24,7 +24,7 @@
     <!-- right: header + main content -->
     <div class="main-panel">
 
-      <header class="main-header no-print">
+      <header class="main-header">
         <div class="header-brand">
           <div class="header-logo" aria-hidden="true">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -40,26 +40,22 @@
 
         <div id="bookings-view" class="tab-view" role="tabpanel" aria-labelledby="tab-bookings">
 
-          <div class="date-controls no-print">
-						<div class="current-date" id="current-date-display" aria-live="polite" aria-atomic="true"></div>
-            <button class="btn-date-nav" id="prev-day" aria-label="Previous day">&#8249;</button>
-            <button class="btn-date-nav" id="next-day" aria-label="Next day">&#8250;</button>
-          </div>
+					<div class="bookings-overview">
+						<div class="date-controls">
+							<div class="current-date" id="current-date-display" aria-live="polite" aria-atomic="true"></div>
+							<button class="btn-date-nav" id="prev-day" aria-label="Previous day">&#8249;</button>
+							<button class="btn-date-nav" id="next-day" aria-label="Next day">&#8250;</button>
+						</div>
+
+						<div class="summary-text">
+							<span id="summary-text">Loading…</span>
+						</div>
+					</div>
 
           <div class="summary-bar" id="summary-bar" aria-live="polite" aria-atomic="true">
-            <span id="summary-text">Loading…</span>
             <div class="capacity-track" aria-hidden="true">
               <div class="capacity-fill" id="capacity-fill" style="width:0%"></div>
             </div>
-          </div>
-
-          <div class="print-header print-only">
-            <h2 id="print-date-heading"></h2>
-            <p id="print-venue-name"></p>
-          </div>
-
-          <div class="print-btn-row no-print">
-            <button class="btn-print" id="print-btn">&#128424; Print day sheet</button>
           </div>
 
           <div id="bookings-list" aria-live="polite" aria-busy="true"></div>

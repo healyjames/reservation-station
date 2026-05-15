@@ -105,9 +105,6 @@ const SettingsManager = (() => {
       const nameEl = document.getElementById('venue-name');
       if (nameEl && body.name) nameEl.textContent = body.name;
 
-      const printNameEl = document.getElementById('print-venue-name');
-      if (printNameEl && body.name) printNameEl.textContent = body.name;
-
       setTimeout(() => {
         successEl.setAttribute('aria-hidden', 'true');
         successEl.classList.remove('visible');

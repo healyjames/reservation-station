@@ -53,9 +53,6 @@
 
       const nameEl = document.getElementById('venue-name');
       if (nameEl) nameEl.textContent = tenantInfo.name || 'Dashboard';
-
-      const printNameEl = document.getElementById('print-venue-name');
-      if (printNameEl) printNameEl.textContent = tenantInfo.name || '';
     } catch (err) {
       console.error('Failed to load tenant info:', err.message);
     }
@@ -67,9 +64,6 @@
     listEl.innerHTML = '<p class="loading-text">Loading…</p>';
 
     document.getElementById('current-date-display').textContent = date;
-
-    const printDateEl = document.getElementById('print-date-heading');
-    if (printDateEl) printDateEl.textContent = `Bookings for ${date}`;
 
     try {
       const reservations = await apiFetch(`/api/admin/reservations?date=${date}`);
@@ -123,7 +117,7 @@
           <th scope="col">Name</th>
           <th scope="col">Guests</th>
           <th scope="col">Dietary requirements</th>
-          <th scope="col" class="no-print">Actions</th>
+          <th scope="col">Actions</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -145,7 +139,7 @@
       <td>${escHtml(r.first_name)} ${escHtml(r.surname)}</td>
       <td>${r.guests}</td>
       <td>${escHtml(r.dietary_requirements || '-')}</td>
-      <td class="actions-cell no-print">
+      <td class="actions-cell">
         <button class="btn-action btn-edit" aria-label="Edit booking for ${escHtml(r.first_name)} ${escHtml(r.surname)}">Edit</button>
         <button class="btn-action btn-delete" aria-label="Delete booking for ${escHtml(r.first_name)} ${escHtml(r.surname)}">Delete</button>
       </td>
@@ -219,8 +213,6 @@
       currentDate = offsetDate(currentDate, 1);
       loadBookings(currentDate);
     });
-
-    document.getElementById('print-btn').addEventListener('click', () => window.print());
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => switchTab(btn.dataset.tab));

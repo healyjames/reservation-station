@@ -274,39 +274,6 @@ html, body {
   border: var(--border-width) solid rgba(6, 95, 70, 0.15);
 }
 
-/* ============================================================
-   PRINT UTILITY - shown only when printing
-   ============================================================ */
-.print-only {
-  display: none;
-}
-
-/* ============================================================
-   PRINT STYLES
-   ============================================================ */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-  .print-only {
-    display: block !important;
-  }
-  .booking-cards {
-    display: none !important;
-  }
-  .booking-table {
-    display: table !important;
-  }
-  .dashboard-layout {
-    display: block;
-  }
-  .main-panel {
-    display: block;
-  }
-  #main-content {
-    overflow: visible;
-  }
-}
 
 /* ============================================================
    DASHBOARD LAYOUT - two-column: sidebar + main panel
@@ -537,14 +504,12 @@ html, body {
   color: var(--primary);
 }
 
+
+
 /* ============================================================
    SUMMARY BAR
    ============================================================ */
 .summary-bar {
-  background: var(--background-card);
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-xs);
-  padding: 0.875rem 1rem;
   margin-bottom: var(--space-4);
 }
 
@@ -578,31 +543,6 @@ html, body {
   background: var(--primary);
 }
 
-/* ============================================================
-   PRINT BUTTON ROW
-   ============================================================ */
-.print-btn-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: var(--space-3);
-}
-
-.btn-print {
-  background: none;
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-xs);
-  padding: 0.4375rem 0.875rem;
-  font-size: 0.875rem;
-  font-family: inherit;
-  color: var(--foreground);
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.btn-print:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-}
 
 /* ============================================================
    BOOKING TABLE - desktop
@@ -1042,23 +982,6 @@ html, body {
   font-size: 0.9rem;
 }
 
-/* ============================================================
-   PRINT HEADER - visible only when printing
-   ============================================================ */
-.print-header {
-  margin-bottom: var(--space-4);
-}
-
-.print-header h2 {
-  margin: 0 0 0.2rem;
-  font-size: 1.25rem;
-}
-
-.print-header p {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--foreground);
-}
 
 /* ============================================================
    RESPONSIVE - mobile: sidebar becomes horizontal nav row
@@ -1180,4 +1103,20 @@ html, body {
   .settings-panel .btn-primary {
     width: 100%;
   }
+}
+
+.summary-text {
+	margin-bottom: var(--space-2);
+}
+
+.bookings-overview {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+}
+
+@media (max-width: 768px) {
+	.bookings-overview {
+		align-items: baseline;
+	}
 }
