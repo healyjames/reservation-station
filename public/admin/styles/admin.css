@@ -465,11 +465,16 @@ html, body {
    TAB VIEWS
    ============================================================ */
 .tab-view {
-  padding: var(--space-5) var(--space-4);
-  max-width: 960px;
+  padding: var(--space-5) var(--space-16);
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+	.tab-view {
+		padding: var(--space-5) var(--space-8);
+	}
 }
 
 /* ============================================================
@@ -485,15 +490,13 @@ html, body {
 
 .btn-date-nav {
   background: var(--background);
-  border: var(--border-width) solid var(--background-lightest);
+  border: var(--border-width) solid var(--background);
   border-radius: var(--radius-full);
-  width: var(--size-touch);
-  height: var(--size-touch);
+	padding: var(--space-2) var(--space-4);
   font-size: 1.5rem;
   line-height: 1;
   color: var(--foreground);
   cursor: pointer;
-  display: inline-flex;
   align-items: center;
   justify-content: center;
   transition: border-color 0.15s, background 0.15s;
@@ -509,7 +512,9 @@ html, body {
   font-size: 1.0625rem;
   font-weight: 600;
   color: var(--foreground);
-  padding: 0 var(--space-2);
+	border: var(--border-width-md) solid var(--foreground);
+  border-radius: var(--radius-xs);
+	padding: var(--space-2) var(--space-4);
   letter-spacing: 0.01em;
 }
 

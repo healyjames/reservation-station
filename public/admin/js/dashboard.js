@@ -220,11 +220,6 @@
       loadBookings(currentDate);
     });
 
-    document.getElementById('today-btn').addEventListener('click', () => {
-      currentDate = todayString();
-      loadBookings(currentDate);
-    });
-
     document.getElementById('print-btn').addEventListener('click', () => window.print());
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
