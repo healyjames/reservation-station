@@ -748,13 +748,13 @@ html, body {
   max-height: calc(100vh - 4rem);
   overflow-y: auto;
   box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.12),
-    0 24px 48px rgba(0, 0, 0, 0.16);
-  background: var(--background-card);
+    0 4px 16px rgba(0, 0, 0, 0.6),
+    0 24px 48px rgba(0, 0, 0, 0.6);
+  background: var(--background);
 }
 
 .booking-modal::backdrop {
-  background: rgba(26, 10, 12, 0.5);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(2px);
 }
 
@@ -771,20 +771,20 @@ html, body {
 
 .modal-header h2 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   font-weight: 700;
-  color: var(--foreground);
+  color: var(--foreground-lightest);
 }
 
 .modal-close {
   background: none;
-  border: none;
+  border: var(--border-width) solid transparent;
   font-size: 1.5rem;
   line-height: 1;
   color: var(--foreground);
   cursor: pointer;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-full);
   transition: color 0.15s;
   min-height: var(--size-touch-sm);
   min-width: var(--size-touch-sm);
@@ -795,7 +795,7 @@ html, body {
 
 .modal-close:hover {
   color: var(--foreground);
-  background: var(--background-light);
+  background: var(--background);
 }
 
 .modal-form .form-row {
@@ -820,13 +820,13 @@ html, body {
 .modal-form .form-group textarea,
 .modal-form .form-group select {
   width: 100%;
-  padding: 0.5625rem 0.75rem;
-  background: var(--background);
-  border: var(--border-width-md) solid var(--border);
+  padding: var(--space-2) var(--space-3);
+  background: var(--background-light);
+  border: var(--border-width) solid var(--background-light);
   border-radius: var(--radius-xs);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-family: inherit;
-  color: var(--foreground);
+  color: var(--foreground-lightest);
   transition: border-color 0.15s, box-shadow 0.15s;
   box-sizing: border-box;
 }
@@ -844,10 +844,7 @@ html, body {
 }
 
 .modal-actions {
-  display: flex;
-  gap: var(--space-3);
   margin-top: var(--space-5);
-  flex-direction: row-reverse;
 }
 
 .modal-confirm-text {
@@ -892,7 +889,7 @@ html, body {
 .settings-panel .form-group input[type="text"],
 .settings-panel .form-group input[type="number"] {
   width: 100%;
-  padding: 0.625rem 0.875rem;
+  padding: var(--space-2) var(--space-3);
   background: var(--background-light);
   border: var(--border-width) solid var(--background-light);
   border-radius: var(--radius-xs);

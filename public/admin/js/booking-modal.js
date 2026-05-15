@@ -125,13 +125,11 @@ const BookingModal = (() => {
         </div>
         <div class="modal-actions">
           <button type="submit" class="btn-primary" id="save-btn">Save changes</button>
-          <button type="button" class="btn-secondary" id="cancel-btn">Cancel</button>
         </div>
       </form>
     `;
 
     inner.querySelector('.modal-close').addEventListener('click', closeModal);
-    inner.querySelector('#cancel-btn').addEventListener('click', closeModal);
 
     inner.querySelector('#edit-form').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -182,17 +180,15 @@ const BookingModal = (() => {
       <div id="modal-error" class="alert alert-error" role="alert" aria-live="assertive" aria-hidden="true"></div>
       <p class="modal-confirm-text">
         Delete booking for <strong>${esc(reservation.first_name)} ${esc(reservation.surname)}</strong>
-        on <strong>${esc(reservation.reservation_date)}</strong> at <strong>${esc(reservation.reservation_time)}</strong>?
+        on <strong>${esc(new Date(reservation.reservation_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long' }))}</strong> at <strong>${esc(reservation.reservation_time)}</strong>?
       </p>
       <p class="modal-confirm-subtext">This action cannot be undone.</p>
       <div class="modal-actions">
         <button class="btn-danger" id="delete-confirm-btn">Delete</button>
-        <button class="btn-secondary" id="cancel-btn">Cancel</button>
       </div>
     `;
 
     inner.querySelector('.modal-close').addEventListener('click', closeModal);
-    inner.querySelector('#cancel-btn').addEventListener('click', closeModal);
 
     inner.querySelector('#delete-confirm-btn').addEventListener('click', async () => {
       const deleteBtn = inner.querySelector('#delete-confirm-btn');
