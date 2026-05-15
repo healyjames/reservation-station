@@ -643,24 +643,24 @@ html, body {
 
 .btn-edit {
   background: var(--background-light);
-  color: var(--foreground);
-  border: var(--border-width) solid var(--border);
+  color: var(--foreground-lighter);
+  border: var(--border-width) solid var(--background-light);
 }
 
 .btn-edit:hover {
-  background: var(--primary-lightest);
-  border-color: var(--primary-lighter);
-  color: var(--primary);
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  color: var(--foreground-lightest);
 }
 
 .btn-delete {
   background: var(--error-light);
   color: var(--error-dark);
-  border: var(--border-width) solid rgba(153, 27, 27, 0.15);
 }
 
 .btn-delete:hover {
-  background: #fecaca;
+  background: var(--error-dark);
+  color: var(--foreground-lightest);
 }
 
 .btn-secondary {
