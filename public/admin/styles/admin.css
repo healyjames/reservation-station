@@ -298,7 +298,6 @@ html, body {
   display: flex;
   flex-direction: column;
   background: var(--background-darker);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
   padding: var(--space-2) 0;
   position: sticky;
   top: 0;
@@ -330,7 +329,16 @@ html, body {
   top: 0;
   z-index: 100;
   flex-shrink: 0;
-	border-bottom: var(--border-width) solid var(--foreground-darkest);
+	border-bottom: var(--border-width-md) solid var(--foreground-darkest);
+	background: var(--background);
+}
+
+@media (max-width: 768px) {
+	.main-header {
+		border-bottom: var(--border-width-md) solid var(--background-light);
+		-webkit-box-shadow: 0px 10px 33px -12px #000000;
+		box-shadow: 0px 10px 33px -12px #000000;
+	}
 }
 
 /* ============================================================
@@ -579,8 +587,8 @@ html, body {
 }
 
 .booking-card {
-  background: var(--background-card);
-  border: var(--border-width) solid var(--border);
+  background: var(--background);
+  border: var(--border-width-md) solid var(--background-light);
   border-radius: var(--radius-xs);
   padding: var(--space-4);
 }
@@ -595,7 +603,7 @@ html, body {
 .card-time {
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--foreground-lightest);
 }
 
 .card-guests {
@@ -990,9 +998,7 @@ html, body {
     flex-direction: row;
     overflow-x: auto;
     padding: 0 var(--space-2);
-    border-right: none;
-    border-bottom: var(--border-width-md) solid var(--border);
-    background: var(--background-card);
+    background: var(--background-darker);
   }
 
   #main-content {
@@ -1004,7 +1010,6 @@ html, body {
   .tab-btn {
     border-left: none;
     border-bottom: var(--border-width-md) solid transparent;
-    margin-bottom: -2px;
     width: auto;
     white-space: nowrap;
     color: var(--foreground);

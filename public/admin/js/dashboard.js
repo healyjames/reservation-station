@@ -148,7 +148,7 @@
     card.innerHTML = `
       <div class="card-time-guests">
         <span class="card-time">${escHtml(r.reservation_time)}</span>
-        <span class="card-guests">${r.guests} guest${r.guests !== 1 ? 's' : ''}</span>
+        <span class="card-guests"><strong>${r.guests}</strong> guest${r.guests !== 1 ? 's' : ''}</span>
       </div>
       <div class="card-name">${escHtml(r.first_name)} ${escHtml(r.surname)}</div>
       ${r.dietary_requirements ? `<div class="card-dietary">${escHtml(r.dietary_requirements)}</div>` : ''}
