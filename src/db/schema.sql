@@ -8,7 +8,9 @@ CREATE TABLE Tenants (
     max_covers INTEGER NOT NULL DEFAULT 0,
     status TEXT NOT NULL CHECK (status IN ('active', 'cancelled')) DEFAULT 'active',
     block_current_day BOOLEAN NOT NULL DEFAULT FALSE,
-    concurrent_guests_time_limit INTEGER NOT NULL DEFAULT 120
+    concurrent_guests_time_limit INTEGER NOT NULL DEFAULT 120,
+    created_date TEXT DEFAULT (CURRENT_TIMESTAMP),
+    modified_date TEXT DEFAULT (CURRENT_TIMESTAMP)
 );
 
 DROP TABLE IF EXISTS Reservations;

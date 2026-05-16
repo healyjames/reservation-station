@@ -29,6 +29,8 @@ Tester on the Maximum Bookings project. Writes Vitest tests, reviews implementat
 - **API logging strategy (2026-04-06):** Business-rule rejections (422) and expected 404s are silent - not errors. Only D1 write failures and unexpected missing tenants trigger `console.error`. Do not add test assertions against log output for these silent paths.
 - **No code comments directive (2026-04-07):** James directed no inline comments in code unless genuinely necessary. Applies to test files too.
 
+- **block_current_day integer coercion tests (2026-04-08):** Added 6 new test cases to `test/admin.spec.ts` inside the `PATCH /api/admin/me` describe block to cover the bug fix where the Zod schema rejected integer `0`/`1` for `block_current_day`. Tests cover: integer `1` → 200 + DB value `1`; integer `0` → 200 + DB value `0`; boolean `true` → 200 + DB value `1`; boolean `false` → 200 + DB value `0`; string `"yes"` → 400; out-of-range integer `2` → 400. Each successful case queries the DB directly to assert the persisted value, consistent with the existing PATCH patterns in the file. The schema fix (`z.union([z.boolean(), z.literal(0), z.literal(1)])`) must be applied in `src/db/schema.ts` for the integer and invalid-value cases to pass.
+
 ### Original Learnings
 
 - Project kickoff: 2026-04-01

@@ -47,3 +47,7 @@ Backend Dev on the Maximum Bookings project. Owns the Hono API, D1 database sche
 
 - **Concurrent-limit test data (2027-06-15, Oak Tavern)**: Added 4 reservations on `2027-06-15` for Oak Tavern to exercise concurrent guest logic. Lunch cluster: Grace Taylor 13:00 (4 guests) + Henry Evans 13:30 (4 guests) = 8 concurrent within the 120-min window - any further booking of ≥3 guests in that window should be blocked. Evening slots (Isabel Brown 19:00×3, Jack Wilson 20:00×2) are isolated from the lunch cluster. Also corrected Oak Tavern `max_covers` from accidentally-set `5` back to `50`.
 
+- **Tenants table missing date columns (migration 0003)**: The `Tenants` table was created without `created_date` and `modified_date` columns, unlike `Reservations` and `AdminUsers` which both have them. The `PATCH /api/admin/me` route sets `modified_date` on every update, causing a D1_ERROR 500 at runtime. Migration `0003_tenants_dates.sql` adds both columns with `DEFAULT (CURRENT_TIMESTAMP)` to bring `Tenants` in line with the other tables. `schema.sql` was updated to match.
+
+ Changed `block_current_day` in `TenantSchema` from `z.boolean()` to `z.union([z.boolean(), z.literal(0), z.literal(1)])`. The frontend sends integer `1`/`0` per established design decision, and D1/SQLite stores and returns booleans as integers. The strict `z.boolean()` was rejecting valid payloads with a 400. No other files required changes.
+
