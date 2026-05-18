@@ -25,7 +25,11 @@ const SettingsManager = (() => {
             <label for="sf-block-today">Block same-day bookings</label>
           </div>
           <div class="form-group">
-            <label for="sf-time-window">Concurrent guest time window (minutes)</label>
+            <label for="sf-time-window">
+              Concurrent guest time window (minutes)
+              <button type="button" class="info-trigger" aria-label="What is this?" aria-describedby="time-window-tooltip"><span aria-hidden="true">?</span></button>
+              <span class="info-tooltip" id="time-window-tooltip" role="tooltip">No more than <strong id="tt-max-cover">-</strong> guests can be booked across any rolling <strong id="tt-time-window">-</strong>-minute window.</span>
+            </label>
             <input type="number" id="sf-time-window" name="concurrent_guests_time_limit" min="0" />
           </div>
           <p class="tz-note">Times are in your local timezone.</p>
@@ -35,6 +39,9 @@ const SettingsManager = (() => {
     `;
 
     loadSettings(container);
+
+    container.querySelector('#sf-max-covers').addEventListener('input', () => updateTooltip(container));
+    container.querySelector('#sf-time-window').addEventListener('input', () => updateTooltip(container));
 
     container.querySelector('#settings-form').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -56,6 +63,7 @@ const SettingsManager = (() => {
       container.querySelector('#sf-max-covers').value = tenant.max_covers ?? 0;
       container.querySelector('#sf-block-today').checked = !!tenant.block_current_day;
       container.querySelector('#sf-time-window').value = tenant.concurrent_guests_time_limit ?? 0;
+      updateTooltip(container);
     } catch (err) {
       const el = container.querySelector('#settings-error');
       el.textContent = 'Failed to load settings. Please refresh.';
@@ -121,5 +129,14 @@ const SettingsManager = (() => {
 
   return { init };
 })();
+
+function updateTooltip(container) {
+  const maxCovers = parseInt(container.querySelector('#sf-max-covers').value, 10);
+  const timeWindow = parseInt(container.querySelector('#sf-time-window').value, 10);
+  const ttMax = container.querySelector('#tt-max-cover');
+  const ttTime = container.querySelector('#tt-time-window');
+  if (ttMax) ttMax.textContent = maxCovers > 0 ? maxCovers : 'unlimited';
+  if (ttTime) ttTime.textContent = timeWindow > 0 ? timeWindow : '–';
+}
 
 window.SettingsManager = SettingsManager;

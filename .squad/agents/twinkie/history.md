@@ -258,3 +258,17 @@ Replaced the 4-cell CSS Grid layout (sidebar-logo / topbar-actions / sidebar-nav
 - Popup positioned via `triggerEl.getBoundingClientRect()` on each open to stay aligned.
 - Admin allows selecting any date (past or future) — `isDisabled: () => false` (default). Past cells get `.past` class (muted opacity) but remain clickable.
 - `loadBookings` overwrites `#current-date-display.innerHTML` on each load; popup is in `document.body`, not inside the trigger, so it survives those resets.
+
+## Learnings
+
+### CSS-only tooltip with live JS content (settings form, time-window field)
+
+**Added:** Info icon tooltip on "Concurrent guest time window (minutes)" label in `public/admin/js/settings.js` + `public/admin/styles/admin.css`.
+
+**Pattern:**
+- Tooltip markup is injected inside the `<label>` so `label:has(.info-trigger:hover)` CSS `:has()` selector can show/hide purely in CSS — zero JS for visibility.
+- `updateTooltip(container)` reads `#sf-max-guests` and `#sf-time-window` values and updates `#tt-max-guests` / `#tt-time-window` strong elements live. Called on `input` events and once after `loadSettings` populates the fields.
+- `updateTooltip` defined outside the IIFE (module-level) so both `init()` and `loadSettings()` can call it with `container` as parameter — avoids duplicating logic or passing callbacks.
+- Tooltip `position: absolute` inside `position: relative` label; arrow via `::before` triangle pointing up.
+- Used `--background-darker` + `--foreground-lightest` CSS variables to match existing dark palette — no hardcoded colours.
+- `type="button"` on trigger is critical — prevents accidental form submission.
