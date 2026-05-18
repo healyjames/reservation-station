@@ -548,6 +548,9 @@ html, body {
 	border-spacing: 0 var(--space-2);
   overflow: hidden;
   font-size: 0.9375rem;
+	background: var(--background-light);
+	padding: 0 var(--space-2);
+	border-radius: var(--radius-xs);
 }
 
 .booking-table thead {
