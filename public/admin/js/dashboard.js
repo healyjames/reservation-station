@@ -63,14 +63,21 @@
     if (!container) return;
 
     container.innerHTML = `
-      <div class="day-block-row">
-        <div class="form-group form-group-check">
-          <div class="toggle-switch">
-            <input type="checkbox" id="day-block-toggle" role="switch" ${isBlocked ? 'checked' : ''} />
-          </div>
-          <label for="day-block-toggle">Block this day</label>
-        </div>
-        <div id="day-block-feedback" class="alert" aria-live="polite" aria-hidden="true"></div>
+      <div class="toggle-list">
+				<div class="toggle-list-item">
+					<div class="toggle-list-item-content">
+						<p class="toggle-list-item-header"><strong>Block this day</strong></p>
+						<p class="toggle-list-item-subtext">Customers will no longer be able to make reservations on this date. Existing reservations will not be affected.</p>
+					</div>
+					<div class="toggle-list-item-switch">
+						<div class="form-group-check">
+							<div class="toggle-switch">
+								<input type="checkbox" id="day-block-toggle" role="switch" ${isBlocked ? 'checked' : ''} />
+							</div>
+						</div>
+						<div id="day-block-feedback" class="alert" aria-live="polite" aria-hidden="true"></div>
+					</div>
+				</div>
       </div>
     `;
 

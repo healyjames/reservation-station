@@ -1368,3 +1368,32 @@ label:has(.info-trigger:hover) .info-tooltip,
 label:has(.info-trigger:focus) .info-tooltip {
   display: block;
 }
+
+/* ============================================================
+   TOGGLE LIST
+   ============================================================ */
+.toggle-list .toggle-list-item p {
+	font-size: 0.875rem;
+}
+
+.toggle-list .toggle-list-item .toggle-list-item-header {
+	margin: 0 0 0.25rem 0;
+}
+
+.toggle-list .toggle-list-item .toggle-list-item-subtext {
+	margin: 0;
+}
+
+.toggle-list, .toggle-list-item {
+	margin-bottom: var(--space-2);
+}
+
+.toggle-list-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: var(--space-10);
+	background: var(--background-light);
+	padding: var(--space-4);
+	border-radius: var(--radius-xs);
+}
