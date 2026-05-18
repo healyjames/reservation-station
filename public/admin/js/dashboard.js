@@ -29,10 +29,11 @@
       .replace(/'/g, '&#39;');
   }
 
-  async function apiFetch(path, options) {
+  async function apiFetch(path, options = {}) {
+    const { headers: extraHeaders, ...restOptions } = options;
     const res = await fetch(path, {
-      headers: { 'Authorization': `Bearer ${AdminAuth.getToken()}` },
-      ...options,
+      headers: { 'Authorization': `Bearer ${AdminAuth.getToken()}`, ...extraHeaders },
+      ...restOptions,
     });
     if (res.status === 401) {
       AdminAuth.logout();
@@ -57,6 +58,67 @@
     }
   }
 
+  function renderBlockToggle(date, isBlocked) {
+    const container = document.getElementById('day-block-container');
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="day-block-row">
+        <div class="form-group form-group-check">
+          <div class="toggle-switch">
+            <input type="checkbox" id="day-block-toggle" role="switch" ${isBlocked ? 'checked' : ''} />
+          </div>
+          <label for="day-block-toggle">Block this day</label>
+        </div>
+        <div id="day-block-feedback" class="alert" aria-live="polite" aria-hidden="true"></div>
+      </div>
+    `;
+
+    container.querySelector('#day-block-toggle').addEventListener('change', async (e) => {
+      const nowBlocked = e.target.checked;
+      e.target.disabled = true;
+      const feedbackEl = container.querySelector('#day-block-feedback');
+      feedbackEl.className = 'alert';
+      feedbackEl.setAttribute('aria-hidden', 'true');
+
+      try {
+        if (nowBlocked) {
+          await apiFetch('/api/admin/blocked-dates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date }),
+          });
+        } else {
+          await apiFetch(`/api/admin/blocked-dates/date/${date}`, { method: 'DELETE' });
+        }
+        feedbackEl.textContent = nowBlocked ? 'Day blocked.' : 'Day unblocked.';
+        feedbackEl.classList.add('alert-success', 'visible');
+        feedbackEl.setAttribute('aria-hidden', 'false');
+        setTimeout(() => {
+          feedbackEl.classList.remove('visible');
+          feedbackEl.setAttribute('aria-hidden', 'true');
+        }, 3000);
+      } catch (err) {
+        e.target.checked = !nowBlocked;
+        feedbackEl.textContent = err.message || 'Failed to update block state.';
+        feedbackEl.classList.add('alert-error', 'visible');
+        feedbackEl.setAttribute('aria-hidden', 'false');
+      } finally {
+        e.target.disabled = false;
+      }
+    });
+  }
+
+  async function loadBlockState(date) {
+    try {
+      const blocks = await apiFetch(`/api/admin/blocked-dates?date=${date}`);
+      if (blocks === null) return;
+      renderBlockToggle(date, blocks.some(b => b.start_time === null));
+    } catch {
+      renderBlockToggle(date, false);
+    }
+  }
+
   async function loadBookings(date) {
     const listEl = document.getElementById('bookings-list');
     listEl.setAttribute('aria-busy', 'true');
@@ -74,6 +136,7 @@
       currentReservations = reservations;
       updateDaySummary(reservations);
       renderBookingList(reservations);
+      loadBlockState(date);
     } catch (err) {
       listEl.innerHTML = `<p class="error-text">Failed to load bookings: ${escHtml(err.message)}</p>`;
     } finally {

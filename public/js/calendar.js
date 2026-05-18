@@ -9,6 +9,7 @@ const todayDay   = _today.getDate();
 let currentYear  = todayYear;
 let currentMonth = todayMonth;
 let selectedDate = null;
+let blockedDates = new Set();
 
 function isBeforeToday(year, month, day) {
   if (year !== todayYear)  return year < todayYear;
@@ -16,7 +17,21 @@ function isBeforeToday(year, month, day) {
   return day < todayDay;
 }
 
-function renderCalendar(year, month) {
+async function fetchBlockedDates(year, month) {
+  const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+  try {
+    const res = await fetch(`/api/reservations/blocked-dates?tenant_id=${encodeURIComponent(tenantConfig.id)}&month=${monthStr}`);
+    if (!res.ok) { blockedDates = new Set(); return; }
+    const data = await res.json();
+    blockedDates = new Set(data.blocked_dates || []);
+  } catch {
+    blockedDates = new Set();
+  }
+}
+
+async function renderCalendar(year, month) {
+  await fetchBlockedDates(year, month);
+
   const titleEl = document.getElementById('calendar-title');
   const gridEl  = document.getElementById('calendar-grid');
   const prevBtn = document.getElementById('prev-month');
@@ -30,9 +45,8 @@ function renderCalendar(year, month) {
     selectedDate,
     isDisabled: (y, m, d) => {
       const past = isBeforeToday(y, m, d);
-      const blockedToday = y === todayYear && m === todayMonth && d === todayDay &&
-                           tenantConfig?.block_current_day === true;
-      return past || blockedToday;
+      const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      return past || blockedDates.has(dateStr);
     },
     onSelect: (y, m, d) => selectDay(y, m, d),
     cellClass: 'calendar-day',

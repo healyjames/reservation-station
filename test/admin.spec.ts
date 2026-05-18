@@ -18,8 +18,8 @@ const TEST_PASSWORD = 'securepass456';
 async function seedTenant(overrides: Record<string, unknown> = {}) {
 	await env.maximum_bookings_db
 		.prepare(
-			`INSERT OR REPLACE INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, block_current_day, concurrent_guests_time_limit)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			`INSERT OR REPLACE INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		)
 		.bind(
 			overrides.id ?? TENANT_ID,
@@ -28,7 +28,6 @@ async function seedTenant(overrides: Record<string, unknown> = {}) {
 			overrides.max_guests ?? 50,
 			overrides.max_covers ?? 20,
 			overrides.status ?? 'active',
-			overrides.block_current_day ?? 0,
 			overrides.concurrent_guests_time_limit ?? 120,
 		)
 		.run();
@@ -354,87 +353,4 @@ describe('PATCH /api/admin/me', () => {
 		expect(res.status).toBe(401);
 	});
 
-	it('accepts block_current_day as integer 1 and returns 200', async () => {
-		const token = await getAuthToken();
-		const res = await exports.default.fetch('http://localhost/api/admin/me', {
-			method: 'PATCH',
-			headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-			body: JSON.stringify({ block_current_day: 1 }),
-		});
-		expect(res.status).toBe(200);
-
-		const row = await env.maximum_bookings_db
-			.prepare('SELECT block_current_day FROM Tenants WHERE id = ?')
-			.bind(TENANT_ID)
-			.first<{ block_current_day: number }>();
-		expect(row?.block_current_day).toBe(1);
-	});
-
-	it('accepts block_current_day as integer 0 and returns 200', async () => {
-		const token = await getAuthToken();
-		const res = await exports.default.fetch('http://localhost/api/admin/me', {
-			method: 'PATCH',
-			headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-			body: JSON.stringify({ block_current_day: 0 }),
-		});
-		expect(res.status).toBe(200);
-
-		const row = await env.maximum_bookings_db
-			.prepare('SELECT block_current_day FROM Tenants WHERE id = ?')
-			.bind(TENANT_ID)
-			.first<{ block_current_day: number }>();
-		expect(row?.block_current_day).toBe(0);
-	});
-
-	it('accepts block_current_day as boolean true and returns 200', async () => {
-		const token = await getAuthToken();
-		const res = await exports.default.fetch('http://localhost/api/admin/me', {
-			method: 'PATCH',
-			headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-			body: JSON.stringify({ block_current_day: true }),
-		});
-		expect(res.status).toBe(200);
-
-		const row = await env.maximum_bookings_db
-			.prepare('SELECT block_current_day FROM Tenants WHERE id = ?')
-			.bind(TENANT_ID)
-			.first<{ block_current_day: number }>();
-		expect(row?.block_current_day).toBe(1);
-	});
-
-	it('accepts block_current_day as boolean false and returns 200', async () => {
-		const token = await getAuthToken();
-		const res = await exports.default.fetch('http://localhost/api/admin/me', {
-			method: 'PATCH',
-			headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-			body: JSON.stringify({ block_current_day: false }),
-		});
-		expect(res.status).toBe(200);
-
-		const row = await env.maximum_bookings_db
-			.prepare('SELECT block_current_day FROM Tenants WHERE id = ?')
-			.bind(TENANT_ID)
-			.first<{ block_current_day: number }>();
-		expect(row?.block_current_day).toBe(0);
-	});
-
-	it('returns 400 when block_current_day is a string value', async () => {
-		const token = await getAuthToken();
-		const res = await exports.default.fetch('http://localhost/api/admin/me', {
-			method: 'PATCH',
-			headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-			body: JSON.stringify({ block_current_day: 'yes' }),
-		});
-		expect(res.status).toBe(400);
-	});
-
-	it('returns 400 when block_current_day is an integer other than 0 or 1', async () => {
-		const token = await getAuthToken();
-		const res = await exports.default.fetch('http://localhost/api/admin/me', {
-			method: 'PATCH',
-			headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-			body: JSON.stringify({ block_current_day: 2 }),
-		});
-		expect(res.status).toBe(400);
-	});
 });

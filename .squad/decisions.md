@@ -97,6 +97,51 @@
 **What:** Converted admin dashboard from sticky-header + horizontal-tab layout to a 4-cell CSS Grid sidebar layout. `--sidebar-width: 220px` token added to `:root`. Active nav indicator changed from bottom-border to left-border on desktop. New `@media (max-width: 768px)` breakpoint collapses sidebar to a full-width horizontal scroll-nav; existing `640px` breakpoint retained for card/table layout. `@media print` sets `.dashboard-layout { display: block }`. All JS-depended IDs and classes (`#venue-name`, `#logout-btn`, `.tab-btn`, `.tab-view`, `#main-content`) preserved.
 **Why:** Sidebar layout is the standard pattern for admin dashboards. CSS Grid gives explicit named-cell placement. Width tokenised for single-point tunability.
 
+### 2026-04-07: block_current_day schema accepts boolean | 0 | 1
+**By:** Sean (Backend Dev)
+**What:** `block_current_day` in `TenantSchema` (and `UpdateTenantSchema`) now validates as `z.union([z.boolean(), z.literal(0), z.literal(1)])` instead of `z.boolean()`.
+**Why:** The admin dashboard frontend sends `block_current_day` as integer `1` or `0` (established design decision). D1/SQLite stores and returns boolean columns as integers. `z.boolean()` was rejecting valid payloads with a 400 on PATCH `/api/admin/me`. Accepting both forms matches the actual data contract end-to-end without requiring coercion in routes or the frontend.
+
+### 2026-04-05: Tenants table date columns (migration 0003)
+**By:** Sean (Backend Dev)
+**What:** Migration `0003_tenants_dates.sql` adds `created_date` and `modified_date` columns to `Tenants` with `DEFAULT (CURRENT_TIMESTAMP)`. `src/db/schema.sql` updated to match.
+**Why:** `PATCH /api/admin/me` writes `modified_date` on every update. The column did not exist on `Tenants`, causing a D1_ERROR 500 at runtime. `Reservations` and `AdminUsers` already had these columns; this brings `Tenants` into line.
+
+### 2026-04-14: Admin dashboard 2-div layout
+**By:** Twinkie (Frontend Dev)
+**What:** Replaced the 4-cell CSS Grid layout (sidebar-logo / topbar-actions / sidebar-nav / main-content) with a 2-child grid: `.sidebar-nav` (left) + `.main-panel` (right, flex column containing `.main-header` and `#main-content`). At mobile (`max-width: 768px`), `.main-panel` uses `display: contents` so its children join the outer flex column with CSS `order` control: header (1), sidebar nav row (2), content (3). `.sidebar-logo` and `.topbar-actions` CSS classes removed. All JS-consumed IDs unchanged.
+**Why:** Semantically cleaner — the header belongs with the content panel, not floating as a separate grid cell. Fewer grid areas to maintain.
+
+### 2026-04-15: BlockedDates test suite
+**By:** Neela (Tester)
+**What:** Created `test/blocked-dates.spec.ts` with 24 tests: 11 admin CRUD tests, 7 public endpoint tests (`GET /api/reservations/blocked-dates`), 3 blocked-times integration tests, 3 reservation creation enforcement tests. UUID range `000000000601–000000000901`. `seedTenant` omits `block_current_day` (relies on `DEFAULT FALSE`, forward-compatible with migration). `clearDb` wraps `DELETE FROM BlockedDates` in `.catch(() => {})`. Full-day block asserted as all 20 slots blocked. Time-range boundary edge slot left unasserted (semantics Sean's call). DELETE tests accept 200 or 204.
+**Why:** Feature coverage for the BlockedDates system replacing `block_current_day`. Full-day block short-circuits capacity logic; time-range blocks merge with capacity blocks; reservation creation guard checked.
+
+### 2026-05-14: Font loading — preload hints
+**By:** Twinkie (Frontend Dev)
+**What:** All three HTML entry points (`public/index.html`, `public/admin/index.html`, `public/admin/dashboard.html`) now include `<link rel="preload">` hints for both self-hosted variable font files before their stylesheet links. `font-display: swap` retained in `shared.css`.
+**Why:** `@font-face` rules live in `shared.css` discovered only after the full `@import` chain resolves. Fonts were not requested until that chain completed, creating a download gap that caused visible FOUT with `font-display: swap`. Preload moves font requests to first-HTML-parse time.
+
+### 2026-05-14: Admin date picker and calendar-core extraction
+**By:** Twinkie (Frontend Dev)
+**What:** Extracted shared calendar grid rendering into `public/js/calendar-core.js` (ES module exporting `MONTHS`, `DAY_NAMES`, `renderCalendarGrid`). Added `public/admin/js/date-picker.js` (plain IIFE, `window.DatePicker`) to make the admin date display clickable with a popup calendar. `calendar.js` updated to import from `calendar-core.js`. `renderCalendarGrid` is class-name agnostic via `cellClass`/`headerClass` options — defaults to `dp-day`/`dp-day-name`; public widget passes `calendar-day`/`day-name`. Popup appended to `document.body`, `position: fixed`. Past dates get `.past` class but remain clickable in admin. `isDisabled` is now separate from the `past` class.
+**Why:** Admin dashboard needed arbitrary date navigation without clicking prev/next many times. Extraction avoids code duplication between public widget and admin picker.
+
+### 2026-05-14: BlockedDates UI migration
+**By:** Twinkie (Frontend Dev)
+**What:** Removed the global "Block same-day bookings" toggle from settings form. Added per-day block toggle to admin dashboard in `#day-block-container` (between `.bookings-overview` and `#bookings-list`). Toggle uses optimistic UI; reverts on API error. `apiFetch` updated to merge `headers` from options (backward-compatible). Public calendar `renderCalendar` made async; `fetchBlockedDates(year, month)` added; blocked dates stored in module-level `Set<string>`; fetched once per month navigation; fails open.
+**Why:** `block_current_day` replaced by `BlockedDates` table. Block control moved to per-day in the day view rather than a global setting. Calendar widget must grey blocked dates for bookability.
+
+### 2026-05-14: BlockedDates API implementation
+**By:** Sean (Backend Dev)
+**What:** Migration `0004_blocked_dates.sql`: creates `BlockedDates(id, tenant_id, date, start_time, end_time, reason, created_date)` with compound index `(tenant_id, date)`; drops `block_current_day` from Tenants. `src/routes/blocked-dates.ts`: new Hono router, `adminAuth` via `blockedDates.use('*', adminAuth)`, endpoints `GET /?date=`, `POST /`, `DELETE /date/:date`, `DELETE /:id`. `GET /api/reservations/blocked-dates?tenant_id=&month=YYYY-MM` added to reservations router. `GET /blocked-times` updated: full-day block → all slots (short-circuit); time-range blocks merged with capacity blocks. `POST /reservations` checks `BlockedDates` for full-day block instead of `block_current_day`. `src/app.ts` mounts the new router. `DELETE /date/:date` registered before `DELETE /:id` to prevent route conflict.
+**Why:** `block_current_day` was a coarse boolean. Tenants need holiday closures (specific dates) and partial-day blocks (private hire). Full-day blocks gate new bookings without cancelling existing ones.
+
+### 2026-05-17: BlockedDates system architecture
+**By:** Han (Lead)
+**What:** Defined `BlockedDates` table schema and full API contract replacing `block_current_day`. Full-day block = `start_time IS NULL AND end_time IS NULL`; partial block = explicit `[start_time, end_time)` range; multiple rows per date allowed. `block_current_day` removed from `TenantSchema` and `Tenants`. `BlockedDateSchema`, `CreateBlockedDateSchema`, `BlockedDate`, `CreateBlockedDate` added to `src/db/schema.ts`. Admin endpoints: `GET/POST /api/admin/blocked-dates`, `DELETE /api/admin/blocked-dates/date/:date`, `DELETE /api/admin/blocked-dates/:id`. Public endpoint: `GET /api/reservations/blocked-dates?tenant_id=&month=YYYY-MM` returns `{ blocked_dates: string[] }` of full-day blocked dates. Dashboard toggle maps to `POST /` (block) and `DELETE /date/:date` (unblock). Calendar widget fetches per month — single request per navigation.
+**Why:** `block_current_day` had no date flexibility, no time-range support, and no per-date targeting. Required for holiday closures and partial-day private hire.
+
 ## Governance
 
 - All meaningful changes require team consensus

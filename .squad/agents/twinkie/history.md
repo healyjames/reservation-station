@@ -272,3 +272,23 @@ Replaced the 4-cell CSS Grid layout (sidebar-logo / topbar-actions / sidebar-nav
 - Tooltip `position: absolute` inside `position: relative` label; arrow via `::before` triangle pointing up.
 - Used `--background-darker` + `--foreground-lightest` CSS variables to match existing dark palette — no hardcoded colours.
 - `type="button"` on trigger is critical — prevents accidental form submission.
+
+### BlockedDates UI migration (2026-05-14)
+
+**Changed:** Replaced `block_current_day` boolean across all frontend files with the new `BlockedDates` table API.
+
+**Files modified:**
+- `public/admin/js/settings.js` — removed `sf-block-today` checkbox, removed field from `saveSettings()` body and `loadSettings()` population
+- `public/admin/js/dashboard.js` — added `renderBlockToggle(date, isBlocked)`, `loadBlockState(date)`; `apiFetch` updated to merge extra headers (needed for POST Content-Type)
+- `public/admin/dashboard.html` — added `<div id="day-block-container">` between `.bookings-overview` and `#bookings-list`
+- `public/admin/styles/admin.css` — added `.day-block-row` scoping rules
+- `public/js/calendar.js` — added `blockedDates` Set, `fetchBlockedDates(year, month)`, made `renderCalendar` async, updated `isDisabled` to check `blockedDates`
+- `public/js/tenants.js` — no changes needed (never stored `block_current_day` locally)
+
+**Key patterns:**
+- `loadBlockState` called fire-and-forget inside `loadBookings` after reservations render — independent request, no need to block booking display
+- `renderBlockToggle` fully replaces `#day-block-container` innerHTML on each date change — clean re-mount, no stale listeners
+- Optimistic UI: toggle visually updates immediately; reverts `e.target.checked = !nowBlocked` on API error
+- `apiFetch` header merge: destructure `headers: extraHeaders` from options, spread into fetch headers — backward-compatible (callers without headers still work)
+- `fetchBlockedDates` fails open: any error resets `blockedDates` to empty Set, calendar remains fully usable
+- Public widget fetches per-month on navigation: `GET /api/reservations/blocked-dates?tenant_id=X&month=YYYY-MM`

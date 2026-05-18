@@ -15,8 +15,8 @@ async function seedTenant(overrides: Record<string, unknown> = {}) {
 	const now = new Date().toISOString();
 	await env.maximum_bookings_db
 		.prepare(
-			`INSERT OR REPLACE INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, block_current_day, concurrent_guests_time_limit)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			`INSERT OR REPLACE INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		)
 		.bind(
 			overrides.id ?? TENANT_ID,
@@ -25,7 +25,6 @@ async function seedTenant(overrides: Record<string, unknown> = {}) {
 			overrides.max_guests ?? 50,
 			overrides.max_covers ?? 20,
 			overrides.status ?? 'active',
-			overrides.block_current_day ?? 0,
 			overrides.concurrent_guests_time_limit ?? 120,
 		)
 		.run();

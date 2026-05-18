@@ -275,6 +275,18 @@ html, body {
 }
 
 
+.day-block-row {
+  margin-bottom: var(--space-5);
+}
+
+.day-block-row .form-group {
+  margin-bottom: var(--space-2);
+}
+
+.day-block-row .alert {
+  margin-bottom: 0;
+}
+
 /* ============================================================
    DASHBOARD LAYOUT - two-column: sidebar + main panel
    ============================================================ */

@@ -31,6 +31,15 @@ Tester on the Maximum Bookings project. Writes Vitest tests, reviews implementat
 
 - **block_current_day integer coercion tests (2026-04-08):** Added 6 new test cases to `test/admin.spec.ts` inside the `PATCH /api/admin/me` describe block to cover the bug fix where the Zod schema rejected integer `0`/`1` for `block_current_day`. Tests cover: integer `1` → 200 + DB value `1`; integer `0` → 200 + DB value `0`; boolean `true` → 200 + DB value `1`; boolean `false` → 200 + DB value `0`; string `"yes"` → 400; out-of-range integer `2` → 400. Each successful case queries the DB directly to assert the persisted value, consistent with the existing PATCH patterns in the file. The schema fix (`z.union([z.boolean(), z.literal(0), z.literal(1)])`) must be applied in `src/db/schema.ts` for the integer and invalid-value cases to pass.
 
+- **BlockedDates feature test suite (2026-04-15):** Created `test/blocked-dates.spec.ts` with 24 tests covering admin CRUD, public blocked-dates endpoint, blocked-times integration, and reservation creation enforcement.
+  - `seedTenant` INSERT omits `block_current_day` entirely — relies on `DEFAULT FALSE` so it's forward-compatible with the migration that removes the column
+  - `clearDb` wraps `DELETE FROM BlockedDates` in `.catch(() => {})` — pre-migration, the missing table silently skips; individual feature tests fail cleanly instead of every test blowing up on `beforeEach`
+  - UUID range `000000000601–000000000901` used to avoid collisions with existing test files
+  - `generateTimeSlots()` confirmed to return exactly 20 slots (12:00–21:30 at 30-min intervals) — `blocked_times.length === 20` assertion is grounded in source
+  - Time-range block boundary: only asserting clearly inside/outside the range; the edge slot (end_time itself) is left unasserted since include/exclude semantics are Sean's call
+  - DELETE tests use `expect([200, 204]).toContain(res.status)` — spec allows either
+  - **Flagged** for Han + Sean: `test/index.spec.ts` and `test/admin.spec.ts` both reference `block_current_day` in seedTenant and specific test cases — these need updating after migration removes the column
+
 ### Original Learnings
 
 - Project kickoff: 2026-04-01

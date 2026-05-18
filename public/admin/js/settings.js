@@ -18,12 +18,6 @@ const SettingsManager = (() => {
             <label for="sf-max-covers">Max covers per day</label>
             <input type="number" id="sf-max-covers" name="max_covers" min="0" />
           </div>
-          <div class="form-group form-group-check">
-            <div class="toggle-switch">
-              <input type="checkbox" id="sf-block-today" name="block_current_day" role="switch" />
-            </div>
-            <label for="sf-block-today">Block same-day bookings</label>
-          </div>
           <div class="form-group">
             <label for="sf-time-window">
               Concurrent guest time window (minutes)
@@ -61,7 +55,6 @@ const SettingsManager = (() => {
       container.querySelector('#sf-name').value = tenant.name || '';
       container.querySelector('#sf-max-guests').value = tenant.max_guests ?? 0;
       container.querySelector('#sf-max-covers').value = tenant.max_covers ?? 0;
-      container.querySelector('#sf-block-today').checked = !!tenant.block_current_day;
       container.querySelector('#sf-time-window').value = tenant.concurrent_guests_time_limit ?? 0;
       updateTooltip(container);
     } catch (err) {
@@ -88,7 +81,6 @@ const SettingsManager = (() => {
       name: container.querySelector('#sf-name').value.trim(),
       max_guests: parseInt(container.querySelector('#sf-max-guests').value, 10) || 0,
       max_covers: parseInt(container.querySelector('#sf-max-covers').value, 10) || 0,
-      block_current_day: container.querySelector('#sf-block-today').checked ? 1 : 0,
       concurrent_guests_time_limit: parseInt(container.querySelector('#sf-time-window').value, 10) || 0,
     };
 

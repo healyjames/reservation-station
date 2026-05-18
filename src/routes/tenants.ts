@@ -32,10 +32,10 @@ tenants.post('/', async (c) => {
 	try {
 		await c.env.maximum_bookings_db
 			.prepare(
-				`INSERT INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, block_current_day, created_date, modified_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				`INSERT INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, created_date, modified_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 			)
-			.bind(id, body.name, body.tenant_code, body.max_guests, body.max_covers, body.status, body.block_current_day, now, now)
+			.bind(id, body.name, body.tenant_code, body.max_guests, body.max_covers, body.status, now, now)
 			.run();
 	} catch (err) {
 		console.error('[tenants] POST insert failed', { err, tenant_code: body.tenant_code });
