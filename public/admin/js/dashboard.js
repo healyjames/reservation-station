@@ -2,7 +2,6 @@
   let currentDate = todayString();
   let currentReservations = [];
   let tenantInfo = null;
-  let settingsInitialized = false;
 
   function todayString() {
     const d = new Date();
@@ -166,22 +165,6 @@
     return card;
   }
 
-  function switchTab(tabName) {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      const active = btn.dataset.tab === tabName;
-      btn.setAttribute('aria-selected', String(active));
-      btn.classList.toggle('active', active);
-    });
-    document.querySelectorAll('.tab-view').forEach(view => {
-      view.hidden = view.id !== `${tabName}-view`;
-    });
-
-    if (tabName === 'settings' && !settingsInitialized) {
-      settingsInitialized = true;
-      SettingsManager.init(document.getElementById('settings-view'));
-    }
-  }
-
   async function init() {
     AdminAuth.requireAuth();
 
@@ -201,10 +184,6 @@
     document.getElementById('next-day').addEventListener('click', () => {
       currentDate = offsetDate(currentDate, 1);
       loadBookings(currentDate);
-    });
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
     });
 
     DatePicker.init(
