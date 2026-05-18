@@ -2,26 +2,26 @@ const SettingsManager = (() => {
   function init(container) {
     container.innerHTML = `
       <div class="settings-panel">
-        <h2>Venue Settings</h2>
+        <h2>Settings</h2>
         <div id="settings-error" class="alert alert-error" role="alert" aria-live="assertive" aria-hidden="true"></div>
         <div id="settings-success" class="alert alert-success" role="status" aria-live="polite" aria-hidden="true">Settings saved.</div>
         <form id="settings-form" novalidate>
           <div class="form-group">
-            <label for="sf-name">Venue name</label>
+            <label for="sf-name">Name</label>
             <input type="text" id="sf-name" name="name" required autocomplete="organization" />
           </div>
           <div class="form-group">
-            <label for="sf-max-guests">Max concurrent guests</label>
-            <span class="field-hint">0 = unlimited</span>
+            <label for="sf-max-guests">Max party size</label>
             <input type="number" id="sf-max-guests" name="max_guests" min="0" />
           </div>
           <div class="form-group">
             <label for="sf-max-covers">Max covers per day</label>
-            <span class="field-hint">0 = unlimited</span>
             <input type="number" id="sf-max-covers" name="max_covers" min="0" />
           </div>
           <div class="form-group form-group-check">
-            <input type="checkbox" id="sf-block-today" name="block_current_day" />
+            <div class="toggle-switch">
+              <input type="checkbox" id="sf-block-today" name="block_current_day" role="switch" />
+            </div>
             <label for="sf-block-today">Block same-day bookings</label>
           </div>
           <div class="form-group">

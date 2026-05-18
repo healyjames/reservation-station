@@ -907,23 +907,91 @@ html, body {
 }
 
 .form-group-check {
+  --switch-bg:            var(--background-darkest, #4f4f4f);
+  --switch-border:        var(--background-darkest, #4f4f4f);
+  --switch-knob:          var(--foreground-dark, #7d7d7d);
+  --switch-active-bg:     var(--success, #5ba989);
+  --switch-active-border: var(--success, #5ba989);
+  --switch-active-knob:   var(--background-darker, #252525);
+  --switch-easing:        cubic-bezier(.05, .7, .1, 1);
+  --switch-duration:      0.2s;
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.75rem;
   flex-direction: row !important;
 }
 
-.form-group-check input[type="checkbox"] {
-  width: var(--size-icon-sm);
-  height: var(--size-icon-sm);
-  flex-shrink: 0;
-  accent-color: var(--primary);
-  cursor: pointer;
+@supports (transition: all 0.1s linear(1, 1, 1)) {
+  .form-group-check {
+    --switch-easing: linear(0, .00245 1.753%, .00994 3.55%, .01966 4.916%, .03415 6.402%, .05334 7.836%, .07376 9.061%, .10031 10.32%, .12808 11.414%, .19399 13.366%, .27138 14.974%, .34403 16.052%, .47679 17.475%, .54434 18.338%, .60689 19.389%, .66036 20.609%, .71671 22.4%, .76532 24.589%, .78755 25.874%, .80828 27.285%, .84475 30.42%, .86492 32.632%, .88332 35.056%, .9002 37.721%, .91554 40.622%, .9295 43.795%, .94208 47.239%, .95333 50.97%, .96327 54.986%, .9795 64.011%, .99095 74.434%, .99774 86.373%, 1);
+    --switch-duration: 0.3s;
+  }
 }
 
-.form-group-check label {
-  margin-bottom: 0 !important;
+/* The pill track */
+.toggle-switch {
+  background: var(--switch-bg);
+  border: 2px solid var(--switch-border);
+  border-radius: 50px;
   cursor: pointer;
+  flex-shrink: 0;
+  height: 1.5rem;
+  position: relative;
+  width: 3rem;
+}
+
+/* Knob — ::after on the pill, animated with left + scale */
+.toggle-switch::after {
+  background-color: var(--switch-knob);
+  border-radius: inherit;
+  content: "";
+  height: 100%;
+  left: 0;
+  position: absolute;
+  scale: 0.65;
+  top: 0;
+  transition:
+    left var(--switch-duration) var(--switch-easing),
+    scale var(--switch-duration) var(--switch-easing),
+    background-color var(--switch-duration) var(--switch-easing);
+  width: 50%;
+  z-index: 0;
+}
+
+/* Checked — knob slides right, pill turns green */
+.toggle-switch:has(input:checked) {
+  background: var(--switch-active-bg);
+  border-color: var(--switch-active-border);
+}
+
+.toggle-switch:has(input:checked)::after {
+  background-color: var(--switch-active-knob);
+  left: 50%;
+  scale: 0.85;
+}
+
+/* Transparent input overlays the whole pill for click/keyboard */
+.toggle-switch input[type="checkbox"] {
+  cursor: pointer;
+  height: 100%;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+  z-index: 1;
+}
+
+/* Focus ring */
+.toggle-switch:has(input:focus-visible) {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.form-group-check > label {
+  cursor: pointer;
+  margin-bottom: 0 !important;
+  user-select: none;
 }
 
 .field-hint {
