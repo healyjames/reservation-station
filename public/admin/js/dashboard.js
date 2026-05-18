@@ -75,7 +75,7 @@
 								<input type="checkbox" id="day-block-toggle" role="switch" ${isBlocked ? 'checked' : ''} />
 							</div>
 						</div>
-						<div id="day-block-feedback" class="alert" aria-live="polite" aria-hidden="true"></div>
+						<div id="day-block-feedback" class="alert" style="margin-top: 8px;" aria-live="polite" aria-hidden="true"></div>
 					</div>
 				</div>
       </div>

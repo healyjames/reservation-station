@@ -13,6 +13,10 @@ const BLOCK_ID_2 = '00000000-0000-4000-8000-000000000802';
 const BLOCK_ID_OTHER = '00000000-0000-4000-8000-000000000803';
 const RES_ID = '00000000-0000-4000-8000-000000000901';
 
+const BLOCK_ID_MONTH_1 = '00000000-0000-4000-8000-000000000902';
+const BLOCK_ID_MONTH_2 = '00000000-0000-4000-8000-000000000903';
+const BLOCK_ID_MONTH_3 = '00000000-0000-4000-8000-000000000904';
+
 const TEST_EMAIL = 'owner@blockedvenue.com';
 const TEST_PASSWORD = 'blockedpass999';
 
@@ -235,6 +239,101 @@ describe('Admin: /api/admin/blocked-dates', () => {
 			expect(body.some((b: any) => b.id === BLOCK_ID_1)).toBe(true);
 			expect(body.some((b: any) => b.id === BLOCK_ID_OTHER)).toBe(false);
 			expect(body.some((b: any) => b.tenant_id === TENANT_ID_OTHER)).toBe(false);
+		});
+
+		it('returns 400 with error message when neither date nor month is provided', async () => {
+			const token = await getAuthToken();
+			const res = await exports.default.fetch('http://localhost/api/admin/blocked-dates', {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			expect(res.status).toBe(400);
+			const body = (await res.json()) as any;
+			expect(body.error).toBe('date or month is required');
+		});
+	});
+
+	// ─── GET ?month=YYYY-MM ───────────────────────────────────────────────────
+
+	describe('GET /api/admin/blocked-dates?month=YYYY-MM', () => {
+		it('returns an empty array when no blocked dates exist for that month', async () => {
+			const token = await getAuthToken();
+			const res = await exports.default.fetch('http://localhost/api/admin/blocked-dates?month=2099-11', {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			expect(res.status).toBe(200);
+			const body = (await res.json()) as any[];
+			expect(body).toEqual([]);
+		});
+
+		it('returns all rows for that month including full-day and time-range entries', async () => {
+			await seedBlockedDate({ id: BLOCK_ID_MONTH_1, date: '2099-11-05' });
+			await seedBlockedDate({ id: BLOCK_ID_MONTH_2, date: '2099-11-12', start_time: '18:00', end_time: '20:00', reason: 'Private hire' });
+			const token = await getAuthToken();
+			const res = await exports.default.fetch('http://localhost/api/admin/blocked-dates?month=2099-11', {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			expect(res.status).toBe(200);
+			const body = (await res.json()) as any[];
+			expect(body.length).toBe(2);
+			const fullDay = body.find((b: any) => b.id === BLOCK_ID_MONTH_1);
+			expect(fullDay).toBeDefined();
+			expect(fullDay.date).toBe('2099-11-05');
+			expect(fullDay.start_time).toBeNull();
+			expect(fullDay.end_time).toBeNull();
+			const timeRange = body.find((b: any) => b.id === BLOCK_ID_MONTH_2);
+			expect(timeRange).toBeDefined();
+			expect(timeRange.date).toBe('2099-11-12');
+			expect(timeRange.start_time).toBe('18:00');
+			expect(timeRange.end_time).toBe('20:00');
+			expect(timeRange.reason).toBe('Private hire');
+		});
+
+		it('does not return rows from a different month', async () => {
+			await seedBlockedDate({ id: BLOCK_ID_MONTH_1, date: '2099-11-10' });
+			await seedBlockedDate({ id: BLOCK_ID_MONTH_3, date: '2099-12-10' });
+			const token = await getAuthToken();
+			const res = await exports.default.fetch('http://localhost/api/admin/blocked-dates?month=2099-11', {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			expect(res.status).toBe(200);
+			const body = (await res.json()) as any[];
+			expect(body.some((b: any) => b.id === BLOCK_ID_MONTH_1)).toBe(true);
+			expect(body.some((b: any) => b.id === BLOCK_ID_MONTH_3)).toBe(false);
+		});
+
+		it('does not return rows from a different tenant', async () => {
+			await seedBlockedDate({ id: BLOCK_ID_MONTH_1, tenant_id: TENANT_ID, date: '2099-11-15' });
+			await seedBlockedDate({ id: BLOCK_ID_MONTH_2, tenant_id: TENANT_ID_OTHER, date: '2099-11-15' });
+			const token = await getAuthToken();
+			const res = await exports.default.fetch('http://localhost/api/admin/blocked-dates?month=2099-11', {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			expect(res.status).toBe(200);
+			const body = (await res.json()) as any[];
+			expect(body.some((b: any) => b.id === BLOCK_ID_MONTH_1)).toBe(true);
+			expect(body.some((b: any) => b.id === BLOCK_ID_MONTH_2)).toBe(false);
+			expect(body.some((b: any) => b.tenant_id === TENANT_ID_OTHER)).toBe(false);
+		});
+
+		it('returns 400 when month is missing a leading zero (e.g. 2099-5)', async () => {
+			const token = await getAuthToken();
+			const res = await exports.default.fetch('http://localhost/api/admin/blocked-dates?month=2099-5', {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			expect(res.status).toBe(400);
+		});
+
+		it('returns 400 when month is not a valid format (e.g. not-a-month)', async () => {
+			const token = await getAuthToken();
+			const res = await exports.default.fetch('http://localhost/api/admin/blocked-dates?month=not-a-month', {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			expect(res.status).toBe(400);
+		});
+
+		it('returns 401 when no Authorization header is provided', async () => {
+			const res = await exports.default.fetch('http://localhost/api/admin/blocked-dates?month=2099-11');
+			expect(res.status).toBe(401);
 		});
 	});
 

@@ -1,3 +1,294 @@
+const BlockedDatesCalendar = (() => {
+  let _container = null;
+  let _viewYear = new Date().getFullYear();
+  let _viewMonth = new Date().getMonth();
+  let _blockedSet = new Set();
+  let _rangeStart = null;
+  let _isLoading = false;
+  let _core = null;
+
+  async function _loadCore() {
+    if (!_core) _core = await import('/js/calendar-core.js');
+    return _core;
+  }
+
+  function _pad(n) { return String(n).padStart(2, '0'); }
+
+  function _toDateStr(y, m, d) {
+    return `${y}-${_pad(m + 1)}-${_pad(d)}`;
+  }
+
+  function _toMonthStr(y, m) {
+    return `${y}-${_pad(m + 1)}`;
+  }
+
+  function _isPastDay(y, m, d) {
+    const t = new Date();
+    if (y !== t.getFullYear()) return y < t.getFullYear();
+    if (m !== t.getMonth()) return m < t.getMonth();
+    return d < t.getDate();
+  }
+
+  function _showError(msg) {
+    if (!_container) return;
+    const el = _container.querySelector('.bd-calendar-error');
+    if (!el) return;
+    el.textContent = msg;
+    el.removeAttribute('hidden');
+    setTimeout(() => el.setAttribute('hidden', ''), 5000);
+  }
+
+  async function _render() {
+    if (!_container) return;
+    const loadingEl = _container.querySelector('.bd-calendar-loading');
+    const gridEl    = _container.querySelector('.date-picker-grid');
+    const labelEl   = _container.querySelector('.bd-month-label');
+    const prevBtn   = _container.querySelector('.bd-prev-btn');
+
+    const { MONTHS, renderCalendarGrid } = await _loadCore();
+
+    if (labelEl) labelEl.textContent = `${MONTHS[_viewMonth]} ${_viewYear}`;
+
+    const today = new Date();
+    if (prevBtn) {
+      const isCurrent = _viewYear === today.getFullYear() && _viewMonth === today.getMonth();
+      prevBtn.disabled = isCurrent;
+      prevBtn.style.pointerEvents = isCurrent ? 'none' : '';
+    }
+
+    if (_isLoading) {
+      if (loadingEl) loadingEl.removeAttribute('hidden');
+      if (gridEl) gridEl.style.visibility = 'hidden';
+      return;
+    }
+
+    if (loadingEl) loadingEl.setAttribute('hidden', '');
+    if (gridEl) gridEl.style.visibility = '';
+
+    renderCalendarGrid(gridEl, _viewYear, _viewMonth, {
+      cellClass: 'dp-day',
+      headerClass: 'dp-day-name',
+      isDisabled: (y, m, d) => _isPastDay(y, m, d),
+      isBlocked: (y, m, d) => _blockedSet.has(_toDateStr(y, m, d)),
+      onSelect: (y, m, d) => _handleDayClick(y, m, d),
+    });
+
+    _applyRangeStart(gridEl);
+    _setupHoverListeners(gridEl);
+  }
+
+  function _applyRangeStart(gridEl) {
+    if (!_rangeStart || _rangeStart.y !== _viewYear || _rangeStart.m !== _viewMonth) return;
+    gridEl.querySelectorAll('.dp-day').forEach(cell => {
+      if (parseInt(cell.textContent, 10) === _rangeStart.d) {
+        cell.classList.add('dp-day--range-start');
+      }
+    });
+  }
+
+  function _setupHoverListeners(gridEl) {
+    gridEl.addEventListener('mouseover', e => {
+      if (!_rangeStart || _rangeStart.y !== _viewYear || _rangeStart.m !== _viewMonth) return;
+      const cell = e.target.closest('.dp-day');
+      if (!cell || cell.classList.contains('empty')) return;
+      const hovered = parseInt(cell.textContent, 10);
+      if (isNaN(hovered)) return;
+      _updateRangeHover(gridEl, hovered);
+    });
+    gridEl.addEventListener('mouseleave', () => _clearRangeHover(gridEl));
+  }
+
+  function _updateRangeHover(gridEl, hovered) {
+    _clearRangeHover(gridEl);
+    if (!_rangeStart) return;
+    const lo = Math.min(_rangeStart.d, hovered);
+    const hi = Math.max(_rangeStart.d, hovered);
+    gridEl.querySelectorAll('.dp-day').forEach(cell => {
+      const d = parseInt(cell.textContent, 10);
+      if (isNaN(d) || d < lo || d > hi) return;
+      if (d === _rangeStart.d) {
+        cell.classList.add('dp-day--range-start');
+      } else if (d === hovered) {
+        cell.classList.add('dp-day--range-end');
+      } else {
+        cell.classList.add('dp-day--in-range');
+      }
+    });
+  }
+
+  function _clearRangeHover(gridEl) {
+    gridEl.querySelectorAll('.dp-day--in-range, .dp-day--range-end').forEach(cell => {
+      cell.classList.remove('dp-day--in-range', 'dp-day--range-end');
+    });
+  }
+
+  async function _handleDayClick(y, m, d) {
+    if (_isLoading) return;
+    if (!_rangeStart) {
+      _rangeStart = { y, m, d };
+      const gridEl = _container.querySelector('.date-picker-grid');
+      if (gridEl) _applyRangeStart(gridEl);
+      return;
+    }
+    const start = _rangeStart;
+    _rangeStart = null;
+    if (start.y === y && start.m === m && start.d === d) {
+      await _toggleDay(y, m, d);
+    } else if (start.y === y && start.m === m) {
+      await _blockRange(y, m, Math.min(start.d, d), Math.max(start.d, d));
+    } else {
+      await _toggleDay(y, m, d);
+    }
+  }
+
+  async function _toggleDay(y, m, d) {
+    const dateStr = _toDateStr(y, m, d);
+    if (_blockedSet.has(dateStr)) {
+      await _unblockDay(dateStr);
+    } else {
+      await _blockDay(dateStr);
+    }
+  }
+
+  async function _blockDay(dateStr) {
+    _isLoading = true;
+    await _render();
+    try {
+      const res = await fetch('/api/admin/blocked-dates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AdminAuth.getToken()}`,
+        },
+        body: JSON.stringify({ date: dateStr }),
+      });
+      if (res.status === 401) { AdminAuth.logout(); return; }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      _blockedSet.add(dateStr);
+    } catch {
+      _showError('Failed to block date.');
+    } finally {
+      _isLoading = false;
+      _render();
+    }
+  }
+
+  async function _unblockDay(dateStr) {
+    _isLoading = true;
+    await _render();
+    try {
+      const res = await fetch(`/api/admin/blocked-dates/date/${dateStr}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${AdminAuth.getToken()}` },
+      });
+      if (res.status === 401) { AdminAuth.logout(); return; }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      _blockedSet.delete(dateStr);
+    } catch {
+      _showError('Failed to unblock date.');
+    } finally {
+      _isLoading = false;
+      _render();
+    }
+  }
+
+  async function _blockRange(y, m, startDay, endDay) {
+    _isLoading = true;
+    await _render();
+    try {
+      const ops = [];
+      for (let d = startDay; d <= endDay; d++) {
+        const dateStr = _toDateStr(y, m, d);
+        if (_blockedSet.has(dateStr)) continue;
+        ops.push(
+          fetch('/api/admin/blocked-dates', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${AdminAuth.getToken()}`,
+            },
+            body: JSON.stringify({ date: dateStr }),
+          }).then(res => {
+            if (res.status === 401) { AdminAuth.logout(); throw new Error('401'); }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            _blockedSet.add(dateStr);
+          })
+        );
+      }
+      await Promise.all(ops);
+    } catch {
+      _showError('Failed to block some dates.');
+    } finally {
+      _isLoading = false;
+      _render();
+    }
+  }
+
+  async function _loadMonth(y, m) {
+    _isLoading = true;
+    _render();
+    try {
+      const res = await fetch(`/api/admin/blocked-dates?month=${_toMonthStr(y, m)}`, {
+        headers: { 'Authorization': `Bearer ${AdminAuth.getToken()}` },
+      });
+      if (res.status === 401) { AdminAuth.logout(); return; }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      _blockedSet = new Set((data || []).filter(b => !b.start_time).map(b => b.date));
+    } catch {
+      _showError('Failed to load blocked dates.');
+    } finally {
+      _isLoading = false;
+      _render();
+    }
+  }
+
+  function init(container) {
+    _container = container;
+    _viewYear  = new Date().getFullYear();
+    _viewMonth = new Date().getMonth();
+    _blockedSet = new Set();
+    _rangeStart = null;
+    _isLoading  = false;
+
+    container.innerHTML = `
+      <h3 class="bd-section-title">Blocked Dates</h3>
+      <div class="date-picker-popup date-picker-popup--inline">
+        <div class="date-picker-header">
+          <button class="bd-prev-btn" aria-label="Previous month">&#8592;</button>
+          <span class="bd-month-label"></span>
+          <button class="bd-next-btn" aria-label="Next month">&#8594;</button>
+        </div>
+        <div class="bd-calendar-loading loading-text" hidden>Loading…</div>
+        <div class="bd-calendar-error error-text" hidden></div>
+        <div class="date-picker-grid" role="grid"></div>
+        <div class="bd-legend">
+          <span class="bd-legend-item"><span class="bd-legend-swatch bd-legend-swatch--blocked"></span> Blocked</span>
+          <span class="bd-legend-item bd-legend-hint">◌ Click to toggle · Click two days to block a range</span>
+        </div>
+      </div>
+    `;
+
+    container.querySelector('.bd-prev-btn').addEventListener('click', () => {
+      _viewMonth -= 1;
+      if (_viewMonth < 0) { _viewMonth = 11; _viewYear -= 1; }
+      _rangeStart = null;
+      _loadMonth(_viewYear, _viewMonth);
+    });
+
+    container.querySelector('.bd-next-btn').addEventListener('click', () => {
+      _viewMonth += 1;
+      if (_viewMonth > 11) { _viewMonth = 0; _viewYear += 1; }
+      _rangeStart = null;
+      _loadMonth(_viewYear, _viewMonth);
+    });
+
+    _loadMonth(_viewYear, _viewMonth);
+  }
+
+  return { init };
+})();
+
 const SettingsManager = (() => {
   function init(container) {
     container.innerHTML = `
@@ -29,10 +320,12 @@ const SettingsManager = (() => {
           <p class="tz-note">Times are in your local timezone.</p>
           <button type="submit" class="btn-primary" id="settings-save-btn">Save settings</button>
         </form>
+        <div id="blocked-dates-section"></div>
       </div>
     `;
 
     loadSettings(container);
+    BlockedDatesCalendar.init(container.querySelector('#blocked-dates-section'));
 
     container.querySelector('#sf-max-covers').addEventListener('input', () => updateTooltip(container));
     container.querySelector('#sf-time-window').addEventListener('input', () => updateTooltip(container));

@@ -1397,3 +1397,98 @@ label:has(.info-trigger:focus) .info-tooltip {
 	padding: var(--space-4);
 	border-radius: var(--radius-xs);
 }
+
+/* ============================================================
+   BLOCKED DATES CALENDAR
+   Uses .date-picker-popup structure. --inline overrides fixed positioning.
+   ============================================================ */
+.bd-section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: var(--space-10) 0 var(--space-4);
+}
+
+.date-picker-popup--inline {
+  position: static;
+  z-index: auto;
+  border: var(--border-width-md) solid var(--background-light);
+}
+
+.bd-prev-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.dp-day--blocked {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--background-light),
+    var(--background-light) 3px,
+    var(--background) 3px,
+    var(--background) 7px
+  );
+  color: var(--foreground);
+  opacity: 0.55;
+  cursor: pointer;
+  border-color: var(--background-darker);
+}
+
+.dp-day--blocked:hover {
+  opacity: 0.75;
+  border-color: var(--primary);
+}
+
+.dp-day--range-start,
+.dp-day--range-end {
+  background: var(--primary-light);
+  color: white;
+  border-color: var(--primary-light);
+  font-weight: 600;
+}
+
+.dp-day--in-range {
+  background: rgba(var(--primary-rgb), 0.15);
+  border-color: transparent;
+}
+
+.bd-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin-top: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.bd-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--foreground);
+}
+
+.bd-legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.bd-legend-swatch--blocked {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--background-light),
+    var(--background-light) 2px,
+    var(--background) 2px,
+    var(--background) 5px
+  );
+  border: 1px solid var(--background-darker);
+  opacity: 0.7;
+}
+
+.bd-legend-hint {
+  opacity: 0.6;
+}

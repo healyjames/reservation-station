@@ -17,9 +17,23 @@ blockedDates.use('*', adminAuth);
 blockedDates.get('/', async (c) => {
 	const tenantId = c.get('tenantId');
 	const date = c.req.query('date');
+	const month = c.req.query('month');
 
-	if (!date) {
-		return c.json({ error: 'date is required' }, 400);
+	if (!date && !month) {
+		return c.json({ error: 'date or month is required' }, 400);
+	}
+
+	if (month) {
+		if (!/^\d{4}-\d{2}$/.test(month)) {
+			return c.json({ error: 'Invalid month format (YYYY-MM)' }, 400);
+		}
+
+		const { results } = await c.env.maximum_bookings_db
+			.prepare('SELECT * FROM BlockedDates WHERE tenant_id = ? AND date LIKE ?')
+			.bind(tenantId, `${month}-%`)
+			.run<BlockedDate>();
+
+		return c.json(results);
 	}
 
 	const { results } = await c.env.maximum_bookings_db
