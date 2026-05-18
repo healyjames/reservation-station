@@ -11,6 +11,43 @@ let currentMonth = todayMonth;
 let selectedDate = null;
 let blockedDates = new Set();
 
+let activeTooltip = null;
+let tooltipTimer  = null;
+
+function handleOutsideClick() {
+  dismissTooltip();
+  document.removeEventListener('click', handleOutsideClick);
+}
+
+function dismissTooltip() {
+  if (activeTooltip) {
+    activeTooltip.remove();
+    activeTooltip = null;
+  }
+  clearTimeout(tooltipTimer);
+  document.removeEventListener('click', handleOutsideClick);
+}
+
+function showBlockedTooltip(cell) {
+  try {
+    dismissTooltip();
+    const container = document.getElementById('calendar-container');
+    activeTooltip = document.createElement('div');
+    activeTooltip.className = 'calendar-blocked-tooltip';
+    activeTooltip.setAttribute('role', 'tooltip');
+    activeTooltip.setAttribute('aria-live', 'polite');
+    activeTooltip.textContent = 'Bookings currently unavailable for this date';
+    container.appendChild(activeTooltip);
+    const cellRect      = cell.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    activeTooltip.style.top  = `${cellRect.bottom - containerRect.top + 4}px`;
+    activeTooltip.style.left = `${cellRect.left - containerRect.left + cellRect.width / 2}px`;
+    tooltipTimer = setTimeout(dismissTooltip, 3000);
+    setTimeout(() => document.addEventListener('click', handleOutsideClick), 0);
+  } catch {
+  }
+}
+
 function isBeforeToday(year, month, day) {
   if (year !== todayYear)  return year < todayYear;
   if (month !== todayMonth) return month < todayMonth;
@@ -48,7 +85,12 @@ async function renderCalendar(year, month) {
       const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       return past || blockedDates.has(dateStr);
     },
+    isBlocked: (y, m, d) => {
+      const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      return blockedDates.has(dateStr);
+    },
     onSelect: (y, m, d) => selectDay(y, m, d),
+    onBlockedSelect: (y, m, d, cell) => showBlockedTooltip(cell),
     cellClass: 'calendar-day',
     headerClass: 'day-name',
   });

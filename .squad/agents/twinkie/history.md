@@ -292,3 +292,20 @@ Replaced the 4-cell CSS Grid layout (sidebar-logo / topbar-actions / sidebar-nav
 - `apiFetch` header merge: destructure `headers: extraHeaders` from options, spread into fetch headers — backward-compatible (callers without headers still work)
 - `fetchBlockedDates` fails open: any error resets `blockedDates` to empty Set, calendar remains fully usable
 - Public widget fetches per-month on navigation: `GET /api/reservations/blocked-dates?tenant_id=X&month=YYYY-MM`
+
+### Blocked day tooltip (2026-05-14)
+
+**Changed:** `public/js/calendar-core.js`, `public/js/calendar.js`, `public/styles.css`
+
+Blocked days (in `blockedDates` set) are now visually distinguished from past days and show a tooltip on click.
+
+**Key patterns:**
+- `renderCalendarGrid` now accepts `isBlocked: (y, m, d) => bool` and `onBlockedSelect: (y, m, d, cell) => void` options (both default to no-ops — backward-compatible; admin date picker is unaffected)
+- Inside the grid renderer, `blocked = !isPast && isBlocked(y, m, d)` — blocked is a subset of disabled, but explicitly excludes past so the two states remain independent
+- Blocked cells get `${cellClass}--blocked` class (produces `calendar-day--blocked` in the public widget); they still carry `aria-disabled="true"` but gain `tabindex="0"` and click/keydown handlers calling `onBlockedSelect`
+- `showBlockedTooltip(cell)` in `calendar.js`: appends a single `<div role="tooltip" aria-live="polite">` to `#calendar-container` (which has `position: relative`); positions it below the clicked cell using `getBoundingClientRect()` delta; auto-dismisses after 3 s or on next document click (listener added via `setTimeout(..., 0)` to avoid catching the triggering click)
+- `dismissTooltip()` removes element, clears timer, and removes the document listener — safe to call multiple times
+- Entire `showBlockedTooltip` body is wrapped in `try/catch {}` — any rendering failure is silent, nothing breaks
+- `.calendar-day--blocked`: diagonal stripe pattern (`repeating-linear-gradient(-45deg, ...)`) using `--background-light` / `--background` variables; `opacity: 0.55`; `cursor: not-allowed` — visually "intentionally closed" vs past's flat fade
+- Hover rule updated to `:not(.calendar-day--blocked)` exclusion so blocked days don't scale on hover
+- `.calendar-blocked-tooltip`: `position: absolute`; `background: var(--background-lighter)`; `border: 1px solid var(--primary)`; `transform: translateX(-50%)` centres it under the clicked cell; `pointer-events: none` prevents it stealing the dismiss click

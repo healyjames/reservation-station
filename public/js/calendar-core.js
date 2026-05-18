@@ -9,7 +9,9 @@ export function renderCalendarGrid(gridEl, year, month, options = {}) {
   const {
     selectedDate = null,
     isDisabled = () => false,
+    isBlocked = () => false,
     onSelect = () => {},
+    onBlockedSelect = () => {},
     cellClass = 'dp-day',
     headerClass = 'dp-day-name',
   } = options;
@@ -51,6 +53,7 @@ export function renderCalendarGrid(gridEl, year, month, options = {}) {
                     (year === todayYear && month < todayMonth) ||
                     (year === todayYear && month === todayMonth && day < todayDay);
     const disabled = isDisabled(year, month, day);
+    const blocked  = !isPast && isBlocked(year, month, day);
     const isSelected = selectedDate &&
                        selectedDate.year  === year  &&
                        selectedDate.month === month &&
@@ -58,11 +61,22 @@ export function renderCalendarGrid(gridEl, year, month, options = {}) {
 
     if (isToday)    cell.classList.add('today');
     if (isPast)     cell.classList.add('past');
+    if (blocked)    cell.classList.add(`${cellClass}--blocked`);
     if (isSelected) cell.classList.add('selected');
 
     if (disabled) {
       cell.setAttribute('aria-disabled', 'true');
       cell.setAttribute('role', 'gridcell');
+      if (blocked) {
+        cell.setAttribute('tabindex', '0');
+        cell.addEventListener('click', () => onBlockedSelect(year, month, day, cell));
+        cell.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onBlockedSelect(year, month, day, cell);
+          }
+        });
+      }
     } else {
       const dateLabel = new Date(year, month, day).toLocaleDateString('en-GB', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
