@@ -5,11 +5,14 @@ export function toMinutes(time: string): number {
 	return h * 60 + m;
 }
 
-export function generateTimeSlots(): string[] {
+export function generateTimeSlots(openTime = '12:00', closeTime = '22:00'): string[] {
 	const slots: string[] = [];
-	for (let hour = 12; hour <= 21; hour++) {
-		slots.push(`${hour.toString().padStart(2, '0')}:00`);
-		slots.push(`${hour.toString().padStart(2, '0')}:30`);
+	const open = toMinutes(openTime);
+	const close = toMinutes(closeTime);
+	for (let m = open; m < close; m += 30) {
+		const hour = Math.floor(m / 60).toString().padStart(2, '0');
+		const min = (m % 60).toString().padStart(2, '0');
+		slots.push(`${hour}:${min}`);
 	}
 	return slots;
 }

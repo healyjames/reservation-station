@@ -14,7 +14,15 @@ tenants.get('/:id', async (c) => {
 	const tenant = await c.env.maximum_bookings_db.prepare('SELECT * FROM Tenants WHERE tenant_code = ?').bind(id).first<Tenant>();
 
 	if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
-	return c.json(tenant);
+
+	const { results } = await c.env.maximum_bookings_db
+		.prepare(
+			'SELECT id, tenant_id, day_of_week, is_closed, open_time, close_time FROM OpeningHours WHERE tenant_id = ? ORDER BY day_of_week ASC',
+		)
+		.bind(tenant.id)
+		.run<{ id: string; tenant_id: string; day_of_week: number; is_closed: number; open_time: string | null; close_time: string | null }>();
+
+	return c.json({ ...tenant, opening_hours: results.length > 0 ? results : null });
 });
 
 tenants.post('/', async (c) => {
@@ -32,10 +40,10 @@ tenants.post('/', async (c) => {
 	try {
 		await c.env.maximum_bookings_db
 			.prepare(
-				`INSERT INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, block_current_day, created_date, modified_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				`INSERT INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, created_date, modified_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 			)
-			.bind(id, body.name, body.tenant_code, body.max_guests, body.max_covers, body.status, body.block_current_day, now, now)
+			.bind(id, body.name, body.tenant_code, body.max_guests, body.max_covers, body.status, now, now)
 			.run();
 	} catch (err) {
 		console.error('[tenants] POST insert failed', { err, tenant_code: body.tenant_code });

@@ -5,6 +5,55 @@ import { generateTimeSlots, calculateConcurrentGuests, SlotReservation } from '.
 
 const reservations = new Hono<{ Bindings: Env }>();
 
+reservations.get('/blocked-dates', async (c) => {
+	const tenantId = c.req.query('tenant_id');
+	const month = c.req.query('month');
+
+	if (!tenantId || !month) {
+		return c.json({ error: 'tenant_id and month are required' }, 400);
+	}
+
+	if (!/^\d{4}-\d{2}$/.test(month)) {
+		return c.json({ error: 'month must be in YYYY-MM format' }, 400);
+	}
+
+	const tenant = await c.env.maximum_bookings_db
+		.prepare('SELECT id FROM Tenants WHERE id = ?')
+		.bind(tenantId)
+		.first<{ id: string }>();
+
+	if (!tenant) {
+		return c.json({ error: 'Tenant not found' }, 404);
+	}
+
+	const { results } = await c.env.maximum_bookings_db
+		.prepare('SELECT DISTINCT date FROM BlockedDates WHERE tenant_id = ? AND date LIKE ? AND start_time IS NULL')
+		.bind(tenantId, `${month}-%`)
+		.run<{ date: string }>();
+
+	const { results: closedDays } = await c.env.maximum_bookings_db
+		.prepare('SELECT day_of_week FROM OpeningHours WHERE tenant_id = ? AND is_closed = 1')
+		.bind(tenantId)
+		.run<{ day_of_week: number }>();
+
+	const blockedSet = new Set(results.map((r) => r.date));
+
+	if (closedDays.length > 0) {
+		const closedDowSet = new Set(closedDays.map((r) => r.day_of_week));
+		const [year, monthNum] = month.split('-').map(Number);
+		const daysInMonth = new Date(year, monthNum, 0).getDate();
+		for (let day = 1; day <= daysInMonth; day++) {
+			const dateStr = `${month}-${day.toString().padStart(2, '0')}`;
+			const dow = new Date(dateStr + 'T12:00:00Z').getUTCDay();
+			if (closedDowSet.has(dow)) {
+				blockedSet.add(dateStr);
+			}
+		}
+	}
+
+	return c.json({ blocked_dates: Array.from(blockedSet) });
+});
+
 reservations.get('/blocked-times', async (c) => {
 	const tenantId = c.req.query('tenant_id');
 	const date = c.req.query('date');
@@ -28,8 +77,35 @@ reservations.get('/blocked-times', async (c) => {
 		return c.json({ error: 'Tenant not found' }, 404);
 	}
 
+	const { results: blockedDateRows } = await c.env.maximum_bookings_db
+		.prepare('SELECT start_time, end_time FROM BlockedDates WHERE tenant_id = ? AND date = ?')
+		.bind(tenantId, date)
+		.run<{ start_time: string | null; end_time: string | null }>();
+
+	if (blockedDateRows.some((r) => r.start_time === null)) {
+		return c.json({ blocked_times: generateTimeSlots(), time_limit_minutes: tenant.concurrent_guests_time_limit });
+	}
+
+	const dow = new Date(date + 'T12:00:00Z').getUTCDay();
+	const openingHoursRow = await c.env.maximum_bookings_db
+		.prepare('SELECT is_closed, open_time, close_time FROM OpeningHours WHERE tenant_id = ? AND day_of_week = ?')
+		.bind(tenantId, dow)
+		.first<{ is_closed: number; open_time: string | null; close_time: string | null }>();
+
+	if (openingHoursRow?.is_closed === 1) {
+		return c.json({ blocked_times: generateTimeSlots(), time_limit_minutes: tenant.concurrent_guests_time_limit });
+	}
+
+	const slots =
+		openingHoursRow?.open_time && openingHoursRow?.close_time
+			? generateTimeSlots(openingHoursRow.open_time, openingHoursRow.close_time)
+			: generateTimeSlots();
+
 	if (tenant.max_guests === 0) {
-		return c.json({ blocked_times: [], time_limit_minutes: tenant.concurrent_guests_time_limit });
+		const blockedTimes = slots.filter((slot) =>
+			blockedDateRows.some((r) => r.start_time !== null && r.end_time !== null && slot >= r.start_time && slot < r.end_time),
+		);
+		return c.json({ blocked_times: blockedTimes, time_limit_minutes: tenant.concurrent_guests_time_limit });
 	}
 
 	const { results: slotReservations } = await c.env.maximum_bookings_db
@@ -38,7 +114,14 @@ reservations.get('/blocked-times', async (c) => {
 		.run<SlotReservation>();
 
 	const blockedTimes: string[] = [];
-	for (const slot of generateTimeSlots()) {
+	for (const slot of slots) {
+		const partiallyBlocked = blockedDateRows.some(
+			(r) => r.start_time !== null && r.end_time !== null && slot >= r.start_time && slot < r.end_time,
+		);
+		if (partiallyBlocked) {
+			blockedTimes.push(slot);
+			continue;
+		}
 		const concurrent = calculateConcurrentGuests(slot, slotReservations, tenant.concurrent_guests_time_limit);
 		if (concurrent + requestedGuests > tenant.max_guests) {
 			blockedTimes.push(slot);
@@ -142,18 +225,22 @@ reservations.post('/', async (c) => {
 		.run<{ total: number }>();
 
 	const tenant = await c.env.maximum_bookings_db
-		.prepare('SELECT max_covers, block_current_day FROM Tenants WHERE id = ?')
+		.prepare('SELECT max_covers FROM Tenants WHERE id = ?')
 		.bind(data.tenant_id)
-		.first<{ max_covers: number; block_current_day: boolean }>();
+		.first<{ max_covers: number }>();
 
 	if (!tenant) {
 		console.error('[reservations] POST tenant not found', { tenant_id: data.tenant_id });
 		return c.json({ error: 'Tenant not found' }, 404);
 	}
 
-	const today = now.split('T')[0];
-	if (tenant.block_current_day && data.reservation_date === today) {
-		return c.json({ error: 'Same-day bookings are not allowed', block_current_day: tenant.block_current_day, tenant_id: data.tenant_id }, 422);
+	const fullDayBlock = await c.env.maximum_bookings_db
+		.prepare('SELECT id FROM BlockedDates WHERE tenant_id = ? AND date = ? AND start_time IS NULL LIMIT 1')
+		.bind(data.tenant_id, data.reservation_date)
+		.first<{ id: string }>();
+
+	if (fullDayBlock) {
+		return c.json({ error: 'Bookings are not available for this date' }, 422);
 	}
 
 	const currentTotal = existing[0]?.total ?? 0;

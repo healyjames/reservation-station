@@ -47,6 +47,126 @@
 **What:** Added `concurrent_guests_time_limit INTEGER NOT NULL DEFAULT 120` to Tenants table. New endpoint `GET /api/reservations/blocked-times` computes which time slots would exceed `max_guests` within the time window using `|slotMinutes - reservationMinutes| < concurrent_guests_time_limit`. Returns `{ blocked_times, time_limit_minutes }`. Frontend fetches on date selection and guest count change.
 **Why:** `max_guests` is concurrent capacity. Without a time window, the system had no way to calculate overlapping occupancy. Configurable per tenant to match table turnover patterns.
 
+### 2026-04-07T18:48:55Z: No code comments
+**By:** James Healy (via Copilot)
+**What:** Do not add comments to code changes. No inline comments, no explanatory comments, no JSDoc - unless code is genuinely complex enough that it cannot be understood without a comment.
+**Why:** User request - captured for team memory.
+
+### 2026-04-12T19:44:31Z: Planning artifacts location
+**By:** James Healy (via Copilot)
+**What:** Planning artifacts and working markdown files (plans, design docs, research notes) must be stored in `.squad/temp/` - never in the Copilot session state directory (`~/.copilot/session-state/`).
+**Why:** User request - keeps planning docs with the repo and visible to the team.
+
+### 2026-04-06: API logging strategy
+**By:** Sean (Backend Dev)
+**What:** Removed Hono `logger()` middleware. `console.error` only on genuine errors (D1 write failures, unexpected missing tenant inside POST /reservations). Validation failures log with `z.prettifyError` plus raw body IDs. Business-rule rejections (422) and expected 404s are silent. Log format: `[route-file] VERB description` with context object.
+**Why:** James's requirement to log only when things go wrong. Cloudflare Workers tail logs are the target; `console.error` is the correct primitive. No external logging service.
+
+### 2026-04-05: Admin auth foundation
+**By:** Sean (Backend Dev)
+**What:** Added `AdminUsers` table (migration `0002`) with `failed_attempts` + `locked_until` for in-table rate limiting (10 failures → 15-min lock). PBKDF2-SHA-256 (100k iterations) password hashing and HMAC-SHA256 JWTs via Web Crypto API (`src/utils/auth.ts`). `POST /api/auth/login` route. `adminAuth` JWT middleware sets `userId` + `tenantId` on Hono context. `JWT_SECRET` is a Wrangler secret declared in `src/types/env.d.ts` until `npx wrangler types` is re-run. Auth responses use `{ success, data?, error? }` envelope.
+**Why:** Admin dashboard requires authenticated access; pure Web Crypto avoids external dependencies; in-table rate limiting is simpler than a separate attempts table.
+
+### 2026-04-05: Admin API routes
+**By:** Sean (Backend Dev)
+**What:** Created `src/routes/admin.ts` with `GET/PATCH /me` and `GET/PATCH/DELETE /reservations`, all protected by `adminAuth` middleware. `tenantId` read exclusively from JWT - never from request body, query params, or URL. Double tenant isolation: application-layer pre-fetch + SQL `WHERE id = ? AND tenant_id = ?`. 404 returned for both not-found and wrong-tenant (prevents resource enumeration). `tenant_code` stripped on `PATCH /me`. `signJWT` extended with optional `expiresInSeconds` (default 8h).
+**Why:** Tenant impersonation prevention; resource enumeration protection; `expiresInSeconds` extension required by the test suite.
+
+### 2026-04-05: Admin login UI
+**By:** Twinkie (Frontend Dev)
+**What:** Created `public/admin/` with `index.html` (login page), `styles/admin.css` (warm burgundy design tokens, separate from public widget's stylesheet), `js/auth.js` (`window.AdminAuth` IIFE global). Blocking inline redirect in `<head>` for already-authenticated users. CSS-only loading spinner. Inline error banner with `aria-live="assertive"`. No `window.alert()`.
+**Why:** No bundler; IIFE global required for synchronous `requireAuth()` execution; separate CSS tokens prevent coupling between admin and public widget stylesheets.
+
+### 2026-04-05: Admin dashboard (phases 4–7)
+**By:** Twinkie (Frontend Dev)
+**What:** Created `public/admin/dashboard.html`, `dashboard.js`, `booking-modal.js`, `settings.js`. Native `<dialog>` for modal (browser handles focus trap + Escape). Table + cards dual-render, CSS toggles at 640px breakpoint (clean print always uses table). Settings tab lazy-initialised on first activation. Date arithmetic via `new Date(y, m-1, d)` to avoid timezone drift. Tenant name pre-populated from localStorage cache. `block_current_day` sent as integer `1`/`0`.
+**Why:** `<dialog>` handles focus trap and Escape natively; dual render enables clean print; lazy init avoids double `/api/admin/me` call at startup.
+
+### 2026-04-13: Spacing & sizing token system
+**By:** Twinkie (Frontend Dev)
+**What:** Added a `/* SPACING & SIZING TOKENS */` `:root` block to `public/shared.css` establishing a 4px-base token system (36 tokens). All derived values use `calc()`. Scale steps: 1, 2, 3, 4, 5, 6, 8, 10, 12, 16 (only steps that existed in the codebase). Applied across `public/styles.css` and `public/admin/styles/admin.css`, replacing hardcoded magic numbers.  Token categories: space scale, border radius, border widths, touch/icon/component sizing. Key rules: only clean-scale px values converted; rem-based layout spacing left alone; `--radius-full: 9999px` used for pill shapes (was `border-radius: 20px`); `border-radius: 50%` circles left as-is; decorative values (box-shadow offsets, animation transforms) left as-is.
+**Why:** Scattered hardcoded magic numbers across both CSS files with no consistency system. Token system makes the design scale visible and the base theoretically changeable. Rem tokens rejected — existing widget uses px for spacing and rem for typography; mixing would add confusion.
+
+### 2026-04-05: Admin test suite (phase 8)
+**By:** Neela (Tester)
+**What:** Created `test/auth.spec.ts` (10 tests) and `test/admin.spec.ts` (13 tests). `hashPassword` imported at test runtime for seeds (no stale pre-computed hashes). `getAuthToken()` calls real login endpoint. `signJWT` called with `expiresInSeconds: -1` for expired-token test. Tenant isolation returns 404 (not 403). `PATCH /me` immutability verified by DB assertion. Distinct UUID constants per test file to avoid cross-file collisions.
+**Why:** Tests written before implementation to drive Sean's phase 1+2 spec; real hash avoids staleness; 404 for isolation prevents resource enumeration.
+
+### 2026-04-14: Admin dashboard sidebar grid layout
+**By:** Twinkie (Frontend Dev)
+**What:** Converted admin dashboard from sticky-header + horizontal-tab layout to a 4-cell CSS Grid sidebar layout. `--sidebar-width: 220px` token added to `:root`. Active nav indicator changed from bottom-border to left-border on desktop. New `@media (max-width: 768px)` breakpoint collapses sidebar to a full-width horizontal scroll-nav; existing `640px` breakpoint retained for card/table layout. `@media print` sets `.dashboard-layout { display: block }`. All JS-depended IDs and classes (`#venue-name`, `#logout-btn`, `.tab-btn`, `.tab-view`, `#main-content`) preserved.
+**Why:** Sidebar layout is the standard pattern for admin dashboards. CSS Grid gives explicit named-cell placement. Width tokenised for single-point tunability.
+
+### 2026-04-07: block_current_day schema accepts boolean | 0 | 1
+**By:** Sean (Backend Dev)
+**What:** `block_current_day` in `TenantSchema` (and `UpdateTenantSchema`) now validates as `z.union([z.boolean(), z.literal(0), z.literal(1)])` instead of `z.boolean()`.
+**Why:** The admin dashboard frontend sends `block_current_day` as integer `1` or `0` (established design decision). D1/SQLite stores and returns boolean columns as integers. `z.boolean()` was rejecting valid payloads with a 400 on PATCH `/api/admin/me`. Accepting both forms matches the actual data contract end-to-end without requiring coercion in routes or the frontend.
+
+### 2026-04-05: Tenants table date columns (migration 0003)
+**By:** Sean (Backend Dev)
+**What:** Migration `0003_tenants_dates.sql` adds `created_date` and `modified_date` columns to `Tenants` with `DEFAULT (CURRENT_TIMESTAMP)`. `src/db/schema.sql` updated to match.
+**Why:** `PATCH /api/admin/me` writes `modified_date` on every update. The column did not exist on `Tenants`, causing a D1_ERROR 500 at runtime. `Reservations` and `AdminUsers` already had these columns; this brings `Tenants` into line.
+
+### 2026-04-14: Admin dashboard 2-div layout
+**By:** Twinkie (Frontend Dev)
+**What:** Replaced the 4-cell CSS Grid layout (sidebar-logo / topbar-actions / sidebar-nav / main-content) with a 2-child grid: `.sidebar-nav` (left) + `.main-panel` (right, flex column containing `.main-header` and `#main-content`). At mobile (`max-width: 768px`), `.main-panel` uses `display: contents` so its children join the outer flex column with CSS `order` control: header (1), sidebar nav row (2), content (3). `.sidebar-logo` and `.topbar-actions` CSS classes removed. All JS-consumed IDs unchanged.
+**Why:** Semantically cleaner — the header belongs with the content panel, not floating as a separate grid cell. Fewer grid areas to maintain.
+
+### 2026-04-15: BlockedDates test suite
+**By:** Neela (Tester)
+**What:** Created `test/blocked-dates.spec.ts` with 24 tests: 11 admin CRUD tests, 7 public endpoint tests (`GET /api/reservations/blocked-dates`), 3 blocked-times integration tests, 3 reservation creation enforcement tests. UUID range `000000000601–000000000901`. `seedTenant` omits `block_current_day` (relies on `DEFAULT FALSE`, forward-compatible with migration). `clearDb` wraps `DELETE FROM BlockedDates` in `.catch(() => {})`. Full-day block asserted as all 20 slots blocked. Time-range boundary edge slot left unasserted (semantics Sean's call). DELETE tests accept 200 or 204.
+**Why:** Feature coverage for the BlockedDates system replacing `block_current_day`. Full-day block short-circuits capacity logic; time-range blocks merge with capacity blocks; reservation creation guard checked.
+
+### 2026-05-14: Font loading — preload hints
+**By:** Twinkie (Frontend Dev)
+**What:** All three HTML entry points (`public/index.html`, `public/admin/index.html`, `public/admin/dashboard.html`) now include `<link rel="preload">` hints for both self-hosted variable font files before their stylesheet links. `font-display: swap` retained in `shared.css`.
+**Why:** `@font-face` rules live in `shared.css` discovered only after the full `@import` chain resolves. Fonts were not requested until that chain completed, creating a download gap that caused visible FOUT with `font-display: swap`. Preload moves font requests to first-HTML-parse time.
+
+### 2026-05-14: Admin date picker and calendar-core extraction
+**By:** Twinkie (Frontend Dev)
+**What:** Extracted shared calendar grid rendering into `public/js/calendar-core.js` (ES module exporting `MONTHS`, `DAY_NAMES`, `renderCalendarGrid`). Added `public/admin/js/date-picker.js` (plain IIFE, `window.DatePicker`) to make the admin date display clickable with a popup calendar. `calendar.js` updated to import from `calendar-core.js`. `renderCalendarGrid` is class-name agnostic via `cellClass`/`headerClass` options — defaults to `dp-day`/`dp-day-name`; public widget passes `calendar-day`/`day-name`. Popup appended to `document.body`, `position: fixed`. Past dates get `.past` class but remain clickable in admin. `isDisabled` is now separate from the `past` class.
+**Why:** Admin dashboard needed arbitrary date navigation without clicking prev/next many times. Extraction avoids code duplication between public widget and admin picker.
+
+### 2026-05-14: BlockedDates UI migration
+**By:** Twinkie (Frontend Dev)
+**What:** Removed the global "Block same-day bookings" toggle from settings form. Added per-day block toggle to admin dashboard in `#day-block-container` (between `.bookings-overview` and `#bookings-list`). Toggle uses optimistic UI; reverts on API error. `apiFetch` updated to merge `headers` from options (backward-compatible). Public calendar `renderCalendar` made async; `fetchBlockedDates(year, month)` added; blocked dates stored in module-level `Set<string>`; fetched once per month navigation; fails open.
+**Why:** `block_current_day` replaced by `BlockedDates` table. Block control moved to per-day in the day view rather than a global setting. Calendar widget must grey blocked dates for bookability.
+
+### 2026-05-14: BlockedDates API implementation
+**By:** Sean (Backend Dev)
+**What:** Migration `0004_blocked_dates.sql`: creates `BlockedDates(id, tenant_id, date, start_time, end_time, reason, created_date)` with compound index `(tenant_id, date)`; drops `block_current_day` from Tenants. `src/routes/blocked-dates.ts`: new Hono router, `adminAuth` via `blockedDates.use('*', adminAuth)`, endpoints `GET /?date=`, `POST /`, `DELETE /date/:date`, `DELETE /:id`. `GET /api/reservations/blocked-dates?tenant_id=&month=YYYY-MM` added to reservations router. `GET /blocked-times` updated: full-day block → all slots (short-circuit); time-range blocks merged with capacity blocks. `POST /reservations` checks `BlockedDates` for full-day block instead of `block_current_day`. `src/app.ts` mounts the new router. `DELETE /date/:date` registered before `DELETE /:id` to prevent route conflict.
+**Why:** `block_current_day` was a coarse boolean. Tenants need holiday closures (specific dates) and partial-day blocks (private hire). Full-day blocks gate new bookings without cancelling existing ones.
+
+### 2026-05-17: BlockedDates system architecture
+**By:** Han (Lead)
+**What:** Defined `BlockedDates` table schema and full API contract replacing `block_current_day`. Full-day block = `start_time IS NULL AND end_time IS NULL`; partial block = explicit `[start_time, end_time)` range; multiple rows per date allowed. `block_current_day` removed from `TenantSchema` and `Tenants`. `BlockedDateSchema`, `CreateBlockedDateSchema`, `BlockedDate`, `CreateBlockedDate` added to `src/db/schema.ts`. Admin endpoints: `GET/POST /api/admin/blocked-dates`, `DELETE /api/admin/blocked-dates/date/:date`, `DELETE /api/admin/blocked-dates/:id`. Public endpoint: `GET /api/reservations/blocked-dates?tenant_id=&month=YYYY-MM` returns `{ blocked_dates: string[] }` of full-day blocked dates. Dashboard toggle maps to `POST /` (block) and `DELETE /date/:date` (unblock). Calendar widget fetches per month — single request per navigation.
+**Why:** `block_current_day` had no date flexibility, no time-range support, and no per-date targeting. Required for holiday closures and partial-day private hire.
+
+### 2026-05-18: Blocked day tooltip UI
+**By:** Twinkie (Frontend Dev)
+**What:** Blocked days in the public booking calendar widget are now visually distinct from past days, and clicking them shows a tooltip instead of opening the booking form. `.calendar-day--blocked` uses diagonal stripe background (`repeating-linear-gradient(-45deg, ...)` with `--background-light`/`--background` tokens), `opacity: 0.55`, `cursor: not-allowed`. Click or keyboard (Enter/Space) appends a `<div role="tooltip" aria-live="polite">` to `#calendar-container` with "Bookings currently unavailable for this date"; auto-dismisses after 3 seconds or on next document click. `renderCalendarGrid` gained two new options: `isBlocked: (y, m, d) => bool` and `onBlockedSelect: (y, m, d, cell) => void` — both default to no-ops, keeping the admin date picker unaffected. In `calendar.js`, `isBlocked` wired to `blockedDates.has(dateStr)` and `onBlockedSelect` calls `showBlockedTooltip(cell)`. `setTimeout(..., 0)` defers the dismiss listener to prevent the triggering click closing the tooltip immediately. `showBlockedTooltip` is fully `try/catch` guarded — fail open. `pointer-events: none` on tooltip prevents it intercepting the dismiss click. Files changed: `public/js/calendar-core.js`, `public/js/calendar.js`, `public/styles.css`.
+**Why:** Blocked dates needed to be visually "intentionally closed" (not just greyed like past dates), and users needed feedback on why their click did nothing.
+
+### 2026-05-18: Opening Hours architecture
+**By:** Han (Lead)
+**What:** Defined `OpeningHours(id, tenant_id, day_of_week INTEGER 0–6, is_closed INTEGER 0/1, open_time TEXT HH:MM, close_time TEXT HH:MM)` table with `UNIQUE(tenant_id, day_of_week)` and `ON DELETE CASCADE`. `day_of_week` follows `Date.getDay()` / SQLite `strftime('%w')` encoding (0=Sunday). Invariant: `is_closed=1` → both times NULL; `is_closed=0` → both times non-NULL (route layer enforces; CHECK covers domain only). Default when no rows: all days open, 12:00–21:30. `generateTimeSlots(openTime='12:00', closeTime='22:00')` — `22:00` exclusive upper bound preserves last slot `21:30`. Admin endpoints `GET/PUT /api/admin/opening-hours` (PUT = atomic D1 batch: DELETE + 7 INSERTs, exactly 7 entries). `GET /api/tenants/:tenant_code` additive: `opening_hours` field (array or null). `GET /api/reservations/blocked-dates` additive: unions dates where DOW is closed (application-layer enumeration of month). `GET /api/reservations/blocked-times` additive: fetches DOW row, `is_closed=1` → all slots blocked, row with times → `generateTimeSlots(open, close)`, no row → defaults. Frontend: `getSlotsForDate(dateStr)` replaces `TIME_SLOTS` constant; reads `tenantConfig.opening_hours` by `Date.getDay()` from `T00:00:00`. Settings UI: 7-row table (Mon→Sun), closed checkbox disables time inputs, single Save button, GET on init, PUT on save.
+**Why:** Hardcoded 12:00–21:30 window and all-days-open assumption had to be configurable per tenant. Zero migration risk for existing tenants — no rows = old behaviour.
+
+### 2026-05-18: Opening Hours backend implementation
+**By:** Sean (Backend Dev)
+**What:** Migration `0005_opening_hours.sql`: creates `OpeningHours` table (no seed rows — backward compat in code). `src/db/schema.ts`: added `OpeningHoursEntrySchema`, `UpsertOpeningHoursSchema` (exactly 7 entries, `is_closed` accepts `boolean | 0 | 1`), `OpeningHoursEntry` type. `src/utils/slots.ts`: `generateTimeSlots(openTime='12:00', closeTime='22:00')` — exclusive upper bound; defaults preserve 12:00–21:30. `src/routes/opening-hours.ts`: Hono router, `adminAuth`, `GET /` returns `{ success: true, data: [] }`, `PUT /` validates open/close times when not closed, D1 batch for atomic replace (DELETE + 7 INSERTs). `src/app.ts`: mounted at `/api/admin/opening-hours`. `src/routes/tenants.ts` `GET /:id`: second query fetches opening hours, returned as `opening_hours` field (array or null). `src/routes/reservations.ts` `GET /blocked-dates`: queries closed DOWs from `OpeningHours`, enumerates month dates in application code, unions with `BlockedDates` full-day rows. `src/routes/reservations.ts` `GET /blocked-times`: fetches DOW row; `is_closed=1` → all default slots returned as blocked; otherwise uses `generateTimeSlots(open_time, close_time)` throughout capacity logic.
+**Why:** Tenants need to define regular weekly opening hours so the booking widget only offers valid slots and hides closed days in the calendar.
+
+### 2026-05-18: Opening Hours frontend implementation
+**By:** Twinkie (Frontend Dev)
+**What:** `public/admin/js/settings.js` — new `OpeningHoursManager` IIFE renders 7-row schedule table (UK order Mon→Sun, DOW 1→0) between settings form and blocked dates calendar. Each row: day name, closed checkbox, open/close time `<input type="time">`. Closed checkbox triggers `_applyClosedState(row)` — toggles `disabled`, adjusts `.oh-times` opacity (no full re-render). Default values: open=12:00, close=22:00. `GET /api/admin/opening-hours` populates on init; empty array keeps defaults. `PUT /api/admin/opening-hours` sends all 7 rows; `open_time`/`close_time` are `null` when `is_closed: true`. Success/error banner reuses `.alert`/`.alert-success`/`.alert-error`. 401 → `AdminAuth.logout()`. `window.OpeningHoursManager` declared before `SettingsManager` (called synchronously in `SettingsManager.init()`). `public/js/booking-form.js` — `TIME_SLOTS` constant replaced with `generateSlots(openTime, closeTime)` (30-min intervals, exclusive upper bound) and `getSlotsForDate(date)` (reads `tenantConfig.opening_hours` by DOW using `getUTCDay()` on `T12:00:00Z` ISO string to avoid timezone drift; returns `[]` for closed days; falls back to `generateSlots('12:00', '22:00')` when `opening_hours` null/empty). `public/admin/styles/admin.css` — `.oh-*` CSS block; responsive: ≤640px collapses to 2-column 2-row grid. CSS variable mapping: spec's `--text-primary`/`--text-secondary`/`--surface` mapped to `--foreground`/`--foreground-darker`/`--background`.
+**Why:** Opening hours are more fundamental than blocked dates; dynamic slot generation from `tenantConfig.opening_hours` means the widget automatically respects the restaurant's schedule without additional API calls.
+
+### 2026-05-18: Opening Hours test suite
+**By:** Neela (Tester)
+**What:** Created `test/opening-hours.spec.ts` with 19 tests across 5 suites: (1) `GET /api/admin/opening-hours` — 401 guard, empty state, ordered results; (2) `PUT /api/admin/opening-hours` — 401 guard, body-length validation, missing-time validation, save 7 days, replace on second PUT, closed day null times; (3) `GET /api/tenants/:tenant_code` — `opening_hours: null` when unconfigured, array when configured; (4) `GET /api/reservations/blocked-dates` — empty state, closed DOW dates included, union with explicit blocked dates, tenant isolation; (5) `GET /api/reservations/blocked-times` — all slots blocked for closed day, no extra blocks for open day, backward compat when no rows. UUID ranges: tenants `000000001001–000000001002`, admin user `000000001101`, opening hours rows `000000001200–000000001206`, blocked date `000000001300`. January 2099: starts Thursday (DOW 4); Sundays (0) on 5, 12, 19, 26; Mondays (1) on 6, 13, 20, 27. `clearDb` wraps `DELETE FROM OpeningHours` and `DELETE FROM BlockedDates` in `.catch(() => {})`. Suite 5 uses `max_guests: 0` (unlimited) to isolate from capacity logic. `is_closed` asserted as integer `1` from GET (D1 returns booleans as integers). `makeAllOpenHours()` helper generates 7-entry array (days 0–6, open 12:00–22:00) for PUT body construction.
+**Why:** Tests written ahead of implementation to define the contract. Closed-day behaviour observable via both `blocked-dates` (date string) and `blocked-times` (20 slots). Open-day slot-window constraint not directly testable via `blocked-times` (out-of-window slots never generated, not marked blocked) — Suite 5 focuses on observable: closed-day full-block and no-op for open days.
+
 ## Governance
 
 - All meaningful changes require team consensus

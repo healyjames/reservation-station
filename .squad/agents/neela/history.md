@@ -14,6 +14,46 @@ Tester on the Maximum Bookings project. Writes Vitest tests, reviews implementat
 
 ## Learnings
 
+- **Admin Dashboard auth + API tests (Phase 8):** Wrote `test/auth.spec.ts` and `test/admin.spec.ts` from spec before Sean's implementation.
+  - `hashPassword` imported from `../../src/utils/auth` to generate seeds at test runtime - avoids pre-computing PBKDF2 hashes
+  - `signJWT` imported from same module for the expired-token test case (passes `-1` as `expiresInSeconds`)
+  - `getAuthToken()` helper calls the login endpoint to get real tokens - preferred over crafting JWTs manually
+  - JWT payload decoded in tests via `atob(payloadB64)` without verifying signature - valid for checking claims in tests
+  - Tenant isolation for PATCH/DELETE: spec says return 404 (not 403) to avoid revealing the resource exists
+  - Rate limiting: test both "10 failures → locks account" (via repeated HTTP calls) and "lock expired → login succeeds" (via DB seed with past locked_until)
+  - Each test file uses distinct UUID constants so they don't clash with each other or the existing index.spec.ts tests
+  - `PATCH /api/admin/me` immutability test: send `id` and `tenant_id` in body, assert they were silently ignored
+  - Assumption documented in test: omitting `date` from `GET /api/admin/reservations` returns all own-tenant bookings (200) - consistent with public endpoint; if Sean changes this to 400, the test comment explains how to flip it
+
+- **Sean's phase 1+2 complete (2026-04-05):** All auth and admin route implementations are in place. `test/auth.spec.ts` and `test/admin.spec.ts` should now be runnable. Sean added the `expiresInSeconds` optional parameter to `signJWT` as required by the test suite. The `AdminUsers` migration (`0002`) is applied.
+- **API logging strategy (2026-04-06):** Business-rule rejections (422) and expected 404s are silent - not errors. Only D1 write failures and unexpected missing tenants trigger `console.error`. Do not add test assertions against log output for these silent paths.
+- **No code comments directive (2026-04-07):** James directed no inline comments in code unless genuinely necessary. Applies to test files too.
+
+- **block_current_day integer coercion tests (2026-04-08):** Added 6 new test cases to `test/admin.spec.ts` inside the `PATCH /api/admin/me` describe block to cover the bug fix where the Zod schema rejected integer `0`/`1` for `block_current_day`. Tests cover: integer `1` → 200 + DB value `1`; integer `0` → 200 + DB value `0`; boolean `true` → 200 + DB value `1`; boolean `false` → 200 + DB value `0`; string `"yes"` → 400; out-of-range integer `2` → 400. Each successful case queries the DB directly to assert the persisted value, consistent with the existing PATCH patterns in the file. The schema fix (`z.union([z.boolean(), z.literal(0), z.literal(1)])`) must be applied in `src/db/schema.ts` for the integer and invalid-value cases to pass.
+
+- **BlockedDates feature test suite (2026-04-15):** Created `test/blocked-dates.spec.ts` with 24 tests covering admin CRUD, public blocked-dates endpoint, blocked-times integration, and reservation creation enforcement.
+  - `seedTenant` INSERT omits `block_current_day` entirely — relies on `DEFAULT FALSE` so it's forward-compatible with the migration that removes the column
+  - `clearDb` wraps `DELETE FROM BlockedDates` in `.catch(() => {})` — pre-migration, the missing table silently skips; individual feature tests fail cleanly instead of every test blowing up on `beforeEach`
+  - UUID range `000000000601–000000000901` used to avoid collisions with existing test files
+  - `generateTimeSlots()` confirmed to return exactly 20 slots (12:00–21:30 at 30-min intervals) — `blocked_times.length === 20` assertion is grounded in source
+  - Time-range block boundary: only asserting clearly inside/outside the range; the edge slot (end_time itself) is left unasserted since include/exclude semantics are Sean's call
+  - DELETE tests use `expect([200, 204]).toContain(res.status)` — spec allows either
+  - **Flagged** for Han + Sean: `test/index.spec.ts` and `test/admin.spec.ts` both reference `block_current_day` in seedTenant and specific test cases — these need updating after migration removes the column
+
+- **Opening Hours feature test suite:** Created `test/opening-hours.spec.ts` with 19 tests across 5 suites: GET/PUT admin opening-hours, tenant public endpoint with opening_hours field, blocked-dates with closed day_of_week, and blocked-times with opening hours.
+  - UUID range `000000001001–000000001206` plus `000000001300` for a blocked-date seed; no collision with other spec files
+  - `seedOpeningHours` uses `INSERT OR REPLACE` bound to `(id, tenant_id, day_of_week, is_closed, open_time, close_time)` — mirrors the DB schema exactly
+  - `clearDb` wraps both `DELETE FROM OpeningHours` and `DELETE FROM BlockedDates` in `.catch(() => {})` since both tables may not exist pre-migration
+  - January 2099 chosen for blocked-dates suite: starts on Thursday (day_of_week=4); Sundays (0) fall on 5, 12, 19, 26; Mondays (1) on 6, 13, 20, 27 — deterministic day-of-week arithmetic for assertions
+  - Suite 4 (blocked-dates) uses the public endpoint — no auth token needed; seeds tenants directly via `seedTenant`
+  - Suite 5 (blocked-times) seeds tenant with `max_guests: 0` (unlimited) to isolate opening-hours logic from capacity logic
+  - Closed-day blocked-times test verifies `blocked_times.length === 20` plus presence of boundary slots `12:00` and `21:30`
+  - `makeAllOpenHours()` helper generates a 7-entry array (days 0–6, open 12:00–22:00) for PUT body construction; individual tests spread/override specific days for mutation scenarios
+  - `is_closed` asserted as integer `1` from GET responses (D1 returns booleans as integers)
+  - Suite 3 (tenant public endpoint) tests `opening_hours: null` when no rows exist and an array when rows are present — tests the new field that Sean needs to add to the GET /api/tenants/:id response
+
+### Original Learnings
+
 - Project kickoff: 2026-04-01
 - Using Vitest (already configured)
 - Key edge cases for booking systems: double-booking, past dates, fully-booked slots, invalid party sizes

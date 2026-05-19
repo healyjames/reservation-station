@@ -1,58 +1,10 @@
-@font-face {
-  font-family: 'Google Sans';
-  src: url('/fonts/GoogleSans-Variable.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Google Sans';
-  src: url('/fonts/GoogleSans-Italic-Variable.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: italic;
-  font-display: swap;
-}
-
-:root {
-  --primary: #818cf8;
-  --primary-lighter: #a5b4fc;
-  --primary-lightest: #374151;
-  --primary-darker: #4f46e5;
-  --background: #0f172a;
-  --background-light: #1e293b;
-  --background-darker: #152032;
-  --foreground: #e2e8f0;
-  --grey-lightest: #2d3748;
-  --error-light: #fee2e2;
-  --error-dark: #991b1b;
-  --success-light: #d1fae5;
-  --success-dark: #065f46;
-}
-
-/* ============================================================
-   BASE RESET
-   ============================================================ */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+@import url('/shared.css');
 
 /* ============================================================
    PROVIDED CSS - do not modify
    ============================================================ */
 .full-width {
   grid-column: 1 / -1;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
 }
 
 @media screen and (min-width: 768px) {
@@ -71,15 +23,16 @@
 
 .calendar-container {
   background: var(--background);
-  padding: 24px;
+  padding: var(--space-6);
   font-family: 'Google Sans', sans-serif;
+  position: relative;
 }
 
 .calendar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 .calendar-header h2 {
@@ -90,14 +43,14 @@
 
 .calendar-nav {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .calendar-nav button {
   background: var(--background-light);
   border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
+  border-radius: var(--radius-xs);
+  padding: var(--space-2) var(--space-4);
   cursor: pointer;
   font-size: 1rem;
   transition: all 0.2s;
@@ -110,13 +63,13 @@
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .day-name {
   text-align: center;
   font-weight: 600;
-  padding: 12px 0;
+  padding: var(--space-3) 0;
   color: var(--foreground);
   opacity: 0.6;
   font-size: 0.875rem;
@@ -124,10 +77,10 @@
 
 .calendar-day {
   aspect-ratio: 1;
-  border: 2px solid var(--background-darker);
+  border: var(--border-width-md) solid var(--background-darker);
   background: var(--background-light);
   color: var(--foreground);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -137,7 +90,7 @@
   font-weight: 500;
 }
 
-.calendar-day:not(.empty):not(.past):hover {
+.calendar-day:not(.empty):not(.past):not(.calendar-day--blocked):hover {
   background: var(--primary-lightest);
   border-color: var(--primary);
   transform: scale(1.05);
@@ -156,6 +109,20 @@
   border-color: var(--background-darker);
 }
 
+.calendar-day.calendar-day--blocked {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--background-light),
+    var(--background-light) 3px,
+    var(--background) 3px,
+    var(--background) 7px
+  );
+  color: var(--foreground);
+  opacity: 0.55;
+  cursor: not-allowed;
+  border-color: var(--background-darker);
+}
+
 .calendar-day.empty {
   border: none;
   cursor: default;
@@ -163,8 +130,8 @@
 
 .form-container {
   background: white;
-  border-radius: 12px;
-  padding: 32px;
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
   box-shadow: -20px 20px 60px var(--background-darker), 20px -20px 60px white;
   animation: slideIn 0.3s ease-out;
   font-family: 'Google Sans', sans-serif;
@@ -182,12 +149,12 @@
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
   font-weight: 500;
   color: #333;
 }
@@ -196,9 +163,9 @@
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 10px 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
+  padding: calc(var(--space-base) * 2 + 2px) var(--space-3);
+  border: var(--border-width-md) solid #e0e0e0;
+  border-radius: var(--radius-xs);
   font-size: 1rem;
   transition: border-color 0.2s;
   box-sizing: border-box;
@@ -222,8 +189,8 @@
 }
 
 .message {
-  border-radius: 8px;
-  margin-bottom: 20px;
+  border-radius: var(--radius-xs);
+  margin-bottom: var(--space-5);
   font-family: 'Google Sans', sans-serif;
   padding: 1.5rem 2.5rem;
 }
@@ -234,7 +201,7 @@
   font-size: 1.2rem;
   font-weight: 600;
   svg {
-    margin-right: 8px;
+    margin-right: var(--space-2);
   }
 	h4 {
 		margin: 0;
@@ -262,8 +229,8 @@
   background: var(--primary);
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-xs);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -330,6 +297,22 @@
   pointer-events: none;
 }
 
+.calendar-blocked-tooltip {
+  position: absolute;
+  background: var(--background-lighter);
+  color: var(--foreground);
+  border: var(--border-width) solid var(--primary);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transform: translateX(-50%);
+}
+
 /* ============================================================
    PAGE CHROME
    ============================================================ */
@@ -350,11 +333,11 @@ html, body {
 /* Responsive: tighten on small screens */
 @media (max-width: 480px) {
   .calendar-container {
-    padding: 16px;
+    padding: var(--space-4);
   }
 
   .calendar-grid {
-    gap: 4px;
+    gap: var(--space-1);
   }
 
   .calendar-day {
@@ -363,7 +346,7 @@ html, body {
 
   .day-name {
     font-size: 0.75rem;
-    padding: 8px 0;
+    padding: var(--space-2) 0;
   }
 }
 
@@ -373,7 +356,7 @@ html, body {
 
 #booking-container {
   background: var(--background);
-  padding: 24px;
+  padding: var(--space-6);
   font-family: 'Google Sans', sans-serif;
   height: 100%;
   width: 100%;
@@ -387,7 +370,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 .booking-header h2 {
@@ -398,8 +381,8 @@ html, body {
 
 .step-indicator {
   background: var(--background-light);
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-xs);
   font-size: 0.875rem;
   color: var(--primary-lighter);
   font-weight: 600;
@@ -409,7 +392,7 @@ html, body {
   display: none;
   font-size: 0.8rem;
   color: #f87171;
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 
 /* Show error message only after the user has interacted with the field */
@@ -425,32 +408,32 @@ textarea:user-invalid {
 
 .selected-date-info {
   background: var(--background-light);
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 24px;
-  border: 2px solid var(--background-darker);
+  padding: var(--space-4);
+  border-radius: var(--radius-xs);
+  margin-bottom: var(--space-6);
+  border: var(--border-width-md) solid var(--background-darker);
 }
 
 .date-label {
   font-size: 0.875rem;
   color: var(--foreground);
   opacity: 0.6;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
 }
 
 .date-value {
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--primary);
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .change-date-btn {
   background: transparent;
   border: 1px solid var(--primary);
   color: var(--primary);
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: calc(var(--space-base) + 2px) var(--space-3);
+  border-radius: var(--radius-xs);
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -463,12 +446,12 @@ textarea:user-invalid {
 
 /* Dark theme form inputs */
 #booking-container .form-group {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 
 #booking-container .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
   font-weight: 500;
   color: var(--foreground);
   font-size: 0.875rem;
@@ -478,10 +461,10 @@ textarea:user-invalid {
 #booking-container .form-group select,
 #booking-container .form-group textarea {
   width: 100%;
-  padding: 12px;
+  padding: var(--space-3);
   background: var(--background-light);
-  border: 2px solid var(--background-darker);
-  border-radius: 8px;
+  border: var(--border-width-md) solid var(--background-darker);
+  border-radius: var(--radius-xs);
   font-size: 1rem;
   color: var(--foreground);
   transition: border-color 0.2s;
@@ -509,16 +492,16 @@ textarea:user-invalid {
 /* Form navigation */
 .form-navigation {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   align-items: center;
-  margin-top: 24px;
+  margin-top: var(--space-6);
 }
 
 .calendar-nav-btn {
   background: var(--background-light);
   border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
+  border-radius: var(--radius-xs);
+  padding: var(--space-2) var(--space-4);
   cursor: pointer;
   font-size: 1rem;
   color: var(--foreground);
@@ -540,19 +523,19 @@ textarea:user-invalid {
 
 /* Error container */
 .error-container {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
 /* Responsive booking form */
 @media (max-width: 480px) {
   #booking-container {
-    padding: 16px;
+    padding: var(--space-4);
   }
 
   .booking-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: var(--space-3);
   }
 
   .step-indicator {

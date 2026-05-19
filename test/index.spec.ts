@@ -10,8 +10,8 @@ const RES_ID = '00000000-0000-4000-8000-000000000010';
 async function seedTenant(overrides: Record<string, unknown> = {}) {
 	await env.maximum_bookings_db
 		.prepare(
-			`INSERT OR REPLACE INTO Tenants (id, name, max_guests, max_covers, status, block_current_day, concurrent_guests_time_limit)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			`INSERT OR REPLACE INTO Tenants (id, name, max_guests, max_covers, status, concurrent_guests_time_limit)
+     VALUES (?, ?, ?, ?, ?, ?)`,
 		)
 		.bind(
 			overrides.id ?? TENANT_ID,
@@ -19,7 +19,6 @@ async function seedTenant(overrides: Record<string, unknown> = {}) {
 			overrides.max_guests ?? 50,
 			overrides.max_covers ?? 20,
 			overrides.status ?? 'active',
-			overrides.block_current_day ?? 0,
 			overrides.concurrent_guests_time_limit ?? 120,
 		)
 		.run();
@@ -107,7 +106,6 @@ describe('Tenants', () => {
 					max_guests: 30,
 					max_covers: 10,
 					status: 'active',
-					block_current_day: false,
 				}),
 			});
 			const body = (await res.json()) as any;
@@ -135,7 +133,6 @@ describe('Tenants', () => {
 					max_guests: 10,
 					max_covers: 5,
 					status: 'pending', // not in enum
-					block_current_day: false,
 				}),
 			});
 			expect(res.status).toBe(400);
@@ -313,9 +310,16 @@ describe('Reservations', () => {
 			expect(res.status).toBe(400);
 		});
 
-		it('blocks same-day booking when tenant has block_current_day=true', async () => {
-			await seedTenant({ id: TENANT_ID_2, name: 'No Same Day', block_current_day: 1 });
+		it('blocks booking when a full-day block exists for the date', async () => {
+			await seedTenant({ id: TENANT_ID_2, name: 'Blocked Day Venue' });
 			const today = new Date().toISOString().split('T')[0];
+			await env.maximum_bookings_db
+				.prepare(
+					`INSERT INTO BlockedDates (id, tenant_id, date, start_time, end_time, created_date)
+           VALUES (?, ?, ?, NULL, NULL, ?)`,
+				)
+				.bind('00000000-0000-4000-8000-000000000099', TENANT_ID_2, today, new Date().toISOString())
+				.run();
 			const res = await exports.default.fetch('http://localhost/api/reservations', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -323,7 +327,7 @@ describe('Reservations', () => {
 			});
 			expect(res.status).toBe(422);
 			const body = (await res.json()) as any;
-			expect(body.error).toMatch(/same-day/i);
+			expect(body.error).toMatch(/not available/i);
 		});
 
 		it('rejects booking that exceeds max_covers', async () => {

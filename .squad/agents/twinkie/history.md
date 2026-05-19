@@ -17,8 +17,7 @@ Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget
 - Widget must be embeddable on any site - no framework, pure HTML/CSS/JS
 - Must handle cross-origin API calls to the Workers API
 - CSS custom properties for host-site theming
-
-### Asset split refactor (2026-04-01)
+- Admin opening hours settings now use explicit user-triggered saves via a dedicated Save Changes button; row edits should stay local until the user commits them.
 
 `public/index.html` was split from a monolithic ~713-line file into three separate assets (no build step):
 
@@ -96,7 +95,121 @@ public/
 - `public/styles.css` - added dark theme form styles at end
 - `public/js/booking-form.js` - new module (created)
 
-### Blocked time slots filtering (2026-04-01)
+### Admin Login UI - Phase 3 (2026-04-01)
+
+**Built:** Admin login page and auth utilities under `public/admin/`.
+
+**File structure:**
+```
+public/admin/
+├── index.html           ← Login page (SPA-style)
+├── styles/
+│   └── admin.css        ← Admin design tokens + login layout
+└── js/
+    └── auth.js          ← AdminAuth global (login, logout, getToken, getTenant, requireAuth)
+```
+
+**Design tokens:**
+- Admin uses warm burgundy palette (`--primary: #8b2635`), distinct from the public widget's current indigo theme
+- Same Google Sans font via `/fonts/` - loaded with @font-face in admin.css
+- Light background with a centered card (`max-width: 400px`); mobile-first (full-width below 480px)
+
+**Auth flow patterns:**
+- On load: blocking inline `<script>` in `<head>` redirects immediately to `dashboard.html` if `admin_token` exists - prevents flash of login form for already-authenticated users
+- `?expired=1` query param shows an amber "session expired" banner on load
+- Error messages are inline (not alerts): `.alert-error` div with `aria-live="assertive"`
+- Loading state: CSS-only spinner via `.btn-primary.loading::after` pseudo-element + `color: transparent` to hide label text
+- `AdminAuth` is an IIFE that exposes a global on `window` - no bundler needed
+
+**Error handling:**
+- 401 → "Invalid email or password."
+- 429 → "Too many failed attempts. Please try again later."
+- Network error (no `err.status`) → "Unable to connect. Please check your connection."
+- Typing in either field clears the error banner immediately
+
+### Admin Dashboard - Phases 4–7 (2026-04-05)
+
+**Built:** Full dashboard experience - `public/admin/dashboard.html`, `dashboard.js`, `booking-modal.js`, `settings.js`, plus all supporting CSS added to `admin.css`.
+
+**File structure added:**
+```
+public/admin/
+├── dashboard.html            ← Dashboard page (Bookings + Settings tabs)
+└── js/
+    ├── booking-modal.js      ← Edit/Delete modal (window.BookingModal)
+    ├── settings.js           ← Tenant settings form (window.SettingsManager)
+    └── dashboard.js          ← Main dashboard controller (IIFE)
+```
+
+**Key patterns used:**
+
+- Auth guard: blocking `<script>` in `<head>` redirects immediately if no `admin_token` in localStorage - same pattern as login page; `AdminAuth.requireAuth()` called again in JS as belt-and-suspenders
+- Tenant name pre-populated from `AdminAuth.getTenant()` (cached localStorage) on first paint, then overwritten when fresh `/api/admin/me` resolves - prevents blank flash
+- `<dialog>` element for modal: `showModal()` handles focus trap and Escape natively; backdrop click handled manually by checking `e.target === dialog`; single dialog element created once, reused for both edit and delete
+- Modal is full-screen on mobile (`width: 100vw; border-radius: 0; position: fixed; inset: 0`) via `@media (max-width: 640px)`
+- Booking list: desktop table + mobile cards rendered together (one hidden via CSS); same event listener wiring for both
+- Date navigation: pure date arithmetic via `Date(y, m-1, d)` + `setDate()` - avoids timezone issues from `new Date(string)` parsing
+- `updateDaySummary()` hides capacity bar when `max_covers === 0` (unlimited); colour-codes fill at 75% (amber) and 90% (burgundy)
+- Settings tab lazy-initialised on first activation (`settingsInitialized` flag) - avoids `/api/admin/me` double-fetch on page load
+- Settings `block_current_day` sent as integer `1`/`0` to match SQLite storage
+- All 401 responses → `AdminAuth.logout()` across all three JS modules
+- No `alert()` anywhere - all errors are inline `.alert-error` elements with `aria-live`
+- Print: table always rendered (shown in print via `display: table !important`), cards always rendered (hidden in print); `.print-only` header with date + venue name shown only when printing
+
+**CSS additions to `admin.css`:**
+- Dashboard layout, header, nav tabs, date controls, summary bar, capacity bar, booking table, booking cards (mobile), action buttons (edit/delete/danger/secondary), `<dialog>` modal, settings panel, empty/loading/error states, print header, mobile responsive pass at 640px breakpoint
+
+
+### Sidebar grid layout refactor (2026-04-14)
+
+**Changed:** `public/admin/dashboard.html`, `public/admin/styles/admin.css`
+
+Converted the admin dashboard from a sticky-header + horizontal-tab layout to a 4-cell CSS Grid sidebar layout. The grid is 2 columns × 2 rows: logo (top-left), sign-out (top-right), sidebar nav (bottom-left), main content (bottom-right).
+
+**Key patterns:**
+- `--sidebar-width: 220px` token added to `:root`; grid defined as `grid-template-columns: var(--sidebar-width) 1fr`
+- Sidebar nav buttons use left-border active indicator (`border-left: 3px solid`) on desktop — standard sidebar nav pattern
+- New `@media (max-width: 768px)` breakpoint collapses sidebar into full-width horizontal scroll-nav row (3-row grid: header / nav-bar / content); existing `640px` breakpoint retained for card/table layout tuning
+- Inside 768px breakpoint, `.tab-btn` reverts to horizontal-tab style (bottom border, auto width) — left-border indicator doesn't apply to a row nav
+- `@media print` sets `.dashboard-layout { display: block }` + `#main-content { overflow: visible }` for reliable print output
+- All JS-consumed IDs and class names preserved unchanged (`#venue-name`, `#logout-btn`, `.tab-btn`, `.tab-view`, etc.)
+
+
+
+### 2-div layout refactor (2026-04-14)
+
+**Changed:** `public/admin/dashboard.html`, `public/admin/styles/admin.css`
+
+Replaced the 4-cell CSS Grid layout (sidebar-logo / topbar-actions / sidebar-nav / main-content) with a clean 2-div structure: `.sidebar-nav` (left) and `.main-panel` (right). The logo and sign-out button now live in `<header class="main-header">` inside `.main-panel`.
+
+**Key patterns:**
+- `display: grid; grid-template-columns: var(--sidebar-width) 1fr` - still a 2-column grid at desktop, but now just 2 children instead of 4
+- `.main-panel` is a flex column: header (sticky) + main (flex: 1, overflow-y: auto)
+- `display: contents` trick on `.main-panel` at mobile so `.main-header`, `.sidebar-nav`, and `#main-content` participate directly in the outer flex column with `order` control: header (1) → sidebar nav row (2) → content (3)
+- Print: both `.dashboard-layout` and `.main-panel` set to `display: block`
+
+** James directed that inline comments, explanatory comments, and JSDoc are not to be added to code changes unless genuinely necessary. Apply to all JS/HTML/CSS edits.
+- **Planning artifacts location (2026-04-12):** Planning docs and design notes go in `.squad/temp/` - not in the Copilot session state directory.
+- **Admin auth dependency (2026-04-05):** `window.AdminAuth` on the login page depends on `POST /api/auth/login` (Sean's phase 1). All three JS modules (`dashboard.js`, `booking-modal.js`, `settings.js`) route 401 responses through `AdminAuth.logout()` to maintain consistent session expiry handling.
+
+### Spacing & sizing tokens refactor (2026-04-13)
+
+**Added:** `/* SPACING & SIZING TOKENS */` section to `public/shared.css` with 36 new CSS custom properties.
+
+**Token scale:**
+- Space scale: `--space-base: 4px`, then `--space-1` through `--space-16` using `calc()` multiples (only steps 1–6, 8, 10, 12, 16 defined — values that exist in the codebase)
+- Border radius: `--radius-xs` (6px) through `--radius-full` (9999px)
+- Border widths: `--border-width` (1px), `--border-width-md` (2px)
+- Sizing: `--size-touch-sm` (36px), `--size-touch` (44px), `--size-icon-sm/md/lg`, `--size-header` (56px)
+
+**Files updated:** `public/shared.css`, `public/styles.css`, `public/admin/styles/admin.css`
+
+**Decisions:**
+- Off-scale values (6px, 10px padding, rem-based layout spacing) left as-is — token system only covers values that fit cleanly
+- `--radius-full: 9999px` used for pill shapes (was `border-radius: 20px` on `.card-guests`) — pill intent is clearer than a specific px value
+- `border-radius: 50%` (circles) left as-is — not a spacing token
+- Decorative values (box-shadow offsets, animation transforms) left as-is — these are artistic, not layout
+
 
 **Added:** Dynamic time slot filtering based on restaurant capacity using backend `blocked-times` endpoint.
 
@@ -123,3 +236,117 @@ public/
 
 **Files modified:**
 - `public/js/booking-form.js` - added blocked times fetching, filtering, and dynamic re-rendering
+
+### Admin date picker & calendar-core extraction (2026-05-14)
+
+**Built:** Clickable date display on admin dashboard that pops up a mini calendar for date navigation.
+
+**New files:**
+- `public/js/calendar-core.js` — shared ES module exporting `MONTHS`, `DAY_NAMES`, `renderCalendarGrid(gridEl, year, month, options)`
+- `public/admin/js/date-picker.js` — plain IIFE script, exposes `window.DatePicker`
+
+**Updated files:**
+- `public/js/calendar.js` — imports from `calendar-core.js`; passes `cellClass: 'calendar-day'`, `headerClass: 'day-name'` to preserve existing widget CSS
+- `public/admin/dashboard.html` — added `<script src="/admin/js/date-picker.js">` before `dashboard.js`
+- `public/admin/js/dashboard.js` — `DatePicker.init()` wired in `init()` before `loadBookings`
+- `public/admin/styles/admin.css` — date picker trigger hover/underline styles, popup card, grid, and `.dp-day` variants
+
+**Key patterns:**
+
+- `renderCalendarGrid` is class-name agnostic via `cellClass`/`headerClass` options — defaults `dp-day`/`dp-day-name` for admin, overridden to `calendar-day`/`day-name` for the public widget. The `past` modifier is always applied by date comparison; `isDisabled` controls clickability separately.
+- `date-picker.js` is NOT an ES module — admin uses plain `<script src>` tags. Dynamic `import('/js/calendar-core.js')` inside an IIFE works in all modern browsers.
+- Popup appended to `document.body`, `position: fixed` — avoids stacking context issues.
+- Popup positioned via `triggerEl.getBoundingClientRect()` on each open to stay aligned.
+- Admin allows selecting any date (past or future) — `isDisabled: () => false` (default). Past cells get `.past` class (muted opacity) but remain clickable.
+- `loadBookings` overwrites `#current-date-display.innerHTML` on each load; popup is in `document.body`, not inside the trigger, so it survives those resets.
+
+## Learnings
+
+### CSS-only tooltip with live JS content (settings form, time-window field)
+
+**Added:** Info icon tooltip on "Concurrent guest time window (minutes)" label in `public/admin/js/settings.js` + `public/admin/styles/admin.css`.
+
+**Pattern:**
+- Tooltip markup is injected inside the `<label>` so `label:has(.info-trigger:hover)` CSS `:has()` selector can show/hide purely in CSS — zero JS for visibility.
+- `updateTooltip(container)` reads `#sf-max-guests` and `#sf-time-window` values and updates `#tt-max-guests` / `#tt-time-window` strong elements live. Called on `input` events and once after `loadSettings` populates the fields.
+- `updateTooltip` defined outside the IIFE (module-level) so both `init()` and `loadSettings()` can call it with `container` as parameter — avoids duplicating logic or passing callbacks.
+- Tooltip `position: absolute` inside `position: relative` label; arrow via `::before` triangle pointing up.
+- Used `--background-darker` + `--foreground-lightest` CSS variables to match existing dark palette — no hardcoded colours.
+- `type="button"` on trigger is critical — prevents accidental form submission.
+
+### BlockedDates UI migration (2026-05-14)
+
+**Changed:** Replaced `block_current_day` boolean across all frontend files with the new `BlockedDates` table API.
+
+**Files modified:**
+- `public/admin/js/settings.js` — removed `sf-block-today` checkbox, removed field from `saveSettings()` body and `loadSettings()` population
+- `public/admin/js/dashboard.js` — added `renderBlockToggle(date, isBlocked)`, `loadBlockState(date)`; `apiFetch` updated to merge extra headers (needed for POST Content-Type)
+- `public/admin/dashboard.html` — added `<div id="day-block-container">` between `.bookings-overview` and `#bookings-list`
+- `public/admin/styles/admin.css` — added `.day-block-row` scoping rules
+- `public/js/calendar.js` — added `blockedDates` Set, `fetchBlockedDates(year, month)`, made `renderCalendar` async, updated `isDisabled` to check `blockedDates`
+- `public/js/tenants.js` — no changes needed (never stored `block_current_day` locally)
+
+**Key patterns:**
+- `loadBlockState` called fire-and-forget inside `loadBookings` after reservations render — independent request, no need to block booking display
+- `renderBlockToggle` fully replaces `#day-block-container` innerHTML on each date change — clean re-mount, no stale listeners
+- Optimistic UI: toggle visually updates immediately; reverts `e.target.checked = !nowBlocked` on API error
+- `apiFetch` header merge: destructure `headers: extraHeaders` from options, spread into fetch headers — backward-compatible (callers without headers still work)
+- `fetchBlockedDates` fails open: any error resets `blockedDates` to empty Set, calendar remains fully usable
+- Public widget fetches per-month on navigation: `GET /api/reservations/blocked-dates?tenant_id=X&month=YYYY-MM`
+
+### Blocked day tooltip (2026-05-14)
+
+**Changed:** `public/js/calendar-core.js`, `public/js/calendar.js`, `public/styles.css`
+
+Blocked days (in `blockedDates` set) are now visually distinguished from past days and show a tooltip on click.
+
+**Key patterns:**
+- `renderCalendarGrid` now accepts `isBlocked: (y, m, d) => bool` and `onBlockedSelect: (y, m, d, cell) => void` options (both default to no-ops — backward-compatible; admin date picker is unaffected)
+- Inside the grid renderer, `blocked = !isPast && isBlocked(y, m, d)` — blocked is a subset of disabled, but explicitly excludes past so the two states remain independent
+- Blocked cells get `${cellClass}--blocked` class (produces `calendar-day--blocked` in the public widget); they still carry `aria-disabled="true"` but gain `tabindex="0"` and click/keydown handlers calling `onBlockedSelect`
+- `showBlockedTooltip(cell)` in `calendar.js`: appends a single `<div role="tooltip" aria-live="polite">` to `#calendar-container` (which has `position: relative`); positions it below the clicked cell using `getBoundingClientRect()` delta; auto-dismisses after 3 s or on next document click (listener added via `setTimeout(..., 0)` to avoid catching the triggering click)
+- `dismissTooltip()` removes element, clears timer, and removes the document listener — safe to call multiple times
+- Entire `showBlockedTooltip` body is wrapped in `try/catch {}` — any rendering failure is silent, nothing breaks
+- `.calendar-day--blocked`: diagonal stripe pattern (`repeating-linear-gradient(-45deg, ...)`) using `--background-light` / `--background` variables; `opacity: 0.55`; `cursor: not-allowed` — visually "intentionally closed" vs past's flat fade
+- Hover rule updated to `:not(.calendar-day--blocked)` exclusion so blocked days don't scale on hover
+- `.calendar-blocked-tooltip`: `position: absolute`; `background: var(--background-lighter)`; `border: 1px solid var(--primary)`; `transform: translateX(-50%)` centres it under the clicked cell; `pointer-events: none` prevents it stealing the dismiss click
+
+### Opening Hours frontend (2026-05-14)
+
+**Added:** `OpeningHoursManager` IIFE in `public/admin/js/settings.js`. Renders between the settings save button and the blocked dates calendar.
+
+**Files modified:**
+- `public/admin/js/settings.js` — added `OpeningHoursManager` IIFE; updated `SettingsManager.init()` template to include `#opening-hours-section` div and call `OpeningHoursManager.init()`.
+- `public/js/booking-form.js` — replaced hardcoded `TIME_SLOTS` constant with `generateSlots(openTime, closeTime)` and `getSlotsForDate(date)` functions; `getAvailableSlots()` now calls `getSlotsForDate(formState.selectedDate)` instead of `TIME_SLOTS`.
+- `public/admin/styles/admin.css` — added `.oh-*` CSS block for the opening hours section.
+
+**Key patterns:**
+- DAYS array defines UK week order (Mon→Sun, dow 1→0). Weeks start Monday in this UI.
+- `_buildRows(data)` handles both initial render (empty `[]`) and populated state — always defaults to `12:00–22:00` open for any missing/unclosed entry.
+- `_load()` fetches `GET /api/admin/opening-hours`; if `data` is empty array, keeps default rows as-is (no re-render needed because `_buildRows([])` already fills defaults).
+- Closed checkbox change: `_applyClosedState(row)` toggles `disabled` and adjusts `.oh-times` opacity directly on the DOM — no full re-render.
+- PUT body always sends all 7 rows; `open_time`/`close_time` are `null` when `is_closed: true`.
+- Banner reuses `.alert` + `.alert-success`/`.alert-error` CSS — no new CSS classes for the banner itself.
+- CSS variable mapping: spec used `--text-primary`, `--text-secondary`, `--surface`; mapped to `--foreground`, `--foreground-darker`, `--background` to match actual token system.
+- `window.OpeningHoursManager` exposed before `SettingsManager` in the file — `SettingsManager.init()` calls it synchronously, so declaration order matters.
+
+**Widget side (`booking-form.js`):**
+- `getSlotsForDate` uses `getUTCDay()` on a `T12:00:00Z` ISO string to avoid local timezone day-boundary issues (same technique used in admin date arithmetic).
+- If `opening_hours` is null/empty on `tenantConfig`, falls back to `generateSlots('12:00', '22:00')` — same 20-slot window as the old hardcoded constant.
+- If a day `is_closed`, `getSlotsForDate` returns `[]` — booking form shows the "no availability" message naturally.
+
+### Settings hash routing + accordion sidebar (2026-05-19)
+
+**Changed:** Split `settings.html` into hash-routed sub-views with an accordion sub-navigation in the sidebar.
+
+**Files modified:**
+- `public/admin/settings.html` — replaced the flat Settings tab with a parent Settings button plus General / Opening Hours / Blocked Dates sub-items.
+- `public/admin/js/settings-page.js` — added hash routing (`#general`, `#opening-hours`, `#blocked-dates`), active sub-nav syncing, and accordion open/close behaviour.
+- `public/admin/js/settings.js` — exposed `window.BlockedDatesCalendar` and added `SettingsManager.initFormOnly(container)` so the general form can render without mounting the other settings sections.
+- `public/admin/styles/admin.css` — added `.tab-btn--parent`, `.tab-subnav`, `.tab-btn--sub` styles and mobile overrides so the submenu wraps under the top nav row at ≤768px.
+
+**Key patterns:**
+- Keep `settings.html` as the shell; switch views entirely from `window.location.hash` so browser back/forward works without a full reload.
+- `syncHash()` normalises missing/invalid hashes to `#general` with `history.replaceState(...)` — avoids a reload and guarantees a valid active state.
+- `SettingsManager.init()` stays backward-compatible; `initFormOnly()` reuses the same form markup/listeners for the General sub-page.
+- On mobile, `.sidebar-nav` now `flex-wrap`s and `.tab-subnav` takes full width, so Bookings/Settings stay on the first row while the submenu expands below as readable touch targets.

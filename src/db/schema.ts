@@ -7,7 +7,6 @@ export const TenantSchema = z.object({
 	max_guests: z.number().int().nonnegative(),
 	max_covers: z.number().int().nonnegative(),
 	status: z.enum(['active', 'cancelled']),
-	block_current_day: z.boolean(),
 	concurrent_guests_time_limit: z.number().int().positive().default(120),
 	created_date: z.string().optional(),
 	modified_date: z.string().optional(),
@@ -59,3 +58,62 @@ export type UpdateTenant = z.infer<typeof UpdateTenantSchema>;
 export type Reservation = z.infer<typeof ReservationSchema>;
 export type CreateReservation = z.infer<typeof CreateReservationSchema>;
 export type UpdateReservation = z.infer<typeof UpdateReservationSchema>;
+
+export const BlockedDateSchema = z.object({
+	id: z.uuid(),
+	tenant_id: z.uuid(),
+	date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
+	start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format (HH:MM)').nullable(),
+	end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format (HH:MM)').nullable(),
+	reason: z.string().nullable(),
+	created_date: z.string().optional(),
+});
+
+export const CreateBlockedDateSchema = BlockedDateSchema.omit({
+	id: true,
+	created_date: true,
+});
+
+export type BlockedDate = z.infer<typeof BlockedDateSchema>;
+export type CreateBlockedDate = z.infer<typeof CreateBlockedDateSchema>;
+
+export const OpeningHoursEntrySchema = z.object({
+	id: z.uuid(),
+	tenant_id: z.uuid(),
+	day_of_week: z.number().int().min(0).max(6),
+	is_closed: z.union([z.boolean(), z.literal(0), z.literal(1)]),
+	open_time: z.string().regex(/^\d{2}:\d{2}$/).nullable(),
+	close_time: z.string().regex(/^\d{2}:\d{2}$/).nullable(),
+});
+
+export const UpsertOpeningHoursSchema = z
+	.array(
+		z.object({
+			day_of_week: z.number().int().min(0).max(6),
+			is_closed: z.union([z.boolean(), z.literal(0), z.literal(1)]),
+			open_time: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(),
+			close_time: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(),
+		}),
+	)
+	.length(7);
+
+export type OpeningHoursEntry = z.infer<typeof OpeningHoursEntrySchema>;
+
+export const AdminUserSchema = z.object({
+	id: z.uuid(),
+	tenant_id: z.uuid(),
+	email: z.email(),
+	password_hash: z.string(),
+	failed_attempts: z.number().int().nonnegative().default(0),
+	locked_until: z.string().nullable().optional(),
+	created_date: z.string().optional(),
+	modified_date: z.string().optional(),
+});
+
+export const LoginSchema = z.object({
+	email: z.email(),
+	password: z.string().min(1),
+});
+
+export type AdminUser = z.infer<typeof AdminUserSchema>;
+export type LoginPayload = z.infer<typeof LoginSchema>;

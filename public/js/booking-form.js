@@ -16,13 +16,27 @@ let formState = {
   }
 };
 
-// Time slots: 12:00 to 21:30 in 30-minute intervals
-const TIME_SLOTS = [];
-for (let hour = 12; hour <= 21; hour++) {
-  TIME_SLOTS.push(`${hour.toString().padStart(2, '0')}:00`);
-  if (hour < 21 || hour === 21) {
-    TIME_SLOTS.push(`${hour.toString().padStart(2, '0')}:30`);
+function generateSlots(openTime, closeTime) {
+  const slots = [];
+  const [openH, openM] = openTime.split(':').map(Number);
+  const [closeH, closeM] = closeTime.split(':').map(Number);
+  const openMins = openH * 60 + openM;
+  const closeMins = closeH * 60 + closeM;
+  for (let mins = openMins; mins < closeMins; mins += 30) {
+    const h = Math.floor(mins / 60).toString().padStart(2, '0');
+    const m = (mins % 60).toString().padStart(2, '0');
+    slots.push(`${h}:${m}`);
   }
+  return slots;
+}
+
+function getSlotsForDate(date) {
+  const hours = tenantConfig?.opening_hours;
+  if (!hours || hours.length === 0) return generateSlots('12:00', '22:00');
+  const dow = new Date(`${date.year}-${String(date.month + 1).padStart(2,'0')}-${String(date.day).padStart(2,'0')}T12:00:00Z`).getUTCDay();
+  const entry = hours.find(h => h.day_of_week === dow);
+  if (!entry || entry.is_closed) return [];
+  return generateSlots(entry.open_time, entry.close_time);
 }
 
 // Returns true if the given date object matches today's date
@@ -48,7 +62,7 @@ function getEarliestTodaySlot() {
 // Returns available slots for the current form state,
 // excluding blocked times and (for today) past/too-soon times.
 function getAvailableSlots() {
-  let slots = TIME_SLOTS.filter(slot => !formState.blockedTimes.includes(slot));
+  let slots = getSlotsForDate(formState.selectedDate).filter(slot => !formState.blockedTimes.includes(slot));
   if (isToday(formState.selectedDate)) {
     const earliest = getEarliestTodaySlot();
     slots = slots.filter(slot => slot >= earliest);
