@@ -167,7 +167,7 @@
     listEl.innerHTML = '';
 
     const table = document.createElement('table');
-    table.className = 'booking-table';
+    table.className = 'admin-table booking-table';
     table.innerHTML = `
       <thead>
         <tr>

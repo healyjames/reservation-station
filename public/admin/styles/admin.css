@@ -285,24 +285,29 @@ html, body {
 }
 
 .oh-schedule {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
   margin-bottom: var(--space-4);
 }
 
-.oh-row {
-  display: grid;
-  grid-template-columns: 110px auto 1fr;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) 0;
-  border-bottom: var(--border-width) solid var(--border);
+.oh-schedule input[type="time"] {
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--background-lighter);
+  color: var(--foreground-lightest);
+  font-size: 0.875rem;
+  font-family: inherit;
+  width: 110px;
+}
+
+.oh-schedule input[type="time"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .oh-day-name {
   font-weight: 500;
   color: var(--foreground);
+  white-space: nowrap;
 }
 
 .oh-closed-label {
@@ -317,43 +322,6 @@ html, body {
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
-}
-
-.oh-times {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.oh-times input[type="time"] {
-  padding: var(--space-1) var(--space-2);
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--background);
-  color: var(--foreground);
-  font-size: 0.875rem;
-  width: 110px;
-}
-
-.oh-times input[type="time"]:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.oh-separator {
-  color: var(--foreground-darker);
-}
-
-
-
-@media (max-width: 640px) {
-  .oh-row {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
-  }
-  .oh-times {
-    grid-column: 1 / -1;
-  }
 }
 
 .day-block-row {
@@ -665,25 +633,25 @@ html, body {
 
 
 /* ============================================================
-   BOOKING TABLE - desktop
+   ADMIN TABLE - shared table styles (used by booking & schedule)
    ============================================================ */
-.booking-table {
+.admin-table {
   width: 100%;
-	border-spacing: 0 var(--space-2);
+  border-spacing: 0 var(--space-2);
   overflow: hidden;
   font-size: 0.9375rem;
-	background: var(--background-light);
-	padding: 0 var(--space-2);
-	border-radius: var(--radius-xs);
-}
-
-.booking-table thead {
-  background: var(--background-lighter);
-	border: var(--border-width) solid var(--background-lighter);
+  background: var(--background-light);
+  padding: 0 var(--space-2);
   border-radius: var(--radius-xs);
 }
 
-.booking-table th {
+.admin-table thead {
+  background: var(--background-lighter);
+  border: var(--border-width) solid var(--background-lighter);
+  border-radius: var(--radius-xs);
+}
+
+.admin-table th {
   padding: var(--space-5) var(--space-4);
   text-align: left;
   font-size: 0.8125rem;
@@ -693,26 +661,24 @@ html, body {
   letter-spacing: 0.04em;
 }
 
-.booking-table td {
+.admin-table td {
   padding: var(--space-4) var(--space-4);
   color: var(--foreground-lightest);
   vertical-align: middle;
-	background: var(--background);
+  background: var(--background);
   border: var(--border-width) solid var(--background);
 }
 
-.booking-table thead tr th:first-child, .booking-table tbody tr td:first-child {
+.admin-table thead tr th:first-child,
+.admin-table tbody tr td:first-child {
   border-top-left-radius: var(--radius-xs);
   border-bottom-left-radius: var(--radius-xs);
 }
 
-.booking-table thead tr th:last-child, .booking-table tbody tr td:last-child {
+.admin-table thead tr th:last-child,
+.admin-table tbody tr td:last-child {
   border-top-right-radius: var(--radius-xs);
   border-bottom-right-radius: var(--radius-xs);
-}
-
-.booking-table tbody tr:hover {
-  background: var(--background-light);
 }
 
 .actions-cell {
@@ -1002,10 +968,6 @@ html, body {
 /* ============================================================
    SETTINGS PANEL
    ============================================================ */
-.settings-panel {
-  max-width: 520px;
-}
-
 .settings-panel h2 {
   font-size: 1.25rem;
   font-weight: 700;
@@ -1141,7 +1103,6 @@ html, body {
 }
 
 .settings-panel .btn-primary {
-  width: auto;
   padding: 0.625rem 2rem;
   margin-top: var(--space-2);
 }
@@ -1205,7 +1166,7 @@ html, body {
     flex-direction: row;
     flex-wrap: wrap;
     overflow-x: visible;
-    padding: 0 var(--space-2) var(--space-2);
+    padding: 0 var(--space-2);
     background: var(--background-darker);
   }
 

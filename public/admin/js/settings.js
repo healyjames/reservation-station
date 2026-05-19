@@ -323,7 +323,9 @@ const OpeningHoursManager = (() => {
     const isClosed = cb.checked;
     openInput.disabled = isClosed;
     closeInput.disabled = isClosed;
-    row.querySelector('.oh-times').style.opacity = isClosed ? '0.4' : '';
+    row.querySelectorAll('.oh-time-cell').forEach(cell => {
+      cell.style.opacity = isClosed ? '0.4' : '';
+    });
   }
 
   function _buildRows(data) {
@@ -333,20 +335,23 @@ const OpeningHoursManager = (() => {
       const openVal  = (entry && !entry.is_closed && entry.open_time)  ? entry.open_time  : '12:00';
       const closeVal = (entry && !entry.is_closed && entry.close_time) ? entry.close_time : '22:00';
       return `
-        <div class="oh-row" data-dow="${dow}">
-          <span class="oh-day-name">${label}</span>
-          <div class="oh-closed-label form-group-check">
-            <div class="toggle-switch">
-              <input type="checkbox" id="oh-cb-${dow}" class="oh-closed-cb" role="switch" ${isClosed ? 'checked' : ''} />
-            </div>
-            <label for="oh-cb-${dow}" class="oh-closed-text">Closed</label>
-          </div>
-          <div class="oh-times" style="${isClosed ? 'opacity:0.4' : ''}">
+        <tr class="oh-row" data-dow="${dow}">
+          <td class="oh-day-name">${label}</td>
+          <td class="oh-time-cell" style="${isClosed ? 'opacity:0.4' : ''}">
             <input type="time" class="oh-open-time" step="1800" value="${openVal}" ${isClosed ? 'disabled' : ''} />
-            <span class="oh-separator">–</span>
+          </td>
+          <td class="oh-time-cell" style="${isClosed ? 'opacity:0.4' : ''}">
             <input type="time" class="oh-close-time" step="1800" value="${closeVal}" ${isClosed ? 'disabled' : ''} />
-          </div>
-        </div>
+          </td>
+          <td class="oh-closed-cell">
+            <div class="oh-closed-label form-group-check">
+              <div class="toggle-switch">
+                <input type="checkbox" id="oh-cb-${dow}" class="oh-closed-cb" role="switch" ${isClosed ? 'checked' : ''} />
+              </div>
+              <label for="oh-cb-${dow}" class="oh-closed-text">Closed</label>
+            </div>
+          </td>
+        </tr>
       `;
     }).join('');
   }
@@ -360,9 +365,9 @@ const OpeningHoursManager = (() => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       const data = (json.data && json.data.length > 0) ? json.data : [];
-      const scheduleEl = _container.querySelector('.oh-schedule');
-      if (scheduleEl) {
-        scheduleEl.innerHTML = _buildRows(data);
+      const tbodyEl = _container.querySelector('.oh-schedule tbody');
+      if (tbodyEl) {
+        tbodyEl.innerHTML = _buildRows(data);
         _container.querySelectorAll('.oh-row').forEach(row => _attachRowListeners(row));
       }
     } catch {
@@ -421,7 +426,17 @@ const OpeningHoursManager = (() => {
     container.innerHTML = `
       <h3 class="oh-section-title">Opening Hours</h3>
       <div class="oh-banner alert" role="status" aria-live="polite" aria-hidden="true"></div>
-      <div class="oh-schedule">${_buildRows([])}</div>
+      <table class="admin-table oh-schedule">
+        <thead>
+          <tr>
+            <th scope="col">Day</th>
+            <th scope="col">Start</th>
+            <th scope="col">End</th>
+            <th scope="col">Closed</th>
+          </tr>
+        </thead>
+        <tbody>${_buildRows([])}</tbody>
+      </table>
       <button type="button" class="btn-primary" id="oh-save-btn">Save Changes</button>
     `;
 
