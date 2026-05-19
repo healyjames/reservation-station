@@ -77,6 +77,28 @@ export const CreateBlockedDateSchema = BlockedDateSchema.omit({
 export type BlockedDate = z.infer<typeof BlockedDateSchema>;
 export type CreateBlockedDate = z.infer<typeof CreateBlockedDateSchema>;
 
+export const OpeningHoursEntrySchema = z.object({
+	id: z.uuid(),
+	tenant_id: z.uuid(),
+	day_of_week: z.number().int().min(0).max(6),
+	is_closed: z.union([z.boolean(), z.literal(0), z.literal(1)]),
+	open_time: z.string().regex(/^\d{2}:\d{2}$/).nullable(),
+	close_time: z.string().regex(/^\d{2}:\d{2}$/).nullable(),
+});
+
+export const UpsertOpeningHoursSchema = z
+	.array(
+		z.object({
+			day_of_week: z.number().int().min(0).max(6),
+			is_closed: z.union([z.boolean(), z.literal(0), z.literal(1)]),
+			open_time: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(),
+			close_time: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(),
+		}),
+	)
+	.length(7);
+
+export type OpeningHoursEntry = z.infer<typeof OpeningHoursEntrySchema>;
+
 export const AdminUserSchema = z.object({
 	id: z.uuid(),
 	tenant_id: z.uuid(),

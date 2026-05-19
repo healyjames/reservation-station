@@ -14,7 +14,15 @@ tenants.get('/:id', async (c) => {
 	const tenant = await c.env.maximum_bookings_db.prepare('SELECT * FROM Tenants WHERE tenant_code = ?').bind(id).first<Tenant>();
 
 	if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
-	return c.json(tenant);
+
+	const { results } = await c.env.maximum_bookings_db
+		.prepare(
+			'SELECT id, tenant_id, day_of_week, is_closed, open_time, close_time FROM OpeningHours WHERE tenant_id = ? ORDER BY day_of_week ASC',
+		)
+		.bind(tenant.id)
+		.run<{ id: string; tenant_id: string; day_of_week: number; is_closed: number; open_time: string | null; close_time: string | null }>();
+
+	return c.json({ ...tenant, opening_hours: results.length > 0 ? results : null });
 });
 
 tenants.post('/', async (c) => {

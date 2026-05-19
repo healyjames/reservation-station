@@ -40,6 +40,18 @@ Tester on the Maximum Bookings project. Writes Vitest tests, reviews implementat
   - DELETE tests use `expect([200, 204]).toContain(res.status)` — spec allows either
   - **Flagged** for Han + Sean: `test/index.spec.ts` and `test/admin.spec.ts` both reference `block_current_day` in seedTenant and specific test cases — these need updating after migration removes the column
 
+- **Opening Hours feature test suite:** Created `test/opening-hours.spec.ts` with 19 tests across 5 suites: GET/PUT admin opening-hours, tenant public endpoint with opening_hours field, blocked-dates with closed day_of_week, and blocked-times with opening hours.
+  - UUID range `000000001001–000000001206` plus `000000001300` for a blocked-date seed; no collision with other spec files
+  - `seedOpeningHours` uses `INSERT OR REPLACE` bound to `(id, tenant_id, day_of_week, is_closed, open_time, close_time)` — mirrors the DB schema exactly
+  - `clearDb` wraps both `DELETE FROM OpeningHours` and `DELETE FROM BlockedDates` in `.catch(() => {})` since both tables may not exist pre-migration
+  - January 2099 chosen for blocked-dates suite: starts on Thursday (day_of_week=4); Sundays (0) fall on 5, 12, 19, 26; Mondays (1) on 6, 13, 20, 27 — deterministic day-of-week arithmetic for assertions
+  - Suite 4 (blocked-dates) uses the public endpoint — no auth token needed; seeds tenants directly via `seedTenant`
+  - Suite 5 (blocked-times) seeds tenant with `max_guests: 0` (unlimited) to isolate opening-hours logic from capacity logic
+  - Closed-day blocked-times test verifies `blocked_times.length === 20` plus presence of boundary slots `12:00` and `21:30`
+  - `makeAllOpenHours()` helper generates a 7-entry array (days 0–6, open 12:00–22:00) for PUT body construction; individual tests spread/override specific days for mutation scenarios
+  - `is_closed` asserted as integer `1` from GET responses (D1 returns booleans as integers)
+  - Suite 3 (tenant public endpoint) tests `opening_hours: null` when no rows exist and an array when rows are present — tests the new field that Sean needs to add to the GET /api/tenants/:id response
+
 ### Original Learnings
 
 - Project kickoff: 2026-04-01

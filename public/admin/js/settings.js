@@ -289,6 +289,150 @@ const BlockedDatesCalendar = (() => {
   return { init };
 })();
 
+const OpeningHoursManager = (() => {
+  const DAYS = [
+    { label: 'Monday',    dow: 1 },
+    { label: 'Tuesday',   dow: 2 },
+    { label: 'Wednesday', dow: 3 },
+    { label: 'Thursday',  dow: 4 },
+    { label: 'Friday',    dow: 5 },
+    { label: 'Saturday',  dow: 6 },
+    { label: 'Sunday',    dow: 0 },
+  ];
+
+  let _container = null;
+  let _saveTimer = null;
+
+  function _showBanner(container, type, message) {
+    const el = container.querySelector('.oh-banner');
+    if (!el) return;
+    el.className = `alert oh-banner alert-${type} visible`;
+    el.setAttribute('aria-hidden', 'false');
+    el.textContent = message;
+    setTimeout(() => {
+      el.classList.remove('visible');
+      el.setAttribute('aria-hidden', 'true');
+    }, 3500);
+  }
+
+  function _applyClosedState(row) {
+    const cb = row.querySelector('.oh-closed-cb');
+    const openInput = row.querySelector('.oh-open-time');
+    const closeInput = row.querySelector('.oh-close-time');
+    const isClosed = cb.checked;
+    openInput.disabled = isClosed;
+    closeInput.disabled = isClosed;
+    row.querySelector('.oh-times').style.opacity = isClosed ? '0.4' : '';
+  }
+
+  function _buildRows(data) {
+    return DAYS.map(({ label, dow }) => {
+      const entry = data.find(e => e.day_of_week === dow);
+      const isClosed = entry ? !!entry.is_closed : false;
+      const openVal  = (entry && !entry.is_closed && entry.open_time)  ? entry.open_time  : '12:00';
+      const closeVal = (entry && !entry.is_closed && entry.close_time) ? entry.close_time : '22:00';
+      return `
+        <div class="oh-row" data-dow="${dow}">
+          <span class="oh-day-name">${label}</span>
+          <div class="oh-closed-label form-group-check">
+            <div class="toggle-switch">
+              <input type="checkbox" id="oh-cb-${dow}" class="oh-closed-cb" role="switch" ${isClosed ? 'checked' : ''} />
+            </div>
+            <label for="oh-cb-${dow}" class="oh-closed-text">Closed</label>
+          </div>
+          <div class="oh-times" style="${isClosed ? 'opacity:0.4' : ''}">
+            <input type="time" class="oh-open-time" step="1800" value="${openVal}" ${isClosed ? 'disabled' : ''} />
+            <span class="oh-separator">–</span>
+            <input type="time" class="oh-close-time" step="1800" value="${closeVal}" ${isClosed ? 'disabled' : ''} />
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function _load() {
+    try {
+      const res = await fetch('/api/admin/opening-hours', {
+        headers: { 'Authorization': `Bearer ${AdminAuth.getToken()}` },
+      });
+      if (res.status === 401) { AdminAuth.logout(); return; }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const data = (json.data && json.data.length > 0) ? json.data : [];
+      const scheduleEl = _container.querySelector('.oh-schedule');
+      if (scheduleEl) {
+        scheduleEl.innerHTML = _buildRows(data);
+        _container.querySelectorAll('.oh-row').forEach(row => _attachRowListeners(row));
+      }
+    } catch {
+      _showBanner(_container, 'error', 'Failed to load opening hours.');
+    }
+  }
+
+  function _debouncedSave() {
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(_save, 400);
+  }
+
+  function _attachRowListeners(row) {
+    row.querySelector('.oh-closed-cb').addEventListener('change', () => {
+      _applyClosedState(row);
+      _debouncedSave();
+    });
+    row.querySelector('.oh-open-time').addEventListener('change', _debouncedSave);
+    row.querySelector('.oh-close-time').addEventListener('change', _debouncedSave);
+  }
+
+  async function _save() {
+    const body = DAYS.map(({ dow }) => {
+      const row = _container.querySelector(`.oh-row[data-dow="${dow}"]`);
+      const isClosed = row.querySelector('.oh-closed-cb').checked;
+      return {
+        day_of_week: dow,
+        is_closed: isClosed,
+        open_time:  isClosed ? null : row.querySelector('.oh-open-time').value,
+        close_time: isClosed ? null : row.querySelector('.oh-close-time').value,
+      };
+    });
+
+    try {
+      const res = await fetch('/api/admin/opening-hours', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AdminAuth.getToken()}`,
+        },
+        body: JSON.stringify(body),
+      });
+      if (res.status === 401) { AdminAuth.logout(); return; }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+    } catch (err) {
+      _showBanner(_container, 'error', err.message || 'Failed to save opening hours.');
+    }
+  }
+
+  function init(container) {
+    _container = container;
+
+    container.innerHTML = `
+      <h3 class="oh-section-title">Opening Hours</h3>
+      <div class="oh-banner alert" role="status" aria-live="polite" aria-hidden="true"></div>
+      <div class="oh-schedule">${_buildRows([])}</div>
+    `;
+
+    container.querySelectorAll('.oh-row').forEach(row => _attachRowListeners(row));
+
+    _load();
+  }
+
+  return { init };
+})();
+
+window.OpeningHoursManager = OpeningHoursManager;
+
 const SettingsManager = (() => {
   function init(container) {
     container.innerHTML = `
@@ -320,11 +464,13 @@ const SettingsManager = (() => {
           <p class="tz-note">Times are in your local timezone.</p>
           <button type="submit" class="btn-primary" id="settings-save-btn">Save settings</button>
         </form>
+        <div id="opening-hours-section"></div>
         <div id="blocked-dates-section"></div>
       </div>
     `;
 
     loadSettings(container);
+    OpeningHoursManager.init(container.querySelector('#opening-hours-section'));
     BlockedDatesCalendar.init(container.querySelector('#blocked-dates-section'));
 
     container.querySelector('#sf-max-covers').addEventListener('input', () => updateTooltip(container));

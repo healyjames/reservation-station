@@ -5,6 +5,7 @@ import reservations from './routes/reservations';
 import auth from './routes/auth';
 import admin from './routes/admin';
 import blockedDates from './routes/blocked-dates';
+import openingHours from './routes/opening-hours';
 
 const app = new Hono();
 
@@ -15,6 +16,7 @@ app.route('/api/reservations', reservations);
 app.route('/api/auth', auth);
 app.route('/api/admin', admin);
 app.route('/api/admin/blocked-dates', blockedDates);
+app.route('/api/admin/opening-hours', openingHours);
 
 app.notFound((c) => c.json({ error: 'Not found' }, 404));
 

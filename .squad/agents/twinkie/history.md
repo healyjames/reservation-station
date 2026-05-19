@@ -309,3 +309,27 @@ Blocked days (in `blockedDates` set) are now visually distinguished from past da
 - `.calendar-day--blocked`: diagonal stripe pattern (`repeating-linear-gradient(-45deg, ...)`) using `--background-light` / `--background` variables; `opacity: 0.55`; `cursor: not-allowed` — visually "intentionally closed" vs past's flat fade
 - Hover rule updated to `:not(.calendar-day--blocked)` exclusion so blocked days don't scale on hover
 - `.calendar-blocked-tooltip`: `position: absolute`; `background: var(--background-lighter)`; `border: 1px solid var(--primary)`; `transform: translateX(-50%)` centres it under the clicked cell; `pointer-events: none` prevents it stealing the dismiss click
+
+### Opening Hours frontend (2026-05-14)
+
+**Added:** `OpeningHoursManager` IIFE in `public/admin/js/settings.js`. Renders between the settings save button and the blocked dates calendar.
+
+**Files modified:**
+- `public/admin/js/settings.js` — added `OpeningHoursManager` IIFE; updated `SettingsManager.init()` template to include `#opening-hours-section` div and call `OpeningHoursManager.init()`.
+- `public/js/booking-form.js` — replaced hardcoded `TIME_SLOTS` constant with `generateSlots(openTime, closeTime)` and `getSlotsForDate(date)` functions; `getAvailableSlots()` now calls `getSlotsForDate(formState.selectedDate)` instead of `TIME_SLOTS`.
+- `public/admin/styles/admin.css` — added `.oh-*` CSS block for the opening hours section.
+
+**Key patterns:**
+- DAYS array defines UK week order (Mon→Sun, dow 1→0). Weeks start Monday in this UI.
+- `_buildRows(data)` handles both initial render (empty `[]`) and populated state — always defaults to `12:00–22:00` open for any missing/unclosed entry.
+- `_load()` fetches `GET /api/admin/opening-hours`; if `data` is empty array, keeps default rows as-is (no re-render needed because `_buildRows([])` already fills defaults).
+- Closed checkbox change: `_applyClosedState(row)` toggles `disabled` and adjusts `.oh-times` opacity directly on the DOM — no full re-render.
+- PUT body always sends all 7 rows; `open_time`/`close_time` are `null` when `is_closed: true`.
+- Banner reuses `.alert` + `.alert-success`/`.alert-error` CSS — no new CSS classes for the banner itself.
+- CSS variable mapping: spec used `--text-primary`, `--text-secondary`, `--surface`; mapped to `--foreground`, `--foreground-darker`, `--background` to match actual token system.
+- `window.OpeningHoursManager` exposed before `SettingsManager` in the file — `SettingsManager.init()` calls it synchronously, so declaration order matters.
+
+**Widget side (`booking-form.js`):**
+- `getSlotsForDate` uses `getUTCDay()` on a `T12:00:00Z` ISO string to avoid local timezone day-boundary issues (same technique used in admin date arithmetic).
+- If `opening_hours` is null/empty on `tenantConfig`, falls back to `generateSlots('12:00', '22:00')` — same 20-slot window as the old hardcoded constant.
+- If a day `is_closed`, `getSlotsForDate` returns `[]` — booking form shows the "no availability" message naturally.

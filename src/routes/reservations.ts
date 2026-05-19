@@ -31,7 +31,27 @@ reservations.get('/blocked-dates', async (c) => {
 		.bind(tenantId, `${month}-%`)
 		.run<{ date: string }>();
 
-	return c.json({ blocked_dates: results.map((r) => r.date) });
+	const { results: closedDays } = await c.env.maximum_bookings_db
+		.prepare('SELECT day_of_week FROM OpeningHours WHERE tenant_id = ? AND is_closed = 1')
+		.bind(tenantId)
+		.run<{ day_of_week: number }>();
+
+	const blockedSet = new Set(results.map((r) => r.date));
+
+	if (closedDays.length > 0) {
+		const closedDowSet = new Set(closedDays.map((r) => r.day_of_week));
+		const [year, monthNum] = month.split('-').map(Number);
+		const daysInMonth = new Date(year, monthNum, 0).getDate();
+		for (let day = 1; day <= daysInMonth; day++) {
+			const dateStr = `${month}-${day.toString().padStart(2, '0')}`;
+			const dow = new Date(dateStr + 'T12:00:00Z').getUTCDay();
+			if (closedDowSet.has(dow)) {
+				blockedSet.add(dateStr);
+			}
+		}
+	}
+
+	return c.json({ blocked_dates: Array.from(blockedSet) });
 });
 
 reservations.get('/blocked-times', async (c) => {
@@ -66,8 +86,23 @@ reservations.get('/blocked-times', async (c) => {
 		return c.json({ blocked_times: generateTimeSlots(), time_limit_minutes: tenant.concurrent_guests_time_limit });
 	}
 
+	const dow = new Date(date + 'T12:00:00Z').getUTCDay();
+	const openingHoursRow = await c.env.maximum_bookings_db
+		.prepare('SELECT is_closed, open_time, close_time FROM OpeningHours WHERE tenant_id = ? AND day_of_week = ?')
+		.bind(tenantId, dow)
+		.first<{ is_closed: number; open_time: string | null; close_time: string | null }>();
+
+	if (openingHoursRow?.is_closed === 1) {
+		return c.json({ blocked_times: generateTimeSlots(), time_limit_minutes: tenant.concurrent_guests_time_limit });
+	}
+
+	const slots =
+		openingHoursRow?.open_time && openingHoursRow?.close_time
+			? generateTimeSlots(openingHoursRow.open_time, openingHoursRow.close_time)
+			: generateTimeSlots();
+
 	if (tenant.max_guests === 0) {
-		const blockedTimes = generateTimeSlots().filter((slot) =>
+		const blockedTimes = slots.filter((slot) =>
 			blockedDateRows.some((r) => r.start_time !== null && r.end_time !== null && slot >= r.start_time && slot < r.end_time),
 		);
 		return c.json({ blocked_times: blockedTimes, time_limit_minutes: tenant.concurrent_guests_time_limit });
@@ -79,7 +114,7 @@ reservations.get('/blocked-times', async (c) => {
 		.run<SlotReservation>();
 
 	const blockedTimes: string[] = [];
-	for (const slot of generateTimeSlots()) {
+	for (const slot of slots) {
 		const partiallyBlocked = blockedDateRows.some(
 			(r) => r.start_time !== null && r.end_time !== null && slot >= r.start_time && slot < r.end_time,
 		);
