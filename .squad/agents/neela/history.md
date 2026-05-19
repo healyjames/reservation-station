@@ -14,6 +14,12 @@ Tester on the Maximum Bookings project. Writes Vitest tests, reviews implementat
 
 ## Learnings
 
+- **Reservation cancellation API tests (2026-05-19):** Added `test/reservations-cancel.test.ts` for the cancel-page endpoints.
+  - Uses UUID range `000000001401–000000001599` to avoid collisions with existing spec files
+  - Seeds a far-future reservation (`2099-11-18 18:30`) with non-null `dietary_requirements` so GET assertions exercise the full response shape the cancel page needs
+  - DELETE coverage asserts both success payload (`{ success: true }`) and behavior by following with GET `404 { error: 'Reservation not found' }`
+  - Idempotency is explicit: second DELETE on the same UUID must return `404`, not a second success
+
 - **Admin Dashboard auth + API tests (Phase 8):** Wrote `test/auth.spec.ts` and `test/admin.spec.ts` from spec before Sean's implementation.
   - `hashPassword` imported from `../../src/utils/auth` to generate seeds at test runtime - avoids pre-computing PBKDF2 hashes
   - `signJWT` imported from same module for the expired-token test case (passes `-1` as `expiresInSeconds`)

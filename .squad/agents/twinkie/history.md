@@ -350,3 +350,14 @@ Blocked days (in `blockedDates` set) are now visually distinguished from past da
 - `syncHash()` normalises missing/invalid hashes to `#general` with `history.replaceState(...)` — avoids a reload and guarantees a valid active state.
 - `SettingsManager.init()` stays backward-compatible; `initFormOnly()` reuses the same form markup/listeners for the General sub-page.
 - On mobile, `.sidebar-nav` now `flex-wrap`s and `.tab-subnav` takes full width, so Bookings/Settings stay on the first row while the submenu expands below as readable touch targets.
+
+### Booking cancellation page (2026-05-19)
+
+**Added:** `public/cancel.html`, `public/js/cancel.js`, shared standalone-page styles in `public/shared.css`.
+
+**Key patterns:**
+- Cancellation page is a standalone public entry point: preload the self-hosted Google Sans fonts, load `/shared.css`, and keep `/js/theme.js` blocking in `<head>` so theme variables apply before first paint.
+- `cancel.js` reads `?id=` from the URL, fetches `GET /api/reservations/:id`, and renders one of four explicit states: missing-link error, loading, loaded booking review, or cancellation success.
+- Public-facing booking data is escaped before inserting into `.innerHTML` so guest names and dietary notes cannot inject markup.
+- Date formatting uses `new Date(YYYY-MM-DD + 'T12:00:00Z')` with `timeZone: 'UTC'` to avoid timezone drift on reservation dates.
+- Delete flow is single-click by design on this page: the destructive button swaps to `Cancelling...`, disables during the request, then either replaces the card with a success message or re-renders the review state with an inline human-readable error.
