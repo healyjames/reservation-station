@@ -324,9 +324,6 @@ const OpeningHoursManager = (() => {
     const isClosed = cb.checked;
     openInput.disabled = isClosed;
     closeInput.disabled = isClosed;
-    row.querySelectorAll('.oh-time-cell').forEach(cell => {
-      cell.style.opacity = isClosed ? '0.4' : '';
-    });
     const card = _container.querySelector(`.oh-card[data-dow="${dow}"]`);
     if (card) {
       card.querySelector('.oh-card-closed-cb').checked = isClosed;
@@ -346,11 +343,11 @@ const OpeningHoursManager = (() => {
       return `
         <tr class="oh-row" data-dow="${dow}">
           <td class="oh-day-name">${label}</td>
-          <td class="oh-time-cell" style="${isClosed ? 'opacity:0.4' : ''}">
-            <input type="time" class="oh-open-time" step="1800" value="${openVal}" ${isClosed ? 'disabled' : ''} />
+          <td class="oh-time-cell">
+            <input type="time" class="oh-open-time" step="1800" value="${openVal}" ${isClosed ? 'disabled' : ''} style="${isClosed ? 'opacity:0.25' : ''}" />
           </td>
-          <td class="oh-time-cell" style="${isClosed ? 'opacity:0.4' : ''}">
-            <input type="time" class="oh-close-time" step="1800" value="${closeVal}" ${isClosed ? 'disabled' : ''} />
+          <td class="oh-time-cell">
+            <input type="time" class="oh-close-time" step="1800" value="${closeVal}" ${isClosed ? 'disabled' : ''} style="${isClosed ? 'opacity:0.25' : ''}" />
           </td>
           <td class="oh-closed-cell">
             <div class="oh-closed-label form-group-check">
@@ -382,7 +379,7 @@ const OpeningHoursManager = (() => {
               <label for="oh-card-cb-${dow}" class="oh-closed-text">Closed</label>
             </div>
           </div>
-          <div class="oh-card-times" style="${isClosed ? 'opacity:0.4' : ''}">
+          <div class="oh-card-times">
             <div class="oh-card-time-field">
               <label class="oh-card-time-label">Start</label>
               <input type="time" class="oh-card-open-time" step="1800" value="${openVal}" ${isClosed ? 'disabled' : ''} />
