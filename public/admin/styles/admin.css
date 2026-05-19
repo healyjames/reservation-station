@@ -530,6 +530,47 @@ html, body {
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* Settings sub-navigation */
+.tab-btn--parent {
+  justify-content: space-between;
+}
+
+.tab-btn-arrow {
+  font-size: 0.75rem;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.tab-btn--parent[aria-expanded="false"] .tab-btn-arrow {
+  transform: rotate(-90deg);
+}
+
+.tab-subnav {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+  max-height: 200px; /* enough for 3 items */
+}
+
+.tab-subnav[hidden] {
+  display: none;
+}
+
+.tab-btn--sub {
+  padding-left: calc(var(--space-4) + 1rem);
+  font-size: 0.875rem;
+  font-weight: 400;
+  border-left-width: 2px;
+  min-height: var(--size-touch-sm);
+}
+
+.tab-btn--sub.active {
+  color: var(--primary-lightest);
+  border-left-color: var(--primary-lightest);
+  background: rgba(255, 255, 255, 0.05);
+}
+
 /* ============================================================
    TAB VIEWS
    ============================================================ */
@@ -1162,8 +1203,9 @@ html, body {
     position: static;
     height: auto;
     flex-direction: row;
-    overflow-x: auto;
-    padding: 0 var(--space-2);
+    flex-wrap: wrap;
+    overflow-x: visible;
+    padding: 0 var(--space-2) var(--space-2);
     background: var(--background-darker);
   }
 
@@ -1193,6 +1235,25 @@ html, body {
     border-left-color: transparent;
     border-bottom-color: var(--primary);
     background: none;
+  }
+
+  .tab-subnav {
+    width: 100%;
+    max-height: none;
+  }
+
+  .tab-btn--sub {
+    width: 100%;
+    border-bottom: none;
+    border-left: 2px solid transparent;
+    padding-left: calc(var(--space-4) + 1rem);
+  }
+
+  .tab-btn--sub.active {
+    color: var(--primary);
+    border-left-color: var(--primary);
+    border-bottom-color: transparent;
+    background: rgba(255, 255, 255, 0.05);
   }
 }
 

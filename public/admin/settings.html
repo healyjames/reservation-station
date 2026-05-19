@@ -18,7 +18,15 @@
     <!-- left: sidebar navigation -->
     <nav class="sidebar-nav" aria-label="Dashboard navigation">
       <button class="tab-btn" onclick="window.location.href='/admin/dashboard'">Bookings</button>
-      <button class="tab-btn active">Settings</button>
+      <button class="tab-btn tab-btn--parent" id="settings-parent-btn" aria-expanded="true">
+        Settings
+        <span class="tab-btn-arrow" aria-hidden="true">▾</span>
+      </button>
+      <div class="tab-subnav" id="settings-subnav" role="list">
+        <button class="tab-btn tab-btn--sub" role="listitem" data-hash="general">General</button>
+        <button class="tab-btn tab-btn--sub" role="listitem" data-hash="opening-hours">Opening Hours</button>
+        <button class="tab-btn tab-btn--sub" role="listitem" data-hash="blocked-dates">Blocked Dates</button>
+      </div>
     </nav>
 
     <!-- right: header + main content -->

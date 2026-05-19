@@ -17,6 +17,7 @@ Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget
 - Widget must be embeddable on any site - no framework, pure HTML/CSS/JS
 - Must handle cross-origin API calls to the Workers API
 - CSS custom properties for host-site theming
+- Admin opening hours settings now use explicit user-triggered saves via a dedicated Save Changes button; row edits should stay local until the user commits them.
 
 `public/index.html` was split from a monolithic ~713-line file into three separate assets (no build step):
 
@@ -333,3 +334,19 @@ Blocked days (in `blockedDates` set) are now visually distinguished from past da
 - `getSlotsForDate` uses `getUTCDay()` on a `T12:00:00Z` ISO string to avoid local timezone day-boundary issues (same technique used in admin date arithmetic).
 - If `opening_hours` is null/empty on `tenantConfig`, falls back to `generateSlots('12:00', '22:00')` — same 20-slot window as the old hardcoded constant.
 - If a day `is_closed`, `getSlotsForDate` returns `[]` — booking form shows the "no availability" message naturally.
+
+### Settings hash routing + accordion sidebar (2026-05-19)
+
+**Changed:** Split `settings.html` into hash-routed sub-views with an accordion sub-navigation in the sidebar.
+
+**Files modified:**
+- `public/admin/settings.html` — replaced the flat Settings tab with a parent Settings button plus General / Opening Hours / Blocked Dates sub-items.
+- `public/admin/js/settings-page.js` — added hash routing (`#general`, `#opening-hours`, `#blocked-dates`), active sub-nav syncing, and accordion open/close behaviour.
+- `public/admin/js/settings.js` — exposed `window.BlockedDatesCalendar` and added `SettingsManager.initFormOnly(container)` so the general form can render without mounting the other settings sections.
+- `public/admin/styles/admin.css` — added `.tab-btn--parent`, `.tab-subnav`, `.tab-btn--sub` styles and mobile overrides so the submenu wraps under the top nav row at ≤768px.
+
+**Key patterns:**
+- Keep `settings.html` as the shell; switch views entirely from `window.location.hash` so browser back/forward works without a full reload.
+- `syncHash()` normalises missing/invalid hashes to `#general` with `history.replaceState(...)` — avoids a reload and guarantees a valid active state.
+- `SettingsManager.init()` stays backward-compatible; `initFormOnly()` reuses the same form markup/listeners for the General sub-page.
+- On mobile, `.sidebar-nav` now `flex-wrap`s and `.tab-subnav` takes full width, so Bookings/Settings stay on the first row while the submenu expands below as readable touch targets.

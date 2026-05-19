@@ -289,6 +289,8 @@ const BlockedDatesCalendar = (() => {
   return { init };
 })();
 
+window.BlockedDatesCalendar = BlockedDatesCalendar;
+
 const OpeningHoursManager = (() => {
   const DAYS = [
     { label: 'Monday',    dow: 1 },
@@ -301,7 +303,6 @@ const OpeningHoursManager = (() => {
   ];
 
   let _container = null;
-  let _saveTimer = null;
 
   function _showBanner(container, type, message) {
     const el = container.querySelector('.oh-banner');
@@ -369,21 +370,14 @@ const OpeningHoursManager = (() => {
     }
   }
 
-  function _debouncedSave() {
-    clearTimeout(_saveTimer);
-    _saveTimer = setTimeout(_save, 400);
-  }
-
   function _attachRowListeners(row) {
     row.querySelector('.oh-closed-cb').addEventListener('change', () => {
       _applyClosedState(row);
-      _debouncedSave();
     });
-    row.querySelector('.oh-open-time').addEventListener('change', _debouncedSave);
-    row.querySelector('.oh-close-time').addEventListener('change', _debouncedSave);
   }
 
   async function _save() {
+    const saveBtn = _container.querySelector('#oh-save-btn');
     const body = DAYS.map(({ dow }) => {
       const row = _container.querySelector(`.oh-row[data-dow="${dow}"]`);
       const isClosed = row.querySelector('.oh-closed-cb').checked;
@@ -394,6 +388,9 @@ const OpeningHoursManager = (() => {
         close_time: isClosed ? null : row.querySelector('.oh-close-time').value,
       };
     });
+
+    saveBtn.disabled = true;
+    saveBtn.classList.add('loading');
 
     try {
       const res = await fetch('/api/admin/opening-hours', {
@@ -409,8 +406,12 @@ const OpeningHoursManager = (() => {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || `HTTP ${res.status}`);
       }
+      _showBanner(_container, 'success', 'Opening hours saved.');
     } catch (err) {
       _showBanner(_container, 'error', err.message || 'Failed to save opening hours.');
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.classList.remove('loading');
     }
   }
 
@@ -421,8 +422,10 @@ const OpeningHoursManager = (() => {
       <h3 class="oh-section-title">Opening Hours</h3>
       <div class="oh-banner alert" role="status" aria-live="polite" aria-hidden="true"></div>
       <div class="oh-schedule">${_buildRows([])}</div>
+      <button type="button" class="btn-primary" id="oh-save-btn">Save Changes</button>
     `;
 
+    container.querySelector('#oh-save-btn').addEventListener('click', _save);
     container.querySelectorAll('.oh-row').forEach(row => _attachRowListeners(row));
 
     _load();
@@ -434,8 +437,8 @@ const OpeningHoursManager = (() => {
 window.OpeningHoursManager = OpeningHoursManager;
 
 const SettingsManager = (() => {
-  function init(container) {
-    container.innerHTML = `
+  function renderFormMarkup(includeSubsections = false) {
+    return `
       <div class="settings-panel">
         <h2>Settings</h2>
         <div id="settings-error" class="alert alert-error" role="alert" aria-live="assertive" aria-hidden="true"></div>
@@ -464,15 +467,12 @@ const SettingsManager = (() => {
           <p class="tz-note">Times are in your local timezone.</p>
           <button type="submit" class="btn-primary" id="settings-save-btn">Save settings</button>
         </form>
-        <div id="opening-hours-section"></div>
-        <div id="blocked-dates-section"></div>
+        ${includeSubsections ? '<div id="opening-hours-section"></div><div id="blocked-dates-section"></div>' : ''}
       </div>
     `;
+  }
 
-    loadSettings(container);
-    OpeningHoursManager.init(container.querySelector('#opening-hours-section'));
-    BlockedDatesCalendar.init(container.querySelector('#blocked-dates-section'));
-
+  function attachFormListeners(container) {
     container.querySelector('#sf-max-covers').addEventListener('input', () => updateTooltip(container));
     container.querySelector('#sf-time-window').addEventListener('input', () => updateTooltip(container));
 
@@ -480,6 +480,20 @@ const SettingsManager = (() => {
       e.preventDefault();
       await saveSettings(container);
     });
+  }
+
+  function initFormOnly(container) {
+    container.innerHTML = renderFormMarkup(false);
+    loadSettings(container);
+    attachFormListeners(container);
+  }
+
+  function init(container) {
+    container.innerHTML = renderFormMarkup(true);
+    loadSettings(container);
+    attachFormListeners(container);
+    OpeningHoursManager.init(container.querySelector('#opening-hours-section'));
+    BlockedDatesCalendar.init(container.querySelector('#blocked-dates-section'));
   }
 
   async function loadSettings(container) {
@@ -558,7 +572,7 @@ const SettingsManager = (() => {
     }
   }
 
-  return { init };
+  return { init, initFormOnly };
 })();
 
 function updateTooltip(container) {
