@@ -317,6 +317,7 @@ const OpeningHoursManager = (() => {
   }
 
   function _applyClosedState(row) {
+    const dow = row.dataset.dow;
     const cb = row.querySelector('.oh-closed-cb');
     const openInput = row.querySelector('.oh-open-time');
     const closeInput = row.querySelector('.oh-close-time');
@@ -326,6 +327,14 @@ const OpeningHoursManager = (() => {
     row.querySelectorAll('.oh-time-cell').forEach(cell => {
       cell.style.opacity = isClosed ? '0.4' : '';
     });
+    const card = _container.querySelector(`.oh-card[data-dow="${dow}"]`);
+    if (card) {
+      card.querySelector('.oh-card-closed-cb').checked = isClosed;
+      card.querySelector('.oh-card-open-time').disabled = isClosed;
+      card.querySelector('.oh-card-close-time').disabled = isClosed;
+      const times = card.querySelector('.oh-card-times');
+      if (times) times.style.opacity = isClosed ? '0.4' : '';
+    }
   }
 
   function _buildRows(data) {
@@ -356,6 +365,38 @@ const OpeningHoursManager = (() => {
     }).join('');
   }
 
+  function _buildCards(data) {
+    return DAYS.map(({ label, dow }) => {
+      const entry = data.find(e => e.day_of_week === dow);
+      const isClosed = entry ? !!entry.is_closed : false;
+      const openVal  = (entry && !entry.is_closed && entry.open_time)  ? entry.open_time  : '12:00';
+      const closeVal = (entry && !entry.is_closed && entry.close_time) ? entry.close_time : '22:00';
+      return `
+        <div class="oh-card" data-dow="${dow}">
+          <div class="oh-card-header">
+            <span class="oh-card-day">${label}</span>
+            <div class="oh-closed-label form-group-check">
+              <div class="toggle-switch">
+                <input type="checkbox" id="oh-card-cb-${dow}" class="oh-card-closed-cb" role="switch" ${isClosed ? 'checked' : ''} />
+              </div>
+              <label for="oh-card-cb-${dow}" class="oh-closed-text">Closed</label>
+            </div>
+          </div>
+          <div class="oh-card-times" style="${isClosed ? 'opacity:0.4' : ''}">
+            <div class="oh-card-time-field">
+              <label class="oh-card-time-label">Start</label>
+              <input type="time" class="oh-card-open-time" step="1800" value="${openVal}" ${isClosed ? 'disabled' : ''} />
+            </div>
+            <div class="oh-card-time-field">
+              <label class="oh-card-time-label">End</label>
+              <input type="time" class="oh-card-close-time" step="1800" value="${closeVal}" ${isClosed ? 'disabled' : ''} />
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
   async function _load() {
     try {
       const res = await fetch('/api/admin/opening-hours', {
@@ -370,14 +411,47 @@ const OpeningHoursManager = (() => {
         tbodyEl.innerHTML = _buildRows(data);
         _container.querySelectorAll('.oh-row').forEach(row => _attachRowListeners(row));
       }
+      const cardsEl = _container.querySelector('.oh-cards');
+      if (cardsEl) {
+        cardsEl.innerHTML = _buildCards(data);
+        _container.querySelectorAll('.oh-card').forEach(card => _attachCardListeners(card));
+      }
     } catch {
       _showBanner(_container, 'error', 'Failed to load opening hours.');
     }
   }
 
   function _attachRowListeners(row) {
+    const dow = row.dataset.dow;
     row.querySelector('.oh-closed-cb').addEventListener('change', () => {
       _applyClosedState(row);
+    });
+    row.querySelector('.oh-open-time').addEventListener('change', () => {
+      const card = _container.querySelector(`.oh-card[data-dow="${dow}"]`);
+      if (card) card.querySelector('.oh-card-open-time').value = row.querySelector('.oh-open-time').value;
+    });
+    row.querySelector('.oh-close-time').addEventListener('change', () => {
+      const card = _container.querySelector(`.oh-card[data-dow="${dow}"]`);
+      if (card) card.querySelector('.oh-card-close-time').value = row.querySelector('.oh-close-time').value;
+    });
+  }
+
+  function _attachCardListeners(card) {
+    const dow = card.dataset.dow;
+    card.querySelector('.oh-card-closed-cb').addEventListener('change', () => {
+      const row = _container.querySelector(`.oh-row[data-dow="${dow}"]`);
+      if (row) {
+        row.querySelector('.oh-closed-cb').checked = card.querySelector('.oh-card-closed-cb').checked;
+        _applyClosedState(row);
+      }
+    });
+    card.querySelector('.oh-card-open-time').addEventListener('change', () => {
+      const row = _container.querySelector(`.oh-row[data-dow="${dow}"]`);
+      if (row) row.querySelector('.oh-open-time').value = card.querySelector('.oh-card-open-time').value;
+    });
+    card.querySelector('.oh-card-close-time').addEventListener('change', () => {
+      const row = _container.querySelector(`.oh-row[data-dow="${dow}"]`);
+      if (row) row.querySelector('.oh-close-time').value = card.querySelector('.oh-card-close-time').value;
     });
   }
 
@@ -437,11 +511,13 @@ const OpeningHoursManager = (() => {
         </thead>
         <tbody>${_buildRows([])}</tbody>
       </table>
+      <div class="oh-cards">${_buildCards([])}</div>
       <button type="button" class="btn-primary" id="oh-save-btn">Save Changes</button>
     `;
 
     container.querySelector('#oh-save-btn').addEventListener('click', _save);
     container.querySelectorAll('.oh-row').forEach(row => _attachRowListeners(row));
+    container.querySelectorAll('.oh-card').forEach(card => _attachCardListeners(card));
 
     _load();
   }
@@ -458,7 +534,7 @@ const SettingsManager = (() => {
         <h2>Settings</h2>
         <div id="settings-error" class="alert alert-error" role="alert" aria-live="assertive" aria-hidden="true"></div>
         <div id="settings-success" class="alert alert-success" role="status" aria-live="polite" aria-hidden="true">Settings saved.</div>
-        <form id="settings-form" novalidate>
+        <form id="settings-form" class="form-container" novalidate>
           <div class="form-group">
             <label for="sf-name">Name</label>
             <input type="text" id="sf-name" name="name" required autocomplete="organization" />
@@ -479,7 +555,6 @@ const SettingsManager = (() => {
             </label>
             <input type="number" id="sf-time-window" name="concurrent_guests_time_limit" min="0" />
           </div>
-          <p class="tz-note">Times are in your local timezone.</p>
           <button type="submit" class="btn-primary" id="settings-save-btn">Save settings</button>
         </form>
         ${includeSubsections ? '<div id="opening-hours-section"></div><div id="blocked-dates-section"></div>' : ''}

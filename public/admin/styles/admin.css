@@ -149,6 +149,10 @@ html, body {
 /* ============================================================
    FORM
    ============================================================ */
+.form-container {
+	max-width: 480px;
+}
+
 .form-group {
   margin-bottom: var(--space-5);
 }
@@ -288,7 +292,8 @@ html, body {
   margin-bottom: var(--space-4);
 }
 
-.oh-schedule input[type="time"] {
+.oh-schedule input[type="time"],
+.oh-cards input[type="time"] {
   padding: var(--space-1) var(--space-2);
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius-sm);
@@ -296,10 +301,19 @@ html, body {
   color: var(--foreground-lightest);
   font-size: 0.875rem;
   font-family: inherit;
+}
+
+.oh-schedule input[type="time"] {
   width: 110px;
 }
 
-.oh-schedule input[type="time"]:disabled {
+.oh-cards input[type="time"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.oh-schedule input[type="time"]:disabled,
+.oh-cards input[type="time"]:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
@@ -701,6 +715,52 @@ html, body {
   padding: var(--space-4);
 }
 
+/* ============================================================
+   OPENING HOURS CARDS - mobile (hidden on desktop)
+   ============================================================ */
+.oh-cards {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.oh-card {
+  background: var(--background);
+  border: var(--border-width-md) solid var(--background-light);
+  border-radius: var(--radius-xs);
+  padding: var(--space-4);
+}
+
+.oh-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.oh-card-day {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground-lightest);
+}
+
+.oh-card-times {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.oh-card-time-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--foreground-darker);
+  margin-bottom: var(--space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .card-time-guests {
   display: flex;
   align-items: center;
@@ -1019,7 +1079,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex-direction: row !important;
+  flex-direction: row-reverse;
 }
 
 @supports (transition: all 0.1s linear(1, 1, 1)) {
@@ -1227,6 +1287,14 @@ html, body {
   }
 
   .booking-cards {
+    display: flex;
+  }
+
+  .oh-schedule {
+    display: none;
+  }
+
+  .oh-cards {
     display: flex;
   }
 
