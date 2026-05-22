@@ -14,6 +14,12 @@ Tester on the Maximum Bookings project. Writes Vitest tests, reviews implementat
 
 ## Learnings
 
+- **Reservation cancellation API tests (2026-05-19):** Added `test/reservations-cancel.test.ts` for the cancel-page endpoints.
+  - Uses UUID range `000000001401–000000001599` to avoid collisions with existing spec files
+  - Seeds a far-future reservation (`2099-11-18 18:30`) with non-null `dietary_requirements` so GET assertions exercise the full response shape the cancel page needs
+  - DELETE coverage asserts both success payload (`{ success: true }`) and behavior by following with GET `404 { error: 'Reservation not found' }`
+  - Idempotency is explicit: second DELETE on the same UUID must return `404`, not a second success
+
 - **Admin Dashboard auth + API tests (Phase 8):** Wrote `test/auth.spec.ts` and `test/admin.spec.ts` from spec before Sean's implementation.
   - `hashPassword` imported from `../../src/utils/auth` to generate seeds at test runtime - avoids pre-computing PBKDF2 hashes
   - `signJWT` imported from same module for the expired-token test case (passes `-1` as `expiresInSeconds`)
@@ -51,6 +57,8 @@ Tester on the Maximum Bookings project. Writes Vitest tests, reviews implementat
   - `makeAllOpenHours()` helper generates a 7-entry array (days 0–6, open 12:00–22:00) for PUT body construction; individual tests spread/override specific days for mutation scenarios
   - `is_closed` asserted as integer `1` from GET responses (D1 returns booleans as integers)
   - Suite 3 (tenant public endpoint) tests `opening_hours: null` when no rows exist and an array when rows are present — tests the new field that Sean needs to add to the GET /api/tenants/:id response
+
+- **manage-booking review and test coverage (2026-05-21):** Reviewed Sean's `GET /api/tenants/:id` UUID/tenant_code change and Twinkie's `manage-booking.js`. Both approved. No blocking issues found. Key review notes: `state.view` is dead state (no functional impact); `dietary_requirements` sends `''` on clear; all fetch callsites wrapped in try/catch; full `escapeHtml()` coverage verified — no XSS vulnerabilities; minimum party size of 2 matches `booking-form.js` (consistent design). Two new test cases added to `test/index.spec.ts`: returns tenant by tenant_code; 404 for unknown tenant_code. `seedTenant` in `index.spec.ts` updated to include `tenant_code`. Extended `test/reservations-edit.test.ts` with PATCH availability scenarios: open future date (pass), full-day blocked date (reject), closed day from OpeningHours (reject), non-date field edit on valid date (pass). Test execution rejected with `No, ignore tests`.
 
 ### Original Learnings
 

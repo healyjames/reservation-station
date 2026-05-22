@@ -11,7 +11,11 @@ tenants.get('/', async (c) => {
 
 tenants.get('/:id', async (c) => {
 	const id = c.req.param('id');
-	const tenant = await c.env.maximum_bookings_db.prepare('SELECT * FROM Tenants WHERE tenant_code = ?').bind(id).first<Tenant>();
+	const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+	const tenant = await c.env.maximum_bookings_db
+		.prepare(isUuid ? 'SELECT * FROM Tenants WHERE id = ?' : 'SELECT * FROM Tenants WHERE tenant_code = ?')
+		.bind(id)
+		.first<Tenant>();
 
 	if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
 
