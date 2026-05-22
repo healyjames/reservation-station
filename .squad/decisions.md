@@ -167,6 +167,58 @@
 **What:** Created `test/opening-hours.spec.ts` with 19 tests across 5 suites: (1) `GET /api/admin/opening-hours` — 401 guard, empty state, ordered results; (2) `PUT /api/admin/opening-hours` — 401 guard, body-length validation, missing-time validation, save 7 days, replace on second PUT, closed day null times; (3) `GET /api/tenants/:tenant_code` — `opening_hours: null` when unconfigured, array when configured; (4) `GET /api/reservations/blocked-dates` — empty state, closed DOW dates included, union with explicit blocked dates, tenant isolation; (5) `GET /api/reservations/blocked-times` — all slots blocked for closed day, no extra blocks for open day, backward compat when no rows. UUID ranges: tenants `000000001001–000000001002`, admin user `000000001101`, opening hours rows `000000001200–000000001206`, blocked date `000000001300`. January 2099: starts Thursday (DOW 4); Sundays (0) on 5, 12, 19, 26; Mondays (1) on 6, 13, 20, 27. `clearDb` wraps `DELETE FROM OpeningHours` and `DELETE FROM BlockedDates` in `.catch(() => {})`. Suite 5 uses `max_guests: 0` (unlimited) to isolate from capacity logic. `is_closed` asserted as integer `1` from GET (D1 returns booleans as integers). `makeAllOpenHours()` helper generates 7-entry array (days 0–6, open 12:00–22:00) for PUT body construction.
 **Why:** Tests written ahead of implementation to define the contract. Closed-day behaviour observable via both `blocked-dates` (date string) and `blocked-times` (20 slots). Open-day slot-window constraint not directly testable via `blocked-times` (out-of-window slots never generated, not marked blocked) — Suite 5 focuses on observable: closed-day full-block and no-op for open days.
 
+### 2026-05-21: manage-booking page rename from cancel
+**By:** Twinkie (Frontend Dev)
+**What:** Rename the standalone public booking management entrypoint from `public/cancel.html` / `public/js/cancel.js` to `public/manage-booking.html` / `public/js/manage-booking.js`, while keeping the current in-place edit-and-cancel experience unchanged.
+**Why:** The page now handles both editing and cancellation, so the URL and asset names should describe the broader purpose. Matching the file names to the UI wording reduces confusion when linking to the page from future emails or docs.
+**Notes:** Keep the existing `#cancel-app` mount id for now so the rename stays path-focused and does not force unrelated JS/template churn. Preserve the current standalone shared-style approach in `public/shared.css`.
+
+### 2026-05-21: manage-booking.js module architecture
+**By:** Twinkie (Frontend Dev)
+**What:** `public/js/manage-booking.js` is a self-contained ES module that owns the full booking management UX at `/booking/manage/`. Renders into `#cancel-app` exclusively via imperative `.innerHTML` assignment followed by event listener attachment — no virtual DOM, no framework. Single module-scoped `state` object drives all rendering. Explicit views: `loading`, `error`, `overview`, `edit-details`, `change-datetime`, `cancel-confirm`, `success-edit`, `success-cancel`. Calendar reuse: imports `renderCalendarGrid` and `MONTHS` from `./calendar-core.js`. Slot generation functions (`generateSlots`, `getSlotsForDate`, `isToday`, `getEarliestTodaySlot`, `getAvailableSlots`) inlined with explicit `tenantConfig` parameter rather than importing from `booking-form.js` (which consumes a module-singleton). `state.editData` updated from live form values before each PATCH attempt so re-render after failure shows what the user typed. `loadTenant` is non-fatal; null `state.tenantConfig` allowed; `getSlotsForDate` falls back to `generateSlots('12:00', '22:00')`.
+**Why:** Manage-booking is a distinct entry point with different context from `booking-form.js`. Explicit `tenantConfig` parameter makes slot helpers pure functions easier to reason about in a multi-view state machine.
+
+### 2026-05-21: manage-booking calendar — blocked-day parity (superseded)
+**By:** Twinkie (Frontend Dev)
+**What:** Keep `/booking/manage/` on the shared `renderCalendarGrid` core instead of duplicating the homepage calendar, and make its Step 1 date picker match the homepage's blocked-day behaviour. Fetch blocked dates using the resolved tenant id. Blocked and closed days should stay striped, disabled, and show the same tooltip copy as the homepage calendar. Keep the existing `dp-day` / `dp-day-name` class structure in `public/shared.css`.
+**Notes:** Superseded by the calendar rework decision below.
+
+### 2026-05-21: manage-booking calendar — createCalendar factory proposal (superseded)
+**By:** Twinkie (Frontend Dev)
+**What:** Refactor `public/js/calendar.js` into a reusable `createCalendar(containerEl, options)` factory and make manage-booking Step 1 mount that same public calendar. Keep backward-compatible auto-init IIFE in `calendar.js` guarded so importing it on non-homepage pages does nothing. `public/shared.css` aliases the public widget's `.calendar-day` / `.day-name` selectors to existing standalone date-picker styling.
+**Why:** Reusing the same tooltip, blocked-date fetch, and month-navigation logic cuts frontend maintenance and keeps booking/edit flows visually consistent.
+**Notes:** Superseded by the calendar rework decision below.
+
+### 2026-05-21: manage-booking calendar — final approach (stop rebuilding on selection)
+**By:** Twinkie (Frontend Dev)
+**What:** Keep `/booking/manage/` Step 1 on the shared homepage calendar contract, but stop rebuilding the calendar on date selection. `public/js/calendar.js` caches unavailable dates per `YYYY-MM` inside each calendar instance so month re-renders reuse the same blocked set. `public/js/manage-booking.js` updates only the selected-date label, helper text, and Next button when availability or selection changes. `public/shared.css` already contains the calendar container, nav, grid, and blocked-day styles — no extra stylesheet link needed. The manage-page host renders `role="region"` on `#edit-calendar-host` to match the homepage accessibility structure.
+
+### 2026-05-21: manage-booking unavailable dates
+**By:** Twinkie (Frontend Dev)
+**What:** Treat manage-booking unavailable dates exactly like the main widget: build the month's unavailable set from both `/api/reservations/blocked-dates` and tenant `opening_hours`; feed that same data into the shared calendar renderer for blocked styling/tooltips; block the edit flow from advancing when the currently selected date is unavailable.
+**Files:** `public/js/calendar.js`, `public/js/manage-booking.js`
+
+### 2026-05-21: GET /api/tenants/:id accepts UUID or tenant_code
+**By:** Sean (Backend Dev)
+**What:** `GET /api/tenants/:id` now accepts either a UUID or a `tenant_code` slug as the `:id` parameter. Detection uses `/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i`. When matched, the query uses `WHERE id = ?`; otherwise it falls back to `WHERE tenant_code = ?`. Response shape is unchanged: full tenant row plus `opening_hours` array (or null).
+**Why:** The manage-booking page holds a `tenant_id` UUID from the reservation record, not a `tenant_code`. The endpoint needed to serve both the embeddable widget (which uses `tenant_code`) and the manage-booking flow (which uses UUID).
+**Notes:** A `tenant_code` that coincidentally matches the UUID regex would be routed to the UUID branch and return 404. Theoretical collision only — in practice tenant codes are short slugs. Acceptable risk.
+
+### 2026-05-21: Booking update availability validation (proposed)
+**By:** Sean (Backend Dev)
+**What:** Extract a shared reservation-availability validator in `src/routes/reservations.ts` and use it for both public reservation creation and public reservation edits. The public `PATCH /api/reservations/:id` route was updating rows without checking blocked dates or closed days. PATCH must load the existing reservation first so validation can use the reservation tenant and exclude the current reservation from capacity checks. Non-availability edits (name, phone, dietary requirements) should still save without revalidating the unchanged booking slot. Validator should cover: full-day blocks, closed days, opening-hours slot range, partial blocked times, max covers, and concurrent guest limits. Validation failures return the existing public error field.
+**Why:** Manage-booking users could move a reservation onto an unavailable date. Reusing one validator keeps POST and PATCH aligned on tenant-aware booking rules without duplicating date logic.
+**Status:** Proposed — not yet implemented.
+
+### 2026-05-21: manage-booking page review — approved
+**By:** Neela (Tester)
+**What:** Reviewed Sean's `GET /api/tenants/:id` UUID/tenant_code change and Twinkie's `manage-booking.js`. Both approved. UUID regex correct and complete including `/i` flag. State machine covers all 8 views cleanly. Calendar reuse verified: `renderCalendarGrid`, blocked dates, opening hours, tooltip all match main widget. `getAvailableSlots` / today filtering logic correct. Edit details form uses `checkValidity()` + `reportValidity()`. `dietary_requirements` sends `''` on clear. All six fetch callsites wrapped in try/catch. XSS review: all API data passes through `escapeHtml()` — no vulnerabilities found. `state.view` noted as dead state (no functional impact). Minimum party size of 2 matches `booking-form.js` — consistent design decision, not a bug. Tenant_code matching UUID regex is theoretical-only acceptable risk.
+**What (tests):** Two new test cases added to `test/index.spec.ts`: returns tenant by tenant_code; 404 for unknown tenant_code. `seedTenant` in that file updated to include `tenant_code`. Existing tests unaffected.
+
+### 2026-05-21: manage-booking PATCH test coverage
+**By:** Neela (Tester)
+**What:** Extended `test/reservations-edit.test.ts` with: passing-path coverage for updating to an open future date (`2099-11-19`); rejection-path coverage for updating to a full-day blocked date; rejection-path for updating to a closed day from `OpeningHours`; regression coverage that non-date field edits still succeed when reservation remains on a valid date. `seedBlockedDate()` helper added. `clearDb()` extended to include `BlockedDates` cleanup. Past-date PATCH coverage not added — reservation creation contract does not currently reject past dates; parity unclear until that rule exists. Test execution rejected by environment with `No, ignore tests`.
+
 ## Governance
 
 - All meaningful changes require team consensus

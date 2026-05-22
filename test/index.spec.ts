@@ -6,16 +6,18 @@ import { describe, it, expect, beforeEach } from 'vitest';
 const TENANT_ID = '00000000-0000-4000-8000-000000000001';
 const TENANT_ID_2 = '00000000-0000-4000-8000-000000000002';
 const RES_ID = '00000000-0000-4000-8000-000000000010';
+const TENANT_CODE = 'test-restaurant';
 
 async function seedTenant(overrides: Record<string, unknown> = {}) {
 	await env.maximum_bookings_db
 		.prepare(
-			`INSERT OR REPLACE INTO Tenants (id, name, max_guests, max_covers, status, concurrent_guests_time_limit)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+			`INSERT OR REPLACE INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		)
 		.bind(
 			overrides.id ?? TENANT_ID,
 			overrides.name ?? 'Test Restaurant',
+			overrides.tenant_code ?? TENANT_CODE,
 			overrides.max_guests ?? 50,
 			overrides.max_covers ?? 20,
 			overrides.status ?? 'active',
@@ -91,6 +93,20 @@ describe('Tenants', () => {
 
 		it('returns 404 for unknown id', async () => {
 			const res = await exports.default.fetch(`http://localhost/api/tenants/00000000-0000-4000-8000-999999999999`);
+			expect(res.status).toBe(404);
+		});
+
+		it('returns a tenant by tenant_code', async () => {
+			await seedTenant();
+			const res = await exports.default.fetch(`http://localhost/api/tenants/${TENANT_CODE}`);
+			const body = (await res.json()) as any;
+			expect(res.status).toBe(200);
+			expect(body.id).toBe(TENANT_ID);
+			expect(body.opening_hours).toBeNull();
+		});
+
+		it('returns 404 for unknown tenant_code', async () => {
+			const res = await exports.default.fetch('http://localhost/api/tenants/no-such-venue');
 			expect(res.status).toBe(404);
 		});
 	});

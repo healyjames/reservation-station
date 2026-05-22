@@ -58,6 +58,8 @@ Tester on the Maximum Bookings project. Writes Vitest tests, reviews implementat
   - `is_closed` asserted as integer `1` from GET responses (D1 returns booleans as integers)
   - Suite 3 (tenant public endpoint) tests `opening_hours: null` when no rows exist and an array when rows are present — tests the new field that Sean needs to add to the GET /api/tenants/:id response
 
+- **manage-booking review and test coverage (2026-05-21):** Reviewed Sean's `GET /api/tenants/:id` UUID/tenant_code change and Twinkie's `manage-booking.js`. Both approved. No blocking issues found. Key review notes: `state.view` is dead state (no functional impact); `dietary_requirements` sends `''` on clear; all fetch callsites wrapped in try/catch; full `escapeHtml()` coverage verified — no XSS vulnerabilities; minimum party size of 2 matches `booking-form.js` (consistent design). Two new test cases added to `test/index.spec.ts`: returns tenant by tenant_code; 404 for unknown tenant_code. `seedTenant` in `index.spec.ts` updated to include `tenant_code`. Extended `test/reservations-edit.test.ts` with PATCH availability scenarios: open future date (pass), full-day blocked date (reject), closed day from OpeningHours (reject), non-date field edit on valid date (pass). Test execution rejected with `No, ignore tests`.
+
 ### Original Learnings
 
 - Project kickoff: 2026-04-01
