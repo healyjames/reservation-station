@@ -33,6 +33,17 @@ Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget
 
 ## Learnings
 
+### Phase 2 shared utilities — types + utils extraction (2026-05-23)
+
+**Created:** All Phase 2 files under `src/frontend/shared/` — types barrel, utils barrel, `vitest.frontend.config.ts`, and `slots.test.ts` (12/12 passing).
+
+**Key divergences and decisions:**
+- `manage-booking.js` `getSlotsForDate` is more defensive than the `booking-form.js` copy — canonical uses manage-booking approach: explicit `tenantConfig` param, null-check on `open_time`/`close_time`, `Number()` coercion on `day_of_week`
+- `is_closed` comes from D1 as `0`/`1` integers, not booleans — canonical handles both (`boolean | 0 | 1` type, truthy check in `getSlotsForDate`)
+- `escapeHtml` in `formatting.ts` is explicitly `@deprecated` — must be deleted once all surfaces migrate to JSX
+- `vitest.frontend.config.ts` uses `environment: 'node'` (not jsdom) — utils are pure functions, no DOM needed
+- `isToday` intentionally duplicated between `slots.ts` (private, unexported) and `dates.ts` (exported) to keep `slots.ts` self-contained without a circular-ish intra-utils import
+
 ### Settings hash routing + accordion sidebar (2026-05-19)
 
 **Changed:** Split `settings.html` into hash-routed sub-views with an accordion sub-navigation in the sidebar.

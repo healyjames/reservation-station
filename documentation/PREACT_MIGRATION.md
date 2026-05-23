@@ -1122,16 +1122,16 @@ Auth mechanism (Bearer JWT from localStorage) is framework-agnostic — no backe
 **Files to build:**
 
 *Types — `src/frontend/shared/types/`:*
-- [ ] `calendar.ts` — `CalendarDate`, `MONTHS`, `DAY_NAMES`
-- [ ] `tenant.ts` — `TenantConfig`, `OpeningHoursEntry`, `ThemeName`, `ThemeMode`
-- [ ] `reservation.ts` — `Reservation`
-- [ ] `index.ts` — re-export barrel
+- [x] `calendar.ts` — `CalendarDate`, `MONTHS`, `DAY_NAMES`
+- [x] `tenant.ts` — `TenantConfig`, `OpeningHoursEntry`, `ThemeName`, `ThemeMode`
+- [x] `reservation.ts` — `Reservation`
+- [x] `index.ts` — re-export barrel
 
 *Utils — `src/frontend/shared/utils/`:*
-- [ ] `slots.ts` — single canonical `generateSlots` / `getSlotsForDate`; replaces 3 vanilla copies
-- [ ] `dates.ts` — `formatDate*`, `isToday`, `parseYYYYMMDD`
-- [ ] `formatting.ts` — string helpers; note `escapeHtml` becomes unnecessary once JSX is in use, include as shim until vanilla files are deleted
-- [ ] `index.ts` — re-export barrel
+- [x] `slots.ts` — single canonical `generateSlots` / `getSlotsForDate`; replaces 3 vanilla copies
+- [x] `dates.ts` — `formatDate*`, `isToday`, `parseYYYYMMDD`
+- [x] `formatting.ts` — string helpers; note `escapeHtml` becomes unnecessary once JSX is in use, include as shim until vanilla files are deleted
+- [x] `index.ts` — re-export barrel
 
 **Dependencies:** Phase 1 complete (tsconfig + Vite config in place so imports resolve).
 
