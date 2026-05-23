@@ -1,0 +1,70 @@
+/* CalendarGrid layout — also provides all DayCell state styles.
+   DayCell receives this module object as the `styles` prop instead of importing it directly. */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-2);
+}
+
+.dayName {
+  text-align: center;
+  font-weight: 600;
+  padding: var(--space-3) 0;
+  color: var(--foreground);
+  opacity: 0.6;
+  font-size: 0.875rem;
+}
+
+.empty {
+  aspect-ratio: 1;
+}
+
+.day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--border-width-md) solid var(--background-darker);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--foreground-lightest);
+  transition: background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+
+.day:hover:not(.past):not(.blocked) {
+  background: var(--background-light);
+  border-color: var(--primary);
+}
+
+.today {
+  border-color: var(--primary-lighter);
+  color: var(--primary-lighter);
+  font-weight: 700;
+}
+
+.past {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.selected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  font-weight: 700;
+}
+
+.blocked {
+  background: var(--error-light);
+  border-color: var(--error);
+  color: var(--error-dark);
+  cursor: pointer; /* still clickable to show tooltip */
+}
+
+.day:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}

@@ -1,0 +1,49 @@
+.tooltip {
+  background: var(--background-darkest);
+  border: var(--border-width) solid var(--background-lighter);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  max-width: 200px;
+}
+
+.content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.message {
+  color: var(--foreground-lightest);
+  font-size: 0.875rem;
+  flex: 1;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--foreground-lightest);
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.75rem;
+  line-height: 1;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  opacity: 1;
+}
+
+/* Triangle arrow pointing down, centered below tooltip */
+.arrow {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--background-darkest);
+}

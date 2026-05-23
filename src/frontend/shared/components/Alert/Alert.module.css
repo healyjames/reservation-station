@@ -1,0 +1,29 @@
+.alert {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  border-width: var(--border-width);
+  border-style: solid;
+}
+
+.hidden {
+  display: none;
+}
+
+.error {
+  background-color: var(--error-light);
+  color: var(--error-dark);
+  border-color: var(--error);
+}
+
+.info {
+  background-color: var(--info-light);
+  color: var(--info-dark);
+  border-color: var(--info);
+}
+
+.success {
+  background-color: var(--success-light);
+  color: var(--success-dark);
+  border-color: var(--success);
+}

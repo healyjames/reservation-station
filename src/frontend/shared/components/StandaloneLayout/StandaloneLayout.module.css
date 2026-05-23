@@ -1,0 +1,11 @@
+.layout {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: var(--space-6);
+}
+
+.title {
+  margin-top: 0;
+  margin-bottom: var(--space-6);
+  font-size: 1.5rem;
+}

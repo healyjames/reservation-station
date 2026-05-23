@@ -1,0 +1,39 @@
+.card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: var(--border-width) solid;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+}
+
+.header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.body {
+  padding: var(--space-4) var(--space-5);
+}
+
+.success {
+  border-color: var(--success);
+}
+
+.successHeader {
+  background-color: var(--success-light);
+  color: var(--success-dark);
+}
+
+.error {
+  border-color: var(--error);
+}
+
+.errorHeader {
+  background-color: var(--error-light);
+  color: var(--error-dark);
+}

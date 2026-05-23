@@ -33,6 +33,30 @@ Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget
 
 ## Learnings
 
+### Phase 3 Layers A/B/C/E — 12 shared Preact components — patterns (2026-05-23)
+
+**Modal jsdom showModal() guard:** jsdom does not implement `HTMLDialogElement.showModal()` or `.close()`. Both calls are guarded with `typeof dialog.showModal === 'function'`. Modal renders safely in the test environment without this check triggering errors.
+
+**ToggleSwitch `data-checked` strategy (reinforced):** `data-checked` on the wrapper `<label>` is the correct pattern. `:has(input:checked)` works in production Vite but is unreliable in jsdom. Do not switch to `:has`.
+
+**Disabled element jsdom bypass:** `fireEvent.click` from `@testing-library` dispatches click/change events even on disabled form elements — real browsers do not. Always add an explicit `if (disabled) return` guard inside Button `onClick` and ToggleSwitch `onChange`.
+
+**BookingDetailsList uses global classes:** No CSS Module. Renders `.details-list` / `.detail-row` from `public/shared.css`. This is intentional — do not add a CSS Module to this component without migrating the class names across all consumers first.
+
+### Phase 3 Layers A/B/C/E — 12 shared Preact components (2026-05-23)
+
+**@keyframes in CSS Modules:** Defined `@keyframes spin` at the top level of `Spinner.module.css`. Vite's CSS Modules implementation locally-scopes `@keyframes` names by default (mangling them), so there is no global name collision risk. No `:local()` wrapper required.
+
+**ToggleSwitch CSS strategy:** Used `data-checked` attribute on the wrapper `<label>` element driven by the `checked` prop, rather than `:has(input:checked)`. The `[data-checked="true"] .track` and `[data-checked="true"] .thumb` selectors work reliably within CSS Modules scope because the attribute selector operates on the scoped class wrapper. `:has(input:checked)` would also work in production Vite but is less reliable in test environments.
+
+**@testing-library/preact:** Was NOT installed prior to this phase — had to `npm install --save-dev @testing-library/preact jsdom`.
+
+**Modal / createPortal gotchas:** jsdom does not implement `HTMLDialogElement.showModal()` or `.close()`. Guarded both calls with `typeof dialog.showModal === 'function'` checks so the Modal renders safely in the test environment. createPortal into `document.body` works fine in jsdom — no issues with the portal target.
+
+**Disabled element event bypass in jsdom:** `fireEvent.click` from `@testing-library` bypasses the browser's disabled-element behavior (real browsers don't dispatch click/change events on disabled form elements, but `fireEvent` does). Fixed by adding explicit disabled guards inside the Button `onClick` handler and ToggleSwitch `onChange` handler.
+
+**BookingDetailsList — no CSS Module:** This component intentionally uses no CSS Module. It renders global `.details-list` / `.detail-row` class names from `public/shared.css`. Documented with a comment in the file.
+
 ### Phase 2 shared utilities — types + utils extraction (2026-05-23)
 
 **Created:** All Phase 2 files under `src/frontend/shared/` — types barrel, utils barrel, `vitest.frontend.config.ts`, and `slots.test.ts` (12/12 passing).

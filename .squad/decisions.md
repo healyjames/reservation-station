@@ -279,6 +279,27 @@
 **What:** Zero changes to API routes, D1 schema, or auth mechanism for the Preact migration. Auth (Bearer JWT from localStorage) is framework-agnostic. CORS (`cors()` wildcard) is unchanged — same-origin deployment means CORS is not enforced. Optional CORS hardening (explicit `allowHeaders: ['Authorization', 'Content-Type']`) is low-priority. All API calls use relative paths (`/api/...`) — no `VITE_API_BASE_URL` env var needed for same-origin deployment.  
 **Why:** The clean JSON-only API surface means the frontend rewrite is a pure frontend concern. Backend is fully ready for Preact migration without any route, schema, or auth changes.
 
+### 2026-05-23: Phase 3 Layers A/B/C/E components complete
+**By:** Twinkie (via Coordinator)
+**What:** 12 shared Preact components built in `src/frontend/shared/components/`:
+- Layer A (Form primitives): Button, Input, Select, Textarea, FormField
+- Layer B (Feedback & status): Spinner, Alert, MessageCard
+- Layer C (Layout & overlay): Modal, StandaloneLayout, BookingDetailsList
+- Layer E (Admin toggle): ToggleSwitch
+
+ToggleSwitch uses `data-checked` attribute strategy on the wrapper element (not `:has(input:checked)`) for reliable CSS Modules scoping and test environment compatibility.
+
+Tests use `// @vitest-environment jsdom` file-level annotation. `@testing-library/preact` and `jsdom` were installed as devDependencies. Two jsdom behavior notes: `showModal()` not implemented in jsdom — guarded in Modal component; `fireEvent.click` bypasses disabled on form elements — guarded in Button and ToggleSwitch handlers.
+
+Barrel `src/frontend/shared/components/index.ts` updated to include all Layer A/B/C/E exports alongside Han's existing Layer D exports.
+
+**Why:** Phase 3 execution — shared component library for Phases 4–7.
+
+### 2026-05-23: Phase 3 Layer D calendar components complete
+**By:** Han (via Coordinator)
+**What:** 5 calendar/domain Preact components built: Badge, SelectedDateInfo, DayCell, BlockedTooltip, CalendarGrid. DayCell uses style-injection pattern (receives CalendarGrid's CSS module object as prop). CalendarGrid is a direct Preact port of calendar-core.js — calendar-core.js MUST remain in public/js/ until Phase 7.
+**Why:** Phase 3 execution — shared component library for Phases 4-7.
+
 ## Directives
 
 ### 2026-05-23T07-31-02: User directive

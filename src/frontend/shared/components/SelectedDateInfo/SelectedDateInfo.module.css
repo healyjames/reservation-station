@@ -1,0 +1,34 @@
+.container {
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--background-darker);
+  border-radius: var(--radius-md);
+  background: var(--background);
+}
+
+.label {
+  color: var(--foreground);
+  opacity: 0.7;
+  font-size: 0.875rem;
+  margin-bottom: var(--space-1);
+}
+
+.value {
+  color: var(--foreground-lightest);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.changeBtn {
+  display: inline-block;
+  margin-top: var(--space-2);
+  background: none;
+  border: none;
+  color: var(--primary-lighter);
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.875rem;
+}
+
+.changeBtn:hover {
+  text-decoration: underline;
+}

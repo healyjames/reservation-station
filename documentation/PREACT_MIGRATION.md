@@ -1149,57 +1149,57 @@ Auth mechanism (Bearer JWT from localStorage) is framework-agnostic — no backe
 
 **Layer A — Form primitives** *(no Preact dependencies other than JSX itself)*
 
-- [ ] `Button/Button.tsx` + `Button.module.css` + `index.ts`
+- [x] `Button/Button.tsx` + `Button.module.css` + `index.ts`
   - 6 variants: `primary`, `secondary`, `danger`, `ghost`, `action-edit`, `action-delete`
   - `isLoading` shows inline `Spinner`, disables pointer events; `fullWidth` and `size` props
-- [ ] `Input/Input.tsx` + `Input.module.css` + `index.ts`
+- [x] `Input/Input.tsx` + `Input.module.css` + `index.ts`
   - 8 `type` values; `error` + `hint` display below field; `ariaInvalid` for admin login error state
-- [ ] `Select/Select.tsx` + `Select.module.css` + `index.ts`
+- [x] `Select/Select.tsx` + `Select.module.css` + `index.ts`
   - Typed `SelectOption[]` list; `error` display
-- [ ] `Textarea/Textarea.tsx` + `Textarea.module.css` + `index.ts`
+- [x] `Textarea/Textarea.tsx` + `Textarea.module.css` + `index.ts`
   - `rows` default 3; `maxLength`; `hint`
-- [ ] `FormField/FormField.tsx` + `FormField.module.css` + `index.ts`
+- [x] `FormField/FormField.tsx` + `FormField.module.css` + `index.ts`
   - `label` + `error` wrapper; `children` accepts any control; `htmlFor` links label
 
 **Layer B — Feedback & status**
 
-- [ ] `Spinner/Spinner.tsx` + `Spinner.module.css` + `index.ts`
+- [x] `Spinner/Spinner.tsx` + `Spinner.module.css` + `index.ts`
   - `sm` (18px) / `md` (28px) sizes; `@keyframes spin` must be scoped to module to avoid global name collision
-- [ ] `Alert/Alert.tsx` + `Alert.module.css` + `index.ts`
+- [x] `Alert/Alert.tsx` + `Alert.module.css` + `index.ts`
   - `error` / `info` / `success` variants; `visible=false` → `aria-hidden="true"` + `display:none`; `ariaLive` prop (`assertive` for auth errors)
-- [ ] `MessageCard/MessageCard.tsx` + `MessageCard.module.css` + `index.ts`
+- [x] `MessageCard/MessageCard.tsx` + `MessageCard.module.css` + `index.ts`
   - `success` / `error` card; used in every surface for booking confirmation and error states
 
 **Layer C — Layout & overlay**
 
-- [ ] `Modal/Modal.tsx` + `Modal.module.css` + `index.ts`
+- [x] `Modal/Modal.tsx` + `Modal.module.css` + `index.ts`
   - `<dialog>`-based Preact portal; `::backdrop` pseudo-element works with CSS Modules on the root `.booking-modal` class; focus trap on open; `Escape` key calls `onClose`; `footer` slot for action buttons
-- [ ] `StandaloneLayout/StandaloneLayout.tsx` + `StandaloneLayout.module.css` + `index.ts`
+- [x] `StandaloneLayout/StandaloneLayout.tsx` + `StandaloneLayout.module.css` + `index.ts`
   - Page-level layout wrapper for cancel and manage-booking standalone pages
-- [ ] `BookingDetailsList/BookingDetailsList.tsx` + `index.ts`
+- [x] `BookingDetailsList/BookingDetailsList.tsx` + `index.ts`
   - Uses `shared.css` `.details-list` / `.detail-row` tokens — **no CSS Module needed**; document this explicitly so future contributors don't add one unnecessarily
 
 **Layer D — Domain & calendar**
 
-- [ ] `Badge/Badge.tsx` + `Badge.module.css` + `index.ts`
+- [x] `Badge/Badge.tsx` + `Badge.module.css` + `index.ts`
   - `default` / `primary` / `today` variants; used for guest-count pills and "today" date labels in admin
-- [ ] `SelectedDateInfo/SelectedDateInfo.tsx` + `SelectedDateInfo.module.css` + `index.ts`
+- [x] `SelectedDateInfo/SelectedDateInfo.tsx` + `SelectedDateInfo.module.css` + `index.ts`
   - Displays selected `CalendarDate`; renders "Change date" ghost button only when `onChangeDate` prop is provided
-- [ ] `DayCell/DayCell.tsx` + `index.ts`
+- [x] `DayCell/DayCell.tsx` + `index.ts`
   - Internal to `CalendarGrid` — styles live in `CalendarGrid.module.css`, not a separate module
-- [ ] `BlockedTooltip/BlockedTooltip.tsx` + `BlockedTooltip.module.css` + `index.ts`
+- [x] `BlockedTooltip/BlockedTooltip.tsx` + `BlockedTooltip.module.css` + `index.ts`
   - `top` / `left` positioning via inline styles from `anchorRect`; visual chrome (border, bg, shadow) in CSS Module; renders as a portal above the calendar
-- [ ] `CalendarGrid/CalendarGrid.tsx` + `CalendarGrid.module.css` + `index.ts`
+- [x] `CalendarGrid/CalendarGrid.tsx` + `CalendarGrid.module.css` + `index.ts`
   - The pivotal shared component; renders month grid using `DayCell`; drives widget step 1, manage-booking change-datetime, and admin date pickers + blocked-dates settings
 
 **Layer E — Admin toggle** *(higher risk; admin-only use)*
 
-- [ ] `ToggleSwitch/ToggleSwitch.tsx` + `ToggleSwitch.module.css` + `index.ts`
+- [x] `ToggleSwitch/ToggleSwitch.tsx` + `ToggleSwitch.module.css` + `index.ts`
   - Fully controlled component: `checked` prop in, `onChange` out; no internal state
-  - CSS Module uses `:has(input:checked)` to style the track — verify this works in a scoped context before wiring to all 8 call sites
+  - Uses `data-checked` attribute strategy (not `:has(input:checked)`) — more reliable across CSS Modules scoping
 
 **Shared barrel:**
-- [ ] `src/frontend/shared/components/index.ts` — re-exports all components
+- [x] `src/frontend/shared/components/index.ts` — re-exports all components
 
 **Per-component file checklist:** `ComponentName.tsx`, `ComponentName.module.css` (where applicable), `index.ts`, `ComponentName.test.tsx`
 

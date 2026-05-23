@@ -1,0 +1,23 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.default {
+  background: var(--background-light);
+  color: var(--foreground);
+}
+
+.primary {
+  background: var(--primary-darkest);
+  color: var(--primary-lighter);
+}
+
+.today {
+  background: var(--primary);
+  color: white;
+}
