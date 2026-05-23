@@ -1,0 +1,36 @@
+import { defineConfig } from 'vite'
+import preact from '@preact/preset-vite'
+import { resolve } from 'path'
+
+export default defineConfig({
+  plugins: [preact()],
+
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        'booking-widget': resolve(__dirname, 'src/frontend/booking-widget/index.html'),
+        'manage-booking': resolve(__dirname, 'src/frontend/manage-booking/index.html'),
+        'admin': resolve(__dirname, 'src/frontend/admin/index.html'),
+      },
+    },
+  },
+
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8787',
+        changeOrigin: true,
+      },
+    },
+  },
+
+  resolve: {
+    alias: {
+      '@frontend': resolve(__dirname, 'src/frontend'),
+      '@shared': resolve(__dirname, 'src/frontend/shared'),
+    },
+  },
+})

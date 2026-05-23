@@ -1099,11 +1099,11 @@ Auth mechanism (Bearer JWT from localStorage) is framework-agnostic — no backe
 **Files to touch:**
 
 - [x] Install `vite`, `@preact/preset-vite`, `preact`, `@preact/signals`, `vitest`, `@preact/testing-library`
-- [ ] `vite.config.ts` — 4 entry points: `booking-widget`, `cancel`, `manage-booking`, `admin`
-- [ ] `tsconfig.frontend.json` — separate from root Worker tsconfig; `"jsx": "react-jsx"`, `"jsxImportSource": "preact"`
-- [ ] `wrangler.jsonc` — update assets directory to point at `dist/`
-- [ ] `package.json` — `dev` (concurrently runs `wrangler dev` + `vite dev`), `build`, `test:frontend` scripts
-- [ ] `.gitignore` — add `dist/`
+- [x] `vite.config.ts` — 4 entry points: `booking-widget`, `cancel`, `manage-booking`, `admin`
+- [x] `tsconfig.frontend.json` — separate from root Worker tsconfig; `"jsx": "react-jsx"`, `"jsxImportSource": "preact"`
+- [x] `wrangler.jsonc` — update assets directory to point at `dist/`
+- [x] `package.json` — `dev` (concurrently runs `wrangler dev` + `vite dev`), `build`, `test:frontend` scripts
+- [x] `.gitignore` — add `dist/`
 
 **Dependencies:** None. Vanilla JS stays fully working throughout this phase.
 

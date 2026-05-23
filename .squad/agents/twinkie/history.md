@@ -58,6 +58,18 @@ Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget
 - Date formatting: `new Date(YYYY-MM-DD + 'T12:00:00Z')` with `timeZone: 'UTC'` to avoid timezone drift
 - Delete flow: single-click, destructive button swaps to `Cancelling...`, disables during request, replaces card with success or re-renders with inline error
 
+### Phase 1 infrastructure — Vite + tsconfig.frontend (2026-05-23)
+
+**Created:** `vite.config.ts` and `tsconfig.frontend.json` as the frontend build foundation for the Preact migration.
+
+**Key decisions locked in:**
+- `@preact/preset-vite` plugin; multi-entry build: `booking-widget`, `manage-booking`, `admin` all under `src/frontend/`
+- Output dir `dist/` — consumed by Wrangler `assets.directory`
+- Dev server port `5173`; `/api` proxied to `localhost:8787` for same-origin API calls during dev
+- Path aliases `@frontend` → `src/frontend/`, `@shared` → `src/frontend/shared/` — must stay in sync with `tsconfig.frontend.json` paths
+- `tsconfig.frontend.json` uses `moduleResolution: Bundler` (not Node) — required for Vite; `jsxImportSource: preact` for automatic JSX runtime; `noEmit: true` (Vite emits, tsc type-checks only)
+- `tsconfig.frontend.json` scoped to `src/frontend/**` — does not overlap with the worker `tsconfig.json`
+
 ### manage-booking.js — booking management page (2026-05-21)
 
 **Added:** `public/js/manage-booking.js` — self-contained ES module (~390 lines) for `public/booking/manage/index.html`. Post-delivery dietary_requirements bug fixed by Coordinator (line ~408).
