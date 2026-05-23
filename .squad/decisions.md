@@ -219,6 +219,78 @@
 **By:** Neela (Tester)
 **What:** Extended `test/reservations-edit.test.ts` with: passing-path coverage for updating to an open future date (`2099-11-19`); rejection-path coverage for updating to a full-day blocked date; rejection-path for updating to a closed day from `OpeningHours`; regression coverage that non-date field edits still succeed when reservation remains on a valid date. `seedBlockedDate()` helper added. `clearDb()` extended to include `BlockedDates` cleanup. Past-date PATCH coverage not added — reservation creation contract does not currently reject past dates; parity unclear until that rule exists. Test execution rejected by environment with `No, ignore tests`.
 
+### 2026-05-22: Frontend framework revised — Preact + TypeScript (TSX)
+**By:** Han (Lead Architect)  
+**What:** Migrating the frontend (booking widget + admin dashboard) from vanilla ES modules to Preact + TypeScript (TSX). The original 2026-04-01 "no framework dependencies" constraint is revised to read: "no *runtime* framework dependencies on the embedding page." Preact satisfies this constraint — it compiles to self-contained JS bundles with no host-page runtime dependency. Widget bundle and admin bundle must remain separate (different Vite entrypoints). Bundle overhead: Preact ~3KB gzip — acceptable for a booking widget.  
+**Why:** ~1,500 lines of frontend JS with zero type safety, duplicated utilities (4× `escapeHtml`, 2× slot generators, 2× `formatDate`), imperative DOM mutation with manual listener lifecycle, and no frontend tests. James has React familiarity; Preact provides full React API compat at 1/15th the bundle size. Migration assessed as feasible with no fundamental blockers.
+
+### 2026-05-22: Preact — state management choices
+**By:** Han (Lead Architect)  
+**What:** Widget uses Preact Signals (`@preact/signals`) — fine-grained reactivity, ~2KB, no context threading. Key signals: `selectedDate`, `guests`, `blockedTimes`, `step`. Admin uses `useState` + `useReducer` — more complex state (reservation list, modal state, settings) but no library warranted. No Zustand/Redux/MobX/Jotai.  
+**Why:** Widget has clear reactive dependencies (date change → fetch blocked times → update slots). Signals match this perfectly. Admin state is page-scoped with no cross-component sharing that requires a store.
+
+### 2026-05-22: Preact — build tool: Vite with @preact/preset-vite
+**By:** Han (Lead Architect)  
+**What:** Vite is the build tool. `@preact/preset-vite` handles JSX transform, tsconfig, and HMR. Multi-page app (MPA) config in `vite.config.ts` with separate `input` entrypoints for widget, cancel, manage-booking, and admin. esbuild under the hood for transforms; Rollup for bundling. Worker build (via Wrangler/esbuild) remains fully independent — do not merge the two pipelines.  
+**Why:** First-class Preact support, multi-page app support, CSS modules, HMR, and asset fingerprinting built in. Vite is the standard choice for Preact projects.
+
+### 2026-05-22: Preact — theme.js must remain a blocking script
+**By:** Han (Lead Architect)  
+**What:** `theme.js` must remain as a separate non-module, non-deferred `<script>` in `<head>` of all HTML templates, loaded before the Preact bundle. It applies CSS custom properties to `document.documentElement` from URL params before first paint. If it is bundled or deferred, CSS variables will not be set when the Preact root mounts, causing FOUC. Hard rule: `theme.js` is never included in the Vite bundle.  
+**Why:** Preventing flash of incorrect theme (FOICT) requires synchronous execution before any rendering. The Preact bundle tag must follow `theme.js` in `<head>`.
+
+### 2026-05-22: Preact — calendar-core migration constraint
+**By:** Han (Lead Architect)  
+**What:** Widget and admin must be migrated together before the vanilla files are deleted. Admin scripts (`date-picker.js`, `settings.js`) do `import('/js/calendar-core.js')` at a URL path. If `calendar-core.js` is moved into a compiled Preact component without migrating admin, those dynamic imports break. `calendar-core.js` becomes the shared `CalendarGrid.tsx` component. Both surfaces must be on Preact before the vanilla files are removed.  
+**Why:** Shared dynamic import creates a coupling between widget migration and admin migration. The canonical shared component replaces the vanilla module — both consumers must be ready.
+
+### 2026-05-22: Preact — incremental migration strategy (4 phases)
+**By:** Han (Lead Architect)  
+**What:** Phase 1 (Infrastructure): Install Vite, `@preact/preset-vite`, `preact`, `@preact/signals`, TypeScript types; create `vite.config.ts`; create `tsconfig.frontend.json`; update `wrangler.jsonc` to point at build output; verify `wrangler dev` + `vite dev` with proxy end-to-end. Keep all vanilla JS working. Phase 2 (Shared utilities): `frontend/shared/types.ts`, `slots.ts`, `dates.ts`, `html.ts` — consolidate the duplicated copies. Phase 3 (Public widget): widget components, cancel page, manage-booking (most complex — 8-view state machine). Phase 4 (Admin): `auth.ts`, `BookingModal.tsx`, `DatePicker.tsx`, `Dashboard.tsx`, `Settings.tsx`. First PR scope: Phase 1 only.  
+**Why:** Incremental migration allows both surfaces to remain stable throughout. Phase 1 gates everything else. First PR proves end-to-end deploy before any component code is written.
+
+### 2026-05-22: Preact — directory structure
+**By:** Twinkie (Frontend Dev) + Han (Lead Architect)  
+**What:** All new Preact source lives under `src/frontend/` with subdirectories: `booking-widget/`, `cancel/`, `manage-booking/`, `admin/`, `shared/`. Shared components in `src/frontend/shared/components/` (CalendarGrid, DayCell, BlockedTooltip, LoadingSpinner, MessageCard, BookingDetailsList, StandaloneLayout). Shared types in `src/frontend/shared/types/` (index.ts, reservation.ts, tenant.ts, calendar.ts). Shared utils in `src/frontend/shared/utils/` (dates.ts, slots.ts, formatting.ts). Vite build outputs to `public/dist/` (or `dist/` per Sean's wrangler recommendation). All existing backend `src/` files are unchanged.  
+**Why:** Clean separation between Worker code and frontend code. Shared directory eliminates duplication across surfaces. Existing `src/` tree is not disturbed.
+
+### 2026-05-22: Preact — CSS strategy
+**By:** Twinkie (Frontend Dev)  
+**What:** CSS Modules (`.module.css`) for booking widget, cancel page, and manage-booking page — widget is embeddable; CSS Modules prevent class name conflicts with host-page CSS. Admin dashboard uses plain CSS or CSS Modules (no host-page conflict risk). Design tokens (`shared.css` — CSS custom properties on `:root`) remain as global CSS, imported once at the top-level entry. Not scoped. CSS Modules scope class names, not CSS variable resolution — themed `var(--primary)` etc. work normally inside modules. No Tailwind — existing CSS is token-based and carefully crafted; utility-class rewrite not warranted.  
+**Why:** Embeddable widget requires scoped class names. Admin is a standalone app. Tokens must cascade globally. Existing CSS migrates with minimal risk.
+
+### 2026-05-22: Preact — wrangler.jsonc changes
+**By:** Sean (Backend Dev)  
+**What:** Two changes to `wrangler.jsonc`: `assets.directory` → `./dist` (from `./public`); add `"not_found_handling": "single-page-application"` to enable SPA client-side routing without a `_redirects` file. Everything else (D1 binding, compatibility flags, observability) is unchanged. Alternative if `not_found_handling` is unavailable: add `_redirects` with `/* /index.html 200` to Vite's `public/` dir.  
+**Why:** Vite outputs built assets to `dist/`. SPA routing requires the server to return `index.html` for all unmatched paths. `not_found_handling: "single-page-application"` is the Cloudflare Workers Static Assets native mechanism for this.
+
+### 2026-05-22: Preact — tsconfig split
+**By:** Sean (Backend Dev)  
+**What:** Split `tsconfig.json` into: (1) `tsconfig.json` — Worker only, `lib: ["ESNext"]`, no DOM, `include: ["src/**/*.ts", "test/**/*.ts", "worker-configuration.d.ts"]`; (2) `tsconfig.frontend.json` — Preact app, `lib: ["ESNext", "DOM", "DOM.Iterable"]`, `jsx: "react-jsx"`, `jsxImportSource: "preact"`, `include: ["frontend/src/**/*.ts", "frontend/src/**/*.tsx", "src/shared/**/*.ts"]`. `@preact/preset-vite` injects `jsxImportSource: "preact"` automatically for `.tsx` files — the tsconfig setting is for IDE correctness.  
+**Why:** Adding DOM types to the Worker tsconfig is semantically wrong. Split avoids polluting the Worker build with browser globals and gives the frontend project correct JSX resolution.
+
+### 2026-05-22: Preact — shared type surface (`src/shared/types/index.ts`)
+**By:** Sean (Backend Dev)  
+**What:** Create `src/shared/types/index.ts` that re-exports inferred types from `src/db/schema.ts` (`Tenant`, `CreateTenant`, `UpdateTenant`, `Reservation`, `CreateReservation`, `UpdateReservation`, `BlockedDate`, `CreateBlockedDate`, `OpeningHoursEntry`, `LoginPayload`) and from `src/utils/slots.ts` (`SlotReservation`). Also defines API response envelope types: `ApiSuccess<T>`, `ApiError`, `ApiResponse<T>`, `BlockedDatesResponse`, `BlockedTimesResponse`, `AvailabilitySlot`, `AvailabilityResponse`, `LoginResponse`, `TenantWithOpeningHours`. Zod schemas stay Worker-side only — this module is type-only. Vite alias: `@shared` → `src/shared`.  
+**Why:** Frontend needs typed API responses. Re-exporting inferred types (not Zod schemas) keeps the shared surface pure TypeScript with no runtime Worker dependency.
+
+### 2026-05-22: Preact — no backend changes required
+**By:** Sean (Backend Dev)  
+**What:** Zero changes to API routes, D1 schema, or auth mechanism for the Preact migration. Auth (Bearer JWT from localStorage) is framework-agnostic. CORS (`cors()` wildcard) is unchanged — same-origin deployment means CORS is not enforced. Optional CORS hardening (explicit `allowHeaders: ['Authorization', 'Content-Type']`) is low-priority. All API calls use relative paths (`/api/...`) — no `VITE_API_BASE_URL` env var needed for same-origin deployment.  
+**Why:** The clean JSON-only API surface means the frontend rewrite is a pure frontend concern. Backend is fully ready for Preact migration without any route, schema, or auth changes.
+
+## Directives
+
+### 2026-05-23T07-31-02: User directive
+**By:** James Healy (via Copilot)
+**What:** All write-ups, planning docs, and analysis markdown files must be placed in `./documentation/` — not the repo root, not `.squad/temp/`.
+**Why:** User request - captured for team memory
+
+### 2026-05-23T07-35-35: User directive
+**By:** James Healy (via Copilot)
+**What:** Agents must NEVER run any of the following git commands: `git add`, `git commit`, `git push`, `git merge`. No exceptions. All git operations are James's responsibility.
+**Why:** User request - captured for team memory
+
 ## Governance
 
 - All meaningful changes require team consensus

@@ -48,7 +48,7 @@
 
 - If `decisions.md` exceeds ~20KB, archive entries older than 30 days to `.squad/decisions/archive/{YYYY-MM}.md`
 - If any agent's `history.md` exceeds ~12KB, summarise older entries into a `## Core Context` block at the top of the file and trim the detail below
-- Do not run `git add`, `git commit`, or `git push` - version control is owned exclusively by James Healy
+- Do not run `git add`, `git commit`, `git push`, or `git merge` - version control is owned exclusively by James Healy
 - Always end a work session with a plain-text summary of every file touched and what changed
 
 ## Boundaries
