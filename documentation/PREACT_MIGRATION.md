@@ -1223,13 +1223,13 @@ Auth mechanism (Bearer JWT from localStorage) is framework-agnostic — no backe
 
 **Files to build:**
 
-- [ ] `src/frontend/cancel/CancelApp.tsx` — root; `signal<CancelView>` drives the render switch
-- [ ] `src/frontend/cancel/views/LoadingView.tsx` — uses `Spinner`
-- [ ] `src/frontend/cancel/views/ErrorView.tsx` — uses `MessageCard`
-- [ ] `src/frontend/cancel/views/OverviewView.tsx` — uses `BookingDetailsList`, `Button` (cancel + back)
-- [ ] `src/frontend/cancel/views/SuccessView.tsx` — uses `MessageCard`
-- [ ] `src/frontend/cancel/hooks/useCancelBooking.ts` — fetch + signal for the cancel flow
-- [ ] `src/frontend/cancel/cancel.ts` — entry point; reads `?ref=` + `?tenant=` URL params, calls `render()`
+- [x] `src/frontend/cancel/CancelApp.tsx` — root; `useSignal<CancelView>` drives the render switch
+- [x] `src/frontend/cancel/views/LoadingView.tsx` — uses `Spinner`
+- [x] `src/frontend/cancel/views/ErrorView.tsx` — uses `MessageCard`
+- [x] `src/frontend/cancel/views/OverviewView.tsx` — uses `BookingDetailsList`, `Button`
+- [x] `src/frontend/cancel/views/SuccessView.tsx` — uses `MessageCard`
+- [x] `src/frontend/cancel/hooks/useCancelBooking.ts` — fetch + signal for the cancel flow
+- [x] `src/frontend/cancel/cancel.tsx` — entry point; reads `?id=` URL param, calls `render()`
 
 **Shared components used:** `Spinner`, `MessageCard`, `BookingDetailsList`, `Button`, `StandaloneLayout`
 
@@ -1239,7 +1239,7 @@ Auth mechanism (Bearer JWT from localStorage) is framework-agnostic — no backe
 
 **Keep vanilla alive:** Do not delete `public/js/cancel.js` until the Preact version is deployed and smoke-tested end-to-end.
 
-> ⚠️ **Risk:** URL param names. Read the vanilla `cancel.js` carefully for the exact `?ref=` and `?tenant=` param names and any fallback behaviour before writing the entry point.
+> ⚠️ **Risk resolved:** URL param confirmed as `?id=` (not `?ref=`/`?tenant=` as originally documented in this plan). No tenant param — the cancel page only needs the reservation UUID.
 
 ---
 

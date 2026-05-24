@@ -33,6 +33,14 @@ Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget
 
 ## Learnings
 
+### Phase 4 — Cancel surface (first Preact page) (2026-05-24)
+
+- URL param is `?id=` (reservation UUID only), NOT `?ref=` or `?tenant=` — the migration doc had incorrect assumptions; always read the vanilla JS source before writing the entry point
+- The cancel surface needs its own entry in `vite.config.ts` rollup inputs (`'cancel': resolve(__dirname, 'src/frontend/cancel/index.html')`)
+- Used `useSignal` from `@preact/signals` (not bare `signal()`) inside hooks to avoid signal recreation on every render
+- `cancel.tsx` (not `.ts`) because the entry point contains JSX for the `render()` call
+- `src/frontend/vite-env.d.ts` with `/// <reference types="vite/client" />` is required to resolve `*.module.css` type errors in TypeScript — this was a pre-existing gap in the tsconfig, not something introduced in Phase 4
+
 ### Phase 3 Layers A/B/C/E — 12 shared Preact components — patterns (2026-05-23)
 
 **Modal jsdom showModal() guard:** jsdom does not implement `HTMLDialogElement.showModal()` or `.close()`. Both calls are guarded with `typeof dialog.showModal === 'function'`. Modal renders safely in the test environment without this check triggering errors.
