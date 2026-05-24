@@ -1249,15 +1249,19 @@ Auth mechanism (Bearer JWT from localStorage) is framework-agnostic — no backe
 
 **Files to build:**
 
-- [ ] `src/frontend/booking-widget/BookingApp.tsx` — root; `signal<BookingStep>` (`1 | 2 | 'success'`) drives the render
-- [ ] `src/frontend/booking-widget/views/Step1DatePicker.tsx` — uses `CalendarGrid`, `SelectedDateInfo`, `Select` (guests)
-- [ ] `src/frontend/booking-widget/views/Step2BookingForm.tsx` — uses `Input` ×4, `Select` (time), `Textarea`, `FormField` ×5, `Button`, `Spinner`
-- [ ] `src/frontend/booking-widget/views/SuccessView.tsx` — uses `MessageCard`
-- [ ] `src/frontend/booking-widget/hooks/useAvailability.ts` — fetches blocked dates + blocked times; drives `CalendarGrid` `isBlocked` / `isDisabled` props
-- [ ] `src/frontend/booking-widget/hooks/useBookingForm.ts` — form state, field-level validation, submit
-- [ ] `src/frontend/booking-widget/types/booking.ts` — `BookingFormData`, `BookingStep`, `BookingRequest`
-- [ ] `src/frontend/booking-widget/types/availability.ts` — `BlockedTimesResponse`, `BlockedDatesResponse`
-- [ ] `src/frontend/booking-widget/booking-widget.ts` — entry point; reads `?tenant=` + `?theme=` params, calls `render()`
+- [x] `src/frontend/booking-widget/BookingApp.tsx` — root; `signal<BookingStep>` (`'calendar' | 'form-step1' | 'form-step2' | 'success'`) drives the render
+- [x] `src/frontend/booking-widget/views/CalendarView.tsx` — calendar step; uses `CalendarGrid`, `BlockedTooltip`, month nav
+- [x] `src/frontend/booking-widget/views/Step1FormView.tsx` — guests + time step; uses `SelectedDateInfo`, `Select` ×2, `Button`, `Spinner`
+- [x] `src/frontend/booking-widget/views/Step2FormView.tsx` — personal details; uses `Input` ×4, `Textarea`, `FormField` ×5, `Button`, `MessageCard` (error)
+- [x] `src/frontend/booking-widget/views/SuccessView.tsx` — uses `MessageCard`, `Button`
+- [x] `src/frontend/booking-widget/hooks/useTenant.ts` — loads tenant config from `?tenant=` param; manages `loading | ready | error` state
+- [x] `src/frontend/booking-widget/hooks/useAvailability.ts` — fetches blocked dates + blocked times; drives `CalendarGrid` `isBlocked` / `isDisabled` props
+- [x] `src/frontend/booking-widget/hooks/useBookingForm.ts` — form state, field-level validation, submit
+- [x] `src/frontend/booking-widget/types/booking.ts` — `BookingFormData`, `BookingStep`, `BookingRequest`
+- [x] `src/frontend/booking-widget/types/availability.ts` — `BlockedTimesResponse`, `BlockedDatesResponse`
+- [x] `src/frontend/booking-widget/booking-widget.tsx` — entry point (created as `.tsx`); reads container, calls `render()`
+
+**Note:** `BookingStep` type is `'calendar' | 'form-step1' | 'form-step2' | 'success'` — the doc had `1 | 2 | 'success'`; `'calendar'` is required as a separate initial state for the date-picker step. The calendar is its own `CalendarView` component (not merged into Step1). Slot computation uses shared `getAvailableSlots()` from `@shared/utils` (handles blocked times + today threshold). `useTenant` hook added (not in original doc) to cleanly manage tenant loading state. Step2 uses `type="submit"` + HTML5 `form.checkValidity()` matching vanilla behaviour exactly.
 
 **Shared components used:** `CalendarGrid`, `DayCell`, `BlockedTooltip`, `SelectedDateInfo`, `Button`, `Input`, `Select`, `Textarea`, `FormField`, `Spinner`, `MessageCard`
 

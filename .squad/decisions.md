@@ -300,6 +300,16 @@ Barrel `src/frontend/shared/components/index.ts` updated to include all Layer A/
 **What:** 5 calendar/domain Preact components built: Badge, SelectedDateInfo, DayCell, BlockedTooltip, CalendarGrid. DayCell uses style-injection pattern (receives CalendarGrid's CSS module object as prop). CalendarGrid is a direct Preact port of calendar-core.js — calendar-core.js MUST remain in public/js/ until Phase 7.
 **Why:** Phase 3 execution — shared component library for Phases 4-7.
 
+### 2026-05-24: Phase 4 cancel surface complete
+**By:** Twinkie (via Coordinator)
+**What:** Cancel surface built at `src/frontend/cancel/`. Entry point `cancel.tsx`, 4 views (`LoadingView`, `ErrorView`, `OverviewView`, `SuccessView`), `useCancelBooking` hook with `@preact/signals`. URL param confirmed as `?id=` (not `?ref=` as originally documented). Added cancel entry to `vite.config.ts`. Also added `src/frontend/vite-env.d.ts` (`/// <reference types="vite/client" />`) to resolve pre-existing CSS module type errors across all frontend components.
+**Why:** Phase 4 execution — first Preact surface, validates the component library and deploy pipeline.
+
+### 2026-05-24: Phase 5 booking widget complete
+**By:** Twinkie
+**What:** Booking widget built at `src/frontend/booking-widget/`. Entry point `booking-widget.tsx`, `BookingApp` root with 4 steps (`calendar`, `form-step1`, `form-step2`, `success`), 3 hooks (`useTenant`, `useAvailability`, `useBookingForm`), 4 views (`CalendarView`, `Step1FormView`, `Step2FormView`, `SuccessView`), type files (`booking.ts`, `availability.ts`). `BookingStep` type updated from doc's `1 | 2 | 'success'` to `'calendar' | 'form-step1' | 'form-step2' | 'success'`. Slot generation uses shared `getAvailableSlots()` from Phase 2. TypeScript compile clean on first run.
+**Why:** Phase 5 execution — revenue-critical booking widget surface migration.
+
 ## Directives
 
 ### 2026-05-23T07-31-02: User directive

@@ -33,6 +33,18 @@ Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget
 
 ## Learnings
 
+### Phase 5 — Booking widget (revenue-critical Preact surface) (2026-05-24)
+
+- `BookingStep` union type: `'calendar' | 'form-step1' | 'form-step2' | 'success'` — migration doc had `1 | 2 | 'success'`; calendar needs its own state
+- `CalendarView` is a distinct view in `BookingApp` (not merged into a form step); four separate view components: `CalendarView`, `Step1FormView`, `Step2FormView`, `SuccessView`
+- `useTenant` hook manages tenant loading state (`'loading' | 'ready' | 'error'`); not in original doc but needed to cleanly separate tenant fetch from the root component
+- `useAvailability` separates `blockedDates` (per-month, fetched on month nav) from `blockedTimes` (per-date+guests, fetched on date select and guest change)
+- Slot computation uses shared `getAvailableSlots(date, tenantConfig, blockedTimes)` from `@shared/utils/slots.ts` — handles today threshold + blocked filtering in one call; no need to inline the logic in the view
+- `Step2FormView` uses `type="submit"` on the `Button` + `form.checkValidity()` in the submit handler — matches vanilla behaviour exactly; no JS-driven "enabled" state needed for the submit button
+- `Signal` type exported from `@preact/signals` used explicitly in hook return types (not `ReturnType<typeof useSignal<...>>`) — cleaner and equivalent
+- `tenantId` prop removed from `CalendarView` — wasn't needed since `onMonthChange` callback is the only external-facing API; parent (`BookingApp`) owns the fetch calls
+- TypeScript compile was clean on first run — no errors after careful reading of shared component APIs before writing
+
 ### Phase 4 — Cancel surface (first Preact page) (2026-05-24)
 
 - URL param is `?id=` (reservation UUID only), NOT `?ref=` or `?tenant=` — the migration doc had incorrect assumptions; always read the vanilla JS source before writing the entry point
