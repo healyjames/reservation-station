@@ -1283,18 +1283,18 @@ Auth mechanism (Bearer JWT from localStorage) is framework-agnostic — no backe
 
 **Files to build:**
 
-- [ ] `src/frontend/manage-booking/ManageApp.tsx` — root; `signal<ManageView>` drives the render switch
-- [ ] `src/frontend/manage-booking/views/LoadingView.tsx` — uses `Spinner`
-- [ ] `src/frontend/manage-booking/views/ErrorView.tsx` — uses `MessageCard`
-- [ ] `src/frontend/manage-booking/views/OverviewView.tsx` — uses `BookingDetailsList`, `Button` ×3 (edit-details, change-datetime, cancel)
-- [ ] `src/frontend/manage-booking/views/EditDetailsView.tsx` — uses `Input` ×4, `Textarea`, `FormField` ×5, `Button`, `Spinner`
-- [ ] `src/frontend/manage-booking/views/ChangeDateTimeView.tsx` — uses `CalendarGrid`, `SelectedDateInfo`, `Select` (time slots), `Button`, `Spinner`
-- [ ] `src/frontend/manage-booking/views/CancelConfirmView.tsx` — uses `BookingDetailsList`, `Button` ×2 (confirm + back)
-- [ ] `src/frontend/manage-booking/views/SuccessEditView.tsx` — uses `MessageCard`
-- [ ] `src/frontend/manage-booking/views/SuccessCancelView.tsx` — uses `MessageCard`
-- [ ] `src/frontend/manage-booking/hooks/useManageBooking.ts` — fetches reservation, orchestrates view transitions, re-fetches availability on `change-datetime`
-- [ ] `src/frontend/manage-booking/types/manage.ts` — `ManageView`, `EditData`, `ManageState`
-- [ ] `src/frontend/manage-booking/manage-booking.ts` — entry point
+- [x] `src/frontend/manage-booking/ManageApp.tsx` — root; `signal<ManageView>` drives the render switch
+- [x] `src/frontend/manage-booking/views/LoadingView.tsx` — uses `Spinner`
+- [x] `src/frontend/manage-booking/views/ErrorView.tsx` — uses `MessageCard`
+- [x] `src/frontend/manage-booking/views/OverviewView.tsx` — uses `BookingDetailsList`, `Button` ×3 (edit-details, change-datetime, cancel)
+- [x] `src/frontend/manage-booking/views/EditDetailsView.tsx` — uses `Input` ×4, `Textarea`, `FormField` ×5, `Button`, `Spinner`
+- [x] `src/frontend/manage-booking/views/ChangeDateTimeView.tsx` — uses `CalendarGrid`, `SelectedDateInfo`, `Select` (time slots), `Button`, `Spinner`
+- [x] `src/frontend/manage-booking/views/CancelConfirmView.tsx` — uses `BookingDetailsList`, `Button` ×2 (confirm + back)
+- [x] `src/frontend/manage-booking/views/SuccessEditView.tsx` — uses `MessageCard`
+- [x] `src/frontend/manage-booking/views/SuccessCancelView.tsx` — uses `MessageCard`
+- [x] `src/frontend/manage-booking/hooks/useManageBooking.ts` — fetches reservation, orchestrates view transitions, re-fetches availability on `change-datetime`
+- [x] `src/frontend/manage-booking/types/manage.ts` — `ManageView`, `EditData`, `ManageState`
+- [x] `src/frontend/manage-booking/manage-booking.tsx` — entry point (`.tsx` since contains JSX render call)
 
 **Shared components used:** `Spinner`, `MessageCard`, `BookingDetailsList`, `Button`, `Input`, `Select`, `Textarea`, `FormField`, `CalendarGrid`, `DayCell`, `BlockedTooltip`, `SelectedDateInfo`, `StandaloneLayout`
 

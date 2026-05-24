@@ -33,6 +33,18 @@ Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget
 
 ## Learnings
 
+### Phase 6 — Manage-booking (most complex public surface) (2026-05-25)
+
+- Tenant is NOT loaded from a URL param — it's loaded from `reservation.tenant_id` after fetching the reservation. Tenant load failure is non-fatal; `tenantConfig` may be null throughout the flow.
+- `isDateUnavailable` in `ChangeDateTimeView` checks THREE conditions: past-date, `blockedDates` Set, AND tenant `opening_hours` closed days (not just blockedDates + past like the booking widget). Uses `!!entry.is_closed` to handle SQLite `0|1` integers.
+- Signal prop-drilling pattern: `useManageBooking` returns `Signal<T>` objects. `ManageApp` passes them directly to views as props typed as `Signal<T>`. Views can both read `.value` and mutate `.value` (e.g., `selectedTime.value = ...` in `ChangeDateTimeView` onChange). This works because Preact auto-subscribes any component that reads `.value` in its render.
+- `selectDate` in the hook pre-selects the reservation's original time if it's still available on the newly selected date — uses `getAvailableSlots()` directly after the `fetchBlockedTimesForDate` await resolves.
+- On PATCH/DELETE failure: set `errorMessage.value` and stay on the current view. Never navigate to the `error` view from edit/change/cancel flows. The `error` view is only for initial reservation load failure.
+- `ChangeDateTimeView` doesn't need `reservation` as a prop — guests count for blocked-times fetch is handled entirely within the hook's `fetchBlockedTimesForDate`. Removed from props interface to satisfy `noUnusedParameters`.
+- `goToChangeDatetime` is `async` (sets view, then awaits blocked dates + blocked times fetches). The view renders immediately when `view.value = 'change-datetime'` is set; fetches resolve and update signals causing the view to re-render with fresh data.
+- Entry point is `manage-booking.tsx` (not `.ts`) since it contains a JSX `render()` call.
+- TypeScript was clean on first compile pass — zero errors — after reading all shared component APIs and utility signatures before writing.
+
 ### Phase 5 — Booking widget (revenue-critical Preact surface) (2026-05-24)
 
 - `BookingStep` union type: `'calendar' | 'form-step1' | 'form-step2' | 'success'` — migration doc had `1 | 2 | 'success'`; calendar needs its own state
