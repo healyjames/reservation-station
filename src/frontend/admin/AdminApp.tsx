@@ -1,0 +1,69 @@
+import { useSignal } from '@preact/signals';
+import type { FunctionComponent } from 'preact';
+import { useEffect } from 'preact/hooks';
+import { Spinner } from '@shared/components';
+import { useAuth } from './hooks/useAuth';
+import LoginView from './views/LoginView';
+import DashboardView from './views/DashboardView';
+import SettingsView from './views/SettingsView';
+
+type AdminView = 'login' | 'dashboard' | 'settings';
+
+export const AdminApp: FunctionComponent = () => {
+  const auth = useAuth();
+  const view = useSignal<AdminView>('login');
+
+  useEffect(() => {
+    if (auth.isLoading.value) return;
+    if (!auth.isAuthed.value) {
+      view.value = 'login';
+      return;
+    }
+    const path = window.location.pathname;
+    if (path.includes('settings')) {
+      view.value = 'settings';
+    } else {
+      view.value = 'dashboard';
+    }
+  }, [auth.isAuthed.value, auth.isLoading.value]);
+
+  function onLoginSuccess() {
+    view.value = 'dashboard';
+  }
+
+  function onLogout() {
+    auth.logout();
+    view.value = 'login';
+  }
+
+  if (auth.isLoading.value) {
+    return (
+      <div class="loading-screen" aria-busy="true">
+        <Spinner size="md" label="Loading…" />
+      </div>
+    );
+  }
+
+  switch (view.value) {
+    case 'login':
+      return <LoginView auth={auth} onLoginSuccess={onLoginSuccess} />;
+    case 'dashboard':
+      return (
+        <DashboardView
+          auth={auth}
+          onLogout={onLogout}
+          onGoSettings={() => { view.value = 'settings'; }}
+        />
+      );
+    case 'settings':
+      return (
+        <SettingsView
+          auth={auth}
+          onLogout={onLogout}
+          onGoDashboard={() => { view.value = 'dashboard'; }}
+        />
+      );
+    default:
+      return null;
+  }
+};

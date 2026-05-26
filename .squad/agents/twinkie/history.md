@@ -30,8 +30,27 @@ Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget
 ## Key File Paths
 
 - `public/` - widget assets
+- `src/frontend/admin/` - admin SPA
 
 ## Learnings
+
+### Phase 7 — Admin SPA (internal tool) (2026-05-24)
+
+- Admin SPA uses ONE Vite entry (`src/frontend/admin/index.html`) replacing 3 vanilla HTML pages (index.html, dashboard.html, settings.html). View routing via signal: `'login' | 'dashboard' | 'settings'`.
+- View detection on mount: no token → `'login'`; token + URL contains `settings` → `'settings'`; else → `'dashboard'`.
+- `AdminFetch` helper at `src/frontend/admin/utils/api.ts` — always use for admin API calls (injects auth header + Content-Type).
+- Auth login endpoint is `/api/auth/login` (matches vanilla `auth.js`); response structure `{ data: { token, tenant } }`.
+- `useBookings` hook also manages day-block state (`isDayBlocked`, `toggleDayBlock`) and fetches block state after each bookings load.
+- CalendarGrid range selection approach chosen: **Option A** — added `onHoverDate`, `onLeaveGrid`, `isRangeStart`, `isInRange`, `isRangeEnd` props to CalendarGrid; threads through to DayCell via `onMouseEnter`; range CSS classes added to `CalendarGrid.module.css`.
+- `BlockedDatesSettings` uses `rangeStart` signal + `hoverDate` signal; clicking day 1 sets rangeStart, clicking day 2 (same month) blocks the range; clicking same day toggles that day's block state.
+- `OpeningHoursSettings`: ToggleSwitch uses `data-checked` not `:has()` — do NOT change this. Seven days Monday-first (dow 1→0 for Sunday). PUT `/api/admin/opening-hours` sends all 7 rows; `open_time`/`close_time` null when `is_closed: true`.
+- `TenantConfig.opening_hours[].is_closed` may be `0|1` from D1 — always use `!!entry.is_closed`.
+- Opening hours API response wrapped: `{ data: [...] }` — extract with `json.data`.
+- Settings (General) loads/saves via `/api/admin/me` — NOT wrapped in `data:`, direct tenant object.
+- `BookingModal` submit button sits inside the `<form>` (not in Modal footer) because `Button` component doesn't accept a `form` attribute. Delete button is in the Modal footer.
+- DayCell and CalendarGrid now accept range props (`isRangeStart`, `isInRange`, `isRangeEnd`) — these default to `false` and are safe to ignore in non-admin contexts.
+
+**Migration status (2026-05-24):** Phase 7 is complete. The full Preact migration is done — all seven phases (infrastructure, shared utilities, shared components, cancel, booking widget, manage-booking, admin SPA) are complete. The vanilla `public/admin/` JS can be retired once the Preact build is confirmed stable in production.
 
 ### Phase 6 — Manage-booking (most complex public surface) (2026-05-25)
 

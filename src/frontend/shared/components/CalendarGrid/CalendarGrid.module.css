@@ -68,3 +68,21 @@
   outline: 2px solid var(--primary);
   outline-offset: 1px;
 }
+
+.rangeStart {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  font-weight: 700;
+}
+
+.inRange {
+  background: color-mix(in srgb, var(--primary) 25%, transparent);
+  border-color: var(--primary-lighter);
+}
+
+.rangeEnd {
+  background: color-mix(in srgb, var(--primary) 55%, transparent);
+  border-color: var(--primary);
+  font-weight: 700;
+}

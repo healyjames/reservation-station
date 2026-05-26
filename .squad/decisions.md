@@ -310,6 +310,21 @@ Barrel `src/frontend/shared/components/index.ts` updated to include all Layer A/
 **What:** Booking widget built at `src/frontend/booking-widget/`. Entry point `booking-widget.tsx`, `BookingApp` root with 4 steps (`calendar`, `form-step1`, `form-step2`, `success`), 3 hooks (`useTenant`, `useAvailability`, `useBookingForm`), 4 views (`CalendarView`, `Step1FormView`, `Step2FormView`, `SuccessView`), type files (`booking.ts`, `availability.ts`). `BookingStep` type updated from doc's `1 | 2 | 'success'` to `'calendar' | 'form-step1' | 'form-step2' | 'success'`. Slot generation uses shared `getAvailableSlots()` from Phase 2. TypeScript compile clean on first run.
 **Why:** Phase 5 execution — revenue-critical booking widget surface migration.
 
+### 2026-05-24: Phase 6 manage-booking surface complete
+**By:** Twinkie (Frontend Dev)
+**What:** Manage-booking surface built at `src/frontend/manage-booking/`. Entry point `manage-booking.tsx`, `ManageApp` root with `Signal<ManageView>` routing 8 views (loading, error, overview, edit-details, change-datetime, cancel-confirm, success-edit, success-cancel). `useManageBooking` hook owns all state, API calls, and view transitions. Tenant loaded from `reservation.tenant_id` post-fetch — non-fatal; `tenantConfig` may be null throughout. Signal prop-drilling: hook returns `Signal<T>` objects; `ManageApp` passes them directly to views as `Signal<T>` props (views can both read and write `.value`). `isDateUnavailable` checks three conditions: past-date, `blockedDates`, and tenant `opening_hours` closed days (booking widget only checks two). `selectDate` pre-selects the reservation's original time if still available on the new date. PATCH/DELETE failures set `errorMessage.value` and stay on the current view — the `error` view is only for initial reservation load failure. TypeScript clean on first compile.
+**Why:** Phase 6 execution — most complex public surface (8-view state machine, full edit/cancel flows).
+
+### 2026-05-24: Phase 7 admin SPA complete — single Vite entry replacing 3 HTML pages
+**By:** Twinkie (Frontend Dev)
+**What:** Admin SPA built at `src/frontend/admin/`. One Vite entry (`src/frontend/admin/index.html`) replaces 3 vanilla HTML pages (`index.html`, `dashboard.html`, `settings.html`). View routing via signal: `'login' | 'dashboard' | 'settings'`. View detection on mount: no token → `'login'`; token + URL contains `settings` → `'settings'`; else → `'dashboard'`. Auth redirect `window.location.replace('/admin/?expired=1')` becomes `view.value = 'login'; auth.showExpiredBanner.value = true`. `AdminFetch` helper at `src/frontend/admin/utils/api.ts` centralises auth header injection. `useBookings` also manages day-block state (`isDayBlocked`, `toggleDayBlock`). 19 new files, 3 shared files modified. Zero TypeScript errors.
+**Why:** Eliminates three `window.*` globals (`AdminAuth`, `BookingModal`, `DatePicker`) that were the primary source of tight coupling between HTML pages. Single bundle entry means zero risk of a page load where globals are missing. SPA view switching is faster than hard navigations. Completes the full Preact migration.
+
+### 2026-05-24: Phase 7 CalendarGrid range selection — Option A
+**By:** Twinkie (Frontend Dev)
+**What:** Added hover/range props directly to `CalendarGrid` and `DayCell`. `CalendarGrid` new props: `isRangeStart`, `isInRange`, `isRangeEnd` (predicate functions), `onHoverDate` (callback), `onLeaveGrid` (callback). `DayCell` new props: `isRangeStart`, `isInRange`, `isRangeEnd` (booleans), `onMouseEnter` (callback). Range CSS classes added to `CalendarGrid.module.css`: `.rangeStart`, `.inRange`, `.rangeEnd`. All new props default to `undefined`/`false`. `BlockedDatesSettings` owns `rangeStart` and `hoverDate` signals; click logic: same-day → toggle, same-month → block range, different-month → toggle. Existing CalendarGrid usages (booking widget, manage-booking) are unaffected.
+**Why:** Predicate function API is consistent with existing `isBlocked`/`isDisabled` pattern in CalendarGrid. Keeps `BlockedDatesSettings` in full control of range state. Safe defaults mean no changes required in non-admin contexts.
+
 ## Directives
 
 ### 2026-05-23T07-31-02: User directive

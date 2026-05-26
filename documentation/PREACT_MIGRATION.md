@@ -1314,19 +1314,19 @@ Auth mechanism (Bearer JWT from localStorage) is framework-agnostic — no backe
 
 **Files to build:**
 
-- [ ] `src/frontend/admin/AdminApp.tsx` — root; `useAuth` hook gates the authed views
-- [ ] `src/frontend/admin/hooks/useAuth.ts` — replaces `window.AdminAuth`; JWT storage, login, logout, token refresh
-- [ ] `src/frontend/admin/hooks/useBookings.ts` — fetch + signal for the reservations list
-- [ ] `src/frontend/admin/components/Dashboard/DateNav.tsx` — date navigation header
-- [ ] `src/frontend/admin/components/Dashboard/ReservationList.tsx` — table view of bookings
-- [ ] `src/frontend/admin/components/Dashboard/BookingCards.tsx` — mobile card list
-- [ ] `src/frontend/admin/components/Dashboard/BookingCard.tsx` — single booking card; uses `Badge`, `Button` (action-edit, action-delete)
-- [ ] `src/frontend/admin/components/BookingModal/BookingModal.tsx` — replaces `window.BookingModal`; uses shared `Modal`, `Input`, `Select`, `Textarea`, `FormField`, `Button`, `Alert`
-- [ ] `src/frontend/admin/components/Settings/Settings.tsx` — tab shell
-- [ ] `src/frontend/admin/components/Settings/GeneralSettings.tsx` — uses `Input`, `FormField`, `Button`
-- [ ] `src/frontend/admin/components/Settings/OpeningHoursSettings.tsx` — uses `ToggleSwitch` ×7 (one per day of week), `Input`, `FormField`, `Button`
-- [ ] `src/frontend/admin/components/Settings/BlockedDatesSettings.tsx` — uses `CalendarGrid` in range-select mode; `Button`
-- [ ] `src/frontend/admin/admin.ts` — entry point; replaces `window.DatePicker` reference
+- [x] `src/frontend/admin/AdminApp.tsx` — root; `useAuth` hook gates the authed views
+- [x] `src/frontend/admin/hooks/useAuth.ts` — replaces `window.AdminAuth`; JWT storage, login, logout, token refresh
+- [x] `src/frontend/admin/hooks/useBookings.ts` — fetch + signal for the reservations list
+- [x] `src/frontend/admin/components/Dashboard/DateNav.tsx` — date navigation header
+- [x] `src/frontend/admin/components/Dashboard/ReservationList.tsx` — table view of bookings
+- [x] `src/frontend/admin/components/Dashboard/BookingCards.tsx` — mobile card list
+- [x] `src/frontend/admin/components/Dashboard/BookingCard.tsx` — single booking card; uses `Badge`, `Button` (action-edit, action-delete)
+- [x] `src/frontend/admin/components/BookingModal/BookingModal.tsx` — replaces `window.BookingModal`; uses shared `Modal`, `Input`, `Select`, `Textarea`, `FormField`, `Button`, `Alert`
+- [x] `src/frontend/admin/components/Settings/Settings.tsx` — tab shell
+- [x] `src/frontend/admin/components/Settings/GeneralSettings.tsx` — uses `Input`, `FormField`, `Button`
+- [x] `src/frontend/admin/components/Settings/OpeningHoursSettings.tsx` — uses `ToggleSwitch` ×7 (one per day of week), `Input`, `FormField`, `Button`
+- [x] `src/frontend/admin/components/Settings/BlockedDatesSettings.tsx` — uses `CalendarGrid` in range-select mode; `Button`
+- [x] `src/frontend/admin/admin.tsx` — entry point; replaces `window.DatePicker` reference
 
 **Shared components used:** `Button`, `Input`, `Select`, `Textarea`, `FormField`, `Alert`, `Modal`, `Badge`, `ToggleSwitch`, `CalendarGrid`, `DayCell`, `Spinner`
 

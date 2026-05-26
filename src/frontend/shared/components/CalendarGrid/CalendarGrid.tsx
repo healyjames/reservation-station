@@ -11,13 +11,19 @@ interface CalendarGridProps {
   selectedDate?: CalendarDate | null;
   isDisabled?: (year: number, month: number, day: number) => boolean;
   isBlocked?: (year: number, month: number, day: number) => boolean;
+  isRangeStart?: (year: number, month: number, day: number) => boolean;
+  isInRange?: (year: number, month: number, day: number) => boolean;
+  isRangeEnd?: (year: number, month: number, day: number) => boolean;
   onSelect?: (year: number, month: number, day: number) => void;
   onBlockedSelect?: (year: number, month: number, day: number, el: HTMLDivElement) => void;
+  onHoverDate?: (year: number, month: number, day: number) => void;
+  onLeaveGrid?: () => void;
   class?: string;
 }
 
 const CalendarGrid: FunctionComponent<CalendarGridProps> = ({
-  year, month, selectedDate, isDisabled, isBlocked, onSelect, onBlockedSelect, class: className
+  year, month, selectedDate, isDisabled, isBlocked, isRangeStart, isInRange, isRangeEnd,
+  onSelect, onBlockedSelect, onHoverDate, onLeaveGrid, class: className
 }) => {
   const today = new Date();
   const todayYear = today.getFullYear();
@@ -34,6 +40,7 @@ const CalendarGrid: FunctionComponent<CalendarGridProps> = ({
       class={`${styles.grid} ${className ?? ''}`}
       role="grid"
       aria-label={`${MONTHS[month]} ${year}`}
+      onMouseLeave={onLeaveGrid}
     >
       {/* Day name column headers */}
       {DAY_NAMES.map(name => (
@@ -70,8 +77,12 @@ const CalendarGrid: FunctionComponent<CalendarGridProps> = ({
             isSelected={isSelectedCell}
             isBlocked={blocked}
             isDisabled={disabled || isPast}
+            isRangeStart={isRangeStart?.(year, month, day) ?? false}
+            isInRange={isInRange?.(year, month, day) ?? false}
+            isRangeEnd={isRangeEnd?.(year, month, day) ?? false}
             onSelect={() => onSelect?.(year, month, day)}
             onBlockedSelect={(el) => onBlockedSelect?.(year, month, day, el)}
+            onMouseEnter={() => onHoverDate?.(year, month, day)}
             styles={styles}
           />
         );

@@ -3,10 +3,12 @@ import preact from '@preact/preset-vite'
 import { resolve } from 'path'
 
 export default defineConfig({
+  root: resolve(__dirname, 'src/frontend'),
+  publicDir: resolve(__dirname, 'public'),
   plugins: [preact()],
 
   build: {
-    outDir: 'dist',
+    outDir: resolve(__dirname, 'dist'),
     emptyOutDir: true,
     rollupOptions: {
       input: {

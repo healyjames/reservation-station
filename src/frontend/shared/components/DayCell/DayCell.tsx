@@ -12,14 +12,20 @@ interface DayCellProps {
   isSelected: boolean;
   isBlocked: boolean;
   isDisabled: boolean;
+  isRangeStart?: boolean;
+  isInRange?: boolean;
+  isRangeEnd?: boolean;
   onSelect?: () => void;
   onBlockedSelect?: (el: HTMLDivElement) => void;
+  onMouseEnter?: () => void;
   /** CSS module classnames passed from CalendarGrid — DayCell receives the module object rather than importing it directly */
   styles: Record<string, string>;
 }
 
 const DayCell: FunctionComponent<DayCellProps> = ({
-  day, isToday, isPast, isSelected, isBlocked, isDisabled, onSelect, onBlockedSelect, styles
+  day, isToday, isPast, isSelected, isBlocked, isDisabled,
+  isRangeStart, isInRange, isRangeEnd,
+  onSelect, onBlockedSelect, onMouseEnter, styles
 }) => {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -29,6 +35,9 @@ const DayCell: FunctionComponent<DayCellProps> = ({
     isPast ? styles.past : '',
     isSelected ? styles.selected : '',
     isBlocked ? styles.blocked : '',
+    isRangeStart ? styles.rangeStart : '',
+    isInRange ? styles.inRange : '',
+    isRangeEnd ? styles.rangeEnd : '',
   ].filter(Boolean).join(' ');
 
   // Past + not blocked: purely disabled, no interaction
@@ -70,6 +79,7 @@ const DayCell: FunctionComponent<DayCellProps> = ({
       aria-pressed={isSelected}
       tabIndex={0}
       onClick={onSelect}
+      onMouseEnter={onMouseEnter}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
