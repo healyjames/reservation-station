@@ -52,6 +52,10 @@ Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget
 
 **Migration status (2026-05-24):** Phase 7 is complete. The full Preact migration is done — all seven phases (infrastructure, shared utilities, shared components, cancel, booking widget, manage-booking, admin SPA) are complete. The vanilla `public/admin/` JS can be retired once the Preact build is confirmed stable in production.
 
+**Route restructuring (2026-05-26):** Manage-booking page moved from `/manage-booking` to `/booking/manage`. Directory structure: `src/frontend/booking/manage/`. Vite config updated to reflect new path. Build outputs to `dist/booking/manage/index.html`. This aligns with a cleaner booking-related URL hierarchy.
+
+**StandaloneLayout mobile styles restored (2026-05-26):** Added missing `.page` mobile media query to `StandaloneLayout.module.css` from main branch's `.standalone-page` pattern. On mobile (max-width: 640px), `.page` now gets `height: 100vh`, `display: flex`, `align-items: center` to match the original vanilla implementation. This ensures proper centering behavior on small screens for standalone pages (cancel, manage-booking).
+
 ### Phase 6 — Manage-booking (most complex public surface) (2026-05-25)
 
 - Tenant is NOT loaded from a URL param — it's loaded from `reservation.tenant_id` after fetching the reservation. Tenant load failure is non-fatal; `tenantConfig` may be null throughout the flow.

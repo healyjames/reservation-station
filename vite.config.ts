@@ -13,7 +13,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         'booking-widget': resolve(__dirname, 'src/frontend/booking-widget/index.html'),
-        'manage-booking': resolve(__dirname, 'src/frontend/manage-booking/index.html'),
+        'booking/manage': resolve(__dirname, 'src/frontend/booking/manage/index.html'),
         'admin': resolve(__dirname, 'src/frontend/admin/index.html'),
         'cancel': resolve(__dirname, 'src/frontend/cancel/index.html'),
       },
