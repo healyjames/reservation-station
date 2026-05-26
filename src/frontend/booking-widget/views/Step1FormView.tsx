@@ -88,7 +88,7 @@ export const Step1FormView: FunctionComponent<Step1FormViewProps> = ({
         </div>
 
         <Button
-          variant="secondary"
+          variant="primary"
           fullWidth
           disabled={!isValid}
           onClick={onNext}

@@ -8,9 +8,13 @@ interface StandaloneLayoutProps {
 }
 
 const StandaloneLayout: FunctionComponent<StandaloneLayoutProps> = ({ title, children, class: className }) => (
-  <main class={`${styles.layout} ${className ?? ''}`}>
-    {title && <h1 class={styles.title}>{title}</h1>}
-    {children}
+  <main class={styles.page}>
+    <div class={styles.container}>
+      <section class={`${styles.card} ${className ?? ''}`}>
+        {title && <h1 class={styles.title}>{title}</h1>}
+        <div class={styles.content}>{children}</div>
+      </section>
+    </div>
   </main>
 );
 

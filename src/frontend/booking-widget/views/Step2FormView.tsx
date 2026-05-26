@@ -110,7 +110,7 @@ export const Step2FormView: FunctionComponent<Step2FormViewProps> = ({
 
         <Button
           type="submit"
-          variant="secondary"
+          variant="primary"
           fullWidth
           isLoading={isSubmitting}
         >

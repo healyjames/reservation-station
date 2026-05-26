@@ -18,17 +18,27 @@
   font-weight: 600;
 }
 
+.interactive {
+  background: var(--background-light);
+}
+
+.valueInteractive {
+  color: var(--primary);
+  margin-bottom: var(--space-3);
+}
+
 .changeBtn {
-  display: inline-block;
-  margin-top: var(--space-2);
-  background: none;
-  border: none;
-  color: var(--primary-lighter);
-  cursor: pointer;
-  padding: 0;
+  background: transparent;
+  border: var(--border-width) solid var(--primary);
+  color: var(--primary);
+  padding: calc(var(--space-base) + 2px) var(--space-3);
+  border-radius: var(--radius-xs);
   font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
 }
 
 .changeBtn:hover {
-  text-decoration: underline;
+  background: var(--primary-lightest);
 }

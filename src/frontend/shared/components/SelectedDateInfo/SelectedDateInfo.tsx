@@ -10,9 +10,9 @@ interface SelectedDateInfoProps {
 }
 
 const SelectedDateInfo: FunctionComponent<SelectedDateInfoProps> = ({ date, onChangeDate, class: className }) => (
-  <div class={`${styles.container} ${className ?? ''}`}>
+  <div class={`${styles.container} ${onChangeDate ? styles.interactive : ''} ${className ?? ''}`}>
     <div class={styles.label}>Selected Date</div>
-    <div class={styles.value}>{formatDateForDisplay(date)}</div>
+    <div class={`${styles.value} ${onChangeDate ? styles.valueInteractive : ''}`}>{formatDateForDisplay(date)}</div>
     {onChangeDate && (
       <button type="button" class={styles.changeBtn} onClick={onChangeDate}>
         Change date

@@ -24,7 +24,7 @@ export const SuccessView: FunctionComponent<SuccessViewProps> = ({ formData, sel
         </p>
         <p>We've sent a confirmation email to <strong>{formData.email}</strong>.</p>
       </MessageCard>
-      <Button variant="secondary" onClick={onNewBooking}>
+      <Button variant="primary" onClick={onNewBooking}>
         Make Another Booking
       </Button>
     </div>
