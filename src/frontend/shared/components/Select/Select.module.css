@@ -12,6 +12,7 @@
   background-color: var(--background-dark);
   color: var(--foreground);
   font-size: 0.95rem;
+  font-family: inherit;
   cursor: pointer;
   appearance: none;
   box-sizing: border-box;
