@@ -3,6 +3,7 @@ import type { CalendarDate } from '@shared/types';
 import { MessageCard, Button } from '@shared/components';
 import { formatDateForDisplay } from '@shared/utils';
 import type { BookingFormData } from '@shared/types';
+import styles from './Success.module.css';
 
 interface SuccessProps {
   formData: BookingFormData;
@@ -15,7 +16,7 @@ export const Success: FunctionComponent<SuccessProps> = ({ formData, selectedDat
   const guestLabel = `${formData.guests} guest${formData.guests > 1 ? 's' : ''}`;
 
   return (
-    <div class="booking-form-content">
+    <div class={styles.content}>
       <MessageCard variant="success" title="Booking Confirmed!">
         <p>
           Your reservation for <strong>{guestLabel}</strong> on{' '}

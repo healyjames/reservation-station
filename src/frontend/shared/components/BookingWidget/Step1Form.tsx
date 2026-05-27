@@ -3,6 +3,7 @@ import type { CalendarDate, TenantConfig } from '@shared/types';
 import { FormField, SelectedDateInfo, Select, Button, Spinner } from '@shared/components';
 import { getAvailableSlots } from '@shared/utils';
 import type { BookingFormData } from '@shared/types';
+import styles from './Step1Form.module.css';
 
 interface Step1FormProps {
   date: CalendarDate;
@@ -31,12 +32,12 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
   const isValid = formData.guests >= 2 && formData.guests <= maxGuests && formData.time !== '';
 
   return (
-    <div class="booking-form-content">
-			<div class="calendar-nav">
-				<div class="step-indicator">Step 1 of 2</div>
+    <div class={styles.content}>
+			<div class={styles.nav}>
+				<div class={styles.stepIndicator}>Step 1 of 2</div>
 				<button
 						type="button"
-						class="calendar-close-btn"
+						class={styles.closeBtn}
 						aria-label="Close booking form"
 						onClick={onChangeDate}
 					>&#10006;</button>
@@ -44,7 +45,7 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
 
       <SelectedDateInfo date={date} onChangeDate={onChangeDate} />
 
-      <form id="booking-form-step1" class="stack">
+      <form id="booking-form-step1" class={styles.form}>
         <FormField label="Number of Guests" htmlFor="guests" required>
           <Select
             id="guests"
@@ -58,7 +59,7 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
 
         <FormField label="Time" htmlFor="time" required>
           {isFetchingTimes ? (
-            <div class="loading-indicator compact-loading">
+            <div class={styles.loadingIndicator}>
               <Spinner size="sm" label="Loading available times" />
               <span>Loading times...</span>
             </div>
@@ -73,7 +74,7 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
               onChange={(e) => onTimeChange((e.target as HTMLSelectElement).value)}
             />
           ) : (
-            <p class="inline-helper inline-helper-error no-availability">
+            <p class={`${styles.inlineHelper} ${styles.inlineHelperError}`}>
               No times available for this date with {formData.guests} guests. Try a different date or fewer guests.
             </p>
           )}

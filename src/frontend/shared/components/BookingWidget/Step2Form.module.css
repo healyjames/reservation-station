@@ -1,0 +1,57 @@
+.content {
+  animation: slideIn 0.3s ease-out;
+  padding: var(--space-6);
+}
+
+.nav {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.stepIndicator {
+  background: var(--background-light);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-xs);
+  font-size: 0.875rem;
+  color: var(--primary-lighter);
+  font-weight: 600;
+}
+
+.backBtn {
+  border: none;
+  border-radius: var(--radius-xs);
+  padding: var(--space-2) var(--space-4);
+  background: var(--background-lighter);
+  color: var(--foreground-lightest);
+  font: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.backBtn:hover:not(:disabled) {
+  background: var(--background-lightest);
+}
+
+.backBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
