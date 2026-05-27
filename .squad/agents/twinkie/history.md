@@ -34,6 +34,14 @@ Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget
 
 ## Learnings
 
+### CSS file organization audit (2026-05-27)
+
+- `public/shared.css` is still the active base stylesheet for the Preact public/admin surfaces: design tokens, resets, shared utilities, standalone page helpers, and a few intentionally global classes like `.details-list` / `.detail-row` that some shared components still depend on.
+- `public/styles.css` and `public/admin/styles/admin.css` both `@import '/shared.css'`, so they are surface-specific layers on top of the shared base rather than fully independent bundles.
+- `src/frontend/admin/index.html` currently links `/shared.css` and `/admin/styles/admin.css`, while `admin.css` also imports `shared.css`; that means the admin surface is redundantly loading the shared stylesheet.
+- After the Preact migration, these public CSS files are not dead assets — Vite copies them from `public/`, the HTML entry points still reference them directly, and some shared components still rely on global class hooks instead of CSS Modules.
+- The better cleanup path is not a single mega-CSS file; it is to keep a shared base plus thin surface stylesheets, remove redundant imports/links, and gradually migrate leftover global selectors into CSS Modules where practical.
+
 ### Phase 7 — Admin SPA (internal tool) (2026-05-24)
 
 - Admin SPA uses ONE Vite entry (`src/frontend/admin/index.html`) replacing 3 vanilla HTML pages (index.html, dashboard.html, settings.html). View routing via signal: `'login' | 'dashboard' | 'settings'`.
@@ -240,3 +248,8 @@ This ensures buttons, inputs, selects, and textareas inherit the Google Sans fon
 - Kept `public/styles.css`, `public/shared.css`, `public/admin/styles/admin.css`, fonts, and `public/js/theme.js` because the Preact HTML entries still depend on those static assets.
 - Documented the cleanup in `documentation/LEGACY_FRONTEND_REMOVAL.md` and verified it with `npm run build`.
 
+### CSS dedupe cleanup (2026-05-27)
+
+- Removed the redundant `/shared.css` `<link>` from `src/frontend/admin/index.html`; admin now relies on `public/admin/styles/admin.css` importing the shared base once.
+- Deleted the appended `frontend-audit.css` duplicate tail from `public/styles.css`; the widget stylesheet is back to being the booking-surface layer on top of `public/shared.css`.
+- Trimmed legacy booking/admin-only rules back out of `public/shared.css` so it keeps shared primitives and standalone-page helpers, while admin/dashboard and booking-step presentation stay in their surface stylesheets.

@@ -355,17 +355,6 @@ textarea:user-invalid + .field-error {
   display: block;
 }
 
-.step-indicator {
-  display: inline-flex;
-  width: fit-content;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-xs);
-  background: var(--background);
-  color: var(--primary-lighter);
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
 .selected-date-info {
   padding: var(--space-4);
   border: var(--border-width) solid var(--background-darker);
@@ -693,8 +682,6 @@ textarea:user-invalid + .field-error {
   }
 }
 
-/* Merged from frontend-audit.css */
-
 @font-face {
   font-family: 'Google Sans';
   font-style: normal;
@@ -799,10 +786,7 @@ body {
   gap: var(--space-3);
 }
 
-.calendar-header h2,
-.booking-header h1,
-.booking-header h2,
-.bd-month-label {
+.calendar-header h2 {
   margin: 0;
   color: var(--text-primary);
 }
@@ -815,9 +799,7 @@ body {
 }
 
 .calendar-nav button,
-.calendar-nav-btn,
-.bd-prev-btn,
-.bd-next-btn {
+.calendar-nav-btn {
   background: none;
   border: 1px solid var(--border-primary);
   color: var(--text-primary);
@@ -829,17 +811,13 @@ body {
 }
 
 .calendar-nav button:hover:not(:disabled),
-.calendar-nav-btn:hover:not(:disabled),
-.bd-prev-btn:hover:not(:disabled),
-.bd-next-btn:hover:not(:disabled) {
+.calendar-nav-btn:hover:not(:disabled) {
   background-color: var(--surface-hover);
   border-color: var(--border-secondary);
 }
 
 .calendar-nav button:disabled,
-.calendar-nav-btn:disabled,
-.bd-prev-btn:disabled,
-.bd-next-btn:disabled {
+.calendar-nav-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -969,196 +947,6 @@ body {
   color: var(--info-light);
 }
 
-.booking-form-content {
-  display: grid;
-  gap: var(--space-8);
-}
-
-.booking-header {
-  text-align: center;
-  margin-bottom: var(--space-6);
-}
-
-.booking-header h1,
-.booking-header h2 {
-  font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-bold);
-  margin-bottom: var(--space-2);
-}
-
-.step-indicator {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-full);
-  background-color: var(--background-light);
-  color: var(--primary);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-}
-
-.dashboard-layout {
-  display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr;
-  grid-template-rows: var(--header-height) 1fr;
-  grid-template-areas:
-    'sidebar header'
-    'sidebar main';
-  min-height: 100vh;
-}
-
-.main-header {
-  grid-area: header;
-  background-color: var(--surface);
-  border-bottom: 1px solid var(--border-subtle);
-  padding: 0 var(--space-6);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.sidebar-nav {
-  grid-area: sidebar;
-  background-color: var(--surface);
-  border-right: 1px solid var(--border-subtle);
-  padding: var(--space-6) 0;
-}
-
-.main-panel,
-.main-content,
-#main-content {
-  grid-area: main;
-  padding: var(--space-6);
-  overflow-y: auto;
-}
-
-.page-container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.sidebar-nav ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebar-nav li {
-  margin: var(--space-1) 0;
-}
-
-.sidebar-nav a,
-.sidebar-nav button,
-.tab-btn {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: var(--space-3) var(--space-6);
-  color: var(--text-secondary);
-  text-decoration: none;
-  background: none;
-  border: none;
-  transition: all 0.2s ease;
-  font: inherit;
-  cursor: pointer;
-  text-align: left;
-}
-
-.sidebar-nav a:hover,
-.sidebar-nav button:hover,
-.tab-btn:hover {
-  background-color: var(--surface-hover);
-  color: var(--text-primary);
-}
-
-.sidebar-nav a.active,
-.sidebar-nav button.active,
-.tab-btn.active,
-.tab-btn[aria-current='page'] {
-  background-color: var(--surface-active);
-  color: var(--primary);
-  border-right: 3px solid var(--primary);
-}
-
-.tab-subnav,
-.tabs {
-  display: flex;
-  gap: var(--space-2);
-  border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: var(--space-6);
-}
-
-.tab-subnav .tab-btn,
-.tabs .tab-btn {
-  width: auto;
-  padding: var(--space-3) var(--space-5);
-  border-bottom: 2px solid transparent;
-}
-
-.tab-subnav .tab-btn.active,
-.tabs .tab-btn.active {
-  border-right: none;
-  border-bottom-color: var(--primary);
-}
-
-.admin-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: var(--surface);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.admin-table thead {
-  background-color: var(--background-light);
-}
-
-.admin-table th {
-  padding: var(--space-4) var(--space-5);
-  text-align: left;
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  border-bottom: 1px solid var(--border-subtle);
-  font-size: var(--font-size-sm);
-}
-
-.admin-table td {
-  padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-}
-
-.admin-table tbody tr {
-  transition: background-color 0.2s ease;
-}
-
-.admin-table tbody tr:hover {
-  background-color: var(--surface-hover);
-}
-
-.admin-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.booking-cards {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.booking-card {
-  background-color: var(--surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  transition: all 0.2s ease;
-}
-
-.booking-card:hover {
-  border-color: var(--border-secondary);
-  box-shadow: var(--shadow-md);
-}
-
 .loading-indicator {
   display: flex;
   align-items: center;
@@ -1177,8 +965,7 @@ body {
   line-height: var(--line-height-normal);
 }
 
-.inline-helper-error,
-.error-text {
+.inline-helper-error {
   color: var(--danger);
 }
 
@@ -1231,39 +1018,6 @@ body {
 }
 
 @media (max-width: 767px) {
-  .dashboard-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto var(--mobile-nav-height) 1fr;
-    grid-template-areas:
-      'header'
-      'sidebar'
-      'main';
-  }
-
-  .sidebar-nav {
-    display: flex;
-    overflow-x: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--border-subtle);
-    padding: 0;
-  }
-
-  .sidebar-nav a,
-  .sidebar-nav button,
-  .tab-btn {
-    white-space: nowrap;
-    border-right: none;
-    border-bottom: 3px solid transparent;
-  }
-
-  .sidebar-nav a.active,
-  .sidebar-nav button.active,
-  .tab-btn.active,
-  .tab-btn[aria-current='page'] {
-    border-right: none;
-    border-bottom: 3px solid var(--primary);
-  }
-
   .form-container,
   .standalone-card,
   .login-card {
