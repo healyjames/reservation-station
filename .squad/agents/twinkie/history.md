@@ -228,3 +228,15 @@ This ensures buttons, inputs, selects, and textareas inherit the Google Sans fon
 - Manage booking entry files were renamed to `BookingManageApp.tsx` and `booking-manage.tsx` to match the surface naming convention.
 - Verification: `npm run build` succeeds after the refactor, and `npx vitest run --config vitest.frontend.config.ts` passes (18 files, 98 tests).
 
+### CSS audit consolidation (2026-05-27)
+
+- Removed the standalone `public/frontend-audit.css` file by folding its rules into the legacy stylesheets that already anchor each Preact surface: `public/styles.css`, `public/shared.css`, and `public/admin/styles/admin.css`.
+- This keeps the audit rules in the same late-cascade position each surface already relied on while removing the extra `<link rel="stylesheet" href="/frontend-audit.css">` tags from every Preact entry HTML file.
+
+### Legacy public-surface cleanup (2026-05-27)
+
+- Added `src/frontend/index.html` to the Vite multi-entry build so `/` now ships the Preact booking surface instead of the retired vanilla `public/index.html`.
+- Removed legacy public surface files that had Preact replacements: the vanilla booking widget modules, legacy cancel/manage scripts, and the old admin HTML/JS pages.
+- Kept `public/styles.css`, `public/shared.css`, `public/admin/styles/admin.css`, fonts, and `public/js/theme.js` because the Preact HTML entries still depend on those static assets.
+- Documented the cleanup in `documentation/LEGACY_FRONTEND_REMOVAL.md` and verified it with `npm run build`.
+

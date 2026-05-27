@@ -1237,7 +1237,7 @@ Auth mechanism (Bearer JWT from localStorage) is framework-agnostic — no backe
 
 **Complexity:** Low. 4 views, no calendar, no form validation.
 
-**Keep vanilla alive:** Do not delete `public/js/cancel.js` until the Preact version is deployed and smoke-tested end-to-end.
+**Cleanup complete:** The legacy `public/js/cancel.js` file has been removed now that the Preact cancel surface owns this flow.
 
 > ⚠️ **Risk resolved:** URL param confirmed as `?id=` (not `?ref=`/`?tenant=` as originally documented in this plan). No tenant param — the cancel page only needs the reservation UUID.
 
@@ -1340,7 +1340,7 @@ Auth mechanism (Bearer JWT from localStorage) is framework-agnostic — no backe
 
 > ⚠️ **Risk — `ToggleSwitch` ×7 in opening hours:** By Phase 7, `ToggleSwitch` must be battle-tested from Phase 3. If any CSS Module `:has()` issues surfaced during Phase 3 testing, they must be fully resolved before wiring up all 7 instances here. Do not discover the CSS is broken at this stage.
 
-> ✅ **`calendar-core.js` deletion checkpoint:** Once Phase 7 is deployed and smoke-tested, `public/js/calendar-core.js` can be deleted. Before deleting, run: `grep -r "calendar-core" public/` and confirm zero remaining references.
+> ✅ **`calendar-core.js` cleanup complete:** `public/js/calendar-core.js` has been removed after the Preact widget and admin surfaces replaced the remaining vanilla consumers.
 
 ---
 
