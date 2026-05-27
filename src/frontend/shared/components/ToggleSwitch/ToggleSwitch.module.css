@@ -28,7 +28,7 @@
   width: 44px;
   height: 24px;
   border-radius: var(--radius-full);
-  background-color: var(--surface-active);
+  background-color: var(--background-lightest);
   transition: all 0.2s ease;
   flex-shrink: 0;
 }

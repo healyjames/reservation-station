@@ -32,7 +32,7 @@ export const Overview: FunctionComponent<OverviewProps> = ({
 
   return (
     <StandaloneLayout title="Manage your booking">
-      <p class="page-subtitle">View, edit, or cancel your reservation.</p>
+      <p>View, edit, or cancel your reservation.</p>
       {errorMessage.value && (
         <MessageCard variant="error" title="Something went wrong">
           <p>{errorMessage.value}</p>

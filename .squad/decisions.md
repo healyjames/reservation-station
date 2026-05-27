@@ -2,121 +2,6 @@
 
 ## Active Decisions
 
-### 2026-04-01: Tech stack confirmed
-**By:** James Healy
-**What:** Stack is Cloudflare Workers + Pages, D1 (SQLite), Hono (API framework), vanilla HTML/CSS/JS widget (no frontend framework).
-**Why:** Lightweight embeddable widget must work on any site with minimal footprint. Cloudflare-native stack keeps latency low and ops simple.
-
-### 2026-04-01: Team cast
-**By:** James Healy
-**What:** Team roster confirmed - Han (Lead), Sean (Backend), Twinkie (Frontend), Neela (Tester), Scribe, Ralph.
-**Universe:** Fast and Furious: Tokyo Drift.
-
-### 2026-04-01: No git operations by Copilot/squad
-**By:** James Healy (via Copilot)
-**What:** Squad must never run `git add`, `git commit`, or `git push`. Version control is managed exclusively by James.
-**Why:** User request - captured for team memory.
-
-### 2026-04-01: Calendar widget - design decisions
-**By:** Twinkie (Frontend Dev)
-**What:** Week starts Monday (ISO/UK norm). `SecondaryFont` resolved via `@font-face { src: local('Google+Sans') }` + Google Fonts fallback. `.today` uses dot indicator; `.selected` uses filled background. Warm burgundy palette (`--primary: #8b2635`). Prev-nav uses `pointer-events: none` + `disabled` (belt-and-suspenders). `renderCalendar` clears and rebuilds on every call (no DOM diffing).
-**Why:** Restaurant-appropriate aesthetics, reliable cross-browser font rendering, simple predictable render model.
-
-### 2026-04-01: Asset split - CSS and JS extracted from index.html
-**By:** Twinkie (Frontend Dev)
-**What:** Split `public/index.html` into `public/styles.css`, `public/js/theme.js` (blocking, in `<head>`), and `public/js/calendar.js` (ES module, deferred). No behaviour or visual change.
-**Why:** Separation of concerns; `type="module"` gives free implicit defer and module scope; blocking theme script prevents flash of incorrect theme.
-
-### 2026-04-01: Booking form - two-step module architecture
-**By:** Twinkie (Frontend Dev)
-**What:** Booking form lives in `public/js/booking-form.js` as a separate ES module; `calendar.js` uses dynamic import to load it on date selection. Module-scoped `formState` tracks step and form data. Real-time validation on input events.
-**Why:** Clean separation of concerns; lazy-loads form code only when needed; no global state pollution; consistent dark theme throughout.
-
-### 2026-04-01: Blocked times UI pattern
-**By:** Twinkie (Frontend Dev)
-**What:** Fail-open on API errors (`fetchBlockedTimes` returns `[]`). Re-render entire step 1 on guest count change (clean state, no edge cases). Show actionable no-availability message when all slots blocked (suggests fewer guests or different date). `formState.blockedTimes` kept as top-level derived state.
-**Why:** Network failures must not block customers; backend enforces hard capacity limit at creation time. Re-rendering is simple and eliminates stale state risk.
-
-### 2026-04-01: Blocked times test coverage
-**By:** Neela (Tester)
-**What:** 6 test cases for `GET /api/reservations/blocked-times`: missing params (400), unknown tenant (404), empty state (no blocks), `max_guests=0` (unlimited - never blocks), capacity boundary (slot blocked when sum exceeds limit), time-window boundary (distant slots not blocked). Far-future dates (2099) used to avoid `block_current_day` conflicts.
-**Why:** Edge case noted - `max_guests=0` means no concurrent limit, must always return empty `blocked_times`.
-
-### 2026-04-05: Concurrent guest time limit
-**By:** Sean (Backend Dev) - requested by James Healy
-**What:** Added `concurrent_guests_time_limit INTEGER NOT NULL DEFAULT 120` to Tenants table. New endpoint `GET /api/reservations/blocked-times` computes which time slots would exceed `max_guests` within the time window using `|slotMinutes - reservationMinutes| < concurrent_guests_time_limit`. Returns `{ blocked_times, time_limit_minutes }`. Frontend fetches on date selection and guest count change.
-**Why:** `max_guests` is concurrent capacity. Without a time window, the system had no way to calculate overlapping occupancy. Configurable per tenant to match table turnover patterns.
-
-### 2026-04-07T18:48:55Z: No code comments
-**By:** James Healy (via Copilot)
-**What:** Do not add comments to code changes. No inline comments, no explanatory comments, no JSDoc - unless code is genuinely complex enough that it cannot be understood without a comment.
-**Why:** User request - captured for team memory.
-
-### 2026-04-12T19:44:31Z: Planning artifacts location
-**By:** James Healy (via Copilot)
-**What:** Planning artifacts and working markdown files (plans, design docs, research notes) must be stored in `.squad/temp/` - never in the Copilot session state directory (`~/.copilot/session-state/`).
-**Why:** User request - keeps planning docs with the repo and visible to the team.
-
-### 2026-04-06: API logging strategy
-**By:** Sean (Backend Dev)
-**What:** Removed Hono `logger()` middleware. `console.error` only on genuine errors (D1 write failures, unexpected missing tenant inside POST /reservations). Validation failures log with `z.prettifyError` plus raw body IDs. Business-rule rejections (422) and expected 404s are silent. Log format: `[route-file] VERB description` with context object.
-**Why:** James's requirement to log only when things go wrong. Cloudflare Workers tail logs are the target; `console.error` is the correct primitive. No external logging service.
-
-### 2026-04-05: Admin auth foundation
-**By:** Sean (Backend Dev)
-**What:** Added `AdminUsers` table (migration `0002`) with `failed_attempts` + `locked_until` for in-table rate limiting (10 failures → 15-min lock). PBKDF2-SHA-256 (100k iterations) password hashing and HMAC-SHA256 JWTs via Web Crypto API (`src/utils/auth.ts`). `POST /api/auth/login` route. `adminAuth` JWT middleware sets `userId` + `tenantId` on Hono context. `JWT_SECRET` is a Wrangler secret declared in `src/types/env.d.ts` until `npx wrangler types` is re-run. Auth responses use `{ success, data?, error? }` envelope.
-**Why:** Admin dashboard requires authenticated access; pure Web Crypto avoids external dependencies; in-table rate limiting is simpler than a separate attempts table.
-
-### 2026-04-05: Admin API routes
-**By:** Sean (Backend Dev)
-**What:** Created `src/routes/admin.ts` with `GET/PATCH /me` and `GET/PATCH/DELETE /reservations`, all protected by `adminAuth` middleware. `tenantId` read exclusively from JWT - never from request body, query params, or URL. Double tenant isolation: application-layer pre-fetch + SQL `WHERE id = ? AND tenant_id = ?`. 404 returned for both not-found and wrong-tenant (prevents resource enumeration). `tenant_code` stripped on `PATCH /me`. `signJWT` extended with optional `expiresInSeconds` (default 8h).
-**Why:** Tenant impersonation prevention; resource enumeration protection; `expiresInSeconds` extension required by the test suite.
-
-### 2026-04-05: Admin login UI
-**By:** Twinkie (Frontend Dev)
-**What:** Created `public/admin/` with `index.html` (login page), `styles/admin.css` (warm burgundy design tokens, separate from public widget's stylesheet), `js/auth.js` (`window.AdminAuth` IIFE global). Blocking inline redirect in `<head>` for already-authenticated users. CSS-only loading spinner. Inline error banner with `aria-live="assertive"`. No `window.alert()`.
-**Why:** No bundler; IIFE global required for synchronous `requireAuth()` execution; separate CSS tokens prevent coupling between admin and public widget stylesheets.
-
-### 2026-04-05: Admin dashboard (phases 4–7)
-**By:** Twinkie (Frontend Dev)
-**What:** Created `public/admin/dashboard.html`, `dashboard.js`, `booking-modal.js`, `settings.js`. Native `<dialog>` for modal (browser handles focus trap + Escape). Table + cards dual-render, CSS toggles at 640px breakpoint (clean print always uses table). Settings tab lazy-initialised on first activation. Date arithmetic via `new Date(y, m-1, d)` to avoid timezone drift. Tenant name pre-populated from localStorage cache. `block_current_day` sent as integer `1`/`0`.
-**Why:** `<dialog>` handles focus trap and Escape natively; dual render enables clean print; lazy init avoids double `/api/admin/me` call at startup.
-
-### 2026-04-13: Spacing & sizing token system
-**By:** Twinkie (Frontend Dev)
-**What:** Added a `/* SPACING & SIZING TOKENS */` `:root` block to `public/shared.css` establishing a 4px-base token system (36 tokens). All derived values use `calc()`. Scale steps: 1, 2, 3, 4, 5, 6, 8, 10, 12, 16 (only steps that existed in the codebase). Applied across `public/styles.css` and `public/admin/styles/admin.css`, replacing hardcoded magic numbers.  Token categories: space scale, border radius, border widths, touch/icon/component sizing. Key rules: only clean-scale px values converted; rem-based layout spacing left alone; `--radius-full: 9999px` used for pill shapes (was `border-radius: 20px`); `border-radius: 50%` circles left as-is; decorative values (box-shadow offsets, animation transforms) left as-is.
-**Why:** Scattered hardcoded magic numbers across both CSS files with no consistency system. Token system makes the design scale visible and the base theoretically changeable. Rem tokens rejected — existing widget uses px for spacing and rem for typography; mixing would add confusion.
-
-### 2026-04-05: Admin test suite (phase 8)
-**By:** Neela (Tester)
-**What:** Created `test/auth.spec.ts` (10 tests) and `test/admin.spec.ts` (13 tests). `hashPassword` imported at test runtime for seeds (no stale pre-computed hashes). `getAuthToken()` calls real login endpoint. `signJWT` called with `expiresInSeconds: -1` for expired-token test. Tenant isolation returns 404 (not 403). `PATCH /me` immutability verified by DB assertion. Distinct UUID constants per test file to avoid cross-file collisions.
-**Why:** Tests written before implementation to drive Sean's phase 1+2 spec; real hash avoids staleness; 404 for isolation prevents resource enumeration.
-
-### 2026-04-14: Admin dashboard sidebar grid layout
-**By:** Twinkie (Frontend Dev)
-**What:** Converted admin dashboard from sticky-header + horizontal-tab layout to a 4-cell CSS Grid sidebar layout. `--sidebar-width: 220px` token added to `:root`. Active nav indicator changed from bottom-border to left-border on desktop. New `@media (max-width: 768px)` breakpoint collapses sidebar to a full-width horizontal scroll-nav; existing `640px` breakpoint retained for card/table layout. `@media print` sets `.dashboard-layout { display: block }`. All JS-depended IDs and classes (`#venue-name`, `#logout-btn`, `.tab-btn`, `.tab-view`, `#main-content`) preserved.
-**Why:** Sidebar layout is the standard pattern for admin dashboards. CSS Grid gives explicit named-cell placement. Width tokenised for single-point tunability.
-
-### 2026-04-07: block_current_day schema accepts boolean | 0 | 1
-**By:** Sean (Backend Dev)
-**What:** `block_current_day` in `TenantSchema` (and `UpdateTenantSchema`) now validates as `z.union([z.boolean(), z.literal(0), z.literal(1)])` instead of `z.boolean()`.
-**Why:** The admin dashboard frontend sends `block_current_day` as integer `1` or `0` (established design decision). D1/SQLite stores and returns boolean columns as integers. `z.boolean()` was rejecting valid payloads with a 400 on PATCH `/api/admin/me`. Accepting both forms matches the actual data contract end-to-end without requiring coercion in routes or the frontend.
-
-### 2026-04-05: Tenants table date columns (migration 0003)
-**By:** Sean (Backend Dev)
-**What:** Migration `0003_tenants_dates.sql` adds `created_date` and `modified_date` columns to `Tenants` with `DEFAULT (CURRENT_TIMESTAMP)`. `src/db/schema.sql` updated to match.
-**Why:** `PATCH /api/admin/me` writes `modified_date` on every update. The column did not exist on `Tenants`, causing a D1_ERROR 500 at runtime. `Reservations` and `AdminUsers` already had these columns; this brings `Tenants` into line.
-
-### 2026-04-14: Admin dashboard 2-div layout
-**By:** Twinkie (Frontend Dev)
-**What:** Replaced the 4-cell CSS Grid layout (sidebar-logo / topbar-actions / sidebar-nav / main-content) with a 2-child grid: `.sidebar-nav` (left) + `.main-panel` (right, flex column containing `.main-header` and `#main-content`). At mobile (`max-width: 768px`), `.main-panel` uses `display: contents` so its children join the outer flex column with CSS `order` control: header (1), sidebar nav row (2), content (3). `.sidebar-logo` and `.topbar-actions` CSS classes removed. All JS-consumed IDs unchanged.
-**Why:** Semantically cleaner — the header belongs with the content panel, not floating as a separate grid cell. Fewer grid areas to maintain.
-
-### 2026-04-15: BlockedDates test suite
-**By:** Neela (Tester)
-**What:** Created `test/blocked-dates.spec.ts` with 24 tests: 11 admin CRUD tests, 7 public endpoint tests (`GET /api/reservations/blocked-dates`), 3 blocked-times integration tests, 3 reservation creation enforcement tests. UUID range `000000000601–000000000901`. `seedTenant` omits `block_current_day` (relies on `DEFAULT FALSE`, forward-compatible with migration). `clearDb` wraps `DELETE FROM BlockedDates` in `.catch(() => {})`. Full-day block asserted as all 20 slots blocked. Time-range boundary edge slot left unasserted (semantics Sean's call). DELETE tests accept 200 or 204.
-**Why:** Feature coverage for the BlockedDates system replacing `block_current_day`. Full-day block short-circuits capacity logic; time-range blocks merge with capacity blocks; reservation creation guard checked.
-
 ### 2026-05-14: Font loading — preload hints
 **By:** Twinkie (Frontend Dev)
 **What:** All three HTML entry points (`public/index.html`, `public/admin/index.html`, `public/admin/dashboard.html`) now include `<link rel="preload">` hints for both self-hosted variable font files before their stylesheet links. `font-display: swap` retained in `shared.css`.
@@ -324,6 +209,89 @@ Barrel `src/frontend/shared/components/index.ts` updated to include all Layer A/
 **By:** Twinkie (Frontend Dev)
 **What:** Added hover/range props directly to `CalendarGrid` and `DayCell`. `CalendarGrid` new props: `isRangeStart`, `isInRange`, `isRangeEnd` (predicate functions), `onHoverDate` (callback), `onLeaveGrid` (callback). `DayCell` new props: `isRangeStart`, `isInRange`, `isRangeEnd` (booleans), `onMouseEnter` (callback). Range CSS classes added to `CalendarGrid.module.css`: `.rangeStart`, `.inRange`, `.rangeEnd`. All new props default to `undefined`/`false`. `BlockedDatesSettings` owns `rangeStart` and `hoverDate` signals; click logic: same-day → toggle, same-month → block range, different-month → toggle. Existing CalendarGrid usages (booking widget, manage-booking) are unaffected.
 **Why:** Predicate function API is consistent with existing `isBlocked`/`isDisabled` pattern in CalendarGrid. Keeps `BlockedDatesSettings` in full control of range state. Safe defaults mean no changes required in non-admin contexts.
+
+### 2026-05-27: Booking widget surface boundary
+**Source:** `.squad/decisions/inbox/han-booking-widget-surface-boundary.md`
+
+# Booking widget surface boundary
+
+- **By:** Han
+- **Date:** 2026-05-27
+- **Decision:** `src/frontend/booking-widget/` remains a surface entry, not a shared component folder. `admin/`, `cancel/`, and `booking/manage/` are the same class of thing: standalone frontend surfaces with thin entries over `src/frontend/shared/`.
+- **Details:** The correct split is surface entry vs reusable runtime code. Surface folders own `index.html`, bootstrap, bundle boundary, and page-level state. Reusable UI for the booking flow belongs under `src/frontend/shared/components/BookingWidget/`, which is already the case. The real cleanup target is not demoting `booking-widget`; it is removing the remaining ambiguity between legacy `public/` surfaces and the new Preact surfaces, then picking one canonical public booking entry.
+- **Why:** This keeps deployable/public routes explicit, preserves thin-entry architecture, and avoids collapsing page-level concerns into shared component directories.
+
+### 2026-05-26: Twinkie decision: audit token layer
+**By:** Twinkie
+**Date:** 2026-05-26
+**Source:** `.squad/decisions/inbox/twinkie-audit-token-layer.md`
+
+# Twinkie decision: audit token layer
+
+## What
+Added `public/frontend-audit.css` as a shared audit-compatibility layer, loaded after the legacy global stylesheets on every Preact entrypoint.
+
+## Why
+The CSS audit defines a newer token vocabulary (`--text-*`, `--surface-*`, `--border-*`, spacing/typography/shadow tokens) than the legacy theme system (`--foreground`, `--error`, older background tokens). Loading a compatibility layer lets Preact components consume the audited design tokens immediately while preserving the existing `theme.js` runtime overrides and older global styles.
+
+## Impact
+- All Preact entrypoints now receive the audited token set.
+- Shared CSS modules can standardise on the audited semantic tokens.
+- Legacy global styles remain functional during the transition.
+
+### 2026-05-27: Twinkie decision: CSS dedupe shared boundaries
+**By:** Twinkie
+**Date:** 2026-05-27
+**Source:** `.squad/decisions/inbox/twinkie-css-dedupe-shared-boundaries.md`
+
+# Twinkie decision: CSS dedupe shared boundaries
+
+- Removed the redundant `/shared.css` link from `src/frontend/admin/index.html` because `public/admin/styles/admin.css` already imports the shared stylesheet.
+- Deleted the appended `frontend-audit.css` duplicate block from `public/styles.css`.
+- Trimmed booking-widget-only and admin-only legacy selectors back out of `public/shared.css` so shared.css stays focused on tokens and genuinely shared primitives, while surface presentation remains in `styles.css` and `admin.css`.
+
+### 2026-05-27: Twinkie decision: frontend audit merge
+**By:** Twinkie
+**Date:** 2026-05-27
+**Source:** `.squad/decisions/inbox/twinkie-frontend-audit-merge.md`
+
+# Twinkie decision: frontend audit merge
+
+## What
+Merged `public/frontend-audit.css` into the existing legacy stylesheets that define each Preact surface instead of choosing a single destination file:
+- `public/styles.css` for the booking widget surfaces
+- `public/shared.css` for shared standalone surfaces
+- `public/admin/styles/admin.css` for the admin surface
+
+## Why
+The audit layer originally loaded *after* each surface's legacy stylesheet stack. Distributing the merged rules to the end of those existing files preserves that cascade order while letting us remove the extra `/frontend-audit.css` `<link>` from every Preact entry HTML file.
+
+### 2026-05-27: Twinkie decision — root preact entry
+**By:** Twinkie
+**Date:** 2026-05-27
+**Source:** `.squad/decisions/inbox/twinkie-root-preact-entry.md`
+
+# Twinkie decision — root preact entry
+
+## What
+Made `src/frontend/index.html` the canonical built root entry by adding it to Vite's multi-entry inputs, then removed the retired vanilla `public/index.html` and other legacy public surface files that already had Preact replacements.
+
+## Why
+The repo had two competing public booking entry points: the old vanilla root page in `public/` and the Preact booking surfaces in `src/frontend/`. Building the root route from `src/frontend/index.html` removes that ambiguity while keeping the shared static CSS and `theme.js` assets that the Preact surfaces still use.
+
+## Keep
+`public/styles.css`, `public/shared.css`, `public/admin/styles/admin.css`, `public/js/theme.js`, and font assets remain live runtime dependencies for the Preact HTML entries.
+
+### 2026-05-27: Shared-first frontend structure
+**Source:** `.squad/decisions/inbox/twinkie-shared-first-frontend-structure.md`
+
+# Shared-first frontend structure
+
+- **By:** Twinkie
+- **Date:** 2026-05-27
+- **Decision:** Surface folders under `src/frontend/` stay entry-only. Shared runtime code now lives under `src/frontend/shared/`, including domain-specific hooks, types, components, and the admin fetch helper.
+- **Details:** Former surface views were promoted into `shared/components/<Surface>/` and dropped the `View` suffix. To avoid the name collision between the former `SettingsView` page and the nested admin settings container, the page-level component stays `shared/components/Admin/Settings.tsx` and the nested shell is `shared/components/Admin/SettingsPanel.tsx`. The admin request helper moved to `shared/utils/adminFetch.ts` so `src/frontend/admin/` remains limited to `index.html`, `admin.tsx`, and `AdminApp.tsx`.
+- **Why:** This keeps every surface as a thin composition layer, makes cross-surface imports consistent through `@shared/*`, and preserves a predictable naming scheme as more shared Preact code lands.
 
 ## Directives
 

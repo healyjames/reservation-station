@@ -21,7 +21,7 @@
 }
 
 .interactive {
-  background-color: var(--surface);
+  background-color: var(--background-light);
 }
 
 .valueInteractive {
@@ -42,6 +42,6 @@
 }
 
 .changeBtn:hover {
-  background-color: var(--surface-hover);
+  background-color: var(--background-lightest);
   border-color: var(--border-secondary);
 }

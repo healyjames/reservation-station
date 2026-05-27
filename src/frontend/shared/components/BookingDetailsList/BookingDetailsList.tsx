@@ -14,8 +14,8 @@ const BookingDetailsList: FunctionComponent<BookingDetailsListProps> = ({ detail
   <dl class="details-list">
     {details.map(({ label, value }) => (
       <div key={label} class="detail-row">
-        <dt>{label}</dt>
-        <dd>{value}</dd>
+        <dt class="detail-term">{label}</dt>
+        <dd class="detail-value">{value}</dd>
       </div>
     ))}
   </dl>

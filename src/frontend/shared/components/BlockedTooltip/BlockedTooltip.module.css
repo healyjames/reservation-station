@@ -1,5 +1,5 @@
 .tooltip {
-  background: var(--surface);
+  background: var(--background-light);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-md);
   padding: var(--space-3);
@@ -43,5 +43,5 @@
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 6px solid var(--surface);
+  border-top: 6px solid var(--background-light);
 }

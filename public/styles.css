@@ -47,7 +47,7 @@
 }
 
 .calendar-nav button {
-  background: var(--background-light);
+  background: var(--background-lighter);
   border: none;
   border-radius: var(--radius-xs);
   padding: var(--space-2) var(--space-4);
@@ -57,7 +57,7 @@
 }
 
 .calendar-nav button:hover {
-  background: var(--background);
+  background: var(--background-lightest);
 }
 
 .calendar-grid {

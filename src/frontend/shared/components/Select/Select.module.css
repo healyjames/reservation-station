@@ -21,7 +21,7 @@
 .select:focus {
   outline: none;
   border-color: var(--border-focus);
-  background-color: var(--surface);
+  background-color: var(--background-light);
 }
 
 .select:disabled {

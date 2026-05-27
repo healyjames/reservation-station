@@ -64,18 +64,18 @@
 }
 
 .secondary:hover:not(:disabled) {
-  background-color: var(--surface-hover);
+  background-color: var(--background-light-hover);
   border-color: var(--border-secondary);
 }
 
 .secondary:active:not(:disabled) {
-  background-color: var(--surface-active);
+  background-color: var(--background-light-active);
 }
 
 .danger {
-  background-color: var(--danger);
-  color: var(--text-inverse);
-  border-color: var(--danger);
+  background-color: var(--danger-dark);
+  color: white;
+  border-color: var(--danger-dark);
 }
 
 .danger:hover:not(:disabled) {
@@ -90,7 +90,7 @@
 }
 
 .ghost:hover:not(:disabled) {
-  background-color: var(--surface-hover);
+  background-color: var(--background-light-hover);
   border-color: var(--border-secondary);
 }
 

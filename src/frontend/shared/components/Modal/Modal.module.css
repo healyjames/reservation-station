@@ -1,7 +1,7 @@
 .dialog {
   border: none;
   border-radius: var(--radius-xl);
-  background-color: var(--surface);
+  background-color: var(--background-light);
   color: var(--text-primary);
   padding: 0;
   max-width: 500px;
