@@ -3,7 +3,8 @@ import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
 import { MONTHS } from '@shared/types';
-import { CalendarGrid, BlockedTooltip } from '@shared/components';
+import { CalendarGrid, BlockedTooltip, Button } from '@shared/components';
+import styles from './Calendar.module.css';
 
 interface CalendarProps {
   year: number;
@@ -62,23 +63,28 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
   const onCurrentMonth = year === todayYear && month === todayMonth;
 
   return (
-    <div class="calendar-container" role="region" aria-label="Date picker">
-      <div class="calendar-header">
-        <h2 id="calendar-title">{MONTHS[month]} {year}</h2>
-        <div class="calendar-nav">
-          <button
-            id="prev-month"
+    <div class={styles.container} role="region" aria-label="Date picker">
+      <div class={styles.header}>
+        <div class={styles.nav}>
+          <Button
+            type="button"
+            class={styles.nav_button}
             aria-label="Previous month"
             disabled={onCurrentMonth}
             onClick={prevMonth}
-          >&#8592;</button>
-          <button
-            id="next-month"
+						size="sm"
+          >&#8592;</Button>
+					<h2 id="calendar-title">{MONTHS[month]} {year}</h2>
+          <Button
+            type="button"
+            class={styles.nav_button}
             aria-label="Next month"
             onClick={nextMonth}
-          >&#8594;</button>
+						size="sm"
+          >&#8594;</Button>
         </div>
       </div>
+
       <CalendarGrid
         year={year}
         month={month}
@@ -88,6 +94,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
         onSelect={onDateSelect}
         onBlockedSelect={handleBlockedSelect}
       />
+
       <BlockedTooltip
         visible={tooltipVisible.value}
         message="Bookings currently unavailable for this date"
