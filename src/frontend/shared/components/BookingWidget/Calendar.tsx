@@ -73,6 +73,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
             disabled={onCurrentMonth}
             onClick={prevMonth}
 						size="sm"
+						variant="ghost"
           >&#8592;</Button>
 					<h2 id="calendar-title">{MONTHS[month]} {year}</h2>
           <Button
@@ -81,6 +82,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
             aria-label="Next month"
             onClick={nextMonth}
 						size="sm"
+						variant="ghost"
           >&#8594;</Button>
         </div>
       </div>
