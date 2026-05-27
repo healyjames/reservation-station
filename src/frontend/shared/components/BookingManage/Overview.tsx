@@ -3,6 +3,7 @@ import type { Signal } from '@preact/signals';
 import type { Reservation } from '@shared/types';
 import { StandaloneLayout, BookingDetailsList, Button, MessageCard } from '@shared/components';
 import { formatDate, getFullName, getGuestsLabel } from '@shared/utils';
+import styles from './Overview.module.css';
 
 interface OverviewProps {
   reservation: Signal<Reservation | null>;
@@ -39,8 +40,8 @@ export const Overview: FunctionComponent<OverviewProps> = ({
         </MessageCard>
       )}
       <BookingDetailsList details={details} />
-      <div class="action-group">
-        <Button variant="secondary" onClick={goToEditDetails}>Edit Details</Button>
+      <div class={styles.action_group}>
+        <Button variant="primary" onClick={goToEditDetails}>Edit Details</Button>
         <Button variant="secondary" onClick={() => goToChangeDatetime()}>Change Date &amp; Time</Button>
       </div>
       <Button variant="danger" fullWidth onClick={goToCancelConfirm}>Cancel Booking</Button>

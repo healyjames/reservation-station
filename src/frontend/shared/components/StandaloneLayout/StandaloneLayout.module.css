@@ -30,12 +30,6 @@
 }
 
 @media (max-width: 640px) {
-  .page {
-    height: 100vh;
-    display: flex;
-    align-items: center;
-  }
-
   .container {
     min-height: auto;
     align-items: stretch;

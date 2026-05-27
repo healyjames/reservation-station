@@ -38,3 +38,12 @@ Frontend Dev on the Maximum Bookings project. Twinkie owns frontend surface work
 - Admin HTML must not link `/shared.css` directly when `public/admin/styles/admin.css` already imports it; otherwise the shared base loads twice.
 - `public/shared.css` should stay focused on tokens, resets, shared primitives, standalone-page helpers, and the few intentional global hooks used by shared components. Surface presentation belongs in `public/styles.css` or `public/admin/styles/admin.css`.
 - Form element CSS modules must explicitly set `font-family: inherit`; otherwise buttons, inputs, and selects fall back to browser defaults after the Preact migration.
+
+## Learnings
+
+### BookingManage Overview CSS module extraction (2026-05-27)
+
+- `Overview.tsx` referenced one global class: `action-group`.
+- `action-group` is shared by `CancelConfirm.tsx`, `ChangeDateTime.tsx`, and `EditDetails.tsx`, so its global rules stay in `public/shared.css`.
+- Copied the equivalent rules into `Overview.module.css`, including the `@media (min-width: 640px)` grid-column layout.
+- Mapping used: `action-group` → `action_group`.

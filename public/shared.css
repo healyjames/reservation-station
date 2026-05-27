@@ -668,7 +668,7 @@ textarea:user-invalid + .field-error {
 
 @media (max-width: 640px) {
 	.standalone-page {
-		height: 100vh;
+		min-height: 100vh;
 		display: flex;
 		align-items: center;
 	}
