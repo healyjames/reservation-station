@@ -199,7 +199,7 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
         <Button type="button" variant="secondary" onClick={goToOverview}>← Back</Button>
         <Button
           type="button"
-          variant="secondary"
+          variant="primary"
           disabled={!canSave}
           isLoading={isSaving.value}
           onClick={handleSave}

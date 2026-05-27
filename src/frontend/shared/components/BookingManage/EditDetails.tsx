@@ -5,6 +5,7 @@ import type { Signal } from '@preact/signals';
 import type { TenantConfig } from '@shared/types';
 import { StandaloneLayout, Input, Select, Textarea, FormField, Button, MessageCard } from '@shared/components';
 import type { EditData } from '@shared/types';
+import styles from './EditDetails.module.css';
 
 interface EditDetailsProps {
   editData: Signal<EditData | null>;
@@ -134,7 +135,7 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
             onChange={(e) => { guests.value = parseInt((e.target as HTMLSelectElement).value, 10); }}
           />
         </FormField>
-        <div class="action-group mt-2">
+        <div class={`${styles.action_group} mt-2`}>
           <Button type="button" variant="secondary" onClick={goToOverview}>← Back</Button>
           <Button type="submit" variant="secondary" isLoading={isSaving.value}>
             {isSaving.value ? 'Saving...' : 'Save Changes'}

@@ -46,7 +46,7 @@ export const CancelConfirm: FunctionComponent<CancelConfirmProps> = ({
       )}
       <BookingDetailsList details={details} />
       <div class="action-group">
-        <Button variant="secondary" onClick={goToOverview}>Keep My Booking</Button>
+        <Button variant="ghost" onClick={goToOverview}>Keep My Booking</Button>
         <Button variant="danger" isLoading={isCancelling.value} onClick={handleCancel}>
           {isCancelling.value ? 'Cancelling...' : 'Cancel My Booking'}
         </Button>
