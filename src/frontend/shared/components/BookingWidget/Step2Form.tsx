@@ -26,17 +26,14 @@ export const Step2Form: FunctionComponent<Step2FormProps> = ({
 
   return (
     <div class="booking-form-content">
-      <div class="booking-header">
-        <h2>Your Details</h2>
-        <div class="calendar-nav">
-          <div class="step-indicator">Step 2 of 2</div>
-          <button type="button" class="calendar-nav-btn" id="prev-step-btn" aria-label="Previous step" onClick={onBack}>
-            &#8592;
-          </button>
-        </div>
-      </div>
+			<div class="calendar-nav">
+				<div class="step-indicator">Step 2 of 2</div>
+				<button type="button" class="calendar-nav-btn" id="prev-step-btn" aria-label="Previous step" onClick={onBack}>
+					&#8592;
+				</button>
+			</div>
 
-      <form id="booking-form-step2" ref={formRef} onSubmit={handleSubmit}>
+      <form id="booking-form-step2" class="stack" ref={formRef} onSubmit={handleSubmit}>
         <FormField label="First Name" htmlFor="firstName" required>
           <Input
             id="firstName"

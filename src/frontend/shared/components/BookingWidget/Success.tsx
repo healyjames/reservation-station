@@ -24,9 +24,6 @@ export const Success: FunctionComponent<SuccessProps> = ({ formData, selectedDat
         </p>
         <p>We've sent a confirmation email to <strong>{formData.email}</strong>.</p>
       </MessageCard>
-      <Button variant="primary" onClick={onNewBooking}>
-        Make Another Booking
-      </Button>
     </div>
   );
 };

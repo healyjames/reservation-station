@@ -51,8 +51,20 @@
 }
 
 .today {
-  border-color: var(--primary);
-  border-width: 2px;
+  border-color: var(--primary-lightest);
+  border-width: var(--border-width-md);
+}
+
+.today::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary-lightest);
+  transform: translateX(-50%);
 }
 
 .past {
@@ -68,7 +80,6 @@
     var(--background) 3px,
     var(--background) 7px
   );
-  border-color: var(--background-darker);
   color: var(--foreground-darker);
   cursor: not-allowed;
   text-decoration: line-through;

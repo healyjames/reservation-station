@@ -6,19 +6,22 @@ import styles from './SelectedDateInfo.module.css';
 interface SelectedDateInfoProps {
   date: CalendarDate;
   onChangeDate?: () => void;
-  class?: string;
 }
 
-const SelectedDateInfo: FunctionComponent<SelectedDateInfoProps> = ({ date, onChangeDate, class: className }) => (
-  <div class={`${styles.container} ${onChangeDate ? styles.interactive : ''} ${className ?? ''}`}>
-    <div class={styles.label}>Selected Date</div>
-    <div class={`${styles.value} ${onChangeDate ? styles.valueInteractive : ''}`}>{formatDateForDisplay(date)}</div>
-    {onChangeDate && (
-      <button type="button" class={styles.changeBtn} onClick={onChangeDate}>
-        Change date
-      </button>
-    )}
-  </div>
-);
+const SelectedDateInfo: FunctionComponent<SelectedDateInfoProps> = ({
+  date,
+  onChangeDate,
+}) => {
+  const formattedDate = formatDateForDisplay(date);
+
+  return (
+    <div>
+      <p className={styles.label}>Selected Date</p>
+      <div>
+        <h2 className={styles.value}>{formattedDate}</h2>
+      </div>
+    </div>
+  );
+};
 
 export default SelectedDateInfo;

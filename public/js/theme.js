@@ -3,10 +3,11 @@
   var THEMES = {
     'default': {
       light: {
-        '--primary':           '#8b2635',
-        '--primary-lighter':   '#b5475a',
-        '--primary-lightest':  '#f5e8ea',
-        '--primary-darker':    '#5c1521',
+        '--primary':           '#266663',
+        '--primary-light':     '#3e7471',
+        '--primary-lighter':   '#548380',
+        '--primary-lightest':  '#69928f',
+        '--primary-darker':    '#1c1412',
         '--background':        '#f3ede8',
         '--background-light':  '#faf7f5',
         '--background-darker': '#c8b8ae',
@@ -14,20 +15,22 @@
         '--grey-lightest':     '#f5f5f5',
       },
       dark: {
-        '--primary':           '#c45a6a',
-        '--primary-lighter':   '#e07a8a',
-        '--primary-lightest':  '#3d1a20',
-        '--primary-darker':    '#a33d4a',
-        '--background':        '#1a1210',
-        '--background-light':  '#251918',
-        '--background-darker': '#2e1e1c',
-        '--foreground':        '#f3ede8',
+        '--primary':           '#266663',
+        '--primary-light':     '#3e7471',
+        '--primary-lighter':   '#548380',
+        '--primary-lightest':  '#69928f',
+        '--primary-darker':    '#bdcfce',
+        '--background':        '#121212',
+        '--background-light':  '#282828',
+        '--background-darker': '#0a0a0a',
+        '--foreground':        '#e9efee',
         '--grey-lightest':     '#2e1e1c',
       },
     },
     'caffeine': {
       light: {
         '--primary':           '#644a40',
+        '--primary-light':     '#77574b',
         '--primary-lighter':   '#8a6456',
         '--primary-lightest':  '#e8e8e8',
         '--primary-darker':    '#3e2e28',
@@ -39,6 +42,7 @@
       },
       dark: {
         '--primary':           '#ffe0c2',
+        '--primary-light':     '#ffe8d1',
         '--primary-lighter':   '#fff0e0',
         '--primary-lightest':  '#2a2a2a',
         '--primary-darker':    '#393028',
@@ -52,6 +56,7 @@
     'clean-slate': {
       light: {
         '--primary':           '#6366f1',
+        '--primary-light':     '#7279f4',
         '--primary-lighter':   '#818cf8',
         '--primary-lightest':  '#e0e7ff',
         '--primary-darker':    '#4f46e5',
@@ -63,6 +68,7 @@
       },
       dark: {
         '--primary':           '#818cf8',
+        '--primary-light':     '#93a0fa',
         '--primary-lighter':   '#a5b4fc',
         '--primary-lightest':  '#374151',
         '--primary-darker':    '#4f46e5',
@@ -76,6 +82,7 @@
     'kodama-grove': {
       light: {
         '--primary':           '#8d9d4f',
+        '--primary-light':     '#95a76d',
         '--primary-lighter':   '#9db18c',
         '--primary-lightest':  '#dbc894',
         '--primary-darker':    '#71856a',
@@ -87,6 +94,7 @@
       },
       dark: {
         '--primary':           '#8a9f7b',
+        '--primary-light':     '#93a883',
         '--primary-lighter':   '#9db18c',
         '--primary-lightest':  '#4a4439',
         '--primary-darker':    '#71856a',
@@ -100,6 +108,7 @@
     'mocha-mousse': {
       light: {
         '--primary':           '#A37764',
+        '--primary-light':     '#b38a76',
         '--primary-lighter':   '#C39E88',
         '--primary-lightest':  '#E4C7B8',
         '--primary-darker':    '#8A655A',
@@ -111,6 +120,7 @@
       },
       dark: {
         '--primary':           '#C39E88',
+        '--primary-light':     '#cbab93',
         '--primary-lighter':   '#d4b89e',
         '--primary-lightest':  '#56453F',
         '--primary-darker':    '#A37764',
@@ -124,6 +134,7 @@
     'sage-garden': {
       light: {
         '--primary':           '#7c9082',
+        '--primary-light':     '#8e9d85',
         '--primary-lighter':   '#a0aa88',
         '--primary-lightest':  '#bfc9bb',
         '--primary-darker':    '#5a6b5e',
@@ -135,6 +146,7 @@
       },
       dark: {
         '--primary':           '#7c9082',
+        '--primary-light':     '#8e9d85',
         '--primary-lighter':   '#a0aa88',
         '--primary-lightest':  '#36443a',
         '--primary-darker':    '#5a6b5e',
@@ -148,9 +160,9 @@
   };
 
   var params = new URLSearchParams(window.location.search);
-  var themeName = params.get('theme') || 'caffeine';
+  var themeName = params.get('theme') || 'default';
   var mode = params.get('mode') === 'light' ? 'light' : 'dark';
-  var themeSet = THEMES[themeName] || THEMES['caffeine'];
+  var themeSet = THEMES[themeName] || THEMES['default'];
   var theme = themeSet[mode];
   var root = document.documentElement;
   Object.keys(theme).forEach(function (prop) {

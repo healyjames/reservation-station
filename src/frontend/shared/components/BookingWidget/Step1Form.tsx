@@ -32,21 +32,15 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
 
   return (
     <div class="booking-form-content">
-      <div class="booking-header">
-        <h2>Book Your Table</h2>
-        <div class="calendar-nav">
-          <div class="step-indicator">Step 1 of 2</div>
-          <button type="button" class="calendar-nav-btn" disabled aria-label="Previous step">&#8592;</button>
-          <button
-            type="button"
-            class="calendar-nav-btn"
-            id="next-step-btn"
-            aria-label="Next step"
-            disabled={!isValid}
-            onClick={onNext}
-          >&#8594;</button>
-        </div>
-      </div>
+			<div class="calendar-nav">
+				<div class="step-indicator">Step 1 of 2</div>
+				<button
+						type="button"
+						class="calendar-close-btn"
+						aria-label="Close booking form"
+						onClick={onChangeDate}
+					>&#10006;</button>
+			</div>
 
       <SelectedDateInfo date={date} onChangeDate={onChangeDate} />
 

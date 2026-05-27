@@ -389,8 +389,6 @@ textarea:user-invalid + .field-error {
   position: relative;
 }
 
-.calendar-header,
-.calendar-nav,
 .form-navigation {
   display: flex;
   align-items: center;
@@ -425,6 +423,21 @@ textarea:user-invalid + .field-error {
 .calendar-nav-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+.calendar-close-btn {
+  border: none;
+  border-radius: var(--radius-xs);
+  padding: var(--space-2) var(--space-4);
+  background: var(--background-light);
+  color: var(--foreground-lightest);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.calendar-close-btn:hover:not(:disabled) {
+  background: var(--background-lightest);
 }
 
 .form-navigation {
