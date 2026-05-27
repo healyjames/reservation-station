@@ -15,12 +15,12 @@
   background-color: var(--background-light);
   border-radius: var(--radius-xl);
   padding: var(--space-8);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--background-darker);
 }
 
 .title {
   margin: 0 0 var(--space-3);
-  color: var(--text-primary);
+  color: var(--foreground);
   font-size: clamp(1.75rem, 4vw, 2.25rem);
 }
 

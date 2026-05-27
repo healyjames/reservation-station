@@ -2,12 +2,12 @@
   border: none;
   border-radius: var(--radius-xl);
   background-color: var(--background-light);
-  color: var(--text-primary);
+  color: var(--foreground);
   padding: 0;
   max-width: 500px;
   width: min(100%, 500px);
   max-height: 90vh;
-  box-shadow: var(--shadow-xl);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
 .dialog::backdrop {
@@ -24,27 +24,27 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-6);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--background-darker);
 }
 
 .title {
   margin: 0;
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-semibold);
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .closeBtn {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-secondary);
-  font-size: var(--font-size-2xl);
+  color: var(--foreground-dark);
+  font-size: 1.5rem;
   padding: 0;
   line-height: 1;
 }
 
 .closeBtn:hover {
-  color: var(--text-primary);
+  color: var(--foreground);
 }
 
 .body {
@@ -57,5 +57,5 @@
   justify-content: flex-end;
   gap: var(--space-3);
   padding: var(--space-6);
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--background-darker);
 }

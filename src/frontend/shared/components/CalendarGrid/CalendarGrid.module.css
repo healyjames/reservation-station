@@ -6,9 +6,9 @@
 
 .dayName {
   text-align: center;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--foreground-dark);
   padding: var(--space-2);
 }
 
@@ -21,28 +21,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--background-darker);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.2s ease;
   background-color: var(--background-light);
-  color: var(--text-primary);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 500;
   user-select: none;
   position: relative;
 }
 
 .day:hover:not(.past):not(.blocked) {
   background-color: var(--background-lightest);
-  border-color: var(--border-secondary);
+  border-color: var(--background-lighter);
 }
 
 .selected {
   background-color: var(--primary);
   border-color: var(--primary);
-  color: var(--text-inverse);
-  font-weight: var(--font-weight-semibold);
+  color: var(--foreground-lightest);
+  font-weight: 600;
 }
 
 .selected:hover {
@@ -69,7 +69,7 @@
     var(--background) 7px
   );
   border-color: var(--background-darker);
-  color: var(--text-tertiary);
+  color: var(--foreground-darker);
   cursor: not-allowed;
   text-decoration: line-through;
   opacity: 0.55;
@@ -88,8 +88,8 @@
 .rangeEnd {
   background: var(--primary);
   border-color: var(--primary);
-  color: var(--text-inverse);
-  font-weight: var(--font-weight-semibold);
+  color: var(--foreground-lightest);
+  font-weight: 600;
 }
 
 .inRange {
@@ -99,6 +99,6 @@
 
 @media (max-width: 640px) {
   .day {
-    font-size: var(--font-size-xs);
+    font-size: 0.75rem;
   }
 }

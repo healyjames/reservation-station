@@ -7,20 +7,20 @@
 .field label {
   display: block;
   margin-bottom: 0;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
 }
 
 .error,
 .hint {
-  font-size: var(--font-size-sm);
+  font-size: 0.875rem;
 }
 
 .error {
-  color: var(--danger);
+  color: var(--error);
 }
 
 .hint {
-  color: var(--text-secondary);
+  color: var(--foreground-dark);
 }

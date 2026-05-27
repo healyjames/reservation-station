@@ -7,11 +7,11 @@
 .select {
   width: 100%;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-primary);
+  border: 1px solid var(--background-darker);
   border-radius: var(--radius-md);
   background-color: var(--background-light);
-  color: var(--text-primary);
-  font-size: var(--font-size-base);
+  color: var(--foreground);
+  font-size: 1rem;
   font-family: inherit;
   cursor: pointer;
   appearance: none;
@@ -20,7 +20,7 @@
 
 .select:focus {
   outline: none;
-  border-color: var(--border-focus);
+  border-color: var(--primary);
   background-color: var(--background-light);
 }
 
@@ -30,10 +30,10 @@
 }
 
 .hasError {
-  border-color: var(--danger);
+  border-color: var(--error);
 }
 
 .error {
-  font-size: var(--font-size-sm);
-  color: var(--danger);
+  font-size: 0.875rem;
+  color: var(--error);
 }

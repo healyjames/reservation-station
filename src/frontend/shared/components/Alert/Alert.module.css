@@ -1,7 +1,7 @@
 .alert {
   padding: var(--space-4) var(--space-5);
   border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
+  font-size: 0.875rem;
   border: 1px solid transparent;
 }
 
@@ -10,9 +10,9 @@
 }
 
 .error {
-  background-color: color-mix(in srgb, var(--danger) 10%, transparent);
-  color: var(--danger-light);
-  border-color: var(--danger);
+  background-color: color-mix(in srgb, var(--error) 10%, transparent);
+  color: var(--error-light);
+  border-color: var(--error);
 }
 
 .info {

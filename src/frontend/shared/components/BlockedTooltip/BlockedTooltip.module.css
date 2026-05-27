@@ -1,9 +1,9 @@
 .tooltip {
   background: var(--background-light);
-  border: 1px solid var(--border-primary);
+  border: 1px solid var(--background-darker);
   border-radius: var(--radius-md);
   padding: var(--space-3);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   max-width: 240px;
 }
 
@@ -14,24 +14,24 @@
 }
 
 .message {
-  color: var(--text-primary);
-  font-size: var(--font-size-sm);
+  color: var(--foreground);
+  font-size: 0.875rem;
   flex: 1;
 }
 
 .closeBtn {
   background: none;
   border: none;
-  color: var(--text-secondary);
+  color: var(--foreground-dark);
   cursor: pointer;
   padding: 0;
-  font-size: var(--font-size-xs);
+  font-size: 0.75rem;
   line-height: 1;
   flex-shrink: 0;
 }
 
 .closeBtn:hover {
-  color: var(--text-primary);
+  color: var(--foreground);
 }
 
 .arrow {
