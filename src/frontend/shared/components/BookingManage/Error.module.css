@@ -1,0 +1,16 @@
+.content {
+  animation: slideIn 0.3s ease-out;
+  padding: var(--space-6);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

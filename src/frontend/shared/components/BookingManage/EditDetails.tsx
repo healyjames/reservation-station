@@ -64,7 +64,7 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
           <p>{errorMessage.value}</p>
         </MessageCard>
       )}
-      <form ref={formRef} onSubmit={handleSubmit}>
+      <form class={styles.form} ref={formRef} onSubmit={handleSubmit}>
         <FormField label="First Name" htmlFor="edit-first-name" required>
           <Input
             id="edit-first-name"
@@ -137,7 +137,7 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
         </FormField>
         <div class={`${styles.action_group} mt-2`}>
           <Button type="button" variant="secondary" onClick={goToOverview}>← Back</Button>
-          <Button type="submit" variant="secondary" isLoading={isSaving.value}>
+          <Button type="submit" variant="primary" isLoading={isSaving.value}>
             {isSaving.value ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>

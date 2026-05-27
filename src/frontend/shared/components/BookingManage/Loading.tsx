@@ -4,7 +4,7 @@ import styles from './Loading.module.css';
 
 export const Loading: FunctionComponent = () => (
   <StandaloneLayout title="Manage your booking">
-    <div class={styles.loading} aria-busy="true">
+    <div class={`${styles.loading_indicator} ${styles.compact_loading}`} aria-busy="true">
       <Spinner size="md" label="Loading your booking details" />
       <p>Loading your booking details...</p>
     </div>

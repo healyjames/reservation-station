@@ -12,10 +12,8 @@
 
 .card {
   width: min(100%, 600px);
-  background-color: var(--background-light);
-  border-radius: var(--radius-xl);
+  background-color: var(--background);
   padding: var(--space-8);
-  border: 1px solid var(--background-darker);
 }
 
 .title {

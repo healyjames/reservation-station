@@ -614,7 +614,7 @@ textarea:user-invalid + .field-error {
   display: grid;
   gap: var(--space-1);
   padding: var(--space-4);
-  background: var(--background);
+  background-color: var(--background-light);
   border: var(--border-width) solid var(--background-darker);
   border-radius: var(--radius-md);
 }

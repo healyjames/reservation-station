@@ -1,8 +1,10 @@
-.loading {
+.loading_indicator {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-8) 0;
+  gap: var(--space-3);
   color: var(--foreground);
+}
+
+.compact_loading p {
+  margin: 0;
 }

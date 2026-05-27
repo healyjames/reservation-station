@@ -4,6 +4,7 @@ import type { Signal } from '@preact/signals';
 import type { Reservation } from '@shared/types';
 import { StandaloneLayout, BookingDetailsList, Button, MessageCard } from '@shared/components';
 import { formatDate, getFullName, getGuestsLabel } from '@shared/utils';
+import styles from './CancelConfirm.module.css';
 
 interface CancelConfirmProps {
   reservation: Signal<Reservation | null>;
@@ -45,7 +46,7 @@ export const CancelConfirm: FunctionComponent<CancelConfirmProps> = ({
         </MessageCard>
       )}
       <BookingDetailsList details={details} />
-      <div class="action-group">
+      <div class={styles.action_group}>
         <Button variant="ghost" onClick={goToOverview}>Keep My Booking</Button>
         <Button variant="danger" isLoading={isCancelling.value} onClick={handleCancel}>
           {isCancelling.value ? 'Cancelling...' : 'Cancel My Booking'}

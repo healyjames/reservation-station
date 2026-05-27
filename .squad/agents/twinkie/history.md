@@ -60,3 +60,34 @@ Frontend Dev on the Maximum Bookings project. Twinkie owns frontend surface work
 - `EditDetails.tsx` referenced `action-group` and `mt-2`.
 - `action-group` is still shared with `CancelConfirm.tsx` and `ChangeDateTime.tsx`, so its global rules stay in `public/shared.css`; no global CSS rule exists for `mt-2`, so that literal class remains in the markup.
 - Mapping used: `action-group` → `action_group`.
+
+### BookingManage SuccessCancel CSS module extraction (2026-05-27)
+
+- `SuccessCancel.tsx` referenced no literal `class=` or `className=` selectors, so the success screen was scoped with a local wrapper based on the existing `booking-form-content` rule from `public/styles.css`.
+- `booking-form-content` is still shared with `src/frontend/booking-widget/BookingApp.tsx`, so its global rule stays in place and no new orphaned globals were introduced.
+- Mapping used: `booking-form-content` → `content`.
+
+### BookingManage CancelConfirm CSS module extraction (2026-05-27)
+
+- `CancelConfirm.tsx` referenced one global class: `action-group`.
+- `action-group` rules were found in `public/shared.css` (base grid + `@media (min-width: 640px)` two-column layout) and not in `public/styles.css`.
+- `action-group` had no remaining TSX consumers under `src/` beyond `CancelConfirm.tsx`, so the global rule now appears newly orphaned; it stays in `public/shared.css` for James's later cleanup pass.
+- Mapping used: `action-group` → `action_group`.
+
+### BookingManage SuccessEdit CSS module extraction (2026-05-27)
+
+- `SuccessEdit.tsx` had no literal `class` or `className` references to extract, so the success screen was scoped with a new local wrapper based on the existing `booking-form-content` rule from `public/styles.css`.
+- `booking-form-content` is still shared with `src/frontend/booking-widget/BookingApp.tsx`, so the global rule stays in place and no new orphaned globals were introduced.
+- Mapping used: `booking-form-content` → `content`.
+
+### BookingManage Loading CSS module extraction (2026-05-27)
+
+- `Loading.tsx` now uses module classes equivalent to the old `loading-indicator compact-loading` wrapper for the spinner row and loading copy.
+- `loading-indicator` and `compact-loading` were found in `public/shared.css` and not in `public/styles.css`; grepping `src/**/*.tsx` showed no remaining TSX consumers outside the migrated module, so both globals now appear orphaned.
+- Mapping used: `loading-indicator` → `loading_indicator`, `compact-loading` → `compact_loading`.
+
+### BookingManage Error CSS module extraction (2026-05-27)
+
+- `Error.tsx` had no literal `class` or `className` references to extract, so the error screen was scoped with a new local wrapper based on the existing `booking-form-content` rule from `public/styles.css`.
+- `booking-form-content` is still shared with `src/frontend/booking-widget/BookingApp.tsx`, so the global rule stays in place; `error-container` appears globally orphaned because it has no TSX consumers under `src/`.
+- Mapping used: `booking-form-content` → `content`.
