@@ -28,13 +28,13 @@
   width: 44px;
   height: 24px;
   border-radius: var(--radius-full);
-  background-color: var(--background-lighter);
-  transition: background-color 0.2s;
+  background-color: var(--surface-active);
+  transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
 .wrapper[data-checked="true"] .track {
-  background-color: var(--primary-dark);
+  background-color: var(--primary);
 }
 
 .thumb {
@@ -44,9 +44,9 @@
   width: 20px;
   height: 20px;
   border-radius: var(--radius-full);
-  background-color: #fff;
-  transition: transform 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  background-color: var(--text-inverse);
+  transition: transform 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .wrapper[data-checked="true"] .thumb {
@@ -54,6 +54,6 @@
 }
 
 .label {
-  font-size: 0.9rem;
-  color: var(--foreground-light);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
 }

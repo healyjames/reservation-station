@@ -5,17 +5,22 @@
 }
 
 .field label {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--foreground-light);
+  display: block;
+  margin-bottom: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.error,
+.hint {
+  font-size: var(--font-size-sm);
 }
 
 .error {
-  font-size: 0.82rem;
-  color: var(--error);
+  color: var(--danger);
 }
 
 .hint {
-  font-size: 0.82rem;
-  color: var(--foreground-darker);
+  color: var(--text-secondary);
 }

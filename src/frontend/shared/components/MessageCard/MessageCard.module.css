@@ -1,39 +1,50 @@
 .card {
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  border: var(--border-width) solid;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
 }
 
 .header {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-2);
+  font-weight: var(--font-weight-semibold);
 }
 
 .header h4 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
 }
 
 .body {
-  padding: var(--space-4) var(--space-5);
+  color: inherit;
+}
+
+.body :global(p:first-child) {
+  margin-top: 0;
+}
+
+.body :global(p:last-child) {
+  margin-bottom: 0;
 }
 
 .success {
+  background-color: color-mix(in srgb, var(--success) 10%, transparent);
   border-color: var(--success);
+  color: var(--success-light);
 }
 
 .successHeader {
-  background-color: var(--success-light);
-  color: var(--success-dark);
+  color: inherit;
 }
 
 .error {
-  border-color: var(--error);
+  background-color: color-mix(in srgb, var(--danger) 10%, transparent);
+  border-color: var(--danger);
+  color: var(--danger-light);
 }
 
 .errorHeader {
-  background-color: var(--error-light);
-  color: var(--error-dark);
+  color: inherit;
 }

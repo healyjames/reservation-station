@@ -56,6 +56,28 @@ Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget
 
 **StandaloneLayout mobile styles restored (2026-05-26):** Added missing `.page` mobile media query to `StandaloneLayout.module.css` from main branch's `.standalone-page` pattern. On mobile (max-width: 640px), `.page` now gets `height: 100vh`, `display: flex`, `align-items: center` to match the original vanilla implementation. This ensures proper centering behavior on small screens for standalone pages (cancel, manage-booking).
 
+### CSS Restoration - Font Inheritance Fix (2026-05-28)
+
+**Complete CSS audit performed:** Systematically pulled ALL CSS from main branch (`public/styles.css`, `public/shared.css`, `public/admin/styles/admin.css`) and compared with current state. Verified that:
+- `public/shared.css` is identical to main ✓
+- `public/styles.css` is identical to main ✓  
+- `public/admin/styles/admin.css` is identical to main ✓
+- `.page-subtitle` rule exists in `public/shared.css` (line 598-603) ✓
+- Diagonal hatching for blocked calendar days preserved ✓
+- All typography rules (page-title, page-subtitle, detail-row, etc.) present ✓
+
+**Font inheritance issue fixed:** Added `font-family: inherit` to all form element CSS modules:
+- `Button.module.css` — `.btn` now includes `font-family: inherit`
+- `Input.module.css` — `.input` now includes `font-family: inherit`
+- `Select.module.css` — `.select` now includes `font-family: inherit`
+- `Textarea.module.css` — `.textarea` already had `font-family: inherit` ✓
+
+This ensures buttons, inputs, selects, and textareas inherit the Google Sans font from their parent containers rather than reverting to browser defaults. This was the primary missing CSS pattern after the Preact migration.
+
+**Why this matters:** In vanilla HTML/CSS, form elements don't inherit font by default — they use browser defaults. The original vanilla `public/shared.css` and `public/admin/styles/admin.css` included `font-family: inherit` on global `input`, `select`, `button`, and `textarea` selectors. After migrating to CSS Modules, these base styles needed to be explicitly added to each component's CSS module.
+
+**Build verified:** `npm run build` completes successfully. All assets compile cleanly.
+
 ### Phase 6 — Manage-booking (most complex public surface) (2026-05-25)
 
 - Tenant is NOT loaded from a URL param — it's loaded from `reservation.tenant_id` after fetching the reservation. Tenant load failure is non-fatal; `tenantConfig` may be null throughout the flow.
@@ -188,4 +210,21 @@ Frontend Dev on the Maximum Bookings project. Owns the embeddable booking widget
 - All fetch calls wrapped in try/catch; `patchReservation` and `deleteReservation` return bool; callers check result
 - `is_closed` treated as boolean via JS truthiness (SQLite 0/1 maps correctly)
 - No inline styles except tooltip pixel positioning (computed from `getBoundingClientRect`)
+
+### CSS audit restoration layer (2026-05-28)
+
+- Added `public/frontend-audit.css` and loaded it after the legacy public/admin stylesheets on every Preact entrypoint.
+- The audit layer backfills the main-branch token vocabulary (`--text-*`, `--surface-*`, `--border-*`, typography, spacing, shadows, admin layout tokens) without breaking the existing `theme.js` overrides.
+- Updated shared CSS modules (`Button`, `Input`, `Select`, `Textarea`, `FormField`, `Alert`, `MessageCard`, `SelectedDateInfo`, `CalendarGrid`, `Modal`, `StandaloneLayout`, `ToggleSwitch`, `Badge`, `BlockedTooltip`, `Spinner`) to consume the audited semantic tokens instead of older legacy variables and hardcoded colors.
+- Replaced several public/manage inline layout styles with class-based audit utilities (`loading-indicator`, `inline-helper`, `action-group`, `mt-2`) and documented truly unmapped audit selectors in `documentation/ORPHANED_CLASSES.md`.
+
+### Shared-first restructure (2026-05-27)
+
+- All surface-owned hooks now live in `src/frontend/shared/hooks/` (`useTenant`, `useAvailability`, `useBookingForm`, `useAuth`, `useBookings`, `useCancelBooking`, `useManageBooking`).
+- All surface-owned types now live in `src/frontend/shared/types/` (`booking.ts`, `availability.ts`, `manage.ts`), and `@shared/types` re-exports them for direct surface imports.
+- Surface views were converted into shared components with the `View` suffix removed under `shared/components/BookingWidget/`, `shared/components/Admin/`, `shared/components/BookingManage/`, and `shared/components/Cancel/`.
+- Surface folders are now entry-only: `booking-widget/`, `admin/`, `cancel/`, and `booking/manage/` only keep `index.html`, the entry `.tsx`, and the top-level app component (`BookingApp`, `AdminApp`, `CancelApp`, `BookingManageApp`).
+- Admin request helper moved to `src/frontend/shared/utils/adminFetch.ts` so admin runtime code also follows the shared-first layout.
+- Manage booking entry files were renamed to `BookingManageApp.tsx` and `booking-manage.tsx` to match the surface naming convention.
+- Verification: `npm run build` succeeds after the refactor, and `npx vitest run --config vitest.frontend.config.ts` passes (18 files, 98 tests).
 

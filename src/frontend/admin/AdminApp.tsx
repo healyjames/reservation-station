@@ -2,10 +2,10 @@ import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { Spinner } from '@shared/components';
-import { useAuth } from './hooks/useAuth';
-import LoginView from './views/LoginView';
-import DashboardView from './views/DashboardView';
-import SettingsView from './views/SettingsView';
+import { useAuth } from '@shared/hooks/useAuth';
+import Login from '@shared/components/Admin/Login';
+import Dashboard from '@shared/components/Admin/Dashboard';
+import Settings from '@shared/components/Admin/Settings';
 
 type AdminView = 'login' | 'dashboard' | 'settings';
 
@@ -46,10 +46,10 @@ export const AdminApp: FunctionComponent = () => {
 
   switch (view.value) {
     case 'login':
-      return <LoginView auth={auth} onLoginSuccess={onLoginSuccess} />;
+      return <Login auth={auth} onLoginSuccess={onLoginSuccess} />;
     case 'dashboard':
       return (
-        <DashboardView
+        <Dashboard
           auth={auth}
           onLogout={onLogout}
           onGoSettings={() => { view.value = 'settings'; }}
@@ -57,7 +57,7 @@ export const AdminApp: FunctionComponent = () => {
       );
     case 'settings':
       return (
-        <SettingsView
+        <Settings
           auth={auth}
           onLogout={onLogout}
           onGoDashboard={() => { view.value = 'dashboard'; }}

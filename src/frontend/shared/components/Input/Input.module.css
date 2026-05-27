@@ -1,42 +1,50 @@
 .wrapper {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-2);
 }
 
 .input {
   width: 100%;
   padding: var(--space-3) var(--space-4);
-  border: var(--border-width) solid var(--background-lighter);
+  border: 1px solid var(--border-primary);
   border-radius: var(--radius-md);
-  background-color: var(--background-dark);
-  color: var(--foreground);
-  font-size: 0.95rem;
+  background-color: var(--background-light);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
   font-family: inherit;
-  transition: border-color 0.15s;
-  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.input::placeholder {
+  color: var(--text-secondary);
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--primary);
+  border-color: var(--border-focus);
+  background-color: var(--surface);
 }
 
 .input:disabled {
-  opacity: 0.65;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.hasError {
-  border-color: var(--error);
+.hasError,
+.input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.error,
+.hint {
+  font-size: var(--font-size-sm);
 }
 
 .error {
-  font-size: 0.82rem;
-  color: var(--error);
+  color: var(--danger);
 }
 
 .hint {
-  font-size: 0.82rem;
-  color: var(--foreground-darker);
+  color: var(--text-secondary);
 }

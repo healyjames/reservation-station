@@ -6,11 +6,10 @@
 
 .dayName {
   text-align: center;
-  font-weight: 600;
-  padding: var(--space-3) 0;
-  color: var(--foreground);
-  opacity: 0.7;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  padding: var(--space-2);
 }
 
 .empty {
@@ -22,65 +21,43 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: var(--border-width-md) solid var(--background-darker);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  background: var(--background-light);
   cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--foreground-lightest);
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+  transition: all 0.2s ease;
+  background-color: var(--surface);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   user-select: none;
   position: relative;
 }
 
 .day:hover:not(.past):not(.blocked) {
-  background: var(--primary-darkest);
-  border-color: var(--primary);
-  transform: scale(1.03);
-}
-
-.today {
-  border-color: var(--primary-lighter);
-  color: var(--primary-lighter);
-  font-weight: 700;
-}
-
-.today::after {
-  content: '';
-  position: absolute;
-  bottom: 5px;
-  left: 50%;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--primary-lighter);
-  transform: translateX(-50%);
-}
-
-.selected.today::after,
-.rangeStart.today::after,
-.rangeEnd.today::after {
-  background: currentColor;
-}
-
-.past {
-  background: var(--background);
-  color: var(--foreground);
-  opacity: 0.35;
-  cursor: default;
+  background-color: var(--surface-hover);
+  border-color: var(--border-secondary);
 }
 
 .selected {
-  background: var(--primary-darkest);
+  background-color: var(--primary);
   border-color: var(--primary);
-  color: var(--foreground-lightest);
-  font-weight: 700;
+  color: var(--text-inverse);
+  font-weight: var(--font-weight-semibold);
 }
 
 .selected:hover {
-  background: var(--primary-darker);
+  background-color: var(--primary-darker);
   border-color: var(--primary-darker);
+}
+
+.today {
+  border-color: var(--primary);
+  border-width: 2px;
+}
+
+.past {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .blocked {
@@ -92,14 +69,14 @@
     var(--background) 7px
   );
   border-color: var(--background-darker);
-  color: var(--foreground);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+  text-decoration: line-through;
   opacity: 0.55;
-  cursor: pointer;
 }
 
 .blocked:hover {
-  opacity: 0.75;
-  border-color: var(--primary);
+  opacity: 0.7;
 }
 
 .day:focus {
@@ -109,13 +86,19 @@
 
 .rangeStart,
 .rangeEnd {
-  background: var(--primary-light);
-  border-color: transparent;
-  color: white;
-  font-weight: 700;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--text-inverse);
+  font-weight: var(--font-weight-semibold);
 }
 
 .inRange {
   background: color-mix(in srgb, var(--primary) 15%, transparent);
   border-color: transparent;
+}
+
+@media (max-width: 640px) {
+  .day {
+    font-size: var(--font-size-xs);
+  }
 }

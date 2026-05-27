@@ -1,15 +1,17 @@
 import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
-import type { BookingStep } from './types/booking';
-import { useTenant } from './hooks/useTenant';
-import { useAvailability } from './hooks/useAvailability';
-import { useBookingForm } from './hooks/useBookingForm';
-import { CalendarView } from './views/CalendarView';
-import { Step1FormView } from './views/Step1FormView';
-import { Step2FormView } from './views/Step2FormView';
-import { SuccessView } from './views/SuccessView';
+import type { BookingStep } from '@shared/types';
+import { useTenant } from '@shared/hooks/useTenant';
+import { useAvailability } from '@shared/hooks/useAvailability';
+import { useBookingForm } from '@shared/hooks/useBookingForm';
+import { Calendar } from '@shared/components/BookingWidget/Calendar';
+import { Step1Form } from '@shared/components/BookingWidget/Step1Form';
+import { Step2Form } from '@shared/components/BookingWidget/Step2Form';
+import { Success } from '@shared/components/BookingWidget/Success';
 import { Spinner, MessageCard } from '@shared/components';
+
+const loadingStyles = 'display:grid;place-items:center;padding:var(--space-12)';
 
 export const BookingApp: FunctionComponent = () => {
   const step = useSignal<BookingStep>('calendar');
@@ -23,7 +25,7 @@ export const BookingApp: FunctionComponent = () => {
 
   if (tenantState.value === 'loading') {
     return (
-      <div style="display:flex;justify-content:center;padding:48px">
+      <div style={loadingStyles}>
         <Spinner size="md" label="Loading booking configuration" />
       </div>
     );
@@ -76,12 +78,11 @@ export const BookingApp: FunctionComponent = () => {
 
   if (step.value === 'calendar') {
     return (
-      <CalendarView
+      <Calendar
         year={currentYear.value}
         month={currentMonth.value}
         selectedDate={selectedDate.value}
         blockedDates={blockedDates.value}
-        tenantId={tenant.id}
         onMonthChange={handleMonthChange}
         onDateSelect={handleDateSelect}
       />
@@ -90,7 +91,7 @@ export const BookingApp: FunctionComponent = () => {
 
   if (step.value === 'form-step1') {
     return (
-      <Step1FormView
+      <Step1Form
         date={selectedDate.value!}
         tenantConfig={tenant}
         formData={formData.value}
@@ -106,7 +107,7 @@ export const BookingApp: FunctionComponent = () => {
 
   if (step.value === 'form-step2') {
     return (
-      <Step2FormView
+      <Step2Form
         tenantConfig={tenant}
         formData={formData.value}
         submitError={submitError.value}
@@ -122,7 +123,7 @@ export const BookingApp: FunctionComponent = () => {
   }
 
   return (
-    <SuccessView
+    <Success
       formData={formData.value}
       selectedDate={selectedDate.value!}
       onNewBooking={handleNewBooking}
