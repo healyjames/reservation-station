@@ -47,3 +47,10 @@ Frontend Dev on the Maximum Bookings project. Twinkie owns frontend surface work
 - `action-group` is shared by `CancelConfirm.tsx`, `ChangeDateTime.tsx`, and `EditDetails.tsx`, so its global rules stay in `public/shared.css`.
 - Copied the equivalent rules into `Overview.module.css`, including the `@media (min-width: 640px)` grid-column layout.
 - Mapping used: `action-group` → `action_group`.
+
+### BookingManage ChangeDateTime CSS module extraction (2026-05-27)
+
+- `ChangeDateTime.tsx` referenced `calendar-container`, `calendar-header`, `calendar-nav`, `calendar-nav-btn`, `loading-indicator`, `compact-loading`, `inline-helper`, `inline-helper-error`, `action-group`, and `mt-2`.
+- `action-group` is still shared with `CancelConfirm.tsx` and `EditDetails.tsx`, so its global rules stay in `public/shared.css`; `calendar-*`, `loading-indicator`, `compact-loading`, and `inline-helper*` were only found in `ChangeDateTime.tsx` and are now candidates for later global cleanup.
+- Mapping used: `calendar-container` → `container`, `calendar-header` → `header`, `calendar-nav` → `nav`, `calendar-nav-btn` → `nav_btn`, `loading-indicator` → `loading_indicator`, `compact-loading` → `compact_loading`, `inline-helper` → `inline_helper`, `inline-helper-error` → `inline_helper_error`, `action-group` → `action_group`.
+- No CSS rule exists for `mt-2` in `public/shared.css` or `public/styles.css`, so the literal class was left in place while the extracted styles moved to the module.

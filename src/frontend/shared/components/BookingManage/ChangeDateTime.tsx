@@ -15,6 +15,7 @@ import {
   FormField,
 } from '@shared/components';
 import { getAvailableSlots } from '@shared/utils';
+import styles from './ChangeDateTime.module.css';
 
 interface ChangeDateTimeProps {
   tenantConfig: Signal<TenantConfig | null>;
@@ -121,19 +122,46 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
 
   return (
     <StandaloneLayout title="Change Date & Time">
-      <p>Choose a new date and time for your reservation.</p>
+      <p class={styles.subtitle}>Choose a new date and time for your reservation.</p>
       {errorMessage.value && (
         <MessageCard variant="error" title="Something went wrong">
           <p>{errorMessage.value}</p>
         </MessageCard>
       )}
-      <div class="calendar-container" role="region" aria-label="Date picker">
-        <div class="calendar-header">
+
+			{selectedDate.value && (
+        <div>
+          <SelectedDateInfo date={selectedDate.value} hideLabel={true} />
+          <FormField label="Time" htmlFor="mb-time-select">
+            {isFetchingTimes.value ? (
+              <div class={`${styles.loading_indicator} ${styles.compact_loading}`}>
+                <Spinner size="sm" label="Loading available times" />
+                <span>Loading times...</span>
+              </div>
+            ) : available.length > 0 ? (
+              <Select
+                id="mb-time-select"
+                value={selectedTime.value}
+                options={timeOptions}
+                placeholder="Select a time"
+                onChange={(e) => { selectedTime.value = (e.target as HTMLSelectElement).value; }}
+              />
+            ) : (
+              <p class={`${styles.inline_helper} ${styles.inline_helper_error}`}>
+                No times available for this date. Please try a different date.
+              </p>
+            )}
+          </FormField>
+        </div>
+      )}
+
+      <div class={styles.container} role="region" aria-label="Date picker">
+        <div class={styles.header}>
           <h2>{MONTHS[calMonth.value]} {calYear.value}</h2>
-          <div class="calendar-nav">
+          <div class={styles.nav}>
             <button
               type="button"
-              class="calendar-nav-btn"
+              class={styles.nav_btn}
               aria-label="Previous month"
               disabled={onCurrentMonth}
               onClick={prevMonth}
@@ -142,7 +170,7 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
             </button>
             <button
               type="button"
-              class="calendar-nav-btn"
+              class={styles.nav_btn}
               aria-label="Next month"
               onClick={nextMonth}
             >
@@ -167,33 +195,7 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
         />
       </div>
 
-      {selectedDate.value && (
-        <div>
-          <SelectedDateInfo date={selectedDate.value} />
-          <FormField label="Time" htmlFor="mb-time-select">
-            {isFetchingTimes.value ? (
-              <div class="loading-indicator compact-loading">
-                <Spinner size="sm" label="Loading available times" />
-                <span>Loading times...</span>
-              </div>
-            ) : available.length > 0 ? (
-              <Select
-                id="mb-time-select"
-                value={selectedTime.value}
-                options={timeOptions}
-                placeholder="Select a time"
-                onChange={(e) => { selectedTime.value = (e.target as HTMLSelectElement).value; }}
-              />
-            ) : (
-              <p class="inline-helper inline-helper-error">
-                No times available for this date. Please try a different date.
-              </p>
-            )}
-          </FormField>
-        </div>
-      )}
-
-      <div class="action-group mt-2">
+      <div class={`${styles.action_group} mt-2`}>
         <Button type="button" variant="secondary" onClick={goToOverview}>← Back</Button>
         <Button
           type="button"
