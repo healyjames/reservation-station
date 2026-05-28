@@ -31,7 +31,7 @@ const DateNav: FunctionComponent<DateNavProps> = ({ currentDate, guestCount, onP
     <div class={styles.date_nav}>
       <button class={styles.btn_action} onClick={onPrev} aria-label="Previous day">&#8592;</button>
       <div class={styles.date_nav_center}>
-        <span id="current-date-display">
+        <span class={styles.current_date_display} id="current-date-display">
           {displayDate}
           {todayFlag && <span class={styles.today_label}> today</span>}
         </span>
