@@ -110,3 +110,9 @@ Frontend Dev on the Maximum Bookings project. Twinkie owns frontend surface work
 - The previous extraction work had used camelCase (e.g. 	abBtn, mainPanel, 	oggleListItem) — these were all converted to underscore form across both .module.css files and styles.xxx references in the TSX.
 - dateNav in DateNav.module.css was also renamed to date_nav — even single-apparent-word names that contain hidden camelCase boundaries must follow the rule.
 - AdminApp.module.css loadingScreen → loading_screen was corrected in both the module and AdminApp.tsx.
+### Admin shared input adoption (2026-05-28)
+
+- `Login.tsx` and `GeneralSettings.tsx` now follow the same `FormField` + `Input` pattern already used in `Admin/BookingModal.tsx`.
+- Local `.form_group` input styling was removed from `Login.module.css` and `GeneralSettings.module.css` because the shared `Input` component now owns those states and visuals.
+- `Input.tsx` gained a `min` prop so numeric admin settings can keep their existing minimum constraints while using the shared field primitive.
+- `OpeningHoursSettings.tsx` was intentionally left on raw time inputs because its controls require `step={1800}` and the shared `Input` component still does not support `step`.

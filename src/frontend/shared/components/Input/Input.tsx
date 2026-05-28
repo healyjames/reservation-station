@@ -11,6 +11,7 @@ interface InputProps {
   disabled?: boolean;
   maxLength?: number;
   minLength?: number;
+  min?: string | number;
   pattern?: string;
   title?: string;
   autocomplete?: string;
@@ -32,6 +33,7 @@ const Input: FunctionComponent<InputProps> = ({
   disabled,
   maxLength,
   minLength,
+  min,
   pattern,
   title,
   autocomplete,
@@ -53,6 +55,7 @@ const Input: FunctionComponent<InputProps> = ({
       disabled={disabled}
       maxLength={maxLength}
       minLength={minLength}
+      min={min}
       pattern={pattern}
       title={title}
       autocomplete={autocomplete}

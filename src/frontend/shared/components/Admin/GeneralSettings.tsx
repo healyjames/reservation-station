@@ -2,8 +2,8 @@ import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import { useEffect } from 'preact/hooks';
 import type { Signal } from '@preact/signals';
+import { Button, FormField, Input } from '@shared/components';
 import type { TenantConfig } from '@shared/types';
-import { Button } from '@shared/components';
 import { adminFetch } from '@shared/utils/adminFetch';
 import styles from './GeneralSettings.module.css';
 
@@ -93,9 +93,8 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
         </div>
       )}
       <form class={styles.form_container} noValidate onSubmit={handleSubmit}>
-        <div class={styles.form_group}>
-          <label for="sf-name">Name</label>
-          <input
+        <FormField label="Name" htmlFor="sf-name" required>
+          <Input
             type="text"
             id="sf-name"
             name="name"
@@ -104,10 +103,9 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             value={name.value}
             onInput={(e) => { name.value = (e.target as HTMLInputElement).value; }}
           />
-        </div>
-        <div class={styles.form_group}>
-          <label for="sf-max-guests">Max party size</label>
-          <input
+        </FormField>
+        <FormField label="Max party size" htmlFor="sf-max-guests">
+          <Input
             type="number"
             id="sf-max-guests"
             name="max_guests"
@@ -115,10 +113,9 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             value={maxGuests.value}
             onInput={(e) => { maxGuests.value = parseInt((e.target as HTMLInputElement).value, 10) || 0; }}
           />
-        </div>
-        <div class={styles.form_group}>
-          <label for="sf-max-covers">Max covers per day</label>
-          <input
+        </FormField>
+        <FormField label="Max covers per day" htmlFor="sf-max-covers">
+          <Input
             type="number"
             id="sf-max-covers"
             name="max_covers"
@@ -126,10 +123,9 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             value={maxCovers.value}
             onInput={(e) => { maxCovers.value = parseInt((e.target as HTMLInputElement).value, 10) || 0; }}
           />
-        </div>
-        <div class={styles.form_group}>
-          <label for="sf-time-window">Concurrent guest time window (minutes)</label>
-          <input
+        </FormField>
+        <FormField label="Concurrent guest time window (minutes)" htmlFor="sf-time-window">
+          <Input
             type="number"
             id="sf-time-window"
             name="concurrent_guests_time_limit"
@@ -137,7 +133,7 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             value={timeWindow.value}
             onInput={(e) => { timeWindow.value = parseInt((e.target as HTMLInputElement).value, 10) || 0; }}
           />
-        </div>
+        </FormField>
         <Button variant="primary" type="submit" isLoading={isSaving.value}>
           Save settings
         </Button>

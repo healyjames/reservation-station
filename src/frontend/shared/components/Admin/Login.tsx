@@ -1,5 +1,6 @@
 import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
+import { FormField, Input } from '@shared/components';
 import type { UseAuthReturn } from '@shared/hooks/useAuth';
 import styles from './Login.module.css';
 
@@ -57,10 +58,9 @@ const Login: FunctionComponent<LoginProps> = ({ auth, onLoginSuccess }) => {
             </div>
           )}
 
-          <form noValidate onSubmit={handleSubmit}>
-            <div class={styles.form_group}>
-              <label for="login-email">Email address</label>
-              <input
+          <form class={`${styles.alert} stack`} noValidate onSubmit={handleSubmit}>
+            <FormField label="Email address" htmlFor="login-email" required>
+              <Input
                 type="email"
                 id="login-email"
                 name="email"
@@ -70,10 +70,9 @@ const Login: FunctionComponent<LoginProps> = ({ auth, onLoginSuccess }) => {
                 value={email.value}
                 onInput={(e) => { email.value = (e.target as HTMLInputElement).value; }}
               />
-            </div>
-            <div class={styles.form_group}>
-              <label for="login-password">Password</label>
-              <input
+            </FormField>
+            <FormField label="Password" htmlFor="login-password" required>
+              <Input
                 type="password"
                 id="login-password"
                 name="password"
@@ -83,7 +82,7 @@ const Login: FunctionComponent<LoginProps> = ({ auth, onLoginSuccess }) => {
                 value={password.value}
                 onInput={(e) => { password.value = (e.target as HTMLInputElement).value; }}
               />
-            </div>
+            </FormField>
             <button type="submit" class={`${styles.btn_primary}${isSubmitting.value ? ` ${styles.loading}` : ''}`} disabled={isSubmitting.value}>
               {isSubmitting.value ? 'Signing in…' : 'Sign in'}
             </button>
