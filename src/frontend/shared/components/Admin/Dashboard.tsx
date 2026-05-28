@@ -61,30 +61,38 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
             onNext={bookings.nextDay}
           />
 
-          <div class={styles.toggle_list} id="day-block-container">
-            <div class={styles.toggle_list_item}>
-              <div class={styles.toggle_list_item_content}>
-                <p class={styles.toggle_list_item_header}><strong>Block this day</strong></p>
-                <p class={styles.toggle_list_item_subtext}>
-                  Customers will no longer be able to make reservations on this date. Existing reservations will not be affected.
-                </p>
-              </div>
-              <div class={styles.toggle_list_item_switch}>
-                <div class={styles.form_group_check}>
-                  <ToggleSwitch
-                    checked={bookings.isDayBlocked.value}
-                    disabled={bookings.isBlockLoading.value}
-                    onChange={() => bookings.toggleDayBlock()}
-                  />
+          <div class={styles.day_actions_row}>
+            <div class={styles.toggle_list} id="day-block-container">
+              <div class={styles.toggle_list_item}>
+                <div class={styles.toggle_list_item_content}>
+                  <p class={styles.toggle_list_item_header}><strong>Block this day</strong></p>
+                  <p class={styles.toggle_list_item_subtext}>
+                    Customers will no longer be able to make reservations on this date. Existing reservations will not be affected.
+                  </p>
+                </div>
+                <div class={styles.toggle_list_item_switch}>
+                  <div class={styles.form_group_check}>
+                    <ToggleSwitch
+                      checked={bookings.isDayBlocked.value}
+                      disabled={bookings.isBlockLoading.value}
+                      onChange={() => bookings.toggleDayBlock()}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div class={styles.bookings_actions}>
-            <button class={styles.btn_primary} onClick={openCreate}>
-              + New Booking
-            </button>
+            <div class={styles.new_booking_card}>
+              <div class={styles.toggle_list_item_content}>
+                <p class={styles.toggle_list_item_header}><strong>New booking</strong></p>
+                <p class={styles.toggle_list_item_subtext}>
+                  Manually add a reservation for this date.
+                </p>
+              </div>
+              <button class={styles.btn_primary} onClick={openCreate}>
+                + New Booking
+              </button>
+            </div>
           </div>
 
           <div id="bookings-list" aria-busy={bookings.isLoading.value}>
