@@ -58,7 +58,7 @@ const Login: FunctionComponent<LoginProps> = ({ auth, onLoginSuccess }) => {
             </div>
           )}
 
-          <form class={`${styles.alert} stack`} noValidate onSubmit={handleSubmit}>
+          <form class="stack" noValidate onSubmit={handleSubmit}>
             <FormField label="Email address" htmlFor="login-email" required>
               <Input
                 type="email"

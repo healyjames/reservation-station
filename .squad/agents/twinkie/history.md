@@ -110,6 +110,7 @@ Frontend Dev on the Maximum Bookings project. Twinkie owns frontend surface work
 - The previous extraction work had used camelCase (e.g. 	abBtn, mainPanel, 	oggleListItem) — these were all converted to underscore form across both .module.css files and styles.xxx references in the TSX.
 - dateNav in DateNav.module.css was also renamed to date_nav — even single-apparent-word names that contain hidden camelCase boundaries must follow the rule.
 - AdminApp.module.css loadingScreen → loading_screen was corrected in both the module and AdminApp.tsx.
+
 ### Admin shared input adoption (2026-05-28)
 
 - `Login.tsx` and `GeneralSettings.tsx` now follow the same `FormField` + `Input` pattern already used in `Admin/BookingModal.tsx`.
