@@ -3,6 +3,7 @@ import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import { Modal, Button, FormField, Input, Textarea } from '@shared/components';
 import { adminFetch } from '@shared/utils/adminFetch';
+import styles from './BookingModal.module.css';
 
 interface BookingModalProps {
   mode: 'create' | 'edit';
@@ -101,12 +102,12 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
   return (
     <Modal open onClose={onClose} title={title} footer={footer}>
       {errorMessage.value && (
-        <div class="alert alert-error" role="alert" aria-live="assertive">
+        <div class={`${styles.alert} ${styles.alert_error}`} role="alert" aria-live="assertive">
           {errorMessage.value}
         </div>
       )}
       <form id="booking-modal-form" noValidate onSubmit={handleSubmit}>
-        <div class="form-row">
+        <div class={styles.form_row}>
           <FormField label="First name" htmlFor="bm-first-name" required>
             <Input
               id="bm-first-name"
@@ -128,7 +129,7 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
             />
           </FormField>
         </div>
-        <div class="form-row">
+        <div class={styles.form_row}>
           <FormField label="Telephone" htmlFor="bm-telephone">
             <Input
               id="bm-telephone"
@@ -150,7 +151,7 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
             />
           </FormField>
         </div>
-        <div class="form-row">
+        <div class={styles.form_row}>
           <FormField label="Date" htmlFor="bm-date" required>
             <Input
               id="bm-date"

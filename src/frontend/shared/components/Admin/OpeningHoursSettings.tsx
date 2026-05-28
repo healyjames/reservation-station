@@ -4,6 +4,7 @@ import { useEffect } from 'preact/hooks';
 import type { OpeningHoursEntry } from '@shared/types';
 import { ToggleSwitch, Button } from '@shared/components';
 import { adminFetch } from '@shared/utils/adminFetch';
+import styles from './OpeningHoursSettings.module.css';
 
 interface DayConfig {
   label: string;
@@ -99,20 +100,20 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
   }
 
   if (isLoading.value) {
-    return <p class="loading-text">Loading opening hours…</p>;
+    return <p class={styles.loading_text}>Loading opening hours…</p>;
   }
 
   return (
     <div>
-      <h3 class="oh-section-title">Opening Hours</h3>
+      <h3 class={styles.oh_section_title}>Opening Hours</h3>
       {bannerMessage.value && (
-        <div class={`alert oh-banner alert-${bannerType.value}`} role="status" aria-live="polite">
+        <div class={`${styles.alert} ${styles.oh_banner} ${bannerType.value === 'success' ? styles.alert_success : styles.alert_error}`} role="status" aria-live="polite">
           {bannerMessage.value}
         </div>
       )}
 
       {/* Desktop table view */}
-      <table class="admin-table oh-schedule">
+      <table class={`${styles.admin_table} ${styles.oh_schedule}`}>
         <thead>
           <tr>
             <th scope="col">Day</th>
@@ -123,12 +124,12 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
         </thead>
         <tbody>
           {days.value.map(d => (
-            <tr key={d.dow} class="oh-row" data-dow={String(d.dow)}>
-              <td class="oh-day-name">{d.label}</td>
-              <td class="oh-time-cell">
+            <tr key={d.dow} class={styles.oh_row} data-dow={String(d.dow)}>
+              <td class={styles.oh_day_name}>{d.label}</td>
+              <td class={styles.oh_time_cell}>
                 <input
                   type="time"
-                  class="oh-open-time"
+                  class={styles.oh_open_time}
                   step={1800}
                   value={d.openTime}
                   disabled={d.isClosed}
@@ -136,10 +137,10 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
                   onChange={(e) => updateDay(d.dow, { openTime: (e.target as HTMLInputElement).value })}
                 />
               </td>
-              <td class="oh-time-cell">
+              <td class={styles.oh_time_cell}>
                 <input
                   type="time"
-                  class="oh-close-time"
+                  class={styles.oh_close_time}
                   step={1800}
                   value={d.closeTime}
                   disabled={d.isClosed}
@@ -147,8 +148,8 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
                   onChange={(e) => updateDay(d.dow, { closeTime: (e.target as HTMLInputElement).value })}
                 />
               </td>
-              <td class="oh-closed-cell">
-                <div class="oh-closed-label form-group-check">
+              <td class={styles.oh_closed_cell}>
+                <div class={`${styles.oh_closed_label} ${styles.form_group_check}`}>
                   <ToggleSwitch
                     id={`oh-toggle-${d.dow}`}
                     checked={d.isClosed}
@@ -163,11 +164,11 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
       </table>
 
       {/* Mobile card view */}
-      <div class="oh-cards">
+      <div class={styles.oh_cards}>
         {days.value.map(d => (
-          <div key={d.dow} class="oh-card" data-dow={String(d.dow)}>
-            <div class="oh-card-header">
-              <span class="oh-card-day">{d.label}</span>
+          <div key={d.dow} class={styles.oh_card} data-dow={String(d.dow)}>
+            <div class={styles.oh_card_header}>
+              <span class={styles.oh_card_day}>{d.label}</span>
               <ToggleSwitch
                 id={`oh-card-toggle-${d.dow}`}
                 checked={d.isClosed}
@@ -175,23 +176,23 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
                 onChange={(checked) => updateDay(d.dow, { isClosed: checked })}
               />
             </div>
-            <div class="oh-card-times" style={d.isClosed ? 'opacity:0.4' : undefined}>
-              <div class="oh-card-time-field">
-                <label class="oh-card-time-label">Start</label>
+            <div class={styles.oh_card_times} style={d.isClosed ? 'opacity:0.4' : undefined}>
+              <div class={styles.oh_card_time_field}>
+                <label class={styles.oh_card_time_label}>Start</label>
                 <input
                   type="time"
-                  class="oh-card-open-time"
+                  class={styles.oh_card_open_time}
                   step={1800}
                   value={d.openTime}
                   disabled={d.isClosed}
                   onChange={(e) => updateDay(d.dow, { openTime: (e.target as HTMLInputElement).value })}
                 />
               </div>
-              <div class="oh-card-time-field">
-                <label class="oh-card-time-label">End</label>
+              <div class={styles.oh_card_time_field}>
+                <label class={styles.oh_card_time_label}>End</label>
                 <input
                   type="time"
-                  class="oh-card-close-time"
+                  class={styles.oh_card_close_time}
                   step={1800}
                   value={d.closeTime}
                   disabled={d.isClosed}

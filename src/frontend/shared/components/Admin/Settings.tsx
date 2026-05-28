@@ -2,6 +2,7 @@ import type { FunctionComponent } from 'preact';
 import type { TenantConfig } from '@shared/types';
 import type { UseAuthReturn } from '@shared/hooks/useAuth';
 import SettingsPanel from './SettingsPanel';
+import styles from './Settings.module.css';
 
 interface SettingsProps {
   auth: UseAuthReturn;
@@ -20,24 +21,24 @@ const Settings: FunctionComponent<SettingsProps> = ({ auth, onLogout, onGoDashbo
   }
 
   return (
-    <div class="dashboard-layout">
-      <nav class="sidebar-nav" aria-label="Admin navigation">
-        <div class="sidebar-logo" aria-hidden="true" />
-        <button class="tab-btn" onClick={onGoDashboard}>
+    <div class={styles.dashboard_layout}>
+      <nav class={styles.sidebar_nav} aria-label="Admin navigation">
+        <div class={styles.sidebar_logo} aria-hidden="true" />
+        <button class={styles.tab_btn} onClick={onGoDashboard}>
           Bookings
         </button>
-        <button class="tab-btn active" aria-current="page">
+        <button class={`${styles.tab_btn} ${styles.active}`} aria-current="page">
           Settings
         </button>
       </nav>
 
-      <div class="main-panel">
-        <header class="main-header">
-          <span id="venue-name" class="header-brand">{venueName}</span>
-          <button class="btn-logout" onClick={onLogout}>Sign out</button>
+      <div class={styles.main_panel}>
+        <header class={styles.main_header}>
+          <span id="venue-name" class={styles.header_brand}>{venueName}</span>
+          <button class={styles.btn_logout} onClick={onLogout}>Sign out</button>
         </header>
 
-        <main id="main-content" class="main-content">
+        <main id="main-content" class={styles.main_content}>
           <SettingsPanel
             tenantConfig={auth.tenantConfig}
             token={token}

@@ -1,0 +1,36 @@
+.booking_card {
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--background-lighter);
+  border-radius: var(--radius-md);
+  background: var(--background-light);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.card_time_guests {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.card_time {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground-lightest);
+}
+
+.card_name {
+  font-size: 1rem;
+  color: var(--foreground-lightest);
+  font-weight: 500;
+}
+
+.card_dietary {
+  font-size: 0.875rem;
+  color: var(--foreground-dark);
+}
+
+.card_actions {
+  display: flex;
+  gap: var(--space-2);
+}

@@ -1,7 +1,7 @@
 import type { FunctionComponent } from 'preact';
-import type { Signal } from '@preact/signals';
 import type { Reservation } from '@shared/types';
 import BookingCard from './BookingCard';
+import styles from './BookingCards.module.css';
 
 interface BookingCardsProps {
   reservations: Reservation[];
@@ -10,7 +10,7 @@ interface BookingCardsProps {
 }
 
 const BookingCards: FunctionComponent<BookingCardsProps> = ({ reservations, onEdit, onDelete }) => (
-  <div class="booking-cards">
+  <div class={styles.booking_cards}>
     {reservations.map(r => (
       <BookingCard key={r.id} reservation={r} onEdit={onEdit} onDelete={onDelete} />
     ))}

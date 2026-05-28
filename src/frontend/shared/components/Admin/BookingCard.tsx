@@ -1,6 +1,7 @@
 import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import { Badge, Button } from '@shared/components';
+import styles from './BookingCard.module.css';
 
 interface BookingCardProps {
   reservation: Reservation;
@@ -9,18 +10,18 @@ interface BookingCardProps {
 }
 
 const BookingCard: FunctionComponent<BookingCardProps> = ({ reservation: r, onEdit, onDelete }) => (
-  <div class="booking-card">
-    <div class="card-time-guests">
-      <span class="card-time">{r.reservation_time}</span>
+  <div class={styles.booking_card}>
+    <div class={styles.card_time_guests}>
+      <span class={styles.card_time}>{r.reservation_time}</span>
       <Badge variant="default">
         <strong>{r.guests}</strong> guest{r.guests !== 1 ? 's' : ''}
       </Badge>
     </div>
-    <div class="card-name">{r.first_name} {r.surname}</div>
+    <div class={styles.card_name}>{r.first_name} {r.surname}</div>
     {r.dietary_requirements && (
-      <div class="card-dietary">{r.dietary_requirements}</div>
+      <div class={styles.card_dietary}>{r.dietary_requirements}</div>
     )}
-    <div class="card-actions">
+    <div class={styles.card_actions}>
       <Button
         variant="action-edit"
         size="sm"

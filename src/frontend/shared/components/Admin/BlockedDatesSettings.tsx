@@ -4,6 +4,7 @@ import { useEffect } from 'preact/hooks';
 import { CalendarGrid } from '@shared/components';
 import { MONTHS } from '@shared/types';
 import { adminFetch } from '@shared/utils/adminFetch';
+import styles from './BlockedDatesSettings.module.css';
 
 function pad(n: number): string {
   return String(n).padStart(2, '0');
@@ -207,30 +208,30 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
   const isCurrent = viewYear.value === today.getFullYear() && viewMonth.value === today.getMonth();
 
   return (
-    <div class="bd-settings">
-      <h3 class="bd-section-title">Blocked Dates</h3>
+    <div class={styles.bd_settings}>
+      <h3 class={styles.bd_section_title}>Blocked Dates</h3>
       {errorMessage.value && (
-        <div class="error-text" role="alert">{errorMessage.value}</div>
+        <div class={styles.error_text} role="alert">{errorMessage.value}</div>
       )}
-      <div class="date-picker-popup date-picker-popup--inline">
-        <div class="date-picker-header">
+      <div class={`${styles.date_picker_popup} ${styles.date_picker_popup_inline}`}>
+        <div class={styles.date_picker_header}>
           <button
-            class="bd-prev-btn"
+            class={styles.bd_prev_btn}
             aria-label="Previous month"
             disabled={isCurrent}
             onClick={prevMonth}
           >
             &#8592;
           </button>
-          <span class="bd-month-label">
+          <span class={styles.bd_month_label}>
             {MONTHS[viewMonth.value]} {viewYear.value}
           </span>
-          <button class="bd-next-btn" aria-label="Next month" onClick={nextMonth}>
+          <button class={styles.bd_next_btn} aria-label="Next month" onClick={nextMonth}>
             &#8594;
           </button>
         </div>
         {isLoading.value && (
-          <div class="bd-calendar-loading loading-text">Loading…</div>
+          <div class={`${styles.bd_calendar_loading} ${styles.loading_text}`}>Loading…</div>
         )}
         <div style={isLoading.value ? 'visibility:hidden' : undefined}>
           <CalendarGrid
@@ -246,11 +247,11 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
             onLeaveGrid={() => { hoverDate.value = null; }}
           />
         </div>
-        <div class="bd-legend">
-          <span class="bd-legend-item">
-            <span class="bd-legend-swatch bd-legend-swatch--blocked" /> Blocked
+        <div class={styles.bd_legend}>
+          <span class={styles.bd_legend_item}>
+            <span class={`${styles.bd_legend_swatch} ${styles.bd_legend_swatch_blocked}`} /> Blocked
           </span>
-          <span class="bd-legend-item bd-legend-hint">
+          <span class={`${styles.bd_legend_item} ${styles.bd_legend_hint}`}>
             ◌ Click to toggle · Click two days to block a range
           </span>
         </div>

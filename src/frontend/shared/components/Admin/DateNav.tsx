@@ -1,5 +1,6 @@
 import type { FunctionComponent } from 'preact';
 import type { Signal } from '@preact/signals';
+import styles from './DateNav.module.css';
 
 function pad(n: number): string {
   return String(n).padStart(2, '0');
@@ -27,18 +28,18 @@ const DateNav: FunctionComponent<DateNavProps> = ({ currentDate, guestCount, onP
   const todayFlag = isToday(d);
 
   return (
-    <div class="date-nav">
-      <button class="btn-action" onClick={onPrev} aria-label="Previous day">&#8592;</button>
-      <div class="date-nav-center">
+    <div class={styles.date_nav}>
+      <button class={styles.btn_action} onClick={onPrev} aria-label="Previous day">&#8592;</button>
+      <div class={styles.date_nav_center}>
         <span id="current-date-display">
           {displayDate}
-          {todayFlag && <span class="today-label"> today</span>}
+          {todayFlag && <span class={styles.today_label}> today</span>}
         </span>
-        <span id="summary-text" class="day-summary">
+        <span id="summary-text" class={styles.day_summary}>
           {guestCount} cover{guestCount !== 1 ? 's' : ''}
         </span>
       </div>
-      <button class="btn-action" onClick={onNext} aria-label="Next day">&#8594;</button>
+      <button class={styles.btn_action} onClick={onNext} aria-label="Next day">&#8594;</button>
     </div>
   );
 };

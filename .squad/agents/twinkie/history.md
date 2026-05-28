@@ -86,8 +86,27 @@ Frontend Dev on the Maximum Bookings project. Twinkie owns frontend surface work
 - `loading-indicator` and `compact-loading` were found in `public/shared.css` and not in `public/styles.css`; grepping `src/**/*.tsx` showed no remaining TSX consumers outside the migrated module, so both globals now appear orphaned.
 - Mapping used: `loading-indicator` → `loading_indicator`, `compact-loading` → `compact_loading`.
 
-### BookingManage Error CSS module extraction (2026-05-27)
+### Admin component CSS module extraction (2026-05-29)
+
+- Created 13 CSS module files covering all Admin components + AdminApp entry: `AdminApp.module.css` (in `src/frontend/admin/`), and `Login`, `Dashboard`, `Settings`, `DateNav`, `BookingCard`, `BookingCards`, `BookingModal`, `ReservationList`, `SettingsPanel`, `GeneralSettings`, `OpeningHoursSettings`, `BlockedDatesSettings` modules in `src/frontend/shared/components/Admin/`.
+- Settings.tsx shares the same layout class names as Dashboard.tsx (dashboard-layout, sidebar-nav, etc.) — each got its own module file rather than cross-importing.
+- `modal-actions` in `BookingModal.tsx` was intentionally left as a global string class; the `Modal` component owns footer layout styling.
+- Responsive show/hide logic (`admin-table` hidden on mobile, `booking-cards`/`oh-cards` hidden on desktop) was baked into each component's module file using `@media` queries.
+- camelCase mapping for BEM modifiers: `tab-btn--sub` → `tabBtnSub`, `date-picker-popup--inline` → `datePickerPopupInline`, `bd-legend-swatch--blocked` → `bdLegendSwatchBlocked`.
+- Multi-class combos use template literals: `` class={`${styles.adminTable} ${styles.bookingTable}`} ``.
+- Conditional active states use: `` class={`${styles.tabBtn}${isActive ? ` ${styles.active}` : ''}`} ``.
+- OpeningHoursSettings banner used a dynamic `alert-${type}` pattern; converted to ternary: `` `${styles.alert} ${styles.ohBanner} ${type === 'success' ? styles.alertSuccess : styles.alertError}` ``.
+- `form-group` is defined globally in `public/shared.css` but was redefined locally in Login and GeneralSettings modules so those components are fully self-contained with scoped styles.
+
 
 - `Error.tsx` had no literal `class` or `className` references to extract, so the error screen was scoped with a new local wrapper based on the existing `booking-form-content` rule from `public/styles.css`.
 - `booking-form-content` is still shared with `src/frontend/booking-widget/BookingApp.tsx`, so the global rule stays in place; `error-container` appears globally orphaned because it has no TSX consumers under `src/`.
 - Mapping used: `booking-form-content` → `content`.
+
+### Admin CSS module naming compliance fix (2026-05-30)
+
+- All 12 Admin CSS module files and their paired TSX files were corrected to comply with the css-module-extraction skill.
+- The underscore naming rule is absolute: **every multi-word CSS module class name must use underscores, never camelCase**. loginLayout ❌ → login_layout ✅.
+- The previous extraction work had used camelCase (e.g. 	abBtn, mainPanel, 	oggleListItem) — these were all converted to underscore form across both .module.css files and styles.xxx references in the TSX.
+- dateNav in DateNav.module.css was also renamed to date_nav — even single-apparent-word names that contain hidden camelCase boundaries must follow the rule.
+- AdminApp.module.css loadingScreen → loading_screen was corrected in both the module and AdminApp.tsx.

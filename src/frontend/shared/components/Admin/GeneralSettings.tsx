@@ -5,6 +5,7 @@ import type { Signal } from '@preact/signals';
 import type { TenantConfig } from '@shared/types';
 import { Button } from '@shared/components';
 import { adminFetch } from '@shared/utils/adminFetch';
+import styles from './GeneralSettings.module.css';
 
 interface GeneralSettingsProps {
   tenantConfig: Signal<TenantConfig | null>;
@@ -75,24 +76,24 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
   }
 
   if (isLoading.value) {
-    return <p class="loading-text">Loading settings…</p>;
+    return <p class={styles.loading_text}>Loading settings…</p>;
   }
 
   return (
-    <div class="settings-panel">
+    <div class={styles.settings_panel}>
       <h2>Settings</h2>
       {errorMessage.value && (
-        <div class="alert alert-error" role="alert" aria-live="assertive">
+        <div class={`${styles.alert} ${styles.alert_error}`} role="alert" aria-live="assertive">
           {errorMessage.value}
         </div>
       )}
       {successMessage.value && (
-        <div class="alert alert-success" role="status" aria-live="polite">
+        <div class={`${styles.alert} ${styles.alert_success}`} role="status" aria-live="polite">
           {successMessage.value}
         </div>
       )}
-      <form class="form-container" noValidate onSubmit={handleSubmit}>
-        <div class="form-group">
+      <form class={styles.form_container} noValidate onSubmit={handleSubmit}>
+        <div class={styles.form_group}>
           <label for="sf-name">Name</label>
           <input
             type="text"
@@ -104,7 +105,7 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             onInput={(e) => { name.value = (e.target as HTMLInputElement).value; }}
           />
         </div>
-        <div class="form-group">
+        <div class={styles.form_group}>
           <label for="sf-max-guests">Max party size</label>
           <input
             type="number"
@@ -115,7 +116,7 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             onInput={(e) => { maxGuests.value = parseInt((e.target as HTMLInputElement).value, 10) || 0; }}
           />
         </div>
-        <div class="form-group">
+        <div class={styles.form_group}>
           <label for="sf-max-covers">Max covers per day</label>
           <input
             type="number"
@@ -126,7 +127,7 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             onInput={(e) => { maxCovers.value = parseInt((e.target as HTMLInputElement).value, 10) || 0; }}
           />
         </div>
-        <div class="form-group">
+        <div class={styles.form_group}>
           <label for="sf-time-window">Concurrent guest time window (minutes)</label>
           <input
             type="number"

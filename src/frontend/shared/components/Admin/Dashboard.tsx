@@ -8,6 +8,7 @@ import DateNav from './DateNav';
 import ReservationList from './ReservationList';
 import BookingCards from './BookingCards';
 import BookingModal from './BookingModal';
+import styles from './Dashboard.module.css';
 
 interface DashboardProps {
   auth: UseAuthReturn;
@@ -44,24 +45,24 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
   const reservations = bookings.reservations.value;
 
   return (
-    <div class="dashboard-layout">
-      <nav class="sidebar-nav" aria-label="Admin navigation">
-        <div class="sidebar-logo" aria-hidden="true" />
-        <button class="tab-btn active" aria-current="page">
+    <div class={styles.dashboard_layout}>
+      <nav class={styles.sidebar_nav} aria-label="Admin navigation">
+        <div class={styles.sidebar_logo} aria-hidden="true" />
+        <button class={`${styles.tab_btn} ${styles.active}`} aria-current="page">
           Bookings
         </button>
-        <button class="tab-btn" onClick={onGoSettings}>
+        <button class={styles.tab_btn} onClick={onGoSettings}>
           Settings
         </button>
       </nav>
 
-      <div class="main-panel">
-        <header class="main-header">
-          <span id="venue-name" class="header-brand">{venueName}</span>
-          <button class="btn-logout" onClick={onLogout}>Sign out</button>
+      <div class={styles.main_panel}>
+        <header class={styles.main_header}>
+          <span id="venue-name" class={styles.header_brand}>{venueName}</span>
+          <button class={styles.btn_logout} onClick={onLogout}>Sign out</button>
         </header>
 
-        <main id="main-content" class="main-content">
+        <main id="main-content" class={styles.main_content}>
           <DateNav
             currentDate={bookings.currentDate}
             guestCount={bookings.guestCount.value}
@@ -69,16 +70,16 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
             onNext={bookings.nextDay}
           />
 
-          <div class="toggle-list" id="day-block-container">
-            <div class="toggle-list-item">
-              <div class="toggle-list-item-content">
-                <p class="toggle-list-item-header"><strong>Block this day</strong></p>
-                <p class="toggle-list-item-subtext">
+          <div class={styles.toggle_list} id="day-block-container">
+            <div class={styles.toggle_list_item}>
+              <div class={styles.toggle_list_item_content}>
+                <p class={styles.toggle_list_item_header}><strong>Block this day</strong></p>
+                <p class={styles.toggle_list_item_subtext}>
                   Customers will no longer be able to make reservations on this date. Existing reservations will not be affected.
                 </p>
               </div>
-              <div class="toggle-list-item-switch">
-                <div class="form-group-check">
+              <div class={styles.toggle_list_item_switch}>
+                <div class={styles.form_group_check}>
                   <ToggleSwitch
                     checked={bookings.isDayBlocked.value}
                     disabled={bookings.isBlockLoading.value}
@@ -89,21 +90,21 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
             </div>
           </div>
 
-          <div class="bookings-actions">
-            <button class="btn-primary" onClick={openCreate}>
+          <div class={styles.bookings_actions}>
+            <button class={styles.btn_primary} onClick={openCreate}>
               + New Booking
             </button>
           </div>
 
           <div id="bookings-list" aria-busy={bookings.isLoading.value}>
             {bookings.isLoading.value && (
-              <p class="loading-text">Loading…</p>
+              <p class={styles.loading_text}>Loading…</p>
             )}
             {!bookings.isLoading.value && bookings.errorMessage.value && (
-              <p class="error-text">{bookings.errorMessage.value}</p>
+              <p class={styles.error_text}>{bookings.errorMessage.value}</p>
             )}
             {!bookings.isLoading.value && !bookings.errorMessage.value && reservations.length === 0 && (
-              <p class="empty-state">No bookings for this date.</p>
+              <p class={styles.empty_state}>No bookings for this date.</p>
             )}
             {!bookings.isLoading.value && reservations.length > 0 && (
               <>

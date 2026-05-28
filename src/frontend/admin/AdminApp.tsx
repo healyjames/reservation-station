@@ -6,6 +6,7 @@ import { useAuth } from '@shared/hooks/useAuth';
 import Login from '@shared/components/Admin/Login';
 import Dashboard from '@shared/components/Admin/Dashboard';
 import Settings from '@shared/components/Admin/Settings';
+import styles from './AdminApp.module.css';
 
 type AdminView = 'login' | 'dashboard' | 'settings';
 
@@ -38,7 +39,7 @@ export const AdminApp: FunctionComponent = () => {
 
   if (auth.isLoading.value) {
     return (
-      <div class="loading-screen" aria-busy="true">
+      <div class={styles.loading_screen} aria-busy="true">
         <Spinner size="md" label="Loading…" />
       </div>
     );

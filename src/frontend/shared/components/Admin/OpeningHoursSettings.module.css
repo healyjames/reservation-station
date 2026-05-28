@@ -1,0 +1,173 @@
+.oh_section_title {
+  margin: 0 0 var(--space-4);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--foreground-lightest);
+}
+
+.alert {
+  border-radius: var(--radius-xs);
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  margin-bottom: var(--space-4);
+}
+
+.oh_banner {
+  /* banner positioning modifier — combined with alert + alertSuccess/alertError */
+}
+
+.alert_success {
+  background: var(--success-light);
+  color: var(--success-dark);
+}
+
+.alert_error {
+  background: var(--error-light);
+  color: var(--error-dark);
+}
+
+/* Desktop table */
+.admin_table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.admin_table thead {
+  background: var(--background-light);
+}
+
+.admin_table th {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--foreground-dark);
+  border-bottom: var(--border-width) solid var(--background-lighter);
+}
+
+.admin_table td {
+  padding: var(--space-3) var(--space-4);
+  color: var(--foreground);
+  border-bottom: var(--border-width) solid var(--background-light);
+}
+
+.oh_schedule {
+  /* desktop opening hours table, hidden on mobile */
+}
+
+@media (max-width: 767px) {
+  .oh_schedule {
+    display: none;
+  }
+}
+
+.oh_row {
+  /* table row per day */
+}
+
+.oh_day_name {
+  font-weight: 500;
+  color: var(--foreground-lightest);
+  min-width: 100px;
+}
+
+.oh_time_cell {
+  min-width: 120px;
+}
+
+.oh_open_time,
+.oh_close_time {
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--background-lighter);
+  border-radius: var(--radius-xs);
+  background: var(--background);
+  color: var(--foreground-lightest);
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.oh_closed_cell {
+  min-width: 80px;
+}
+
+.oh_closed_label {
+  /* label container combined with formGroupCheck */
+}
+
+.form_group_check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Mobile card view */
+.oh_cards {
+  display: none;
+  gap: var(--space-3);
+}
+
+@media (max-width: 767px) {
+  .oh_cards {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
+
+.oh_card {
+  background: var(--background-light);
+  border: var(--border-width) solid var(--background-lighter);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.oh_card_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.oh_card_day {
+  font-weight: 600;
+  color: var(--foreground-lightest);
+}
+
+.oh_card_times {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.oh_card_time_field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.oh_card_time_label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--foreground-dark);
+  text-transform: uppercase;
+}
+
+.oh_card_open_time,
+.oh_card_close_time {
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--background-lighter);
+  border-radius: var(--radius-xs);
+  background: var(--background);
+  color: var(--foreground-lightest);
+  font: inherit;
+  font-size: 0.875rem;
+  width: 100%;
+}
+
+.loading_text {
+  color: var(--foreground-dark);
+  font-style: italic;
+}

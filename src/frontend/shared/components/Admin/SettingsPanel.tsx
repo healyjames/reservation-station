@@ -5,6 +5,7 @@ import type { TenantConfig } from '@shared/types';
 import GeneralSettings from './GeneralSettings';
 import OpeningHoursSettings from './OpeningHoursSettings';
 import BlockedDatesSettings from './BlockedDatesSettings';
+import styles from './SettingsPanel.module.css';
 
 type SettingsTab = 'general' | 'opening-hours' | 'blocked-dates';
 
@@ -18,24 +19,24 @@ const SettingsPanel: FunctionComponent<SettingsProps> = ({ tenantConfig, token, 
   const activeTab = useSignal<SettingsTab>('general');
 
   return (
-    <div class="settings-view">
-      <div class="tab-subnav">
+    <div class={styles.settings_view}>
+      <div class={styles.tab_subnav}>
         <button
-          class={`tab-btn tab-btn--sub${activeTab.value === 'general' ? ' active' : ''}`}
+          class={`${styles.tab_btn} ${styles.tab_btn_sub}${activeTab.value === 'general' ? ` ${styles.active}` : ''}`}
           data-hash="general"
           onClick={() => { activeTab.value = 'general'; }}
         >
           General
         </button>
         <button
-          class={`tab-btn tab-btn--sub${activeTab.value === 'opening-hours' ? ' active' : ''}`}
+          class={`${styles.tab_btn} ${styles.tab_btn_sub}${activeTab.value === 'opening-hours' ? ` ${styles.active}` : ''}`}
           data-hash="opening-hours"
           onClick={() => { activeTab.value = 'opening-hours'; }}
         >
           Opening Hours
         </button>
         <button
-          class={`tab-btn tab-btn--sub${activeTab.value === 'blocked-dates' ? ' active' : ''}`}
+          class={`${styles.tab_btn} ${styles.tab_btn_sub}${activeTab.value === 'blocked-dates' ? ` ${styles.active}` : ''}`}
           data-hash="blocked-dates"
           onClick={() => { activeTab.value = 'blocked-dates'; }}
         >
@@ -43,7 +44,7 @@ const SettingsPanel: FunctionComponent<SettingsProps> = ({ tenantConfig, token, 
         </button>
       </div>
 
-      <div id="settings-view" class="settings-panel">
+      <div id="settings-view" class={styles.settings_panel}>
         {activeTab.value === 'general' && (
           <GeneralSettings tenantConfig={tenantConfig} token={token} onSave={onSave} />
         )}

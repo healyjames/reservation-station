@@ -1,0 +1,53 @@
+.admin_table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.admin_table thead {
+  background: var(--background-light);
+}
+
+.admin_table th {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--foreground-dark);
+  border-bottom: var(--border-width) solid var(--background-lighter);
+}
+
+.admin_table td {
+  padding: var(--space-3) var(--space-4);
+  color: var(--foreground);
+  border-bottom: var(--border-width) solid var(--background-light);
+}
+
+.admin_table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin_table tbody tr:hover {
+  background: var(--background-light);
+}
+
+.booking_table {
+  /* booking-specific table, extends adminTable */
+}
+
+.actions_cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.actions_cell > * + * {
+  margin-left: var(--space-2);
+}
+
+@media (max-width: 767px) {
+  .admin_table {
+    display: none;
+  }
+}

@@ -1,6 +1,7 @@
 import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import { Button } from '@shared/components';
+import styles from './ReservationList.module.css';
 
 interface ReservationListProps {
   reservations: Reservation[];
@@ -9,7 +10,7 @@ interface ReservationListProps {
 }
 
 const ReservationList: FunctionComponent<ReservationListProps> = ({ reservations, onEdit, onDelete }) => (
-  <table class="admin-table booking-table">
+  <table class={`${styles.admin_table} ${styles.booking_table}`}>
     <thead>
       <tr>
         <th scope="col">Time</th>
@@ -26,7 +27,7 @@ const ReservationList: FunctionComponent<ReservationListProps> = ({ reservations
           <td>{r.first_name} {r.surname}</td>
           <td>{r.guests}</td>
           <td>{r.dietary_requirements || '–'}</td>
-          <td class="actions-cell">
+          <td class={styles.actions_cell}>
             <Button
               variant="action-edit"
               size="sm"
