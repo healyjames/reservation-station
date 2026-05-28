@@ -117,3 +117,11 @@ Frontend Dev on the Maximum Bookings project. Twinkie owns frontend surface work
 - Local `.form_group` input styling was removed from `Login.module.css` and `GeneralSettings.module.css` because the shared `Input` component now owns those states and visuals.
 - `Input.tsx` gained a `min` prop so numeric admin settings can keep their existing minimum constraints while using the shared field primitive.
 - `OpeningHoursSettings.tsx` was intentionally left on raw time inputs because its controls require `step={1800}` and the shared `Input` component still does not support `step`.
+
+### AdminSidebar component extraction (2026-05-21)
+
+- Extracted duplicated `<nav>` sidebar from Dashboard.tsx and Settings.tsx into `src/frontend/shared/components/Admin/AdminSidebar.tsx` with paired `AdminSidebar.module.css`.
+- Component accepts `activePage: 'bookings' | 'settings'`, `onGoBookings`, `onGoSettings` props; owns mobile open/close state internally via `useSignal(false)`.
+- Mobile behaviour: sidebar `position: fixed`, off-screen left by default (`translateX(-100%)`), slides in on open. Hamburger button `position: fixed` top-left, z-index 60, `display: none` on desktop. Z-index stack: overlay (40) → sidebar (50) → hamburger (60).
+- Removed `sidebar_nav`, `sidebar_logo`, `tab_btn` rules from Dashboard.module.css and Settings.module.css — now owned by AdminSidebar.module.css.
+- Han reviewed and **approved** (2026-05-21). Non-blocking follow-up: make hamburger `aria-label` dynamic — `aria-label={isOpen.value ? 'Close navigation' : 'Open navigation'}`.

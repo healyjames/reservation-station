@@ -8,6 +8,8 @@ import DateNav from './DateNav';
 import ReservationList from './ReservationList';
 import BookingCards from './BookingCards';
 import BookingModal from './BookingModal';
+import AdminSidebar from './AdminSidebar';
+import AdminHeader from './AdminHeader';
 import styles from './Dashboard.module.css';
 
 interface DashboardProps {
@@ -46,21 +48,10 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
 
   return (
     <div class={styles.dashboard_layout}>
-      <nav class={styles.sidebar_nav} aria-label="Admin navigation">
-        <div class={styles.sidebar_logo} aria-hidden="true" />
-        <button class={`${styles.tab_btn} ${styles.active}`} aria-current="page">
-          Bookings
-        </button>
-        <button class={styles.tab_btn} onClick={onGoSettings}>
-          Settings
-        </button>
-      </nav>
+      <AdminSidebar activePage="bookings" onGoBookings={() => {}} onGoSettings={onGoSettings} />
 
       <div class={styles.main_panel}>
-        <header class={styles.main_header}>
-          <span id="venue-name" class={styles.header_brand}>{venueName}</span>
-          <button class={styles.btn_logout} onClick={onLogout}>Sign out</button>
-        </header>
+        <AdminHeader venueName={venueName} onLogout={onLogout} />
 
         <main id="main-content" class={styles.main_content}>
           <DateNav

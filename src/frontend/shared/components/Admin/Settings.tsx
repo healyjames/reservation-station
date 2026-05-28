@@ -2,6 +2,8 @@ import type { FunctionComponent } from 'preact';
 import type { TenantConfig } from '@shared/types';
 import type { UseAuthReturn } from '@shared/hooks/useAuth';
 import SettingsPanel from './SettingsPanel';
+import AdminSidebar from './AdminSidebar';
+import AdminHeader from './AdminHeader';
 import styles from './Settings.module.css';
 
 interface SettingsProps {
@@ -22,21 +24,10 @@ const Settings: FunctionComponent<SettingsProps> = ({ auth, onLogout, onGoDashbo
 
   return (
     <div class={styles.dashboard_layout}>
-      <nav class={styles.sidebar_nav} aria-label="Admin navigation">
-        <div class={styles.sidebar_logo} aria-hidden="true" />
-        <button class={styles.tab_btn} onClick={onGoDashboard}>
-          Bookings
-        </button>
-        <button class={`${styles.tab_btn} ${styles.active}`} aria-current="page">
-          Settings
-        </button>
-      </nav>
+      <AdminSidebar activePage="settings" onGoBookings={onGoDashboard} onGoSettings={() => {}} />
 
       <div class={styles.main_panel}>
-        <header class={styles.main_header}>
-          <span id="venue-name" class={styles.header_brand}>{venueName}</span>
-          <button class={styles.btn_logout} onClick={onLogout}>Sign out</button>
-        </header>
+        <AdminHeader venueName={venueName} onLogout={onLogout} />
 
         <main id="main-content" class={styles.main_content}>
           <SettingsPanel

@@ -293,6 +293,56 @@ The repo had two competing public booking entry points: the old vanilla root pag
 - **Details:** Former surface views were promoted into `shared/components/<Surface>/` and dropped the `View` suffix. To avoid the name collision between the former `SettingsView` page and the nested admin settings container, the page-level component stays `shared/components/Admin/Settings.tsx` and the nested shell is `shared/components/Admin/SettingsPanel.tsx`. The admin request helper moved to `shared/utils/adminFetch.ts` so `src/frontend/admin/` remains limited to `index.html`, `admin.tsx`, and `AdminApp.tsx`.
 - **Why:** This keeps every surface as a thin composition layer, makes cross-surface imports consistent through `@shared/*`, and preserves a predictable naming scheme as more shared Preact code lands.
 
+### 2026-05-21: AdminSidebar component extraction
+**By:** Twinkie (Frontend Dev)
+**What:** Extracted the duplicated `<nav>` sidebar into a new `AdminSidebar` Preact component at `src/frontend/shared/components/Admin/AdminSidebar.tsx` with its own CSS module `AdminSidebar.module.css`. The component accepts `activePage: 'bookings' | 'settings'`, `onGoBookings`, and `onGoSettings` props. It owns all sidebar state internally, including mobile open/close via `useSignal`. Desktop behaviour: sidebar renders as a static 200px flex column — identical to before, no visual change. Mobile behaviour (<768px): sidebar is `position: fixed`, off-screen left by default (`translateX(-100%)`), slides in with a 0.25s ease transition when open. A hamburger button (`☰`) is `position: fixed` top-left, z-index 60, only visible at `max-width: 767px`. It carries `aria-expanded` and `aria-controls="admin-sidebar-nav"` for accessibility. A semi-transparent overlay (`rgba(0,0,0,0.45)`, z-index 40) renders behind the sidebar when open; clicking it closes the sidebar. Files created: `AdminSidebar.tsx`, `AdminSidebar.module.css`. Files updated: `Dashboard.tsx` and `Settings.tsx` replaced their inline `<nav>` with the component; `Dashboard.module.css` and `Settings.module.css` had their `sidebar_nav`, `sidebar_logo`, and `tab_btn` rules removed (now owned by the component module).
+**Why:** The nav was copy-pasted across Dashboard and Settings. Extracting it removes the duplication and centralises the mobile-responsive sidebar behaviour in one place.
+
+### 2026-05-21: AdminSidebar review — approved
+**By:** Han (Lead)
+**Reviewer:** Han (Lead)
+**Verdict:** ✅ APPROVED
+**What:** Reviewed Twinkie's AdminSidebar extraction. All six criteria passed — correctness, code quality, CSS, accessibility, integration, no regressions. `aria-expanded`, `aria-controls`, `aria-label`, `aria-hidden`, and `aria-current="page"` all correct. Z-index stack (overlay 40, sidebar 50, hamburger 60) correct. Dashboard.module.css and Settings.module.css confirmed clean with no leftover sidebar class names.
+**Non-blocking follow-up:** Hamburger `aria-label="Open navigation"` is static. When `isOpen` is true it should read "Close navigation". `aria-expanded` conveys state for screen readers, but updating the label dynamically is best practice: `aria-label={isOpen.value ? 'Close navigation' : 'Open navigation'}`.
+
+### 2026-05-27: CancelConfirm CSS module extraction
+**By:** Twinkie (Frontend Dev)
+**What:** `src/frontend/shared/components/BookingManage/CancelConfirm.tsx` now uses `CancelConfirm.module.css` for `action_group`. Grepping `src/**/*.tsx` for `action-group` before the migration only found `CancelConfirm.tsx`, so `public/shared.css`'s `.action-group` rule now appears newly orphaned. Per the CSS-module extraction process, the global rule was left in place for James's cleanup pass and was not removed here.
+
+### 2026-05-27: ChangeDateTime CSS module extraction
+**By:** Twinkie (Frontend Dev)
+**What:** Migrate `ChangeDateTime.tsx` to `ChangeDateTime.module.css` but keep the shared global selectors in `public/shared.css`/`public/styles.css` untouched for now. `action-group` is still consumed by other BookingManage components, while `calendar-container`, `calendar-header`, `calendar-nav`, `calendar-nav-btn`, `loading-indicator`, `compact-loading`, `inline-helper`, and `inline-helper-error` appear orphaned after this migration and should be cleaned up separately. `mt-2` is still present in `ChangeDateTime.tsx`, but no matching CSS rule was found in `public/shared.css` or `public/styles.css`.
+
+### 2026-05-27: Error CSS module extraction
+**By:** Twinkie (Frontend Dev)
+**What:** `src/frontend/shared/components/BookingManage/Error.tsx` had no literal global class references, so it now uses a local `content` wrapper extracted from the existing `booking-form-content` rule in `public/styles.css`. `booking-form-content` is still used by `src/frontend/booking-widget/BookingApp.tsx`, so that global rule should remain for now. `error-container` in `public/styles.css` appears orphaned because there are no TSX consumers under `src/`.
+
+### 2026-05-27: Loading CSS module extraction
+**By:** Twinkie (Frontend Dev)
+**What:** `src/frontend/shared/components/BookingManage/Loading.tsx` now uses `Loading.module.css` classes copied from the old `loading-indicator` and `compact-loading` globals. `loading-indicator` and `compact-loading` were found in `public/shared.css` and not in `public/styles.css`. Grepping `src/**/*.tsx` for those selectors found no remaining TSX consumers, so both globals now appear orphaned and can be cleaned up in a later pass.
+
+### 2026-05-27: Booking widget mobile overflow fix
+**By:** Twinkie (Frontend Dev)
+**What:** Scope the booking widget sizing reset to `#booking-app` instead of relying only on the page-level global reset. Add a `#booking-app` border-box reset for all descendants plus `width: 100%; max-width: 100%;` on the root in `public/styles.css`.
+**Why:** The widget contains `width: 100%` form controls/buttons, so if a host page omits or overrides the shared `box-sizing` reset, those controls can push the widget wider than the mobile viewport.
+
+### 2026-05-28: Admin shared input adoption
+**By:** Twinkie (Frontend Dev)
+**Status:** Proposed
+**What:** Admin forms should use the shared `FormField` + `Input` components instead of local raw `<input>` markup whenever they follow the standard stacked label-and-field pattern. Applied to `Login.tsx` and `GeneralSettings.tsx`. `OpeningHoursSettings.tsx` was intentionally skipped — its time controls require `step={1800}` for 30-minute increments, and the current shared `Input` interface does not support a `step` prop. Those specialised raw time inputs should remain in place until the shared input API is expanded deliberately. Reference pattern: `src/frontend/shared/components/Admin/BookingModal.tsx`.
+**Why:** Keeps admin form markup consistent with BookingModal. Reuses shared accessibility and visual behaviour already handled by `FormField` and `Input`. Removes duplicate local input styling from admin CSS modules.
+
+### 2026-05-29: Admin CSS modules use per-component local definitions
+**By:** Twinkie (Frontend Dev)
+**What:** Created a `.module.css` file per Admin component following the existing `BookingWidget/Step1Form.module.css` pattern. Covers all Admin components (`Login`, `Dashboard`, `Settings`, `DateNav`, `BookingCard`, `BookingCards`, `BookingModal`, `ReservationList`, `SettingsPanel`, `GeneralSettings`, `OpeningHoursSettings`, `BlockedDatesSettings`) plus `AdminApp`. Shared class names (e.g. `alert`, `form-group`, `loading-text`) are defined **locally** in each component's module rather than extracted to a shared module — consistent with the per-component module pattern already in use. `Settings.tsx` and `Dashboard.tsx` both use the sidebar layout classes; each got its own module with the shared layout styles duplicated rather than cross-importing. `modal-actions` in `BookingModal.tsx` remains a global string class — the `Modal` component's own styling handles footer layout. Responsive show/hide is defined in each component's module with `@media` queries. Zero global Admin class strings remain except `modal-actions` in `BookingModal.tsx`.
+**Why:** Consistent with the per-component module pattern already in use across the project. Old global rules in `public/admin/styles/admin.css` for Admin component classes are now superseded and may be cleaned up in a future pass.
+
+### 2026-05-30: Admin CSS module class naming convention
+**By:** Twinkie (Frontend Dev)
+**Status:** Applied
+**What:** All CSS module class names in Admin components must use **underscores** for multi-word names, never camelCase. This is a firm rule from the `css-module-extraction` skill. All 12 Admin CSS module files and their paired TSX files were corrected. Examples: `.loginLayout` → `.login_layout`, `.sidebarNav` → `.sidebar_nav`, `.tabBtn` → `.tab_btn`, `.mainPanel` → `.main_panel`, `.toggleListItem` → `.toggle_list_item`. Applies to all files under `src/frontend/shared/components/Admin/*.module.css` and `src/frontend/admin/AdminApp.module.css`.
+**Why:** The team's `css-module-extraction` skill explicitly states: "If a name needs more than one word, use underscores. Never use camelCase for CSS module class names." The original Admin CSS module extraction (2026-05-29) violated this rule.
+
 ## Directives
 
 ### 2026-05-23T07-31-02: User directive

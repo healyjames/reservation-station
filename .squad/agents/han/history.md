@@ -21,3 +21,10 @@ Lead on the Maximum Bookings project. Restaurant booking system built on Cloudfl
 - **Phase 3 Layer D — CalendarGrid preserves calendar-core.js (2026-05-23):** `CalendarGrid.tsx` is a direct Preact port of `calendar-core.js`. The vanilla file MUST remain at `public/js/calendar-core.js` until Phase 7 (admin Preact migration). Do not delete it before both the widget and admin are fully migrated.
 - **Phase 3 Layer D — vitest esbuild JSX fix (reinforced, 2026-05-23):** The `esbuild: { jsxImportSource: 'preact' }` approach in vitest config is confirmed correct. If the vitest config is ever regenerated from the Vite config, verify the `@preact/preset-vite` plugin is excluded from the `plugins` array used in vitest — add a filter to strip it out.
 - **2026-05-27 — Surface boundary after shared-first migration:** `src/frontend/booking-widget/`, `admin/`, `cancel/`, and `booking/manage/` should stay as thin surface entries. They are standalone HTML/bundle boundaries, not shared components. The real remaining architecture issue is mixed ownership between legacy `public/` surfaces and new Preact surfaces, plus the ambiguous root entry (`public/index.html` still builds as `/` while `src/frontend/index.html` suggests a Preact root). Worker/API vs frontend separation is sound, but route response envelopes are still inconsistent with the preferred `{ success, data?, error? }` contract.
+
+### AdminSidebar review (2026-05-21)
+
+- Reviewed Twinkie's AdminSidebar extraction. **APPROVED** with one non-blocking accessibility note.
+- All six criteria passed: correctness, code quality, CSS, accessibility, integration, no regressions.
+- `aria-expanded`, `aria-controls`, `aria-label`, `aria-hidden`, `aria-current="page"` all correct. Z-index stack (overlay 40, sidebar 50, hamburger 60) confirmed. Dashboard.module.css and Settings.module.css confirmed clean.
+- Non-blocking follow-up: hamburger `aria-label="Open navigation"` is static. Dynamic label is best practice: `aria-label={isOpen.value ? 'Close navigation' : 'Open navigation'}`. `aria-expanded` is sufficient for screen readers — not a blocker.
