@@ -130,30 +130,8 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
       )}
 
 			{selectedDate.value && (
-        <div>
-          <SelectedDateInfo date={selectedDate.value} hideLabel={true} />
-          <FormField label="Time" htmlFor="mb-time-select">
-            {isFetchingTimes.value ? (
-              <div class={`${styles.loading_indicator} ${styles.compact_loading}`}>
-                <Spinner size="sm" label="Loading available times" />
-                <span>Loading times...</span>
-              </div>
-            ) : available.length > 0 ? (
-              <Select
-                id="mb-time-select"
-                value={selectedTime.value}
-                options={timeOptions}
-                placeholder="Select a time"
-                onChange={(e) => { selectedTime.value = (e.target as HTMLSelectElement).value; }}
-              />
-            ) : (
-              <p class={`${styles.inline_helper} ${styles.inline_helper_error}`}>
-                No times available for this date. Please try a different date.
-              </p>
-            )}
-          </FormField>
-        </div>
-      )}
+				<SelectedDateInfo date={selectedDate.value} hideLabel={true} />
+			)}
 
       <div class={styles.container} role="region" aria-label="Date picker">
         <div class={styles.header}>
@@ -194,6 +172,31 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
           onClose={() => { tooltipVisible.value = false; }}
         />
       </div>
+
+			{selectedDate.value && (
+        <div>
+          <FormField label="Time" htmlFor="mb-time-select">
+            {isFetchingTimes.value ? (
+              <div class={`${styles.loading_indicator} ${styles.compact_loading}`}>
+                <Spinner size="sm" label="Loading available times" />
+                <span>Loading times...</span>
+              </div>
+            ) : available.length > 0 ? (
+              <Select
+                id="mb-time-select"
+                value={selectedTime.value}
+                options={timeOptions}
+                placeholder="Select a time"
+                onChange={(e) => { selectedTime.value = (e.target as HTMLSelectElement).value; }}
+              />
+            ) : (
+              <p class={`${styles.inline_helper} ${styles.inline_helper_error}`}>
+                No times available for this date. Please try a different date.
+              </p>
+            )}
+          </FormField>
+        </div>
+      )}
 
       <div class={`${styles.action_group} mt-2`}>
         <Button type="button" variant="secondary" onClick={goToOverview}>← Back</Button>
