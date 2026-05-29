@@ -94,22 +94,22 @@
   border-color: var(--background-lighter);
 }
 
-.actionEdit {
-  background-color: transparent;
-  color: var(--primary);
+.action_edit {
+  background-color: var(--background);
+  color: var(--foreground);
   border-color: transparent;
 }
 
-.actionEdit:hover:not(:disabled) {
+.action_edit:hover:not(:disabled) {
   background-color: color-mix(in srgb, var(--primary) 12%, transparent);
 }
 
-.actionDelete {
-  background-color: transparent;
+.action_delete {
+  background-color: var(--background);
   color: var(--error);
   border-color: transparent;
 }
 
-.actionDelete:hover:not(:disabled) {
+.action_delete:hover:not(:disabled) {
   background-color: color-mix(in srgb, var(--error) 12%, transparent);
 }

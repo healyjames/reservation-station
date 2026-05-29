@@ -19,8 +19,8 @@ const variantClassMap: Record<string, string> = {
   secondary: styles.secondary,
   danger: styles.danger,
   ghost: styles.ghost,
-  'action-edit': styles.actionEdit,
-  'action-delete': styles.actionDelete,
+  'action-edit': styles.action_edit,
+  'action-delete': styles.action_delete,
 };
 
 const Button: FunctionComponent<ButtonProps> = ({

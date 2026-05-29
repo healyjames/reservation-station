@@ -49,6 +49,8 @@
   font-size: 0.75rem;
   font-weight: 600;
   margin-left: var(--space-1);
+	text-transform: uppercase;
+	position: absolute;
 }
 
 .day_summary {
