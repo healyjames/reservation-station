@@ -8,17 +8,18 @@ import styles from './BookingModal.module.css';
 interface BookingModalProps {
   mode: 'create' | 'edit';
   reservation?: Reservation;
+  defaultDate?: string;
   token: string;
   onSuccess: () => void;
   onClose: () => void;
 }
 
-const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation, token, onSuccess, onClose }) => {
+const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation, defaultDate, token, onSuccess, onClose }) => {
   const firstName = useSignal(reservation?.first_name ?? '');
   const surname = useSignal(reservation?.surname ?? '');
   const telephone = useSignal(reservation?.telephone ?? '');
   const email = useSignal(reservation?.email ?? '');
-  const reservationDate = useSignal(reservation?.reservation_date ?? '');
+  const reservationDate = useSignal(reservation?.reservation_date ?? defaultDate ?? '');
   const reservationTime = useSignal(reservation?.reservation_time ?? '');
   const guests = useSignal<number>(reservation?.guests ?? 2);
   const dietary = useSignal(reservation?.dietary_requirements ?? '');

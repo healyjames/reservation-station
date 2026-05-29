@@ -68,6 +68,41 @@ admin.get('/reservations', async (c) => {
 	return c.json(results);
 });
 
+admin.post('/reservations', async (c) => {
+	const tenantId = c.get('tenantId');
+
+	const CreateAdminReservationSchema = z.object({
+		first_name: z.string().min(1).max(50),
+		surname: z.string().min(1).max(50),
+		telephone: z.string().optional().default(''),
+		email: z.string().optional().default(''),
+		reservation_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+		reservation_time: z.string().regex(/^\d{2}:\d{2}$/),
+		guests: z.number().int().positive(),
+		dietary_requirements: z.string().max(500).optional().default(''),
+	});
+
+	const msg = await c.req.json().catch(() => null);
+	const parsed = CreateAdminReservationSchema.safeParse(msg);
+	if (!parsed.success) {
+		return c.json({ error: z.prettifyError(parsed.error) }, 400);
+	}
+
+	const { first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements } = parsed.data;
+	const id = crypto.randomUUID();
+	const now = new Date().toISOString();
+
+	await c.env.maximum_bookings_db
+		.prepare(
+			`INSERT INTO Reservations (id, tenant_id, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements, created_date, modified_date)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		)
+		.bind(id, tenantId, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements ?? '', now, now)
+		.run();
+
+	return c.json({ id }, 201);
+});
+
 admin.patch('/reservations/:id', async (c) => {
 	const tenantId = c.get('tenantId');
 	const id = c.req.param('id');

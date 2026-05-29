@@ -46,6 +46,10 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
     deleteModalOpen.value = true;
   }
 
+  function formatDate(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
   const reservations = bookings.reservations.value;
 
   return (
@@ -129,6 +133,7 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
         <BookingModal
           mode={modalMode.value}
           reservation={modalReservation.value}
+          defaultDate={modalMode.value === 'create' ? formatDate(bookings.currentDate.value) : undefined}
           token={auth.token.value}
           onSuccess={() => bookings.fetchBookings(bookings.currentDate.value)}
           onClose={() => { modalOpen.value = false; }}
