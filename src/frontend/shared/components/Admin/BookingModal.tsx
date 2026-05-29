@@ -91,11 +91,9 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
 
   const footer = (
     <div class="modal-actions">
-      {mode === 'edit' && reservation && (
-        <Button variant="danger" isLoading={isDeleting.value} onClick={handleDelete}>
-          Delete booking
-        </Button>
-      )}
+      <Button variant="primary" type="submit" form="booking-modal-form" isLoading={isSubmitting.value}>
+        {mode === 'edit' ? 'Save changes' : 'Create booking'}
+      </Button>
     </div>
   );
 
@@ -173,30 +171,27 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
             />
           </FormField>
         </div>
-        <FormField label="Guests" htmlFor="bm-guests" required>
-          <Input
-            id="bm-guests"
-            type="number"
-            name="guests"
-            value={guests.value}
-            required
-            onChange={(e) => { guests.value = parseInt((e.target as HTMLInputElement).value, 10) || 1; }}
-          />
-        </FormField>
-        <FormField label="Dietary requirements" htmlFor="bm-dietary">
-          <Textarea
-            id="bm-dietary"
-            name="dietary_requirements"
-            value={dietary.value}
-            rows={2}
-            onInput={(e) => { dietary.value = (e.target as HTMLTextAreaElement).value; }}
-          />
-        </FormField>
-        <div class="modal-actions">
-          <Button variant="primary" type="submit" isLoading={isSubmitting.value}>
-            {mode === 'edit' ? 'Save changes' : 'Create booking'}
-          </Button>
-        </div>
+				<div class="stack">
+					<FormField label="Guests" htmlFor="bm-guests" required>
+						<Input
+							id="bm-guests"
+							type="number"
+							name="guests"
+							value={guests.value}
+							required
+							onChange={(e) => { guests.value = parseInt((e.target as HTMLInputElement).value, 10) || 1; }}
+						/>
+					</FormField>
+					<FormField label="Dietary requirements" htmlFor="bm-dietary">
+						<Textarea
+							id="bm-dietary"
+							name="dietary_requirements"
+							value={dietary.value}
+							rows={2}
+							onInput={(e) => { dietary.value = (e.target as HTMLTextAreaElement).value; }}
+						/>
+					</FormField>
+				</div>
       </form>
     </Modal>
   );

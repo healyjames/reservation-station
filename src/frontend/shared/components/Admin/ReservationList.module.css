@@ -1,7 +1,8 @@
 .admin_table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  overflow: hidden;
+	border-collapse: collapse;
 }
 
 .admin_table thead {
@@ -9,14 +10,23 @@
 }
 
 .admin_table th {
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-5) var(--space-4);
   text-align: left;
   font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--foreground-dark);
-  border-bottom: var(--border-width) solid var(--background-lighter);
+}
+
+.admin_table th:last-child {
+	border-top-right-radius: var(--radius-xs);
+	border-bottom-right-radius: var(--radius-xs);
+}
+
+.admin_table th:first-child {
+	border-top-left-radius: var(--radius-xs);
+	border-bottom-left-radius: var(--radius-xs);
 }
 
 .admin_table td {
@@ -27,10 +37,6 @@
 
 .admin_table tbody tr:last-child td {
   border-bottom: none;
-}
-
-.admin_table tbody tr:hover {
-  background: var(--background-light);
 }
 
 .booking_table {

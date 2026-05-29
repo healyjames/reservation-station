@@ -8,6 +8,7 @@ import DateNav from './DateNav';
 import ReservationList from './ReservationList';
 import BookingCards from './BookingCards';
 import BookingModal from './BookingModal';
+import DeleteConfirmModal from './DeleteConfirmModal';
 import AdminSidebar from './AdminSidebar';
 import AdminHeader from './AdminHeader';
 import styles from './Dashboard.module.css';
@@ -23,6 +24,8 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
   const modalOpen = useSignal(false);
   const modalMode = useSignal<'create' | 'edit'>('create');
   const modalReservation = useSignal<Reservation | undefined>(undefined);
+  const deleteModalOpen = useSignal(false);
+  const deleteReservation = useSignal<Reservation | undefined>(undefined);
 
   const venueName = auth.tenantConfig.value?.name ?? 'Dashboard';
 
@@ -39,9 +42,8 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
   }
 
   function handleDeleteClick(reservation: Reservation) {
-    modalReservation.value = reservation;
-    modalMode.value = 'edit';
-    modalOpen.value = true;
+    deleteReservation.value = reservation;
+    deleteModalOpen.value = true;
   }
 
   const reservations = bookings.reservations.value;
@@ -130,6 +132,15 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
           token={auth.token.value}
           onSuccess={() => bookings.fetchBookings(bookings.currentDate.value)}
           onClose={() => { modalOpen.value = false; }}
+        />
+      )}
+
+      {deleteModalOpen.value && deleteReservation.value && auth.token.value && (
+        <DeleteConfirmModal
+          reservation={deleteReservation.value}
+          token={auth.token.value}
+          onSuccess={() => bookings.fetchBookings(bookings.currentDate.value)}
+          onClose={() => { deleteModalOpen.value = false; }}
         />
       )}
     </div>

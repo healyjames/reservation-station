@@ -5,6 +5,7 @@ import styles from './Button.module.css';
 interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'action-edit' | 'action-delete';
   type?: 'button' | 'submit' | 'reset';
+  form?: string;
   disabled?: boolean;
   isLoading?: boolean;
   fullWidth?: boolean;
@@ -26,6 +27,7 @@ const variantClassMap: Record<string, string> = {
 const Button: FunctionComponent<ButtonProps> = ({
   variant = 'secondary',
   type = 'button',
+  form,
   disabled,
   isLoading,
   fullWidth,
@@ -36,6 +38,7 @@ const Button: FunctionComponent<ButtonProps> = ({
 }) => (
   <button
     type={type}
+    form={form}
     class={[
       styles.btn,
       variantClassMap[variant],

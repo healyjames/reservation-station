@@ -1,7 +1,7 @@
 .dialog {
   border: none;
   border-radius: var(--radius-xl);
-  background-color: var(--background-light);
+  background-color: var(--background);
   color: var(--foreground);
   padding: 0;
   max-width: 500px;
@@ -11,7 +11,7 @@
 }
 
 .dialog::backdrop {
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 .content {
