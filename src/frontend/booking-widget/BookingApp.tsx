@@ -20,7 +20,15 @@ export const BookingApp: FunctionComponent = () => {
   const currentMonth = useSignal(new Date().getMonth());
 
   const { tenantConfig, tenantState, tenantError } = useTenant();
-  const { blockedDates, blockedTimes, isFetchingTimes, fetchBlockedDates, fetchBlockedTimes } = useAvailability();
+  const {
+    blockedDates,
+    blockedTimes,
+    dailyCapacity,
+    isFetchingTimes,
+    fetchBlockedDates,
+    fetchBlockedTimes,
+    fetchDailyCapacity,
+  } = useAvailability();
   const { formData, submitError, isSubmitting, updateField, submitBooking, resetForm } = useBookingForm();
 
   if (tenantState.value === 'loading') {
@@ -51,7 +59,10 @@ export const BookingApp: FunctionComponent = () => {
 
   async function handleDateSelect(year: number, month: number, day: number) {
     selectedDate.value = { year, month, day };
-    await fetchBlockedTimes(tenant.id, { year, month, day }, formData.value.guests);
+    await Promise.all([
+      fetchBlockedTimes(tenant.id, { year, month, day }, formData.value.guests),
+      fetchDailyCapacity(tenant.id, { year, month, day }),
+    ]);
     step.value = 'form-step1';
   }
 
@@ -96,6 +107,7 @@ export const BookingApp: FunctionComponent = () => {
         tenantConfig={tenant}
         formData={formData.value}
         blockedTimes={blockedTimes.value}
+        dailyCapacity={dailyCapacity.value}
         isFetchingTimes={isFetchingTimes.value}
         onGuestsChange={handleGuestsChange}
         onTimeChange={(time) => updateField('time', time)}

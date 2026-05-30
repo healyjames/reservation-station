@@ -16,6 +16,8 @@ Backend Dev on the Maximum Bookings project. Owns the Hono API, D1 database sche
 
 ## Learnings
 
+- **Daily capacity endpoint (2026-05-30)**: Added `GET /api/reservations/daily-capacity` immediately after `/availability` and before `/:id` so Hono does not let the parameter route swallow the literal path. Request validation is strict `YYYY-MM-DD` regex matching for this endpoint, and unlimited tenants (`max_covers = 0`) return the early response `{ max_covers: 0, booked_covers: 0, remaining_covers: null }` without summing reservations.
+
 - **README API reference**: Replaced the brief `### Tenant API` bullet list with a full `## API Reference` section covering all 12 endpoints across tenants and reservations. Key accuracy points: `GET /api/tenants/:id` matches on `tenant_code` (not UUID); `PATCH`/`DELETE` for tenants use UUID; availability endpoint returns per-slot `{ time, concurrent_guests, available_capacity }` array; slots run `12:00`–`21:30` in 30-min intervals; `concurrent_guests_time_limit` defaults to 120 mins.
 
 - **Logging strategy**: Only log on genuine error conditions using `console.error`. Format: `[route-file] VERB description` with a context object containing relevant IDs. Validation failures, unexpected 404s (tenant missing inside POST /reservations), and D1 write errors are logged. Business-rule rejections (422) and expected 404s (GET not-found) are silent. Hono `logger()` middleware removed - too noisy for production Workers tail logs.

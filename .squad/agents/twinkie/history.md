@@ -41,6 +41,12 @@ Frontend Dev on the Maximum Bookings project. Twinkie owns frontend surface work
 
 ## Learnings
 
+### Booking widget daily-capacity guardrails (2026-05-30)
+
+- `useAvailability()` now owns both blocked-times and daily-capacity fetches, so the booking widget can load date-specific slot blocks and remaining-cover limits together on date selection.
+- In `Step1Form.tsx`, `remaining_covers: null` means unlimited and should not trigger any warning; only finite values below `tenantConfig.max_guests` count as a daily-capacity constraint.
+- When `remaining_covers < 2`, the guest selector should be replaced with an inline sold-out message instead of rendering a 0- or 1-person dropdown.
+
 ### BookingManage Overview CSS module extraction (2026-05-27)
 
 - `Overview.tsx` referenced one global class: `action-group`.
