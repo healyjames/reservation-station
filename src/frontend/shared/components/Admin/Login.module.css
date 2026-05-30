@@ -105,6 +105,12 @@
   cursor: wait;
 }
 
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
 .login_footer {
   text-align: center;
   font-size: 0.8rem;

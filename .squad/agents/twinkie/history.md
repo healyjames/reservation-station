@@ -41,6 +41,15 @@ Frontend Dev on the Maximum Bookings project. Twinkie owns frontend surface work
 
 ## Learnings
 
+### Migration fully complete (2026-05-30)
+
+- The vanilla JS → Preact migration is now fully complete; all components use CSS Modules.
+- `escapeHtml` shim deleted from `formatting.ts` (other exports in that file remain).
+- `modal-actions` global wrapper class eliminated from `BookingModal.tsx` and `DeleteConfirmModal.tsx`; footer children are now inline.
+- `booking-form-content` global wrapper class eliminated from `BookingApp.tsx`; the error `MessageCard` renders without a wrapping div.
+- `stack` global utility class eliminated from `BookingModal.tsx` (replaced with `styles.fields`) and `Login.tsx` (replaced with `styles.form`).
+- `BookingDetailsList` migrated to its own `BookingDetailsList.module.css`, faithfully replicating the `shared.css` global definitions for `details-list`, `detail-row`, `detail-term`, `detail-value`.
+
 ### Booking widget daily-capacity guardrails (2026-05-30)
 
 - `useAvailability()` now owns both blocked-times and daily-capacity fetches, so the booking widget can load date-specific slot blocks and remaining-cover limits together on date selection.

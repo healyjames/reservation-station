@@ -36,14 +36,14 @@ const DeleteConfirmModal: FunctionComponent<DeleteConfirmModalProps> = ({ reserv
   }
 
   const footer = (
-    <div class="modal-actions">
+    <>
       <Button variant="secondary" onClick={onClose}>
         Cancel
       </Button>
       <Button variant="danger" isLoading={isDeleting.value} onClick={handleDelete}>
         Delete booking
       </Button>
-    </div>
+    </>
   );
 
   return (

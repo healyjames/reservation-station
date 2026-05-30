@@ -41,11 +41,9 @@ export const BookingApp: FunctionComponent = () => {
 
   if (tenantState.value === 'error') {
     return (
-      <div class="booking-form-content">
-        <MessageCard variant="error" title="Unable to load">
-          <p>{tenantError.value}</p>
-        </MessageCard>
-      </div>
+      <MessageCard variant="error" title="Unable to load">
+        <p>{tenantError.value}</p>
+      </MessageCard>
     );
   }
 

@@ -140,9 +140,10 @@ reservations.get('/availability', async (c) => {
 	const dateParam = c.req.query('date');
 	if (!tenantId) return c.json({ error: 'tenant_id required' }, 400);
 	if (!dateParam) return c.json({ error: 'date required' }, 400);
-	if (!yyyyMmDdRegex.test(dateParam)) return c.json({ error: 'Invalid date. Expected YYYY-MM-DD' }, 400);
 
-	const date = dateParam;
+	const parsedDate = new Date(dateParam);
+	if (isNaN(parsedDate.getTime())) return c.json({ error: 'Invalid date. Expected YYYY-MM-DD' }, 400);
+	const date = parsedDate.toISOString().split('T')[0];
 
 	const tenant = await c.env.maximum_bookings_db
 		.prepare('SELECT max_covers, concurrent_guests_time_limit FROM Tenants WHERE id = ?')
@@ -207,7 +208,7 @@ reservations.get('/daily-capacity', async (c) => {
 		.bind(tenantId, date)
 		.first<{ total: number }>();
 
-	const bookedCovers = bookingTotals?.total ?? 0;
+	const bookedCovers = Number(bookingTotals?.total ?? 0);
 
 	return c.json({
 		max_covers: tenant.max_covers,

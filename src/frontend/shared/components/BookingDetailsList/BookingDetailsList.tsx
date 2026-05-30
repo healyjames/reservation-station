@@ -1,5 +1,5 @@
-// No CSS module — uses global .details-list / .detail-row tokens from shared.css
 import type { FunctionComponent } from 'preact';
+import styles from './BookingDetailsList.module.css';
 
 interface BookingDetail {
   label: string;
@@ -11,11 +11,11 @@ interface BookingDetailsListProps {
 }
 
 const BookingDetailsList: FunctionComponent<BookingDetailsListProps> = ({ details }) => (
-  <dl class="details-list">
+  <dl class={styles.list}>
     {details.map(({ label, value }) => (
-      <div key={label} class="detail-row">
-        <dt class="detail-term">{label}</dt>
-        <dd class="detail-value">{value}</dd>
+      <div key={label} class={styles.row}>
+        <dt class={styles.term}>{label}</dt>
+        <dd class={styles.value}>{value}</dd>
       </div>
     ))}
   </dl>

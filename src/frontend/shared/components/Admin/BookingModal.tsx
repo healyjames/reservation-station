@@ -91,11 +91,9 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
   }
 
   const footer = (
-    <div class="modal-actions">
-      <Button variant="primary" type="submit" form="booking-modal-form" isLoading={isSubmitting.value}>
-        {mode === 'edit' ? 'Save changes' : 'Create booking'}
-      </Button>
-    </div>
+    <Button variant="primary" type="submit" form="booking-modal-form" isLoading={isSubmitting.value}>
+      {mode === 'edit' ? 'Save changes' : 'Create booking'}
+    </Button>
   );
 
   return (
@@ -172,7 +170,7 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
             />
           </FormField>
         </div>
-				<div class="stack">
+				<div class={styles.fields}>
 					<FormField label="Guests" htmlFor="bm-guests" required>
 						<Input
 							id="bm-guests"
