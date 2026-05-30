@@ -1,0 +1,18 @@
+.dashboard_layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main_panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.main_content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+}

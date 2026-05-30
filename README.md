@@ -1,72 +1,76 @@
 # Maximum Bookings
 
-A multi-tenant restaurant reservation system built on Cloudflare's developer platform. Tenants (restaurants, pubs, cafes etc) are configured via the API; guests book a table through a vanilla JS frontend served as static assets.
+A multi-tenant restaurant reservation system built on Cloudflare's developer platform. Tenants (restaurants, pubs, cafes etc) are configured via the API; guests book through multi-entry Preact frontend surfaces served alongside the Worker.
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│              Cloudflare Workers                  │
-│                                                 │
-│  Static Assets (/public)   REST API (/api/*)    │
-│  ─────────────────────   ───────────────────    │
-│  index.html               Hono framework        │
-│  styles.css               /api/tenants CRUD     │
-│  js/*.js                  /api/reservations      │
-│                                │                │
-│                         D1 SQLite database      │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                    Cloudflare Worker                     │
+│                                                          │
+│  Static frontend assets              REST API (/api/*)   │
+│  ────────────────────────            ─────────────────   │
+│  src/frontend/* HTML entries         Hono route modules  │
+│  dist/assets/* Vite bundles          /api/tenants        │
+│  public/*.css + fonts + theme.js     /api/reservations   │
+│                                           │              │
+│                                    D1 SQLite database    │
+└──────────────────────────────────────────────────────────┘
 ```
 
 The Worker serves two things from a single deployment:
 
-- **Static frontend** - HTML/CSS/JS from `./public`, served at `/` via [Cloudflare Assets](https://developers.cloudflare.com/workers/static-assets/)
+- **Static frontend** - Vite-built Preact surfaces from `src/frontend`, plus copied assets from `public`, served from `dist/` via [Cloudflare Assets](https://developers.cloudflare.com/workers/static-assets/)
 - **REST API** - Hono routes at `/api/*` backed by a [D1](https://developers.cloudflare.com/d1/) database
 
 ### Project Structure
 
 ```
 src/
-  index.ts          # Worker entry point (exports Hono app)
-  app.ts            # Route mounting + middleware (logger, CORS)
+  index.ts               # Worker entry point (exports Hono app)
+  app.ts                 # Route mounting + middleware (logger, CORS)
   routes/
-    tenants.ts      # GET/POST/PATCH/DELETE /api/tenants
-    reservations.ts # GET/POST/PATCH/DELETE /api/reservations
-  db/
-    schema.ts       # Zod schemas + TypeScript types
-    schema.sql      # D1 table definitions
+    tenants.ts           # GET/POST/PATCH/DELETE /api/tenants
+    reservations.ts      # GET/POST/PATCH/DELETE /api/reservations
+  frontend/
+    index.html           # Canonical root booking entry
+    booking-widget/      # Named booking widget surface
+    booking/manage/      # Booking management surface
+    admin/               # Admin surface
+    cancel/              # Cancellation surface
+    shared/              # Shared hooks, components, utils, types
 
 public/
-  index.html
-  styles.css
-  js/
-    tenants.js      # Tenant config - shared singleton
-    calendar.js     # Calendar UI + page entry point
-    booking-form.js # Multi-step booking form
-    theme.js        # Theme utilities
+  shared.css             # Shared global tokens/layout styles
+  styles.css             # Booking widget global styles
+  admin/styles/admin.css # Admin global styles
+  fonts/                 # Self-hosted Google Sans variable fonts
+  js/theme.js            # Blocking theme bootstrap
 ```
 
 ### Key Dependencies
 
 | Package | Purpose |
 |---------|---------|
+| `preact` | Lightweight frontend UI runtime |
 | `hono` | Lightweight API framework for Workers |
 | `zod` | Request body validation + schema-derived TypeScript types |
+| `vite` | Multi-entry frontend build |
 | `wrangler` | CLI for local dev, D1 migrations, and deployment |
 
 ---
 
 ## Tenant Config
 
-The app is multi-tenant. Each tenant represents a venue and is identified by a `tenant_code` slug (e.g. `the-oak-room`). The frontend reads the tenant from the URL query string:
+The app is multi-tenant. Each tenant represents a venue and is identified by a `tenant_code` slug (e.g. `the-oak-room`). Public booking surfaces read the tenant from the URL query string:
 
 ```
 https://your-worker.workers.dev/?tenant=the-oak-room
 ```
 
-On load, `calendar.js` calls `loadTenant()` which fetches the config and stores it as the exported `tenantConfig` object - an ES module singleton shared across all JS modules.
+The booking widget loads tenant configuration through `src/frontend/shared/hooks/useTenant.ts`, which fetches `/api/tenants/:tenant_code` and exposes loading, ready, and error states to the Preact surface.
 
 ### Tenant Fields
 
@@ -78,42 +82,16 @@ On load, `calendar.js` calls `loadTenant()` which fetches the config and stores 
 | `max_covers` | `number` | Total covers available (for reservation capacity logic) |
 | `status` | `active \| cancelled` | Cancelled tenants can be rejected at API level |
 | `block_current_day` | `boolean` | If `true`, today's date is disabled on the calendar |
+| `opening_hours` | `array` | Drives per-day slot generation and closed-day handling |
 
-### Accessing Tenant Config in JS
+### Frontend usage
 
-`tenantConfig` is a plain JS object exported from `tenants.js`. Because ES modules are singletons, any module that imports it gets the same populated reference after `loadTenant()` resolves.
+The booking widget surface uses the tenant payload to:
 
-```js
-// In any frontend module
-import { tenantConfig } from './tenants.js';
-
-// Read a field
-const max = tenantConfig?.max_guests ?? 20;
-
-// Guard against config not yet loaded
-if (!tenantConfig) {
-  console.warn('Tenant config not available yet');
-}
-```
-
-**How the booking form uses it:**
-
-```js
-// Guests dropdown - options from 2 to max_guests
-Array.from(
-  { length: (tenantConfig?.max_guests ?? 20) - 1 },
-  (_, i) => i + 2
-)
-
-// Calendar - disable today if block_current_day is set
-const isBlockedToday = isToday && tenantConfig?.block_current_day === true;
-
-// Reservation submission - tenant ID comes from config
-const requestBody = {
-  tenant_id: tenantConfig.id,
-  // ...
-};
-```
+- cap guest-count options
+- compute available slots from opening hours
+- disable blocked or closed days
+- send the resolved `tenant_id` in reservation requests
 
 ---
 

@@ -1,0 +1,26 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.field label {
+  display: block;
+  margin-bottom: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.error,
+.hint {
+  font-size: 0.875rem;
+}
+
+.error {
+  color: var(--error);
+}
+
+.hint {
+  color: var(--foreground-dark);
+}

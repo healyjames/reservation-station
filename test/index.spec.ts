@@ -454,6 +454,62 @@ describe('Reservations', () => {
 		});
 	});
 
+	// GET /api/reservations/daily-capacity
+	describe('GET /api/reservations/daily-capacity', () => {
+		it('returns booked and remaining covers for the date', async () => {
+			await seedTenant({ max_covers: 16 });
+			await seedReservation({ guests: 5, reservation_date: '2099-06-20' });
+			await seedReservation({ id: '00000000-0000-4000-8000-000000000012', guests: 4, reservation_date: '2099-06-20' });
+			const res = await exports.default.fetch(
+				`http://localhost/api/reservations/daily-capacity?tenant_id=${TENANT_ID}&date=2099-06-20`,
+			);
+			const body = (await res.json()) as any;
+			expect(res.status).toBe(200);
+			expect(body).toEqual({
+				max_covers: 16,
+				booked_covers: 9,
+				remaining_covers: 7,
+			});
+		});
+
+		it('returns 400 when tenant_id or date is missing', async () => {
+			let res = await exports.default.fetch('http://localhost/api/reservations/daily-capacity?date=2099-06-20');
+			expect(res.status).toBe(400);
+
+			res = await exports.default.fetch(`http://localhost/api/reservations/daily-capacity?tenant_id=${TENANT_ID}`);
+			expect(res.status).toBe(400);
+		});
+
+		it('returns 400 for invalid date format', async () => {
+			const res = await exports.default.fetch(
+				`http://localhost/api/reservations/daily-capacity?tenant_id=${TENANT_ID}&date=20-06-2099`,
+			);
+			expect(res.status).toBe(400);
+		});
+
+		it('returns 404 when tenant does not exist', async () => {
+			const res = await exports.default.fetch(
+				'http://localhost/api/reservations/daily-capacity?tenant_id=00000000-0000-4000-8000-999999999999&date=2099-06-20',
+			);
+			expect(res.status).toBe(404);
+		});
+
+		it('returns unlimited capacity response when max_covers is 0', async () => {
+			await seedTenant({ max_covers: 0 });
+			await seedReservation({ guests: 8, reservation_date: '2099-06-20' });
+			const res = await exports.default.fetch(
+				`http://localhost/api/reservations/daily-capacity?tenant_id=${TENANT_ID}&date=2099-06-20`,
+			);
+			const body = (await res.json()) as any;
+			expect(res.status).toBe(200);
+			expect(body).toEqual({
+				max_covers: 0,
+				booked_covers: 0,
+				remaining_covers: null,
+			});
+		});
+	});
+
 	// GET /api/reservations/blocked-times
 	describe('GET /api/reservations/blocked-times', () => {
 		it('returns 400 when required params are missing', async () => {

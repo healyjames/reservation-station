@@ -1,0 +1,47 @@
+.tooltip {
+  background: var(--background-light);
+  border: 1px solid var(--background-darker);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  max-width: 240px;
+}
+
+.content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.message {
+  color: var(--foreground);
+  font-size: 0.875rem;
+  flex: 1;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--foreground-dark);
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.75rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  color: var(--foreground);
+}
+
+.arrow {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--background-light);
+}

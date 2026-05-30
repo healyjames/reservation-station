@@ -1,0 +1,11 @@
+.booking_cards {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+@media (min-width: 768px) {
+  .booking_cards {
+    display: none;
+  }
+}

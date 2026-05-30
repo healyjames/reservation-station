@@ -12,8 +12,9 @@
 		"global_fetch_strictly_public"
 	],
 	"assets": {
-		// The path to the directory containing the `index.html` file to be served at `/`
-		"directory": "./public",
+		// Vite build output — run `npm run build` before `wrangler deploy`
+		"directory": "./dist",
+		"not_found_handling": "single-page-application",
 	},
 	"observability": {
 		"enabled": true,

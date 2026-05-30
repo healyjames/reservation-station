@@ -4,6 +4,7 @@ import { Reservation, CreateReservationSchema, UpdateReservationSchema, CreateRe
 import { generateTimeSlots, calculateConcurrentGuests, SlotReservation } from '../utils/slots';
 
 const reservations = new Hono<{ Bindings: Env }>();
+const yyyyMmDdRegex = /^\d{4}-\d{2}-\d{2}$/;
 
 reservations.get('/blocked-dates', async (c) => {
 	const tenantId = c.req.query('tenant_id');
@@ -170,6 +171,49 @@ reservations.get('/availability', async (c) => {
 		max_covers: tenant.max_covers,
 		time_limit_minutes: tenant.concurrent_guests_time_limit,
 		slots,
+	});
+});
+
+reservations.get('/daily-capacity', async (c) => {
+	const tenantId = c.req.query('tenant_id');
+	const date = c.req.query('date');
+
+	if (!tenantId || !date) {
+		return c.json({ error: 'tenant_id and date are required' }, 400);
+	}
+
+	if (!yyyyMmDdRegex.test(date)) {
+		return c.json({ error: 'date must be in YYYY-MM-DD format' }, 400);
+	}
+
+	const tenant = await c.env.maximum_bookings_db
+		.prepare('SELECT max_covers FROM Tenants WHERE id = ?')
+		.bind(tenantId)
+		.first<{ max_covers: number }>();
+
+	if (!tenant) {
+		return c.json({ error: 'Tenant not found' }, 404);
+	}
+
+	if (tenant.max_covers === 0) {
+		return c.json({
+			max_covers: 0,
+			booked_covers: 0,
+			remaining_covers: null,
+		});
+	}
+
+	const bookingTotals = await c.env.maximum_bookings_db
+		.prepare('SELECT COALESCE(SUM(guests), 0) as total FROM Reservations WHERE tenant_id = ? AND reservation_date = ?')
+		.bind(tenantId, date)
+		.first<{ total: number }>();
+
+	const bookedCovers = Number(bookingTotals?.total ?? 0);
+
+	return c.json({
+		max_covers: tenant.max_covers,
+		booked_covers: bookedCovers,
+		remaining_covers: Math.max(0, tenant.max_covers - bookedCovers),
 	});
 });
 

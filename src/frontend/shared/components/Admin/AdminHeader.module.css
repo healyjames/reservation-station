@@ -1,0 +1,37 @@
+.main_header {
+  height: var(--size-header);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  border-bottom: var(--border-width) solid var(--background-light);
+  flex-shrink: 0;
+}
+
+.header_brand {
+  font-weight: 600;
+  color: var(--foreground-lightest);
+  font-size: 1rem;
+}
+
+.btn_logout {
+  border: none;
+  background: transparent;
+  color: var(--foreground-dark);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-xs);
+  transition: color 0.15s ease;
+}
+
+.btn_logout:hover {
+  color: var(--error);
+}
+
+@media (max-width: 767px) {
+  .main_header {
+    padding-left: calc(36px + var(--space-3) * 2);
+  }
+}

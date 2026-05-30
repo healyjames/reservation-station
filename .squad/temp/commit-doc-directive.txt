@@ -1,0 +1,8 @@
+chore: move docs to documentation/ dir, apply squad directive
+
+- Create documentation/ directory
+- Move PREACT_MIGRATION.md → documentation/PREACT_MIGRATION.md
+- Update all agent charters with output convention rule
+- Record directive in decisions.md
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

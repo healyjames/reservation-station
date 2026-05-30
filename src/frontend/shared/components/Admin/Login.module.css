@@ -1,0 +1,134 @@
+.login_layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+}
+
+@media (max-width: 767px) {
+  .login_layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.login_panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background);
+  padding: var(--space-8);
+}
+
+.login_panel_inner {
+  width: 100%;
+  max-width: 360px;
+  display: grid;
+  gap: var(--space-6);
+}
+
+.login_header {
+  text-align: center;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.login_header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground-lightest);
+}
+
+.login_header p {
+  margin: 0;
+  color: var(--foreground-dark);
+  font-size: 0.875rem;
+}
+
+.login_logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--background-darker);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.login_logo svg {
+  width: 24px;
+  height: 24px;
+  fill: var(--primary);
+}
+
+.alert {
+  border-radius: var(--radius-xs);
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.alert_info {
+  background: var(--info-light);
+  color: var(--info-dark);
+}
+
+.alert_error {
+  background: var(--error-light);
+  color: var(--error-dark);
+}
+
+.btn_primary {
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-xs);
+  padding: var(--space-3) var(--space-6);
+  background: var(--primary);
+  color: var(--foreground-lightest);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.btn_primary:hover:not(:disabled) {
+  background: var(--primary-darker);
+}
+
+.btn_primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.btn_primary.loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.login_footer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--foreground-dark);
+}
+
+.login_footer p {
+  margin: 0;
+}
+
+.login_brand {
+  background: var(--background-darker);
+  background-image: linear-gradient(135deg, var(--background-darker) 0%, var(--primary-darkest) 100%);
+  min-height: 100%;
+}
+
+@media (max-width: 767px) {
+  .login_brand {
+    display: none;
+  }
+}

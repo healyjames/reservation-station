@@ -1,0 +1,120 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-2);
+}
+
+.dayName {
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--foreground-dark);
+}
+
+.empty {
+  aspect-ratio: 1;
+}
+
+.day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--background-darker);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: var(--background-light);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  user-select: none;
+  position: relative;
+}
+
+.day:hover:not(.past):not(.blocked) {
+  background-color: var(--background-lightest);
+  border-color: var(--background-lighter);
+}
+
+.selected {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: var(--foreground-lightest);
+  font-weight: 600;
+}
+
+.selected:hover {
+  background-color: var(--primary-darker);
+  border-color: var(--primary-darker);
+}
+
+.today {
+  border-color: var(--primary-lightest);
+  border-width: var(--border-width-md);
+}
+
+.today::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary-lightest);
+  transform: translateX(-50%);
+}
+
+.past {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.blocked {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--background-light),
+    var(--background-light) 3px,
+    var(--background) 3px,
+    var(--background) 7px
+  );
+  color: var(--foreground-darker);
+  cursor: not-allowed;
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+.blocked:hover {
+  opacity: 0.7;
+}
+
+.day:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.rangeStart,
+.rangeEnd {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--foreground-lightest);
+  font-weight: 600;
+}
+
+.inRange {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  border-color: transparent;
+}
+
+@media (max-width: 640px) {
+  .day {
+    font-size: 0.75rem;
+  }
+}
+
+@media (min-width: 480px) {
+  .dayName {
+    padding: var(--space-2);
+  }
+}

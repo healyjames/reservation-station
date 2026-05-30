@@ -1,0 +1,10 @@
+.loading_indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--foreground);
+}
+
+.compact_loading p {
+  margin: 0;
+}

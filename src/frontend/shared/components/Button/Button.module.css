@@ -1,0 +1,115 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-weight: 500;
+  line-height: 1.25;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sm {
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.875rem;
+}
+
+.md {
+  padding: var(--space-3) var(--space-6);
+  font-size: 1rem;
+}
+
+.lg {
+  padding: var(--space-4) var(--space-8);
+  font-size: 1.125rem;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.loading {
+  pointer-events: none;
+}
+
+.primary {
+  background-color: var(--primary);
+  color: var(--foreground-lightest);
+  border-color: var(--primary);
+}
+
+.primary:hover:not(:disabled) {
+  background-color: var(--primary-darker);
+  border-color: var(--primary-darker);
+}
+
+.primary:active:not(:disabled) {
+  background-color: var(--primary-darkest);
+  border-color: var(--primary-darkest);
+}
+
+.secondary {
+  background-color: transparent;
+  color: var(--foreground);
+  border-color: var(--background-darker);
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: var(--background-lighter);
+  border-color: var(--background-lighter);
+}
+
+.secondary:active:not(:disabled) {
+  background-color: var(--background-lightest);
+}
+
+.danger {
+  background-color: var(--error-dark);
+  color: white;
+  border-color: var(--error-dark);
+}
+
+.danger:hover:not(:disabled) {
+  background-color: var(--error-dark);
+  border-color: var(--error-dark);
+}
+
+.ghost {
+  background-color: transparent;
+  color: var(--foreground);
+  border-color: transparent;
+}
+
+.ghost:hover:not(:disabled) {
+  background-color: var(--background-lighter);
+  border-color: var(--background-lighter);
+}
+
+.action_edit {
+  background-color: var(--background);
+  color: var(--foreground);
+  border-color: transparent;
+}
+
+.action_edit:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.action_delete {
+  background-color: var(--background);
+  color: var(--error);
+  border-color: transparent;
+}
+
+.action_delete:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--error) 12%, transparent);
+}
