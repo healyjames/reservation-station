@@ -31,6 +31,7 @@ pnpm-debug.log*
 
 # ai temp files
 claude/
+.squad/temp/
 
 # Logs
 
