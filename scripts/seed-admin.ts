@@ -7,7 +7,7 @@
  *   bac4bf8d-f05a-47b8-aab9-f1dc3710fb72  The Oak Tavern
  *
  * Local dev (PowerShell):
- *   $env:TENANT_ID="6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d"; $env:ADMIN_EMAIL="admin@example.com"; $env:ADMIN_PASSWORD="yourpassword"; $env:LOCAL="true"; npx tsx scripts/seed-admin.ts
+ *   $env:TENANT_ID="6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d"; $env:ADMIN_EMAIL="jameshealydesign@gmail.com"; $env:ADMIN_PASSWORD="yourpassword"; $env:LOCAL="true"; npx tsx scripts/seed-admin.ts
  *
  * Production (PowerShell):
  *   $env:TENANT_ID="6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d"; $env:ADMIN_EMAIL="admin@example.com"; $env:ADMIN_PASSWORD="yourpassword"; npx tsx scripts/seed-admin.ts

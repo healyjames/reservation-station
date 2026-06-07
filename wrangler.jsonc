@@ -44,8 +44,15 @@
 	 * For local dev, add JWT_SECRET=<value> to .dev.vars
 	 * After running `wrangler secret put`, run `npx wrangler types` to regenerate
 	 * worker-configuration.d.ts - until then, src/types/env.d.ts provides the type.
+	 * Set via: npx wrangler secret put RESEND_API_KEY
+	 * For local dev, add RESEND_API_KEY=re_test_... to .dev.vars
+	 * All email from/to addresses come from Tenants.contact_email in the database
 	 */
 	// "vars": { "MY_VARIABLE": "production_value" }
+	"vars": {
+		// Set ENVIRONMENT=production in Cloudflare dashboard secrets to disable localhost CORS in production.
+		"ENVIRONMENT": "development",
+	},
 	/**
 	 * D1 Databases (see binding above)
 	 */

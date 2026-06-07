@@ -23,6 +23,12 @@
   color: var(--error-dark);
 }
 
+.alert_warning {
+  background: var(--warning-light, #fffbeb);
+  color: var(--warning-dark, #92400e);
+  border: 1px solid var(--warning-border, #fcd34d);
+}
+
 .alert_success {
   background: var(--success-light);
   color: var(--success-dark);

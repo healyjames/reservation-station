@@ -7,9 +7,23 @@ import admin from './routes/admin';
 import blockedDates from './routes/blocked-dates';
 import openingHours from './routes/opening-hours';
 
-const app = new Hono();
+const whitelist = ['https://maximum-bookings.jameshealydesign.workers.dev'];
 
-app.use('/api/*', cors());
+const app = new Hono<{ Bindings: Env }>();
+
+app.use('/api/*', cors({
+  origin: (origin, c) => {
+    if (c.env.ENVIRONMENT === 'development') {
+      whitelist.push('http://localhost:8787', 'http://localhost:3000', 'http://localhost:5173');
+    }
+    return whitelist.includes(origin) ? origin : null;
+  },
+  allowHeaders: ['Content-Type', 'Authorization'],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  exposeHeaders: ['Content-Length'],
+  maxAge: 600,
+  credentials: true,
+}));
 
 app.route('/api/tenants', tenants);
 app.route('/api/reservations', reservations);

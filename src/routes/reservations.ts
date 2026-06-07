@@ -2,6 +2,15 @@ import { z } from 'zod';
 import { Hono } from 'hono';
 import { Reservation, CreateReservationSchema, UpdateReservationSchema, CreateReservation } from '../db/schema';
 import { generateTimeSlots, calculateConcurrentGuests, SlotReservation } from '../utils/slots';
+import { sendEmail } from '../utils/email';
+import { buildCustomerConfirmationEmail } from '../emails/customer-confirmation';
+import { buildCustomerAmendmentEmail } from '../emails/customer-amendment';
+import { buildCustomerCancellationEmail } from '../emails/customer-cancellation';
+import { buildTenantConfirmationEmail } from '../emails/tenant-confirmation';
+import { buildTenantAmendmentEmail } from '../emails/tenant-amendment';
+import { buildTenantCancellationEmail } from '../emails/tenant-cancellation';
+
+type ReservationWithTenant = Reservation & { tenant_name: string; contact_email: string };
 
 const reservations = new Hono<{ Bindings: Env }>();
 const yyyyMmDdRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -269,9 +278,9 @@ reservations.post('/', async (c) => {
 		.run<{ total: number }>();
 
 	const tenant = await c.env.maximum_bookings_db
-		.prepare('SELECT max_covers FROM Tenants WHERE id = ?')
+		.prepare('SELECT name, max_covers, contact_email FROM Tenants WHERE id = ?')
 		.bind(data.tenant_id)
-		.first<{ max_covers: number }>();
+		.first<{ name: string; max_covers: number; contact_email: string }>();
 
 	if (!tenant) {
 		console.error('[reservations] POST tenant not found', { tenant_id: data.tenant_id });
@@ -321,6 +330,42 @@ reservations.post('/', async (c) => {
 		return c.json({ error: 'Failed to create reservation' }, 500);
 	}
 
+	c.executionCtx.waitUntil(
+		(async () => {
+			const from = `"${tenant.name}" <${tenant.contact_email}>`;
+			await Promise.allSettled([
+				sendEmail(c.env, {
+					to: data.email,
+					from,
+					...buildCustomerConfirmationEmail({
+						tenantName: tenant.name,
+						firstName: data.first_name,
+						reservationDate: data.reservation_date,
+						reservationTime: data.reservation_time,
+						guests: data.guests,
+						dietaryRequirements: data.dietary_requirements ?? null,
+					}),
+				}),
+				sendEmail(c.env, {
+					to: tenant.contact_email,
+					from,
+					...buildTenantConfirmationEmail({
+						tenantName: tenant.name,
+						reservationId: id,
+						firstName: data.first_name,
+						surname: data.surname,
+						telephone: data.telephone,
+						customerEmail: data.email,
+						reservationDate: data.reservation_date,
+						reservationTime: data.reservation_time,
+						guests: data.guests,
+						dietaryRequirements: data.dietary_requirements ?? null,
+					}),
+				}),
+			]);
+		})(),
+	);
+
 	return c.json({ ...data, id, created_date: now, modified_date: now }, 201);
 });
 
@@ -332,6 +377,13 @@ reservations.patch('/:id', async (c) => {
 		console.error('[reservations] PATCH validation failed', { error: z.prettifyError(parsed.error), id });
 		return c.json({ error: z.prettifyError(parsed.error) }, 400);
 	}
+
+	const existing = await c.env.maximum_bookings_db
+		.prepare('SELECT r.*, t.name AS tenant_name, t.contact_email FROM Reservations r JOIN Tenants t ON t.id = r.tenant_id WHERE r.id = ?')
+		.bind(id)
+		.first<ReservationWithTenant>();
+
+	if (!existing) return c.json({ error: 'Reservation not found' }, 404);
 
 	const body = parsed.data;
 	const data = { ...body, modified_date: new Date().toISOString() };
@@ -353,19 +405,104 @@ reservations.patch('/:id', async (c) => {
 		return c.json({ error: 'Failed to update reservation' }, 500);
 	}
 
+	const updated = await c.env.maximum_bookings_db
+		.prepare('SELECT r.*, t.name AS tenant_name, t.contact_email FROM Reservations r JOIN Tenants t ON t.id = r.tenant_id WHERE r.id = ?')
+		.bind(id)
+		.first<ReservationWithTenant>();
+
+	if (updated) {
+		c.executionCtx.waitUntil(
+			(async () => {
+				const from = `"${updated.tenant_name}" <${updated.contact_email}>`;
+				await Promise.allSettled([
+					sendEmail(c.env, {
+						to: updated.email,
+						from,
+						...buildCustomerAmendmentEmail({
+							tenantName: updated.tenant_name,
+							firstName: updated.first_name,
+							reservationDate: updated.reservation_date,
+							reservationTime: updated.reservation_time,
+							guests: updated.guests,
+							dietaryRequirements: updated.dietary_requirements ?? null,
+						}),
+					}),
+					sendEmail(c.env, {
+						to: updated.contact_email,
+						from,
+						...buildTenantAmendmentEmail({
+							tenantName: updated.tenant_name,
+							reservationId: id,
+							firstName: updated.first_name,
+							surname: updated.surname,
+							telephone: updated.telephone,
+							customerEmail: updated.email,
+							reservationDate: updated.reservation_date,
+							reservationTime: updated.reservation_time,
+							guests: updated.guests,
+							dietaryRequirements: updated.dietary_requirements ?? null,
+						}),
+					}),
+				]);
+			})(),
+		);
+	}
+
 	return c.json({ success: true });
 });
 
 reservations.delete('/:id', async (c) => {
 	const id = c.req.param('id');
 
+	const reservation = await c.env.maximum_bookings_db
+		.prepare('SELECT r.*, t.name AS tenant_name, t.contact_email FROM Reservations r JOIN Tenants t ON t.id = r.tenant_id WHERE r.id = ?')
+		.bind(id)
+		.first<ReservationWithTenant>();
+
+	if (!reservation) return c.json({ error: 'Reservation not found' }, 404);
+
 	try {
-		const result = await c.env.maximum_bookings_db.prepare('DELETE FROM Reservations WHERE id = ?').bind(id).run();
-		if (result.meta.changes === 0) return c.json({ error: 'Reservation not found' }, 404);
+		await c.env.maximum_bookings_db.prepare('DELETE FROM Reservations WHERE id = ?').bind(id).run();
 	} catch (err) {
 		console.error('[reservations] DELETE failed', { err, id });
 		return c.json({ error: 'Failed to delete reservation' }, 500);
 	}
+
+	c.executionCtx.waitUntil(
+		(async () => {
+			const from = `"${reservation.tenant_name}" <${reservation.contact_email}>`;
+			await Promise.allSettled([
+				sendEmail(c.env, {
+					to: reservation.email,
+					from,
+					...buildCustomerCancellationEmail({
+						tenantName: reservation.tenant_name,
+						firstName: reservation.first_name,
+						reservationDate: reservation.reservation_date,
+						reservationTime: reservation.reservation_time,
+						guests: reservation.guests,
+						dietaryRequirements: reservation.dietary_requirements ?? null,
+					}),
+				}),
+				sendEmail(c.env, {
+					to: reservation.contact_email,
+					from,
+					...buildTenantCancellationEmail({
+						tenantName: reservation.tenant_name,
+						reservationId: id,
+						firstName: reservation.first_name,
+						surname: reservation.surname,
+						telephone: reservation.telephone,
+						customerEmail: reservation.email,
+						reservationDate: reservation.reservation_date,
+						reservationTime: reservation.reservation_time,
+						guests: reservation.guests,
+						dietaryRequirements: reservation.dietary_requirements ?? null,
+					}),
+				}),
+			]);
+		})(),
+	);
 
 	return c.json({ success: true });
 });
