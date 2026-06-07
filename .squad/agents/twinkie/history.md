@@ -133,6 +133,13 @@ Frontend Dev on the Maximum Bookings project. Twinkie owns frontend surface work
 - `Input.tsx` gained a `min` prop so numeric admin settings can keep their existing minimum constraints while using the shared field primitive.
 - `OpeningHoursSettings.tsx` was intentionally left on raw time inputs because its controls require `step={1800}` and the shared `Input` component still does not support `step`.
 
+### AdminHeader component extraction + Han review (2026-05-30)
+
+- Extracted shared `<header>` from `Dashboard.tsx` and `Settings.tsx` into `src/frontend/shared/components/Admin/AdminHeader.tsx` with props `{ venueName: string; onLogout: () => void }`.
+- Created `AdminHeader.module.css` with `.main_header`, `.header_brand`, `.btn_logout` rules plus `@media (max-width: 767px)` padding rule: `padding-left: calc(36px + var(--space-3) * 2)` to clear the `AdminSidebar` hamburger (width 36px, left `var(--space-3)`).
+- Removed the three header rules from `Dashboard.module.css` and `Settings.module.css`.
+- Han reviewed and **approved**: all criteria passed — props correct, `id="venue-name"` preserved, CSS complete, no regressions.
+
 ### AdminSidebar component extraction (2026-05-21)
 
 - Extracted duplicated `<nav>` sidebar from Dashboard.tsx and Settings.tsx into `src/frontend/shared/components/Admin/AdminSidebar.tsx` with paired `AdminSidebar.module.css`.

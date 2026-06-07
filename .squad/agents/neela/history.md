@@ -14,6 +14,15 @@ Tester on the Maximum Bookings project. Writes Vitest tests, reviews implementat
 
 ## Learnings
 
+- **Email notification test suite (Phase 3):** Wrote `test/email-util.spec.ts`, `test/email-templates.spec.ts`, and `test/email-integration.spec.ts` ahead of Sean's implementation.
+  - `email-util.spec.ts` uses `vi.stubGlobal('fetch', vi.fn())` in a module-level variable captured in `beforeEach` for clean per-test mock control — avoids casting `vi.mocked(fetch)` with the global Workers fetch type
+  - `email-templates.spec.ts` is pure TypeScript (no `cloudflare:workers` import) — all 6 template builders tested with identical shape; customer templates get an extra null-dietary test; tenant templates omit it (tenant data always has dietary as string | null but template must not render 'null')
+  - `null` dietary requirements test uses `not.toContain('null')` — this constrains Sean to use a fallback string (None / N/A etc.) not bare template interpolation
+  - Integration fire-and-forget tests: stub fetch to throw inside the test body (not in a shared `beforeEach`) so only the tests that need it get the stub; `afterEach` always calls `vi.unstubAllGlobals()` to restore
+  - Integration tests do NOT assert that email calls were made — only that HTTP response codes are unaffected by email failures; call-count assertions deferred until implementation lands
+  - `seedTenantWithEmail` explicitly includes `contact_email` column in the INSERT — validates migration 0006 column is present; integration tests use TENANT_ID `000000000001` / RES_ID `000000000099` (safe since each spec runs in its own Miniflare D1 instance)
+  - All 6 template functions are currently stubs returning `{ subject: '', html: '' }` — template tests will fail until Sean implements them (expected; tests define the contract)
+
 - **Reservation cancellation API tests (2026-05-19):** Added `test/reservations-cancel.test.ts` for the cancel-page endpoints.
   - Uses UUID range `000000001401–000000001599` to avoid collisions with existing spec files
   - Seeds a far-future reservation (`2099-11-18 18:30`) with non-null `dietary_requirements` so GET assertions exercise the full response shape the cancel page needs

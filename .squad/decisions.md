@@ -343,6 +343,69 @@ The repo had two competing public booking entry points: the old vanilla root pag
 **What:** All CSS module class names in Admin components must use **underscores** for multi-word names, never camelCase. This is a firm rule from the `css-module-extraction` skill. All 12 Admin CSS module files and their paired TSX files were corrected. Examples: `.loginLayout` → `.login_layout`, `.sidebarNav` → `.sidebar_nav`, `.tabBtn` → `.tab_btn`, `.mainPanel` → `.main_panel`, `.toggleListItem` → `.toggle_list_item`. Applies to all files under `src/frontend/shared/components/Admin/*.module.css` and `src/frontend/admin/AdminApp.module.css`.
 **Why:** The team's `css-module-extraction` skill explicitly states: "If a name needs more than one word, use underscores. Never use camelCase for CSS module class names." The original Admin CSS module extraction (2026-05-29) violated this rule.
 
+### 2026-05-30: AdminHeader component extraction
+**By:** Twinkie (Frontend Dev)
+**What:** Extracted the shared `<header>` from `Dashboard.tsx` and `Settings.tsx` into a new `AdminHeader` component at `src/frontend/shared/components/Admin/AdminHeader.tsx` with props `{ venueName: string; onLogout: () => void }`. Created paired `AdminHeader.module.css` containing `.main_header`, `.header_brand`, `.btn_logout` rules moved from the two module files, plus a `@media (max-width: 767px)` rule setting `padding-left: calc(36px + var(--space-3) * 2)` to prevent the venue name being obscured by the `AdminSidebar` hamburger button. `Dashboard.tsx` and `Settings.tsx` now import and render `<AdminHeader venueName={venueName} onLogout={onLogout} />`. Removed the three header rules from `Dashboard.module.css` and `Settings.module.css`. Han reviewed and **approved** (see han-header-review decision).
+**Why:** Both admin views had identical header markup and CSS. Single source of truth reduces drift risk, and the mobile padding fix could be applied once rather than duplicated.
+
+### 2026-05-30: AdminHeader code review — approved
+**By:** Han (Lead)
+**Reviewer:** Han (Lead)
+**Verdict:** ✅ APPROVED
+**What:** Reviewed Twinkie's `AdminHeader` extraction. All criteria passed: props declared and destructured correctly; both consumers (`Dashboard.tsx`, `Settings.tsx`) wire without error; `id="venue-name"` preserved on brand span; `.main_header`, `.header_brand`, `.btn_logout` absent from both parent module files; mobile padding arithmetic (`calc(36px + var(--space-3) * 2)`) matches `AdminSidebar` hamburger dimensions exactly; no regressions in hook/signal/modal logic.
+**Why:** Code review gate before shipping shared Admin component extraction.
+
+### 2026-05-30: Daily capacity endpoint placement and validation
+**By:** Sean (Backend Dev)
+**What:** Added `GET /api/reservations/daily-capacity` to `src/routes/reservations.ts` immediately after `/availability` and before `/:id` to prevent the parameterised route from capturing the literal path. Enforces strict `YYYY-MM-DD` validation. Product rule preserved: `max_covers = 0` means unlimited capacity — endpoint returns `{ max_covers: 0, booked_covers: 0, remaining_covers: null }` immediately without summing reservations.
+**Why:** Route ordering must be explicit in Hono; literal segments must precede parameterised ones.
+
+### 2026-05-30: Booking widget daily-capacity UI guardrails
+**By:** Twinkie (Frontend Dev)
+**What:** Wired the booking widget `Step1Form.tsx` to the new `/api/reservations/daily-capacity` response. Guest dropdown is capped to `min(max_guests, remaining_covers)` when a finite daily capacity exists. Capacity warning shown only when the daily limit reduces the normal party-size ceiling. `remaining_covers < 2` replaces the guest selector with an inline sold-out / choose-another-date message. `remaining_covers: null` = unlimited — no warning or cap applied.
+**Why:** Keeps UI aligned with the backend's daily cover limit; avoids advertising party sizes that cannot fit; gives guests a clearer explanation when the constraint comes from the day's remaining capacity.
+
+### 2026-05-30: Vanilla JS → Preact frontend migration complete
+**By:** Twinkie (Frontend Dev)
+**What:** The frontend migration from vanilla JS to Preact is fully complete. All Preact components under `src/frontend/` use CSS Modules. `escapeHtml` shim deleted from `formatting.ts`. Orphaned global classes eliminated: `modal-actions` from `BookingModal.tsx` and `DeleteConfirmModal.tsx`; `booking-form-content` from `BookingApp.tsx`; `stack` from `BookingModal.tsx` and `Login.tsx`. `BookingDetailsList` is fully self-contained with `BookingDetailsList.module.css`. Build passes with zero TypeScript errors. No remaining global class dependencies in Preact component files.
+**Why:** Completes the Preact migration started in May 2026.
+
+### 2026-06-01: Email notifications architecture — transport, patterns, and scope
+**By:** Han (Lead)
+**What:** Nine architectural decisions for the Resend email notifications feature:
+1. `sendEmail()` is transport-only: accepts `(env, { to, from, subject, html })`, does not choose templates or understand reservation events.
+2. Route code uses `c.executionCtx.waitUntil(Promise.allSettled([...]))` for fire-and-forget — email failures never change API status codes.
+3. A single joined SQL query (`Reservations r JOIN Tenants t ON t.id = r.tenant_id`) provides notification context for all three mutation handlers.
+4. DELETE must fetch the joined row before deleting — the only way to preserve email context after row removal.
+5. PATCH must fetch before update (404 check) and re-fetch after update — amendment emails use persisted state, not request body.
+6. `contact_email` stays nullable in D1; Zod: `z.email().nullable().optional()` keeps tenant create/update backward-compatible.
+7. `global_fetch_strictly_public` does not block Resend; normal outbound HTTPS `fetch()` works.
+8. Platform subrequest limits (50 Free / 10 000 Paid) are not threatened by two outbound calls per reservation write.
+9. Scope cut: do not normalise route response envelopes while wiring email. Keep existing public response contracts stable.
+**Why:** Architecture review gate. Keeps the email layer additive, the booking writes authoritative, and the scope bounded.
+
+### 2026-06-01: Email notifications backend implementation decisions
+**By:** Sean (Backend Dev)
+**What:** Implementation decisions for the email notifications feature:
+- `sendEmail()` POSTs to `https://api.resend.com/emails`; throws on non-2xx so `Promise.allSettled` in callers absorbs failures.
+- Each template file (`src/emails/*.ts`) is self-contained with local `detailsTable()` and `emailWrapper()` helpers (leemunroe inline-style pattern); no shared template module — avoids coupling. Brand primary `#266663`, body bg `#f6f6f6`, content bg `#ffffff`.
+- All three mutation handlers use `c.executionCtx.waitUntil((async () => { ... })())` — immediately-invoked async IIFE — so HTTP response is never delayed.
+- `contact_email` null guard: both emails skipped + `console.warn`; booking operations succeed regardless.
+- PATCH: pre-fetch (joined) before UPDATE for 404 detection; re-fetch after UPDATE for amendment email state.
+- DELETE: pre-fetch (joined) before DELETE so email context is available.
+- `contact_email` added to `TenantSchema` as `z.string().email().nullable().optional()`. Migration `0006_tenants_contact_email.sql` adds the column.
+- `RESEND_API_KEY` added to `Env` interface in `src/types/env.d.ts`; documented in `wrangler.jsonc`.
+**Why:** Confirms implementation choices against Han's architecture guardrails.
+
+### 2026-06-01: Email notification test coverage contracts
+**By:** Neela (Tester)
+**What:** Three test files authored ahead of implementation; 50 tests total.
+- `test/email-util.spec.ts` (6 tests): `sendEmail` must POST to `https://api.resend.com/emails`, send `Authorization: Bearer` header, send correct JSON payload shape, reject on `ok === false`, resolve `undefined` on 200.
+- `test/email-templates.spec.ts` (39 tests): all 6 template functions return non-empty `{ subject, html }`; `subject` includes tenant name; `html` includes `firstName`, `reservationDate`, `reservationTime`; `dietaryRequirements: null` must not render the literal string `'null'` (fallback required).
+- `test/email-integration.spec.ts` (5 tests): POST/PATCH/DELETE return normal success codes even when Resend throws inside `waitUntil`; null `contact_email` skips dispatch with no stub needed; DELETE 404 on non-existent UUID.
+- `seedTenantWithEmail` helper explicitly includes `contact_email` column to exercise migration 0006. UUID constants TENANT_ID `000000000001` / RES_ID `000000000099` safe in isolated Miniflare D1 per spec file.
+**Why:** Tests define the implementation contract and prevent regressions. Integration tests asserted only on HTTP response codes — not on Resend call count — until implementation lands and can be extended.
+
 ## Directives
 
 ### 2026-05-23T07-31-02: User directive

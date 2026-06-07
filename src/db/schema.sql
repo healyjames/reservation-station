@@ -8,7 +8,8 @@ CREATE TABLE Tenants (
     max_covers INTEGER NOT NULL DEFAULT 0,
     status TEXT NOT NULL CHECK (status IN ('active', 'cancelled')) DEFAULT 'active',
     concurrent_guests_time_limit INTEGER NOT NULL DEFAULT 120,
-    created_date TEXT DEFAULT (CURRENT_TIMESTAMP),
+    contact_email TEXT NOT NULL DEFAULT '',
+    created_date TEXT DEFAULT (CURRENT_TIMESTAMP) NOT NULL,
     modified_date TEXT DEFAULT (CURRENT_TIMESTAMP)
 );
 
@@ -67,10 +68,23 @@ CREATE TABLE BlockedDates (
 
 CREATE INDEX idx_blocked_dates_tenant_date ON BlockedDates(tenant_id, date);
 
-INSERT INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit) VALUES
-('6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'The Red Cow',        'redcow',        6,  50,  'active', 120),
-('59986b7d-a829-4315-9b49-f643ec83cf47', 'The Crown & Anchor', 'crownandanchor', 8,  80,  'active', 120),
-('bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'The Oak Tavern',     'oaktavern',      10, 50, 'active', 120);
+DROP TABLE IF EXISTS OpeningHours;
+
+CREATE TABLE OpeningHours (
+    id TEXT PRIMARY KEY NOT NULL,
+    tenant_id TEXT NOT NULL,
+    day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
+    is_closed INTEGER NOT NULL DEFAULT 0 CHECK (is_closed IN (0, 1)),
+    open_time TEXT,
+    close_time TEXT,
+    UNIQUE (tenant_id, day_of_week),
+    FOREIGN KEY (tenant_id) REFERENCES Tenants(id) ON DELETE CASCADE
+);
+
+INSERT INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit, contact_email) VALUES
+('6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'The Red Cow',        'redcow',        6,  50,  'active', 120, 'info@redcownantwich.co.uk'),
+('59986b7d-a829-4315-9b49-f643ec83cf47', 'The Crown & Anchor', 'crownandanchor', 8,  80,  'active', 120, 'info@crownandanchor.co.uk'),
+('bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'The Oak Tavern',     'oaktavern',      10, 50, 'active', 120, 'info@theoaktavern.co.uk');
 
 INSERT INTO Reservations (id, tenant_id, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements, created_date, modified_date) VALUES
 ('theredcow-1', '6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'John',     'Smith',   '7123456789', 'john.smith@email.com',      '2026-04-01', '18:00', 2, NULL,          '2026-04-01 18:45:39', '2026-04-01 18:45:39'),

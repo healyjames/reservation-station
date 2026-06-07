@@ -22,6 +22,7 @@ export interface TenantConfig {
   max_covers: number;
   status: TenantStatus;
   concurrent_guests_time_limit: number;
+  contact_email: string;
   created_date?: string;
   modified_date?: string;
   /** Null when no opening hours configured */

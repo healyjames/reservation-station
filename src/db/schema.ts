@@ -8,6 +8,7 @@ export const TenantSchema = z.object({
 	max_covers: z.number().int().nonnegative(),
 	status: z.enum(['active', 'cancelled']),
 	concurrent_guests_time_limit: z.number().int().positive().default(120),
+	contact_email: z.email(),
 	created_date: z.string().optional(),
 	modified_date: z.string().optional(),
 });

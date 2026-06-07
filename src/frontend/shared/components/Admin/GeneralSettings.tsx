@@ -18,6 +18,7 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
   const maxGuests = useSignal(0);
   const maxCovers = useSignal(0);
   const timeWindow = useSignal(0);
+  const contactEmail = useSignal('');
   const isLoading = useSignal(true);
   const isSaving = useSignal(false);
   const errorMessage = useSignal('');
@@ -38,6 +39,7 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
       maxGuests.value = tenant.max_guests ?? 0;
       maxCovers.value = tenant.max_covers ?? 0;
       timeWindow.value = tenant.concurrent_guests_time_limit ?? 0;
+      contactEmail.value = tenant.contact_email ?? '';
     } catch {
       errorMessage.value = 'Failed to load settings. Please refresh.';
     } finally {
@@ -55,6 +57,7 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
       max_guests: maxGuests.value,
       max_covers: maxCovers.value,
       concurrent_guests_time_limit: timeWindow.value,
+      contact_email: contactEmail.value.trim(),
     };
     try {
       const r = await adminFetch('/api/admin/me', token, {
@@ -134,6 +137,20 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             onInput={(e) => { timeWindow.value = parseInt((e.target as HTMLInputElement).value, 10) || 0; }}
           />
         </FormField>
+        <FormField label="Notification email address" htmlFor="sf-contact-email" required>
+          <Input
+            type="email"
+            id="sf-contact-email"
+            name="contact_email"
+            required
+            autocomplete="email"
+            value={contactEmail.value}
+            onInput={(e) => { contactEmail.value = (e.target as HTMLInputElement).value; }}
+          />
+        </FormField>
+        <div class={`${styles.alert} ${styles.alert_warning}`} role="note">
+          <strong>⚠ Important:</strong> This email address is used for reservation notification emails sent to your guests when they make, amend, or cancel a booking. Changing it may affect email delivery. If you need to update this address, please contact support.
+        </div>
         <Button variant="primary" type="submit" isLoading={isSaving.value}>
           Save settings
         </Button>
