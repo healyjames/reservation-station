@@ -452,3 +452,5 @@ npx wrangler deploy
 # Run D1 migrations against the remote database
 npx wrangler d1 execute maximum_bookings_db --file=./migrations/<migration>.sql
 ```
+
+.
