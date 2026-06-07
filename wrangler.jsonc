@@ -49,6 +49,10 @@
 	 * All email from/to addresses come from Tenants.contact_email in the database
 	 */
 	// "vars": { "MY_VARIABLE": "production_value" }
+	"vars": {
+		// Set ENVIRONMENT=production in Cloudflare dashboard secrets to disable localhost CORS in production.
+		"ENVIRONMENT": "development",
+	},
 	/**
 	 * D1 Databases (see binding above)
 	 */
