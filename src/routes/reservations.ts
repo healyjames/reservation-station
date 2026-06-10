@@ -9,10 +9,11 @@ import { buildCustomerCancellationEmail } from '../emails/customer-cancellation'
 import { buildTenantConfirmationEmail } from '../emails/tenant-confirmation';
 import { buildTenantAmendmentEmail } from '../emails/tenant-amendment';
 import { buildTenantCancellationEmail } from '../emails/tenant-cancellation';
+import { adminAuth } from '../middleware/adminAuth';
 
 type ReservationWithTenant = Reservation & { tenant_name: string; contact_email: string };
 
-const reservations = new Hono<{ Bindings: Env }>();
+const reservations = new Hono<{ Bindings: Env; Variables: { userId: string; tenantId: string } }>();
 const yyyyMmDdRegex = /^\d{4}-\d{2}-\d{2}$/;
 
 reservations.get('/blocked-dates', async (c) => {
@@ -226,17 +227,13 @@ reservations.get('/daily-capacity', async (c) => {
 	});
 });
 
-reservations.get('/', async (c) => {
-	const tenantId = c.req.query('tenant_id');
+reservations.get('/', adminAuth, async (c) => {
+	const tenantId = c.get('tenantId');
 	const date = c.req.query('date');
 
-	let query = 'SELECT * FROM Reservations WHERE 1=1';
-	const bindings: string[] = [];
+	let query = 'SELECT * FROM Reservations WHERE tenant_id = ?';
+	const bindings: string[] = [tenantId];
 
-	if (tenantId) {
-		query += ' AND tenant_id = ?';
-		bindings.push(tenantId);
-	}
 	if (date) {
 		query += ' AND reservation_date = ?';
 		bindings.push(date);

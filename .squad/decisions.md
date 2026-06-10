@@ -406,6 +406,32 @@ The repo had two competing public booking entry points: the old vanilla root pag
 - `seedTenantWithEmail` helper explicitly includes `contact_email` column to exercise migration 0006. UUID constants TENANT_ID `000000000001` / RES_ID `000000000099` safe in isolated Miniflare D1 per spec file.
 **Why:** Tests define the implementation contract and prevent regressions. Integration tests asserted only on HTTP response codes — not on Resend call count — until implementation lands and can be extended.
 
+### 2026-06-07: CORS lockdown — replace wildcard with explicit allowlist
+**By:** Sean (Backend Developer)
+**Source:** `.squad/decisions/inbox/sean-cors-lockdown.md`
+
+Replaced the open wildcard `cors()` call in `src/app.ts` with an explicit configuration: `origin: ['https://maximum-bookings.pages.dev']`, `allowHeaders: ['Content-Type', 'Authorization']`, `allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']`, `exposeHeaders: ['Content-Length']`, `maxAge: 600`, `credentials: true`. This is Phase A of the origin whitelisting plan.
+
+⚠️ **Caveat:** The deployed domain may be `maximum-bookings.<account>.workers.dev` rather than `maximum-bookings.pages.dev`. James should confirm the actual production URL and update the `origin` array if it differs. When running `wrangler dev`, widget requests are same-origin and CORS headers are not evaluated — no local dev impact.
+
+### 2026-06-07: CORS origins — localhost + production
+**By:** Sean (Backend Developer)
+**Source:** `.squad/decisions/inbox/sean-cors-localhost.md`
+
+Expanded the `origin` array in `src/app.ts` to include the confirmed production domain (`https://maximum-bookings.jameshealydesign.workers.dev`) and three localhost origins (`http://localhost:8787`, `http://localhost:3000`, `http://localhost:5173`). Localhost entries only matter when a separate frontend dev server runs cross-origin against the Worker — a common local dev scenario. Localhost origins are not a security risk and are added unconditionally rather than via environment detection (no `ENVIRONMENT` binding existed at the time of this decision).
+
+### 2026-06-07: CORS origins are environment-conditional
+**By:** James Healy
+**Source:** `.squad/decisions/inbox/sean-cors-env-conditional.md`
+
+Localhost origins (8787, 3000, 5173) are only included when `ENVIRONMENT=development`. Production serves only `maximum-bookings.jameshealydesign.workers.dev`. Prevents theoretical localhost-origin abuse in production; establishes a clean security boundary. **How to activate dev mode:** Set `ENVIRONMENT=development` in `wrangler.jsonc` `[vars]`. Set `ENVIRONMENT=production` in the Cloudflare dashboard for the production Worker.
+
+### 2026-06-01: `contact_email` is required (NOT NULL) on Tenants
+**By:** Sean (Backend Developer)
+**Source:** `.squad/decisions/inbox/sean-contact-email-required.md`
+
+`contact_email` on the `Tenants` table is now `NOT NULL`. Migration `migrations/0006_tenants_contact_email.sql` updates the column definition to `NOT NULL DEFAULT ''` (empty-string default is migration-time fallback only). `src/db/schema.ts` changes `TenantSchema.contact_email` from `z.string().email().nullable().optional()` to `z.string().email()`. All three `if (!tenant.contact_email)` null-guards removed from `src/routes/reservations.ts` POST, PATCH, DELETE `waitUntil` blocks. Type annotation updated to `string`. Email notifications are a core feature — enforcing NOT NULL at the DB layer keeps the email path clean and eliminates a silent failure mode.
+
 ## Directives
 
 ### 2026-05-23T07-31-02: User directive
