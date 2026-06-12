@@ -11,12 +11,13 @@ interface CalendarProps {
   month: number;
   selectedDate: CalendarDate | null;
   blockedDates: Set<string>;
+  blockedDatesError?: string;
   onMonthChange: (year: number, month: number) => Promise<void>;
   onDateSelect: (year: number, month: number, day: number) => Promise<void>;
 }
 
 export const Calendar: FunctionComponent<CalendarProps> = ({
-  year, month, selectedDate, blockedDates, onMonthChange, onDateSelect
+  year, month, selectedDate, blockedDates, blockedDatesError, onMonthChange, onDateSelect
 }) => {
   const tooltipVisible = useSignal(false);
   const tooltipAnchorRect = useSignal<DOMRect | null>(null);
@@ -86,6 +87,15 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
           >&#8594;</Button>
         </div>
       </div>
+
+      {blockedDatesError && (
+        <div role="alert" style="display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:8px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:13px;color:#664d03;">
+          <span style="flex:1">{blockedDatesError}</span>
+          <Button type="button" size="sm" variant="ghost" onClick={() => onMonthChange(year, month)}>
+            Retry
+          </Button>
+        </div>
+      )}
 
       <CalendarGrid
         year={year}

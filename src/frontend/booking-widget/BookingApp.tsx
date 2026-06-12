@@ -22,6 +22,7 @@ export const BookingApp: FunctionComponent = () => {
   const { tenantConfig, tenantState, tenantError } = useTenant();
   const {
     blockedDates,
+    blockedDatesError,
     blockedTimes,
     isFetchingTimes,
     fetchBlockedDates,
@@ -87,6 +88,7 @@ export const BookingApp: FunctionComponent = () => {
         month={currentMonth.value}
         selectedDate={selectedDate.value}
         blockedDates={blockedDates.value}
+        blockedDatesError={blockedDatesError.value}
         onMonthChange={handleMonthChange}
         onDateSelect={handleDateSelect}
       />
