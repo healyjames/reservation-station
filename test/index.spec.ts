@@ -249,6 +249,20 @@ describe('Reservations', () => {
 			});
 			expect(res.status).toBe(201);
 		});
+
+		it('does not count a future booking as concurrent (directional window)', async () => {
+			// H-1 regression: a booking at 14:50 is within 120 min of 13:00 by ABS,
+			// but 13:00 falls BEFORE the 14:50 window — it must not be blocked.
+			await seedTenant({ id: TENANT_ID_2, name: 'Small Venue', tenant_code: 'small-venue', max_covers: 8, concurrent_guests_time_limit: 120 });
+			await seedReservation({ id: '00000000-0000-4000-8000-000000000017', tenant_id: TENANT_ID_2, guests: 8, reservation_date: '2099-06-15', reservation_time: '14:50' });
+			// 13:00 is 110 min before 14:50 — the old ABS check would block it; directional must allow it
+			const res = await exports.default.fetch('http://localhost/api/reservations', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ ...validPayload, tenant_id: TENANT_ID_2, guests: 8, reservation_time: '13:00' }),
+			});
+			expect(res.status).toBe(201);
+		});
 	});
 
 	// PATCH /api/reservations/:id

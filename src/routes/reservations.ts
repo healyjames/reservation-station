@@ -270,10 +270,8 @@ reservations.post('/', async (c) => {
           FROM Reservations
           WHERE tenant_id = ?
             AND reservation_date = ?
-            AND ABS(
-              (CAST(SUBSTR(reservation_time, 1, 2) AS INTEGER) * 60 +
-               CAST(SUBSTR(reservation_time, 4, 2) AS INTEGER)) - ?
-            ) < ?
+            AND (? - (CAST(SUBSTR(reservation_time, 1, 2) AS INTEGER) * 60 +
+               CAST(SUBSTR(reservation_time, 4, 2) AS INTEGER))) BETWEEN 0 AND ? - 1
         ) + ? <= ?`,
 			)
 			.bind(
