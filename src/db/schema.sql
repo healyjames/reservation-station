@@ -50,6 +50,7 @@ CREATE TABLE AdminUsers (
 
 CREATE INDEX idx_booking_tenant ON Reservations(tenant_id);
 CREATE INDEX idx_reservations_tenant_date ON Reservations(tenant_id, reservation_date);
+CREATE UNIQUE INDEX idx_reservations_unique_booking ON Reservations(tenant_id, email, reservation_date, reservation_time);
 CREATE UNIQUE INDEX idx_tenants_code ON Tenants(tenant_code);
 CREATE UNIQUE INDEX idx_admin_users_email ON AdminUsers(email);
 CREATE INDEX idx_admin_users_tenant ON AdminUsers(tenant_id);

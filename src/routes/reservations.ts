@@ -286,6 +286,9 @@ reservations.post('/', async (c) => {
 			)
 			.run();
 	} catch (err) {
+		if ((err as Error).message?.includes('UNIQUE constraint failed')) {
+			return c.json({ error: 'A reservation for this email, date, and time already exists' }, 409);
+		}
 		console.error('[reservations] POST insert failed', { err, tenant_id: data.tenant_id, reservation_id: id });
 		return c.json({ error: 'Failed to create reservation' }, 500);
 	}
