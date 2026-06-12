@@ -1,5 +1,5 @@
 import type { FunctionComponent } from 'preact';
-import type { BookingFormData, CalendarDate, DailyCapacityResponse, TenantConfig } from '@shared/types';
+import type { BookingFormData, CalendarDate, TenantConfig } from '@shared/types';
 import { FormField, SelectedDateInfo, Select, Button, Spinner } from '@shared/components';
 import { getAvailableSlots } from '@shared/utils';
 import styles from './Step1Form.module.css';
@@ -9,7 +9,6 @@ interface Step1FormProps {
   tenantConfig: TenantConfig;
   formData: BookingFormData;
   blockedTimes: string[];
-  dailyCapacity?: DailyCapacityResponse | null;
   isFetchingTimes: boolean;
   onGuestsChange: (guests: number) => void;
   onTimeChange: (time: string) => void;
@@ -22,17 +21,17 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
   tenantConfig,
   formData,
   blockedTimes,
-  dailyCapacity,
   isFetchingTimes,
   onGuestsChange,
   onTimeChange,
   onNext,
   onChangeDate,
 }) => {
-  const maxGuests = tenantConfig.max_guests ?? 20;
-  const remainingCovers = dailyCapacity?.remaining_covers ?? null;
-  const effectiveMaxGuests = remainingCovers !== null ? Math.min(maxGuests, remainingCovers) : maxGuests;
-  const showCapacityWarning = remainingCovers !== null && remainingCovers < maxGuests && effectiveMaxGuests >= 2;
+  const bookingPartyLimit = tenantConfig.max_guests > 0 ? tenantConfig.max_guests : null;
+  const venueCapacityLimit = tenantConfig.max_covers > 0 ? tenantConfig.max_covers : null;
+  const effectiveMaxGuests = bookingPartyLimit !== null && venueCapacityLimit !== null
+    ? Math.min(bookingPartyLimit, venueCapacityLimit)
+    : bookingPartyLimit ?? venueCapacityLimit ?? 20;
 
   const guestOptions = Array.from(
     { length: Math.max(0, effectiveMaxGuests - 1) },
@@ -74,12 +73,6 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
             />
           )}
         </FormField>
-
-        {showCapacityWarning && (
-          <p class={styles.capacityWarning}>
-          	Party sizes may be limited today as we are close to capacity. To arrange a larger booking, please call us.
-          </p>
-        )}
 
         <FormField label="Time" htmlFor="time" required>
           {isFetchingTimes ? (

@@ -2,22 +2,19 @@ import { useSignal } from '@preact/signals';
 import type { Signal } from '@preact/signals';
 import type { CalendarDate } from '@shared/types';
 import { formatDateForAPI } from '@shared/utils';
-import type { BlockedDatesResponse, BlockedTimesResponse, DailyCapacityResponse } from '@shared/types';
+import type { BlockedDatesResponse, BlockedTimesResponse } from '@shared/types';
 
 interface UseAvailabilityReturn {
   blockedDates: Signal<Set<string>>;
   blockedTimes: Signal<string[]>;
-  dailyCapacity: Signal<DailyCapacityResponse | null>;
   isFetchingTimes: Signal<boolean>;
   fetchBlockedDates: (tenantId: string, year: number, month: number) => Promise<void>;
   fetchBlockedTimes: (tenantId: string, date: CalendarDate, guests: number) => Promise<void>;
-  fetchDailyCapacity: (tenantId: string, date: CalendarDate) => Promise<void>;
 }
 
 export function useAvailability(): UseAvailabilityReturn {
   const blockedDates = useSignal<Set<string>>(new Set());
   const blockedTimes = useSignal<string[]>([]);
-  const dailyCapacity = useSignal<DailyCapacityResponse | null>(null);
   const isFetchingTimes = useSignal(false);
 
   async function fetchBlockedDates(tenantId: string, year: number, month: number): Promise<void> {
@@ -47,16 +44,5 @@ export function useAvailability(): UseAvailabilityReturn {
     }
   }
 
-  async function fetchDailyCapacity(tenantId: string, date: CalendarDate): Promise<void> {
-    try {
-      const dateStr = formatDateForAPI(date);
-      const res = await fetch(`/api/reservations/daily-capacity?tenant_id=${encodeURIComponent(tenantId)}&date=${dateStr}`);
-      if (!res.ok) { dailyCapacity.value = null; return; }
-      dailyCapacity.value = await res.json() as DailyCapacityResponse;
-    } catch {
-      dailyCapacity.value = null;
-    }
-  }
-
-  return { blockedDates, blockedTimes, dailyCapacity, isFetchingTimes, fetchBlockedDates, fetchBlockedTimes, fetchDailyCapacity };
+  return { blockedDates, blockedTimes, isFetchingTimes, fetchBlockedDates, fetchBlockedTimes };
 }

@@ -104,7 +104,6 @@ The table below shows which frontend hooks call which API endpoints and why. Pub
 | `GET /api/tenants/:id` | None | `useTenant.ts` | Load tenant config (name, capacity, opening hours) when the widget initialises |
 | `GET /api/reservations/blocked-dates` | None | `useAvailability.ts`, `useManageBooking.ts` | Disable unavailable dates on the booking calendar |
 | `GET /api/reservations/blocked-times` | None | `useAvailability.ts`, `useManageBooking.ts` | Grey out full or blocked time slots in the time picker |
-| `GET /api/reservations/daily-capacity` | None | `useAvailability.ts` | Show remaining covers banner in booking step 1 |
 | `POST /api/reservations` | None | `useBookingForm.ts` | Submit a new reservation from the public booking widget |
 | `GET /api/reservations/:id` | None | `useManageBooking.ts`, `useCancelBooking.ts` | Load an existing booking on the manage/cancel pages |
 | `PATCH /api/reservations/:id` | None | `useManageBooking.ts` | Customer amends their booking date, time, or details |

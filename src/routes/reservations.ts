@@ -14,8 +14,6 @@ import { adminAuth } from '../middleware/adminAuth';
 type ReservationWithTenant = Reservation & { tenant_name: string; contact_email: string };
 
 const reservations = new Hono<{ Bindings: Env; Variables: { userId: string; tenantId: string } }>();
-const yyyyMmDdRegex = /^\d{4}-\d{2}-\d{2}$/;
-
 reservations.get('/blocked-dates', async (c) => {
 	const tenantId = c.req.query('tenant_id');
 	const month = c.req.query('month');
@@ -80,9 +78,9 @@ reservations.get('/blocked-times', async (c) => {
 	}
 
 	const tenant = await c.env.maximum_bookings_db
-		.prepare('SELECT max_guests, concurrent_guests_time_limit FROM Tenants WHERE id = ?')
+		.prepare('SELECT max_covers, concurrent_guests_time_limit FROM Tenants WHERE id = ?')
 		.bind(tenantId)
-		.first<{ max_guests: number; concurrent_guests_time_limit: number }>();
+		.first<{ max_covers: number; concurrent_guests_time_limit: number }>();
 
 	if (!tenant) {
 		return c.json({ error: 'Tenant not found' }, 404);
@@ -112,7 +110,7 @@ reservations.get('/blocked-times', async (c) => {
 			? generateTimeSlots(openingHoursRow.open_time, openingHoursRow.close_time)
 			: generateTimeSlots();
 
-	if (tenant.max_guests === 0) {
+	if (tenant.max_covers === 0) {
 		const blockedTimes = slots.filter((slot) =>
 			blockedDateRows.some((r) => r.start_time !== null && r.end_time !== null && slot >= r.start_time && slot < r.end_time),
 		);
@@ -134,7 +132,7 @@ reservations.get('/blocked-times', async (c) => {
 			continue;
 		}
 		const concurrent = calculateConcurrentGuests(slot, slotReservations, tenant.concurrent_guests_time_limit);
-		if (concurrent + requestedGuests > tenant.max_guests) {
+		if (concurrent + requestedGuests > tenant.max_covers) {
 			blockedTimes.push(slot);
 		}
 	}
@@ -181,49 +179,6 @@ reservations.get('/availability', async (c) => {
 		max_covers: tenant.max_covers,
 		time_limit_minutes: tenant.concurrent_guests_time_limit,
 		slots,
-	});
-});
-
-reservations.get('/daily-capacity', async (c) => {
-	const tenantId = c.req.query('tenant_id');
-	const date = c.req.query('date');
-
-	if (!tenantId || !date) {
-		return c.json({ error: 'tenant_id and date are required' }, 400);
-	}
-
-	if (!yyyyMmDdRegex.test(date)) {
-		return c.json({ error: 'date must be in YYYY-MM-DD format' }, 400);
-	}
-
-	const tenant = await c.env.maximum_bookings_db
-		.prepare('SELECT max_covers FROM Tenants WHERE id = ?')
-		.bind(tenantId)
-		.first<{ max_covers: number }>();
-
-	if (!tenant) {
-		return c.json({ error: 'Tenant not found' }, 404);
-	}
-
-	if (tenant.max_covers === 0) {
-		return c.json({
-			max_covers: 0,
-			booked_covers: 0,
-			remaining_covers: null,
-		});
-	}
-
-	const bookingTotals = await c.env.maximum_bookings_db
-		.prepare('SELECT COALESCE(SUM(guests), 0) as total FROM Reservations WHERE tenant_id = ? AND reservation_date = ?')
-		.bind(tenantId, date)
-		.first<{ total: number }>();
-
-	const bookedCovers = Number(bookingTotals?.total ?? 0);
-
-	return c.json({
-		max_covers: tenant.max_covers,
-		booked_covers: bookedCovers,
-		remaining_covers: Math.max(0, tenant.max_covers - bookedCovers),
 	});
 });
 
@@ -275,15 +230,10 @@ reservations.post('/', async (c) => {
 	const id = crypto.randomUUID();
 	const now = new Date().toISOString();
 
-	const { results: existing } = await c.env.maximum_bookings_db
-		.prepare('SELECT COALESCE(SUM(guests), 0) as total FROM Reservations WHERE tenant_id = ? AND reservation_date = ?')
-		.bind(data.tenant_id, data.reservation_date)
-		.run<{ total: number }>();
-
 	const tenant = await c.env.maximum_bookings_db
-		.prepare('SELECT name, max_covers, contact_email FROM Tenants WHERE id = ?')
+		.prepare('SELECT name, max_covers, concurrent_guests_time_limit, contact_email FROM Tenants WHERE id = ?')
 		.bind(data.tenant_id)
-		.first<{ name: string; max_covers: number; contact_email: string }>();
+		.first<{ name: string; max_covers: number; concurrent_guests_time_limit: number; contact_email: string }>();
 
 	if (!tenant) {
 		console.error('[reservations] POST tenant not found', { tenant_id: data.tenant_id });
@@ -299,9 +249,19 @@ reservations.post('/', async (c) => {
 		return c.json({ error: 'Bookings are not available for this date' }, 422);
 	}
 
-	const currentTotal = existing[0]?.total ?? 0;
-	if (tenant.max_covers > 0 && currentTotal + data.guests > tenant.max_covers) {
-		return c.json({ error: 'Exceeds maximum covers for this date' }, 422);
+	if (tenant.max_covers > 0) {
+		const { results: dayReservations } = await c.env.maximum_bookings_db
+			.prepare('SELECT reservation_time, guests FROM Reservations WHERE tenant_id = ? AND reservation_date = ?')
+			.bind(data.tenant_id, data.reservation_date)
+			.run<SlotReservation>();
+		const concurrent = calculateConcurrentGuests(
+			data.reservation_time,
+			dayReservations,
+			tenant.concurrent_guests_time_limit,
+		);
+		if (concurrent + data.guests > tenant.max_covers) {
+			return c.json({ error: 'Insufficient capacity for the requested time' }, 422);
+		}
 	}
 
 	try {

@@ -64,17 +64,6 @@
   opacity: 1;
 }
 
-.capacityWarning {
-  margin: 0;
-  padding: var(--space-3) var(--space-4);
-  background-color: color-mix(in srgb, var(--warning, #f59e0b) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--warning, #f59e0b) 40%, transparent);
-  border-radius: var(--radius-sm);
-  color: var(--foreground);
-  font-size: 0.875rem;
-  line-height: 1.5;
-}
-
 @keyframes slideIn {
   from {
     opacity: 0;
