@@ -355,15 +355,17 @@ The repo had two competing public booking entry points: the old vanilla root pag
 **What:** Reviewed Twinkie's `AdminHeader` extraction. All criteria passed: props declared and destructured correctly; both consumers (`Dashboard.tsx`, `Settings.tsx`) wire without error; `id="venue-name"` preserved on brand span; `.main_header`, `.header_brand`, `.btn_logout` absent from both parent module files; mobile padding arithmetic (`calc(36px + var(--space-3) * 2)`) matches `AdminSidebar` hamburger dimensions exactly; no regressions in hook/signal/modal logic.
 **Why:** Code review gate before shipping shared Admin component extraction.
 
-### 2026-05-30: Daily capacity endpoint placement and validation
+### 2026-05-30: Daily capacity endpoint placement and validation (superseded)
 **By:** Sean (Backend Dev)
 **What:** Added `GET /api/reservations/daily-capacity` to `src/routes/reservations.ts` immediately after `/availability` and before `/:id` to prevent the parameterised route from capturing the literal path. Enforces strict `YYYY-MM-DD` validation. Product rule preserved: `max_covers = 0` means unlimited capacity — endpoint returns `{ max_covers: 0, booked_covers: 0, remaining_covers: null }` immediately without summing reservations.
 **Why:** Route ordering must be explicit in Hono; literal segments must precede parameterised ones.
+**Notes:** Superseded on 2026-06-12 by the rolling concurrent occupancy model; the `daily-capacity` endpoint was removed from the active capacity flow.
 
-### 2026-05-30: Booking widget daily-capacity UI guardrails
+### 2026-05-30: Booking widget daily-capacity UI guardrails (superseded)
 **By:** Twinkie (Frontend Dev)
 **What:** Wired the booking widget `Step1Form.tsx` to the new `/api/reservations/daily-capacity` response. Guest dropdown is capped to `min(max_guests, remaining_covers)` when a finite daily capacity exists. Capacity warning shown only when the daily limit reduces the normal party-size ceiling. `remaining_covers < 2` replaces the guest selector with an inline sold-out / choose-another-date message. `remaining_covers: null` = unlimited — no warning or cap applied.
 **Why:** Keeps UI aligned with the backend's daily cover limit; avoids advertising party sizes that cannot fit; gives guests a clearer explanation when the constraint comes from the day's remaining capacity.
+**Notes:** Superseded on 2026-06-12 by the rolling concurrent occupancy model; `Step1Form` no longer consumes `dailyCapacity`.
 
 ### 2026-05-30: Vanilla JS → Preact frontend migration complete
 **By:** Twinkie (Frontend Dev)
@@ -432,6 +434,47 @@ Localhost origins (8787, 3000, 5173) are only included when `ENVIRONMENT=develop
 
 `contact_email` on the `Tenants` table is now `NOT NULL`. Migration `migrations/0006_tenants_contact_email.sql` updates the column definition to `NOT NULL DEFAULT ''` (empty-string default is migration-time fallback only). `src/db/schema.ts` changes `TenantSchema.contact_email` from `z.string().email().nullable().optional()` to `z.string().email()`. All three `if (!tenant.contact_email)` null-guards removed from `src/routes/reservations.ts` POST, PATCH, DELETE `waitUntil` blocks. Type annotation updated to `string`. Email notifications are a core feature — enforcing NOT NULL at the DB layer keeps the email path clean and eliminates a silent failure mode.
 
+### 2026-06-12: Booking management links resolve at `/booking`
+**By:** Han (Lead)
+**Source:** `.squad/decisions/inbox/han-booking-tenant-missing-param.md`
+**What:** Customer confirmation/amendment emails must link to `/booking?id=...&email=...`, not `/booking/manage?...`. `/booking` is the real manage-booking entrypoint; `/booking/manage` falls through SPA fallback to the booking widget and triggers the `useTenant` missing-tenant error.
+**Why:** `useManageBooking` already derives `tenant_id` from the reservation response. Fixing the path is sufficient; no `?tenant=` parameter or reservation API contract change is needed.
+
+### 2026-06-12: Dual-port local dev remains the recommended setup
+**By:** Han (Lead)
+**Source:** `.squad/decisions/inbox/han-dual-port-dev-setup.md`
+**Status:** Recommendation
+**What:** Keep `npm run dev` as two processes: `wrangler dev` on `8787` and Vite on `5173`, with Vite proxying `/api` to the Worker. Treat `http://localhost:5173` as the canonical local app URL. Only follow-up cleanups recommended: rename/remove the misleading `start` script and optionally drop redundant `http://localhost:8787` from the dev CORS whitelist.
+**Why:** The Workers runtime and Vite HMR solve different problems. Forcing a single-port setup would either lose HMR or add unnecessary complexity.
+
+### 2026-06-12: Tenant CRUD is protected by super-admin auth
+**By:** Sean (Backend Dev)
+**Source:** `.squad/decisions/inbox/sean-c3-tenant-auth.md`
+**What:** Protect `GET /api/tenants`, `POST /api/tenants`, `PATCH /api/tenants/:id`, and `DELETE /api/tenants/:id` with `superAdminAuth` backed by `X-Admin-Key` / `SUPER_ADMIN_KEY`. Keep `GET /api/tenants/:id` public for widget/bootstrap use, but return only a widget-safe projection.
+**Why:** Tenant CRUD and internal contact data must not be publicly writable or exposed.
+
+### 2026-06-12: Booking widget capacity model uses concurrent occupancy
+**By:** Twinkie (Frontend Dev)
+**Source:** `.squad/decisions/inbox/twinkie-concurrent-capacity.md`
+**Status:** Applied
+**What:** Remove `daily-capacity` fetching/state from the booking widget. Party-size options are derived from tenant config only: `max_guests` remains the per-booking cap, `max_covers` remains venue concurrent capacity, and the effective ceiling is the smallest positive limit across the two (fallback `20` when both are unset). Date-specific unavailability comes from blocked time slots, not a day-level remaining-covers warning.
+**Why:** Aligns the widget with the backend's rolling occupancy model and removes the obsolete daily-total capacity concept.
+**Notes:** Supersedes the 2026-05-30 daily-capacity UI decision.
+
+### 2026-06-12: Reservation POST capacity tests use concurrent-window scenarios
+**By:** Neela (QA)
+**Source:** `.squad/decisions/inbox/neela-concurrent-capacity-tests.md`
+**Status:** Implemented in tests
+**What:** `test/index.spec.ts` validates reservation creation with rolling-window scenarios: separate windows remain valid, overlapping overflow is rejected, an exact time-limit boundary is accepted, and `max_covers = 0` bypasses the guard.
+**Why:** `POST /api/reservations` now uses `calculateConcurrentGuests(...)` against overlapping occupancy, not same-day summed covers.
+
+### 2026-06-12: Tenant CRUD auth coverage moved to a dedicated suite
+**By:** Neela (QA)
+**Source:** `.squad/decisions/inbox/neela-c3-tenant-tests.md`
+**Status:** Implemented in tests
+**What:** Keep C-3 tenant CRUD auth coverage in `test/tenants.spec.ts` and remove outdated unauthenticated tenant CRUD expectations from `test/index.spec.ts`. Protected routes must require `X-Admin-Key`; public tenant lookup remains read-only and projected.
+**Why:** Matches the super-admin tenant contract without mixing unrelated concerns into the main reservation suite.
+
 ## Directives
 
 ### 2026-05-23T07-31-02: User directive
@@ -449,3 +492,4 @@ Localhost origins (8787, 3000, 5173) are only included when `ENVIRONMENT=develop
 - All meaningful changes require team consensus
 - Document architectural decisions here
 - Keep history focused on work, decisions focused on direction
+

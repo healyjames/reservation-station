@@ -41,11 +41,13 @@
 	/**
 	 * Secrets
 	 * Set via: npx wrangler secret put JWT_SECRET
-	 * For local dev, add JWT_SECRET=<value> to .dev.vars
+	 * For local dev, add JWT_SECRET=<value> to .env
 	 * After running `wrangler secret put`, run `npx wrangler types` to regenerate
 	 * worker-configuration.d.ts - until then, src/types/env.d.ts provides the type.
 	 * Set via: npx wrangler secret put RESEND_API_KEY
-	 * For local dev, add RESEND_API_KEY=re_test_... to .dev.vars
+	 * For local dev, add RESEND_API_KEY=re_test_... to .env
+	 * Set via: npx wrangler secret put SUPER_ADMIN_KEY
+	 * For local dev, add SUPER_ADMIN_KEY=<value> to .env
 	 * All email from/to addresses come from Tenants.contact_email in the database
 	 */
 	// "vars": { "MY_VARIABLE": "production_value" }

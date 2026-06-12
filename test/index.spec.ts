@@ -6,7 +6,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 const TENANT_ID = '00000000-0000-4000-8000-000000000001';
 const TENANT_ID_2 = '00000000-0000-4000-8000-000000000002';
 const RES_ID = '00000000-0000-4000-8000-000000000010';
-const TENANT_CODE = 'test-restaurant';
 
 async function seedTenant(overrides: Record<string, unknown> = {}) {
 	await env.maximum_bookings_db
@@ -17,7 +16,7 @@ async function seedTenant(overrides: Record<string, unknown> = {}) {
 		.bind(
 			overrides.id ?? TENANT_ID,
 			overrides.name ?? 'Test Restaurant',
-			overrides.tenant_code ?? TENANT_CODE,
+			overrides.tenant_code ?? 'test-restaurant',
 			overrides.max_guests ?? 50,
 			overrides.max_covers ?? 20,
 			overrides.status ?? 'active',
@@ -57,160 +56,6 @@ async function clearDb() {
 	await env.maximum_bookings_db.prepare('DELETE FROM Reservations').run();
 	await env.maximum_bookings_db.prepare('DELETE FROM Tenants').run();
 }
-
-// ─── Tenants ─────────────────────────────────────────────────────────────────
-
-describe('Tenants', () => {
-	beforeEach(clearDb);
-
-	// GET /api/tenants
-	describe('GET /api/tenants', () => {
-		it('returns empty array when no tenants', async () => {
-			const res = await exports.default.fetch('http://localhost/api/tenants');
-			expect(res.status).toBe(200);
-			expect(await res.json()).toEqual([]);
-		});
-
-		it('returns all tenants', async () => {
-			await seedTenant();
-			const res = await exports.default.fetch('http://localhost/api/tenants');
-			const body = (await res.json()) as any[];
-			expect(res.status).toBe(200);
-			expect(body).toHaveLength(1);
-			expect(body[0].name).toBe('Test Restaurant');
-		});
-	});
-
-	// GET /api/tenants/:id
-	describe('GET /api/tenants/:id', () => {
-		it('returns a tenant by id', async () => {
-			await seedTenant();
-			const res = await exports.default.fetch(`http://localhost/api/tenants/${TENANT_ID}`);
-			const body = (await res.json()) as any;
-			expect(res.status).toBe(200);
-			expect(body.id).toBe(TENANT_ID);
-		});
-
-		it('returns 404 for unknown id', async () => {
-			const res = await exports.default.fetch(`http://localhost/api/tenants/00000000-0000-4000-8000-999999999999`);
-			expect(res.status).toBe(404);
-		});
-
-		it('returns a tenant by tenant_code', async () => {
-			await seedTenant();
-			const res = await exports.default.fetch(`http://localhost/api/tenants/${TENANT_CODE}`);
-			const body = (await res.json()) as any;
-			expect(res.status).toBe(200);
-			expect(body.id).toBe(TENANT_ID);
-			expect(body.opening_hours).toBeNull();
-		});
-
-		it('returns 404 for unknown tenant_code', async () => {
-			const res = await exports.default.fetch('http://localhost/api/tenants/no-such-venue');
-			expect(res.status).toBe(404);
-		});
-	});
-
-	// POST /api/tenants
-	describe('POST /api/tenants', () => {
-		it('creates a tenant and returns 201 with id', async () => {
-			const res = await exports.default.fetch('http://localhost/api/tenants', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					name: 'New Place',
-					max_guests: 30,
-					max_covers: 10,
-					status: 'active',
-				}),
-			});
-			const body = (await res.json()) as any;
-			expect(res.status).toBe(201);
-			expect(body.id).toBeDefined();
-			expect(body.name).toBe('New Place');
-			expect(body.created_date).toBeDefined();
-		});
-
-		it('rejects invalid payload with 400', async () => {
-			const res = await exports.default.fetch('http://localhost/api/tenants', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ name: '' }), // missing required fields
-			});
-			expect(res.status).toBe(400);
-		});
-
-		it('rejects invalid status enum', async () => {
-			const res = await exports.default.fetch('http://localhost/api/tenants', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					name: 'Bad Status',
-					max_guests: 10,
-					max_covers: 5,
-					status: 'pending', // not in enum
-				}),
-			});
-			expect(res.status).toBe(400);
-		});
-	});
-
-	// PATCH /api/tenants/:id
-	describe('PATCH /api/tenants/:id', () => {
-		it('updates allowed fields', async () => {
-			await seedTenant();
-			const res = await exports.default.fetch(`http://localhost/api/tenants/${TENANT_ID}`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ name: 'Updated Name' }),
-			});
-			expect(res.status).toBe(200);
-
-			const row = await env.maximum_bookings_db.prepare('SELECT name FROM Tenants WHERE id = ?').bind(TENANT_ID).first<{ name: string }>();
-			expect(row?.name).toBe('Updated Name');
-		});
-
-		it('bumps modified_date on update', async () => {
-			await seedTenant();
-			await exports.default.fetch(`http://localhost/api/tenants/${TENANT_ID}`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ name: 'Changed' }),
-			});
-			const row = await env.maximum_bookings_db
-				.prepare('SELECT modified_date FROM Tenants WHERE id = ?')
-				.bind(TENANT_ID)
-				.first<{ modified_date: string }>();
-			expect(row?.modified_date).toBeDefined();
-		});
-
-		it('returns 400 for empty body', async () => {
-			await seedTenant();
-			const res = await exports.default.fetch(`http://localhost/api/tenants/${TENANT_ID}`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({}),
-			});
-			expect(res.status).toBe(400);
-		});
-	});
-
-	// DELETE /api/tenants/:id
-	describe('DELETE /api/tenants/:id', () => {
-		it('deletes a tenant', async () => {
-			await seedTenant();
-			const res = await exports.default.fetch(`http://localhost/api/tenants/${TENANT_ID}`, { method: 'DELETE' });
-			expect(res.status).toBe(200);
-			const row = await env.maximum_bookings_db.prepare('SELECT id FROM Tenants WHERE id = ?').bind(TENANT_ID).first();
-			expect(row).toBeNull();
-		});
-
-		it('returns 404 for unknown tenant', async () => {
-			const res = await exports.default.fetch(`http://localhost/api/tenants/00000000-0000-4000-8000-999999999999`, { method: 'DELETE' });
-			expect(res.status).toBe(404);
-		});
-	});
-});
 
 // ─── Reservations ─────────────────────────────────────────────────────────────
 

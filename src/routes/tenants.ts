@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { Hono } from 'hono';
 import { Tenant, UpdateTenantSchema, CreateTenantSchema, CreateTenant } from '../db/schema';
+import { superAdminAuth } from '../middleware/superAdminAuth';
 
 const tenants = new Hono<{ Bindings: Env }>();
 
-tenants.get('/', async (c) => {
+tenants.get('/', superAdminAuth, async (c) => {
 	const { results } = await c.env.maximum_bookings_db.prepare('SELECT * FROM Tenants').run<Tenant>();
 	return c.json(results);
 });
@@ -26,10 +27,12 @@ tenants.get('/:id', async (c) => {
 		.bind(tenant.id)
 		.run<{ id: string; tenant_id: string; day_of_week: number; is_closed: number; open_time: string | null; close_time: string | null }>();
 
-	return c.json({ ...tenant, opening_hours: results.length > 0 ? results : null });
+	const { contact_email, created_date, modified_date, ...publicTenant } = tenant;
+
+	return c.json({ ...publicTenant, opening_hours: results.length > 0 ? results : null });
 });
 
-tenants.post('/', async (c) => {
+tenants.post('/', superAdminAuth, async (c) => {
 	const rawBody = await c.req.json().catch(() => null);
 	const parsed = CreateTenantSchema.safeParse(rawBody);
 	if (!parsed.success) {
@@ -57,7 +60,7 @@ tenants.post('/', async (c) => {
 	return c.json({ id, ...body, created_date: now, modified_date: now }, 201);
 });
 
-tenants.patch('/:id', async (c) => {
+tenants.patch('/:id', superAdminAuth, async (c) => {
 	const id = c.req.param('id');
 	const rawBody = await c.req.json().catch(() => null);
 	const parsed = UpdateTenantSchema.safeParse(rawBody);
@@ -89,7 +92,7 @@ tenants.patch('/:id', async (c) => {
 	return c.json({ success: true });
 });
 
-tenants.delete('/:id', async (c) => {
+tenants.delete('/:id', superAdminAuth, async (c) => {
 	const id = c.req.param('id');
 
 	try {
