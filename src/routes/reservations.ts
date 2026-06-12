@@ -254,6 +254,24 @@ reservations.post('/', async (c) => {
 		return c.json({ error: 'Bookings are not available for this date' }, 422);
 	}
 
+	// H-8: Reject bookings outside opening hours
+	const dow = new Date(data.reservation_date + 'T12:00:00Z').getUTCDay();
+	const openingHours = await c.env.maximum_bookings_db
+		.prepare('SELECT is_closed, open_time, close_time FROM OpeningHours WHERE tenant_id = ? AND day_of_week = ?')
+		.bind(data.tenant_id, dow)
+		.first<{ is_closed: number; open_time: string | null; close_time: string | null }>();
+
+	if (openingHours) {
+		if (openingHours.is_closed === 1) {
+			return c.json({ error: 'Bookings are not available for this date' }, 422);
+		}
+		if (openingHours.open_time && openingHours.close_time) {
+			if (data.reservation_time < openingHours.open_time || data.reservation_time >= openingHours.close_time) {
+				return c.json({ error: 'Bookings are not available for this time' }, 422);
+			}
+		}
+	}
+
 	// Atomic capacity check + insert. The WHERE clause re-evaluates concurrent occupancy
 	// inside the same SQLite statement, eliminating the SELECT-then-INSERT race condition.
 	// (? = 0) short-circuits for unlimited venues (max_covers = 0).
