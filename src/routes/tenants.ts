@@ -53,6 +53,9 @@ tenants.post('/', superAdminAuth, async (c) => {
 			.bind(id, body.name, body.tenant_code, body.max_guests, body.max_covers, body.status, now, now)
 			.run();
 	} catch (err) {
+		if ((err as Error).message?.includes('UNIQUE constraint failed')) {
+			return c.json({ error: 'A tenant with that tenant_code already exists' }, 409);
+		}
 		console.error('[tenants] POST insert failed', { err, tenant_code: body.tenant_code });
 		return c.json({ error: 'Failed to create tenant' }, 500);
 	}
@@ -85,6 +88,9 @@ tenants.patch('/:id', superAdminAuth, async (c) => {
 			.bind(...values, id)
 			.run();
 	} catch (err) {
+		if ((err as Error).message?.includes('UNIQUE constraint failed')) {
+			return c.json({ error: 'A tenant with that tenant_code already exists' }, 409);
+		}
 		console.error('[tenants] PATCH update failed', { err, id });
 		return c.json({ error: 'Failed to update tenant' }, 500);
 	}
