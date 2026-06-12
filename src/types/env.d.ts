@@ -6,4 +6,5 @@ interface Env {
 	JWT_SECRET: string;
 	RESEND_API_KEY: string;
 	ENVIRONMENT?: string;
+	PUBLIC_URL?: string;
 }

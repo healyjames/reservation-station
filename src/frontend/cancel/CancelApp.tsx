@@ -7,10 +7,11 @@ import { useCancelBooking } from '@shared/hooks/useCancelBooking';
 
 interface CancelAppProps {
   reservationId: string | null;
+  bookingEmail: string | null;
 }
 
-export const CancelApp: FunctionComponent<CancelAppProps> = ({ reservationId }) => {
-  const { view, reservation, errorMessage, inlineError, isCancelling, handleCancel } = useCancelBooking(reservationId);
+export const CancelApp: FunctionComponent<CancelAppProps> = ({ reservationId, bookingEmail }) => {
+  const { view, reservation, errorMessage, inlineError, isCancelling, handleCancel } = useCancelBooking(reservationId, bookingEmail);
 
   if (view.value === 'loading') return <Loading />;
   if (view.value === 'error') return <Error message={errorMessage.value} />;

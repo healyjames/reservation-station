@@ -36,6 +36,9 @@ export interface CustomerReservationEmailData {
 	reservationTime: string;
 	guests: number;
 	dietaryRequirements: string | null;
+	reservationId?: string;
+	customerEmail?: string;
+	baseUrl?: string;
 }
 
 export interface TenantReservationEmailData {

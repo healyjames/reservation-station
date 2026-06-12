@@ -14,7 +14,7 @@ export default defineConfig({
       input: {
         index: resolve(__dirname, 'src/frontend/index.html'),
         'booking-widget': resolve(__dirname, 'src/frontend/booking-widget/index.html'),
-        'booking/manage': resolve(__dirname, 'src/frontend/booking/manage/index.html'),
+        'booking': resolve(__dirname, 'src/frontend/booking/index.html'),
         'admin': resolve(__dirname, 'src/frontend/admin/index.html'),
         'cancel': resolve(__dirname, 'src/frontend/cancel/index.html'),
       },

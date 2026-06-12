@@ -14,7 +14,7 @@ interface UseCancelBookingReturn {
   handleCancel: () => Promise<void>;
 }
 
-export function useCancelBooking(reservationId: string | null): UseCancelBookingReturn {
+export function useCancelBooking(reservationId: string | null, bookingEmail: string | null): UseCancelBookingReturn {
   const view = useSignal<CancelView>('loading');
   const reservation = useSignal<Reservation | null>(null);
   const errorMessage = useSignal('');
@@ -22,19 +22,19 @@ export function useCancelBooking(reservationId: string | null): UseCancelBooking
   const isCancelling = useSignal(false);
 
   useEffect(() => {
-    if (!reservationId) {
+    if (!reservationId || !bookingEmail) {
       errorMessage.value = 'No booking reference found. Please check your cancellation link.';
       view.value = 'error';
       return;
     }
 
-    loadReservation(reservationId);
-  }, [reservationId]);
+    loadReservation(reservationId, bookingEmail);
+  }, [reservationId, bookingEmail]);
 
-  async function loadReservation(id: string) {
+  async function loadReservation(id: string, email: string) {
     view.value = 'loading';
     try {
-      const response = await fetch(`/api/reservations/${encodeURIComponent(id)}`);
+      const response = await fetch(`/api/reservations/${encodeURIComponent(id)}?email=${encodeURIComponent(email)}`);
       if (response.status === 404) {
         errorMessage.value = 'Booking not found. It may have already been cancelled.';
         view.value = 'error';
@@ -55,14 +55,15 @@ export function useCancelBooking(reservationId: string | null): UseCancelBooking
   }
 
   async function handleCancel() {
-    if (isCancelling.value || !reservation.value?.id) return;
+    if (isCancelling.value || !reservation.value?.id || !bookingEmail) return;
     isCancelling.value = true;
     inlineError.value = '';
 
     try {
-      const response = await fetch(`/api/reservations/${encodeURIComponent(reservation.value.id)}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        `/api/reservations/${encodeURIComponent(reservation.value.id)}?email=${encodeURIComponent(bookingEmail)}`,
+        { method: 'DELETE' },
+      );
       if (response.ok) {
         view.value = 'success';
         return;

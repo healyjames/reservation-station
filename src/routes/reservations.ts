@@ -251,9 +251,15 @@ reservations.get('/', adminAuth, async (c) => {
 
 reservations.get('/:id', async (c) => {
 	const id = c.req.param('id');
+	const email = c.req.query('email');
+
+	if (!email) return c.json({ error: 'Reservation not found' }, 404);
+
 	const row = await c.env.maximum_bookings_db.prepare('SELECT * FROM Reservations WHERE id = ?').bind(id).first<Reservation>();
 
-	if (!row) return c.json({ error: 'Reservation not found' }, 404);
+	if (!row || row.email.toLowerCase() !== email.toLowerCase()) {
+		return c.json({ error: 'Reservation not found' }, 404);
+	}
 	return c.json(row);
 });
 
@@ -330,6 +336,7 @@ reservations.post('/', async (c) => {
 	c.executionCtx.waitUntil(
 		(async () => {
 			const from = `"${tenant.name}" <${tenant.contact_email}>`;
+			const baseUrl = c.env.PUBLIC_URL ?? `${c.req.raw.headers.get('x-forwarded-proto') ?? 'https'}://${c.req.header('host')}`;
 			await Promise.allSettled([
 				sendEmail(c.env, {
 					to: data.email,
@@ -341,6 +348,9 @@ reservations.post('/', async (c) => {
 						reservationTime: data.reservation_time,
 						guests: data.guests,
 						dietaryRequirements: data.dietary_requirements ?? null,
+						reservationId: id,
+						customerEmail: data.email,
+						baseUrl,
 					}),
 				}),
 				sendEmail(c.env, {
@@ -368,6 +378,7 @@ reservations.post('/', async (c) => {
 
 reservations.patch('/:id', async (c) => {
 	const id = c.req.param('id');
+	const email = c.req.query('email');
 	const msg = await c.req.json().catch(() => null);
 	const parsed = UpdateReservationSchema.safeParse(msg);
 	if (!parsed.success) {
@@ -380,7 +391,9 @@ reservations.patch('/:id', async (c) => {
 		.bind(id)
 		.first<ReservationWithTenant>();
 
-	if (!existing) return c.json({ error: 'Reservation not found' }, 404);
+	if (!existing || !email || existing.email.toLowerCase() !== email.toLowerCase()) {
+		return c.json({ error: 'Reservation not found' }, 404);
+	}
 
 	const body = parsed.data;
 	const data = { ...body, modified_date: new Date().toISOString() };
@@ -411,6 +424,7 @@ reservations.patch('/:id', async (c) => {
 		c.executionCtx.waitUntil(
 			(async () => {
 				const from = `"${updated.tenant_name}" <${updated.contact_email}>`;
+				const baseUrl = c.env.PUBLIC_URL ?? `${c.req.raw.headers.get('x-forwarded-proto') ?? 'https'}://${c.req.header('host')}`;
 				await Promise.allSettled([
 					sendEmail(c.env, {
 						to: updated.email,
@@ -422,6 +436,9 @@ reservations.patch('/:id', async (c) => {
 							reservationTime: updated.reservation_time,
 							guests: updated.guests,
 							dietaryRequirements: updated.dietary_requirements ?? null,
+							reservationId: id,
+							customerEmail: updated.email,
+							baseUrl,
 						}),
 					}),
 					sendEmail(c.env, {
@@ -450,13 +467,16 @@ reservations.patch('/:id', async (c) => {
 
 reservations.delete('/:id', async (c) => {
 	const id = c.req.param('id');
+	const email = c.req.query('email');
 
 	const reservation = await c.env.maximum_bookings_db
 		.prepare('SELECT r.*, t.name AS tenant_name, t.contact_email FROM Reservations r JOIN Tenants t ON t.id = r.tenant_id WHERE r.id = ?')
 		.bind(id)
 		.first<ReservationWithTenant>();
 
-	if (!reservation) return c.json({ error: 'Reservation not found' }, 404);
+	if (!reservation || !email || reservation.email.toLowerCase() !== email.toLowerCase()) {
+		return c.json({ error: 'Reservation not found' }, 404);
+	}
 
 	try {
 		await c.env.maximum_bookings_db.prepare('DELETE FROM Reservations WHERE id = ?').bind(id).run();
