@@ -13,10 +13,18 @@ tenants.get('/', superAdminAuth, async (c) => {
 tenants.get('/:id', async (c) => {
 	const id = c.req.param('id');
 	const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+	// Explicit column list — contact_email, created_date, modified_date are intentionally excluded
+	// to avoid leaking PII to unauthenticated callers. Use GET /api/admin/me for admin access.
+	const publicColumns = 'id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit';
 	const tenant = await c.env.maximum_bookings_db
-		.prepare(isUuid ? 'SELECT * FROM Tenants WHERE id = ?' : 'SELECT * FROM Tenants WHERE tenant_code = ?')
+		.prepare(
+			isUuid
+				? `SELECT ${publicColumns} FROM Tenants WHERE id = ?`
+				: `SELECT ${publicColumns} FROM Tenants WHERE tenant_code = ?`,
+		)
 		.bind(id)
-		.first<Tenant>();
+		.first<Pick<Tenant, 'id' | 'name' | 'tenant_code' | 'max_guests' | 'max_covers' | 'status' | 'concurrent_guests_time_limit'>>();
 
 	if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
 
@@ -27,9 +35,7 @@ tenants.get('/:id', async (c) => {
 		.bind(tenant.id)
 		.run<{ id: string; tenant_id: string; day_of_week: number; is_closed: number; open_time: string | null; close_time: string | null }>();
 
-	const { contact_email, created_date, modified_date, ...publicTenant } = tenant;
-
-	return c.json({ ...publicTenant, opening_hours: results.length > 0 ? results : null });
+	return c.json({ ...tenant, opening_hours: results.length > 0 ? results : null });
 });
 
 tenants.post('/', superAdminAuth, async (c) => {
