@@ -249,48 +249,51 @@ reservations.post('/', async (c) => {
 		return c.json({ error: 'Bookings are not available for this date' }, 422);
 	}
 
-	if (tenant.max_covers > 0) {
-		const { results: dayReservations } = await c.env.maximum_bookings_db
-			.prepare('SELECT reservation_time, guests FROM Reservations WHERE tenant_id = ? AND reservation_date = ?')
-			.bind(data.tenant_id, data.reservation_date)
-			.run<SlotReservation>();
-		const concurrent = calculateConcurrentGuests(
-			data.reservation_time,
-			dayReservations,
-			tenant.concurrent_guests_time_limit,
-		);
-		if (concurrent + data.guests > tenant.max_covers) {
-			return c.json({ error: 'Insufficient capacity for the requested time' }, 422);
-		}
-	}
+	// Atomic capacity check + insert. The WHERE clause re-evaluates concurrent occupancy
+	// inside the same SQLite statement, eliminating the SELECT-then-INSERT race condition.
+	// (? = 0) short-circuits for unlimited venues (max_covers = 0).
+	// If capacity is exceeded the INSERT matches no row; meta.changes === 0 → 422.
+	const [rH, rM] = data.reservation_time.split(':');
+	const slotMinutes = parseInt(rH, 10) * 60 + parseInt(rM, 10);
 
+	let insertResult: D1Result;
 	try {
-		await c.env.maximum_bookings_db
+		insertResult = await c.env.maximum_bookings_db
 			.prepare(
 				`INSERT INTO Reservations
         (id, tenant_id, first_name, surname, telephone, email,
          reservation_date, reservation_time, guests, dietary_requirements,
          created_date, modified_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        WHERE (? = 0) OR (
+          SELECT COALESCE(SUM(guests), 0)
+          FROM Reservations
+          WHERE tenant_id = ?
+            AND reservation_date = ?
+            AND ABS(
+              (CAST(SUBSTR(reservation_time, 1, 2) AS INTEGER) * 60 +
+               CAST(SUBSTR(reservation_time, 4, 2) AS INTEGER)) - ?
+            ) < ?
+        ) + ? <= ?`,
 			)
 			.bind(
-				id,
-				data.tenant_id,
-				data.first_name,
-				data.surname,
-				data.telephone,
-				data.email,
-				data.reservation_date,
-				data.reservation_time,
-				data.guests,
-				data.dietary_requirements ?? null,
-				now,
-				now,
+				id, data.tenant_id, data.first_name, data.surname,
+				data.telephone, data.email, data.reservation_date,
+				data.reservation_time, data.guests, data.dietary_requirements ?? null,
+				now, now,
+				tenant.max_covers,
+				data.tenant_id, data.reservation_date,
+				slotMinutes, tenant.concurrent_guests_time_limit,
+				data.guests, tenant.max_covers,
 			)
 			.run();
 	} catch (err) {
 		console.error('[reservations] POST insert failed', { err, tenant_id: data.tenant_id, reservation_id: id });
 		return c.json({ error: 'Failed to create reservation' }, 500);
+	}
+
+	if (insertResult.meta.changes === 0) {
+		return c.json({ error: 'Insufficient capacity for the requested time' }, 422);
 	}
 
 	c.executionCtx.waitUntil(
