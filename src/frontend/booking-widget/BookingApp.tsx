@@ -23,6 +23,7 @@ export const BookingApp: FunctionComponent = () => {
   const {
     blockedDates,
     blockedDatesError,
+    isFetchingDates,
     blockedTimes,
     isFetchingTimes,
     fetchBlockedDates,
@@ -89,6 +90,7 @@ export const BookingApp: FunctionComponent = () => {
         selectedDate={selectedDate.value}
         blockedDates={blockedDates.value}
         blockedDatesError={blockedDatesError.value}
+        isFetchingDates={isFetchingDates.value}
         onMonthChange={handleMonthChange}
         onDateSelect={handleDateSelect}
       />

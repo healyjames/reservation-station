@@ -12,12 +12,13 @@ interface CalendarProps {
   selectedDate: CalendarDate | null;
   blockedDates: Set<string>;
   blockedDatesError?: string;
+  isFetchingDates?: boolean;
   onMonthChange: (year: number, month: number) => Promise<void>;
   onDateSelect: (year: number, month: number, day: number) => Promise<void>;
 }
 
 export const Calendar: FunctionComponent<CalendarProps> = ({
-  year, month, selectedDate, blockedDates, blockedDatesError, onMonthChange, onDateSelect
+  year, month, selectedDate, blockedDates, blockedDatesError, isFetchingDates, onMonthChange, onDateSelect
 }) => {
   const tooltipVisible = useSignal(false);
   const tooltipAnchorRect = useSignal<DOMRect | null>(null);
@@ -71,7 +72,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
             type="button"
             class={styles.nav_button}
             aria-label="Previous month"
-            disabled={onCurrentMonth}
+            disabled={onCurrentMonth || isFetchingDates}
             onClick={prevMonth}
 						size="sm"
 						variant="ghost"
@@ -81,6 +82,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
             type="button"
             class={styles.nav_button}
             aria-label="Next month"
+            disabled={isFetchingDates}
             onClick={nextMonth}
 						size="sm"
 						variant="ghost"
@@ -97,15 +99,17 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
         </div>
       )}
 
-      <CalendarGrid
-        year={year}
-        month={month}
-        selectedDate={selectedDate}
-        isDisabled={(y, m, d) => isBeforeToday(y, m, d) || isDateBlocked(y, m, d)}
-        isBlocked={(y, m, d) => isDateBlocked(y, m, d)}
-        onSelect={onDateSelect}
-        onBlockedSelect={handleBlockedSelect}
-      />
+      <div style={isFetchingDates ? 'opacity:0.5;pointer-events:none;' : undefined}>
+        <CalendarGrid
+          year={year}
+          month={month}
+          selectedDate={selectedDate}
+          isDisabled={(y, m, d) => isFetchingDates || isBeforeToday(y, m, d) || isDateBlocked(y, m, d)}
+          isBlocked={(y, m, d) => isDateBlocked(y, m, d)}
+          onSelect={onDateSelect}
+          onBlockedSelect={handleBlockedSelect}
+        />
+      </div>
 
       <BlockedTooltip
         visible={tooltipVisible.value}

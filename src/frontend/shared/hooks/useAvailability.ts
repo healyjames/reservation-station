@@ -7,6 +7,7 @@ import type { BlockedDatesResponse, BlockedTimesResponse } from '@shared/types';
 interface UseAvailabilityReturn {
   blockedDates: Signal<Set<string>>;
   blockedDatesError: Signal<string>;
+  isFetchingDates: Signal<boolean>;
   blockedTimes: Signal<string[]>;
   isFetchingTimes: Signal<boolean>;
   fetchBlockedDates: (tenantId: string, year: number, month: number) => Promise<void>;
@@ -16,12 +17,14 @@ interface UseAvailabilityReturn {
 export function useAvailability(): UseAvailabilityReturn {
   const blockedDates = useSignal<Set<string>>(new Set());
   const blockedDatesError = useSignal('');
+  const isFetchingDates = useSignal(false);
   const blockedTimes = useSignal<string[]>([]);
   const isFetchingTimes = useSignal(false);
 
   async function fetchBlockedDates(tenantId: string, year: number, month: number): Promise<void> {
     const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
     blockedDatesError.value = '';
+    isFetchingDates.value = true;
     try {
       const res = await fetch(`/api/reservations/blocked-dates?tenant_id=${encodeURIComponent(tenantId)}&month=${monthStr}`);
       if (!res.ok) {
@@ -32,6 +35,8 @@ export function useAvailability(): UseAvailabilityReturn {
       blockedDates.value = new Set(data.blocked_dates ?? []);
     } catch {
       blockedDatesError.value = 'Could not load availability. Please try again.';
+    } finally {
+      isFetchingDates.value = false;
     }
   }
 
@@ -50,5 +55,5 @@ export function useAvailability(): UseAvailabilityReturn {
     }
   }
 
-  return { blockedDates, blockedDatesError, blockedTimes, isFetchingTimes, fetchBlockedDates, fetchBlockedTimes };
+  return { blockedDates, blockedDatesError, isFetchingDates, blockedTimes, isFetchingTimes, fetchBlockedDates, fetchBlockedTimes };
 }
