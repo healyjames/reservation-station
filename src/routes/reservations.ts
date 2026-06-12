@@ -155,9 +155,9 @@ reservations.get('/availability', async (c) => {
 	const date = parsedDate.toISOString().split('T')[0];
 
 	const tenant = await c.env.maximum_bookings_db
-		.prepare('SELECT max_covers, concurrent_guests_time_limit FROM Tenants WHERE id = ?')
+		.prepare('SELECT max_covers, max_guests, concurrent_guests_time_limit FROM Tenants WHERE id = ?')
 		.bind(tenantId)
-		.first<{ max_covers: number; concurrent_guests_time_limit: number }>();
+		.first<{ max_covers: number; max_guests: number; concurrent_guests_time_limit: number }>();
 
 	if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
 
@@ -178,6 +178,7 @@ reservations.get('/availability', async (c) => {
 	return c.json({
 		date,
 		max_covers: tenant.max_covers,
+		max_guests: tenant.max_guests,
 		time_limit_minutes: tenant.concurrent_guests_time_limit,
 		slots,
 	});
