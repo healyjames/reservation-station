@@ -144,15 +144,6 @@ admin.delete('/reservations/:id', async (c) => {
 	const tenantId = c.get('tenantId');
 	const id = c.req.param('id');
 
-	const existing = await c.env.maximum_bookings_db
-		.prepare('SELECT id FROM Reservations WHERE id = ?')
-		.bind(id)
-		.first<{ id: string }>();
-
-	if (!existing || existing.id !== id) {
-		return c.json({ error: 'Reservation not found' }, 404);
-	}
-
 	const result = await c.env.maximum_bookings_db
 		.prepare('DELETE FROM Reservations WHERE id = ? AND tenant_id = ?')
 		.bind(id, tenantId)
