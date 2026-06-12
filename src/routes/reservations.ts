@@ -236,13 +236,17 @@ reservations.post('/', async (c) => {
 	const now = new Date().toISOString();
 
 	const tenant = await c.env.maximum_bookings_db
-		.prepare('SELECT name, max_covers, concurrent_guests_time_limit, contact_email FROM Tenants WHERE id = ?')
+		.prepare('SELECT name, status, max_covers, concurrent_guests_time_limit, contact_email FROM Tenants WHERE id = ?')
 		.bind(data.tenant_id)
-		.first<{ name: string; max_covers: number; concurrent_guests_time_limit: number; contact_email: string }>();
+		.first<{ name: string; status: string; max_covers: number; concurrent_guests_time_limit: number; contact_email: string }>();
 
 	if (!tenant) {
 		console.error('[reservations] POST tenant not found', { tenant_id: data.tenant_id });
 		return c.json({ error: 'Tenant not found' }, 404);
+	}
+
+	if (tenant.status !== 'active') {
+		return c.json({ error: 'Bookings are not currently available' }, 422);
 	}
 
 	const fullDayBlock = await c.env.maximum_bookings_db
