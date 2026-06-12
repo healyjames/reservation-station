@@ -52,11 +52,12 @@
 	 */
 	// "vars": { "MY_VARIABLE": "production_value" }
 	"vars": {
-		// Set ENVIRONMENT=production in Cloudflare dashboard secrets to disable localhost CORS in production.
-		"ENVIRONMENT": "development",
-		// Public-facing URL of the frontend. Used to generate cancel/manage links in emails.
-		// In production, set this via the Cloudflare dashboard vars (not here).
-		"PUBLIC_URL": "http://localhost:5173",
+		// Safe production default. Override with ENVIRONMENT=development in .env for local dev.
+		"ENVIRONMENT": "production",
+		// Public-facing URL used to generate cancel/manage links in emails.
+		// Must be set in the Cloudflare dashboard for production deployments.
+		// Set PUBLIC_URL=https://yourdomain.com in the Cloudflare dashboard, or in .env for local dev.
+		"PUBLIC_URL": "",
 	},
 	/**
 	 * D1 Databases (see binding above)
