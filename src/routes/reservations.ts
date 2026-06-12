@@ -383,9 +383,19 @@ reservations.patch('/:id', async (c) => {
 	}
 
 	const existing = await c.env.maximum_bookings_db
-		.prepare('SELECT r.*, t.name AS tenant_name, t.contact_email FROM Reservations r JOIN Tenants t ON t.id = r.tenant_id WHERE r.id = ?')
+		.prepare(
+			`SELECT r.*, t.name AS tenant_name, t.contact_email,
+			        t.max_guests AS max_guests, t.max_covers AS max_covers,
+			        t.concurrent_guests_time_limit AS concurrent_guests_time_limit
+			 FROM Reservations r JOIN Tenants t ON t.id = r.tenant_id WHERE r.id = ?`,
+		)
 		.bind(id)
-		.first<ReservationWithTenant & { manage_token_hash: string | null }>();
+		.first<ReservationWithTenant & {
+			manage_token_hash: string | null;
+			max_guests: number;
+			max_covers: number;
+			concurrent_guests_time_limit: number;
+		}>();
 
 	if (!existing || !email || existing.email.toLowerCase() !== email.toLowerCase()) {
 		return c.json({ error: 'Reservation not found' }, 404);
@@ -400,6 +410,42 @@ reservations.patch('/:id', async (c) => {
 	}
 
 	const body = parsed.data;
+
+	// H-10: Re-validate capacity when guests, date, or time is being changed
+	if (body.guests !== undefined || body.reservation_date !== undefined || body.reservation_time !== undefined) {
+		const effectiveGuests = body.guests ?? existing.guests;
+		const effectiveDate = body.reservation_date ?? existing.reservation_date;
+		const effectiveTime = body.reservation_time ?? existing.reservation_time;
+
+		// max_guests caps the party size per booking
+		if (existing.max_guests > 0 && effectiveGuests > existing.max_guests) {
+			return c.json({ error: `Maximum party size is ${existing.max_guests}` }, 422);
+		}
+
+		// max_covers: check concurrent occupancy at the new slot, excluding this reservation
+		if (existing.max_covers > 0) {
+			const [eH, eM] = effectiveTime.split(':');
+			const slotMin = parseInt(eH, 10) * 60 + parseInt(eM, 10);
+			const tl = existing.concurrent_guests_time_limit;
+			const row = await c.env.maximum_bookings_db
+				.prepare(
+					`SELECT COALESCE(SUM(guests), 0) AS concurrent
+					 FROM Reservations
+					 WHERE tenant_id = ?
+					   AND reservation_date = ?
+					   AND id != ?
+					   AND (CAST(SUBSTR(reservation_time,1,2) AS INTEGER)*60 + CAST(SUBSTR(reservation_time,4,2) AS INTEGER)) <= ?
+					   AND (CAST(SUBSTR(reservation_time,1,2) AS INTEGER)*60 + CAST(SUBSTR(reservation_time,4,2) AS INTEGER)) + ? > ?`,
+				)
+				.bind(existing.tenant_id, effectiveDate, id, slotMin, tl, slotMin)
+				.first<{ concurrent: number }>();
+
+			if ((row?.concurrent ?? 0) + effectiveGuests > existing.max_covers) {
+				return c.json({ error: 'Insufficient capacity for the requested time' }, 422);
+			}
+		}
+	}
+
 	const data = { ...body, modified_date: new Date().toISOString() };
 
 	if (!Object.keys(data).length) return c.json({ error: 'No valid fields to update' }, 400);
