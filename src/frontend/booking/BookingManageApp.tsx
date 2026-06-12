@@ -15,10 +15,11 @@ import { SuccessCancel } from '@shared/components/BookingManage/SuccessCancel';
 interface BookingManageAppProps {
   reservationId: string | null;
   bookingEmail: string | null;
+  bookingToken: string | null;
 }
 
-export const BookingManageApp: FunctionComponent<BookingManageAppProps> = ({ reservationId, bookingEmail }) => {
-  const hook = useManageBooking(reservationId, bookingEmail);
+export const BookingManageApp: FunctionComponent<BookingManageAppProps> = ({ reservationId, bookingEmail, bookingToken }) => {
+  const hook = useManageBooking(reservationId, bookingEmail, bookingToken);
 
   switch (hook.view.value) {
     case 'loading':

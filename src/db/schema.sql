@@ -29,6 +29,7 @@ CREATE TABLE Reservations (
     dietary_requirements TEXT,
     created_date TEXT DEFAULT (CURRENT_TIMESTAMP),
     modified_date TEXT DEFAULT (CURRENT_TIMESTAMP),
+    manage_token_hash TEXT,
 
     -- Foreign Key Constraint to ensure the tenant exists
     FOREIGN KEY (tenant_id) REFERENCES Tenants(id) ON DELETE CASCADE

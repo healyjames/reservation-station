@@ -30,7 +30,7 @@ export interface UseManageBookingReturn {
   selectDate: (year: number, month: number, day: number) => Promise<void>;
 }
 
-export function useManageBooking(reservationId: string | null, bookingEmail: string | null): UseManageBookingReturn {
+export function useManageBooking(reservationId: string | null, bookingEmail: string | null, bookingToken: string | null): UseManageBookingReturn {
   const view = useSignal<ManageView>('loading');
   const reservation = useSignal<Reservation | null>(null);
   const tenantConfig = useSignal<TenantConfig | null>(null);
@@ -58,7 +58,8 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
     let res: Reservation | null = null;
     try {
 			console.log('reservationId:', reservationId, 'bookingEmail:', bookingEmail);
-      const r = await fetch(`/api/reservations/${encodeURIComponent(reservationId)}?email=${encodeURIComponent(bookingEmail)}`);
+      const tokenParam = bookingToken ? `&token=${encodeURIComponent(bookingToken)}` : '';
+      const r = await fetch(`/api/reservations/${encodeURIComponent(reservationId)}?email=${encodeURIComponent(bookingEmail)}${tokenParam}`);
       if (r.status === 404) {
         errorMessage.value = 'Booking not found. It may have already been cancelled or the link is invalid.';
         view.value = 'error';
@@ -172,9 +173,10 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
 
   async function saveEditDetails(data: EditData): Promise<void> {
     errorMessage.value = '';
+    const tokenParam = bookingToken ? `&token=${encodeURIComponent(bookingToken)}` : '';
     const emailParam = bookingEmail ? `?email=${encodeURIComponent(bookingEmail)}` : '';
     try {
-      const r = await fetch(`/api/reservations/${encodeURIComponent(reservation.value!.id)}${emailParam}`, {
+      const r = await fetch(`/api/reservations/${encodeURIComponent(reservation.value!.id)}${emailParam}${tokenParam}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -199,9 +201,10 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
       reservation_date: formatDateForAPI(selectedDate.value),
       reservation_time: selectedTime.value,
     };
+    const tokenParam = bookingToken ? `&token=${encodeURIComponent(bookingToken)}` : '';
     const emailParam = bookingEmail ? `?email=${encodeURIComponent(bookingEmail)}` : '';
     try {
-      const r = await fetch(`/api/reservations/${encodeURIComponent(reservation.value!.id)}${emailParam}`, {
+      const r = await fetch(`/api/reservations/${encodeURIComponent(reservation.value!.id)}${emailParam}${tokenParam}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patchData),
@@ -221,9 +224,10 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
 
   async function confirmCancel(): Promise<void> {
     errorMessage.value = '';
+    const tokenParam = bookingToken ? `&token=${encodeURIComponent(bookingToken)}` : '';
     const emailParam = bookingEmail ? `?email=${encodeURIComponent(bookingEmail)}` : '';
     try {
-      const r = await fetch(`/api/reservations/${encodeURIComponent(reservation.value!.id)}${emailParam}`, {
+      const r = await fetch(`/api/reservations/${encodeURIComponent(reservation.value!.id)}${emailParam}${tokenParam}`, {
         method: 'DELETE',
       });
       if (r.ok) {

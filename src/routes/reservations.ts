@@ -9,6 +9,7 @@ import { buildCustomerCancellationEmail } from '../emails/customer-cancellation'
 import { buildTenantConfirmationEmail } from '../emails/tenant-confirmation';
 import { buildTenantAmendmentEmail } from '../emails/tenant-amendment';
 import { buildTenantCancellationEmail } from '../emails/tenant-cancellation';
+import { generateManageToken, hashManageToken, verifyManageToken } from '../utils/manageToken';
 import { adminAuth } from '../middleware/adminAuth';
 
 type ReservationWithTenant = Reservation & { tenant_name: string; contact_email: string };
@@ -210,12 +211,16 @@ reservations.get('/:id', async (c) => {
 
 	if (!email) return c.json({ error: 'Reservation not found' }, 404);
 
-	const row = await c.env.maximum_bookings_db.prepare('SELECT * FROM Reservations WHERE id = ?').bind(id).first<Reservation>();
+	const row = await c.env.maximum_bookings_db
+		.prepare('SELECT * FROM Reservations WHERE id = ?')
+		.bind(id)
+		.first<Reservation & { manage_token_hash?: string | null }>();
 
 	if (!row || row.email.toLowerCase() !== email.toLowerCase()) {
 		return c.json({ error: 'Reservation not found' }, 404);
 	}
-	return c.json(row);
+	const { manage_token_hash: _hash, ...safeRow } = row;
+	return c.json(safeRow);
 });
 
 reservations.post('/', async (c) => {
@@ -256,6 +261,9 @@ reservations.post('/', async (c) => {
 	const [rH, rM] = data.reservation_time.split(':');
 	const slotMinutes = parseInt(rH, 10) * 60 + parseInt(rM, 10);
 
+	const manageToken = await generateManageToken(c.env.JWT_SECRET, id, data.email);
+	const manageTokenHash = await hashManageToken(manageToken);
+
 	let insertResult: D1Result;
 	try {
 		insertResult = await c.env.maximum_bookings_db
@@ -263,8 +271,8 @@ reservations.post('/', async (c) => {
 				`INSERT INTO Reservations
         (id, tenant_id, first_name, surname, telephone, email,
          reservation_date, reservation_time, guests, dietary_requirements,
-         created_date, modified_date)
-        SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+         created_date, modified_date, manage_token_hash)
+        SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         WHERE (? = 0) OR (
           SELECT COALESCE(SUM(guests), 0)
           FROM Reservations
@@ -278,7 +286,7 @@ reservations.post('/', async (c) => {
 				id, data.tenant_id, data.first_name, data.surname,
 				data.telephone, data.email, data.reservation_date,
 				data.reservation_time, data.guests, data.dietary_requirements ?? null,
-				now, now,
+				now, now, manageTokenHash,
 				tenant.max_covers,
 				data.tenant_id, data.reservation_date,
 				slotMinutes, tenant.concurrent_guests_time_limit,
@@ -315,6 +323,7 @@ reservations.post('/', async (c) => {
 						reservationId: id,
 						customerEmail: data.email,
 						baseUrl,
+						manageToken,
 					}),
 				}),
 				sendEmail(c.env, {
@@ -343,6 +352,7 @@ reservations.post('/', async (c) => {
 reservations.patch('/:id', async (c) => {
 	const id = c.req.param('id');
 	const email = c.req.query('email');
+	const token = c.req.query('token');
 	const msg = await c.req.json().catch(() => null);
 	const parsed = UpdateReservationSchema.safeParse(msg);
 	if (!parsed.success) {
@@ -353,9 +363,17 @@ reservations.patch('/:id', async (c) => {
 	const existing = await c.env.maximum_bookings_db
 		.prepare('SELECT r.*, t.name AS tenant_name, t.contact_email FROM Reservations r JOIN Tenants t ON t.id = r.tenant_id WHERE r.id = ?')
 		.bind(id)
-		.first<ReservationWithTenant>();
+		.first<ReservationWithTenant & { manage_token_hash: string | null }>();
 
 	if (!existing || !email || existing.email.toLowerCase() !== email.toLowerCase()) {
+		return c.json({ error: 'Reservation not found' }, 404);
+	}
+
+	if (
+		!token ||
+		!existing.manage_token_hash ||
+		!(await verifyManageToken(c.env.JWT_SECRET, id, existing.email, token, existing.manage_token_hash))
+	) {
 		return c.json({ error: 'Reservation not found' }, 404);
 	}
 
@@ -379,12 +397,23 @@ reservations.patch('/:id', async (c) => {
 		return c.json({ error: 'Failed to update reservation' }, 500);
 	}
 
+	// If email changed, regenerate the manage token so the amendment link remains valid
+	if (body.email && body.email.toLowerCase() !== existing.email.toLowerCase()) {
+		const newToken = await generateManageToken(c.env.JWT_SECRET, id, body.email);
+		const newHash = await hashManageToken(newToken);
+		await c.env.maximum_bookings_db
+			.prepare('UPDATE Reservations SET manage_token_hash = ? WHERE id = ?')
+			.bind(newHash, id)
+			.run();
+	}
+
 	const updated = await c.env.maximum_bookings_db
 		.prepare('SELECT r.*, t.name AS tenant_name, t.contact_email FROM Reservations r JOIN Tenants t ON t.id = r.tenant_id WHERE r.id = ?')
 		.bind(id)
 		.first<ReservationWithTenant>();
 
 	if (updated) {
+		const amendManageToken = await generateManageToken(c.env.JWT_SECRET, id, updated.email);
 		c.executionCtx.waitUntil(
 			(async () => {
 				const from = `"${updated.tenant_name}" <${updated.contact_email}>`;
@@ -403,6 +432,7 @@ reservations.patch('/:id', async (c) => {
 							reservationId: id,
 							customerEmail: updated.email,
 							baseUrl,
+							manageToken: amendManageToken,
 						}),
 					}),
 					sendEmail(c.env, {
@@ -432,13 +462,22 @@ reservations.patch('/:id', async (c) => {
 reservations.delete('/:id', async (c) => {
 	const id = c.req.param('id');
 	const email = c.req.query('email');
+	const token = c.req.query('token');
 
 	const reservation = await c.env.maximum_bookings_db
 		.prepare('SELECT r.*, t.name AS tenant_name, t.contact_email FROM Reservations r JOIN Tenants t ON t.id = r.tenant_id WHERE r.id = ?')
 		.bind(id)
-		.first<ReservationWithTenant>();
+		.first<ReservationWithTenant & { manage_token_hash: string | null }>();
 
 	if (!reservation || !email || reservation.email.toLowerCase() !== email.toLowerCase()) {
+		return c.json({ error: 'Reservation not found' }, 404);
+	}
+
+	if (
+		!token ||
+		!reservation.manage_token_hash ||
+		!(await verifyManageToken(c.env.JWT_SECRET, id, reservation.email, token, reservation.manage_token_hash))
+	) {
 		return c.json({ error: 'Reservation not found' }, 404);
 	}
 

@@ -39,6 +39,7 @@ export interface CustomerReservationEmailData {
 	reservationId?: string;
 	customerEmail?: string;
 	baseUrl?: string;
+	manageToken?: string;
 }
 
 export interface TenantReservationEmailData {

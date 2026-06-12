@@ -58,7 +58,7 @@ export function buildCustomerAmendmentEmail(data: CustomerReservationEmailData):
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;border-collapse:collapse;">
       <tr>
         <td>
-          <a href="${data.baseUrl}/booking/?id=${data.reservationId}&email=${encodeURIComponent(data.customerEmail)}"
+          <a href="${data.baseUrl}/booking/?id=${data.reservationId}&email=${encodeURIComponent(data.customerEmail)}${data.manageToken ? `&token=${data.manageToken}` : ''}"
              style="display:inline-block;padding:10px 20px;background-color:#266663;color:#ffffff;text-decoration:none;font-size:14px;border-radius:4px;">
             Manage my booking
           </a>

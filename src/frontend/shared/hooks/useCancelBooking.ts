@@ -14,7 +14,7 @@ interface UseCancelBookingReturn {
   handleCancel: () => Promise<void>;
 }
 
-export function useCancelBooking(reservationId: string | null, bookingEmail: string | null): UseCancelBookingReturn {
+export function useCancelBooking(reservationId: string | null, bookingEmail: string | null, bookingToken: string | null): UseCancelBookingReturn {
   const view = useSignal<CancelView>('loading');
   const reservation = useSignal<Reservation | null>(null);
   const errorMessage = useSignal('');
@@ -34,7 +34,8 @@ export function useCancelBooking(reservationId: string | null, bookingEmail: str
   async function loadReservation(id: string, email: string) {
     view.value = 'loading';
     try {
-      const response = await fetch(`/api/reservations/${encodeURIComponent(id)}?email=${encodeURIComponent(email)}`);
+      const tokenParam = bookingToken ? `&token=${encodeURIComponent(bookingToken)}` : '';
+      const response = await fetch(`/api/reservations/${encodeURIComponent(id)}?email=${encodeURIComponent(email)}${tokenParam}`);
       if (response.status === 404) {
         errorMessage.value = 'Booking not found. It may have already been cancelled.';
         view.value = 'error';
@@ -60,8 +61,9 @@ export function useCancelBooking(reservationId: string | null, bookingEmail: str
     inlineError.value = '';
 
     try {
+      const tokenParam = bookingToken ? `&token=${encodeURIComponent(bookingToken)}` : '';
       const response = await fetch(
-        `/api/reservations/${encodeURIComponent(reservation.value.id)}?email=${encodeURIComponent(bookingEmail)}`,
+        `/api/reservations/${encodeURIComponent(reservation.value.id)}?email=${encodeURIComponent(bookingEmail)}${tokenParam}`,
         { method: 'DELETE' },
       );
       if (response.ok) {
