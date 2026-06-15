@@ -10,6 +10,7 @@ export interface EmailTemplate {
 export interface SendEmailRequest {
 	to: string;
 	from: string;
+	reply_to?: string;
 	subject: string;
 	html: string;
 }
@@ -65,6 +66,7 @@ export async function sendEmail(env: ResendEnv, message: SendEmailRequest): Prom
 		body: JSON.stringify({
 			from: message.from,
 			to: message.to,
+			...(message.reply_to ? { reply_to: message.reply_to } : {}),
 			subject: message.subject,
 			html: message.html,
 		}),

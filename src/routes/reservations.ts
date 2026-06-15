@@ -330,12 +330,14 @@ reservations.post('/', async (c) => {
 
 	c.executionCtx.waitUntil(
 		(async () => {
-			const from = `"${tenant.name}" <${tenant.contact_email}>`;
+			const from = `"${tenant.name} via Maximum Bookings" <${tenant.contact_email}>`;
+			const replyTo = tenant.contact_email;
 			const baseUrl = c.env.PUBLIC_URL ?? `${c.req.raw.headers.get('x-forwarded-proto') ?? 'https'}://${c.req.header('host')}`;
-			await Promise.allSettled([
+			const results = await Promise.allSettled([
 				sendEmail(c.env, {
 					to: data.email,
 					from,
+					reply_to: replyTo,
 					...buildCustomerConfirmationEmail({
 						tenantName: tenant.name,
 						firstName: data.first_name,
@@ -352,6 +354,7 @@ reservations.post('/', async (c) => {
 				sendEmail(c.env, {
 					to: tenant.contact_email,
 					from,
+					reply_to: replyTo,
 					...buildTenantConfirmationEmail({
 						tenantName: tenant.name,
 						reservationId: id,
@@ -366,6 +369,11 @@ reservations.post('/', async (c) => {
 					}),
 				}),
 			]);
+			results.forEach((r, i) => {
+				if (r.status === 'rejected') {
+					console.error(`[email] send failed (index ${i}):`, r.reason);
+				}
+			});
 		})(),
 	);
 
@@ -485,12 +493,14 @@ reservations.patch('/:id', async (c) => {
 		const amendManageToken = await generateManageToken(c.env.JWT_SECRET, id, updated.email);
 		c.executionCtx.waitUntil(
 			(async () => {
-				const from = `"${updated.tenant_name}" <${updated.contact_email}>`;
+				const from = `"${updated.tenant_name} via Maximum Bookings" <${updated.contact_email}>`;
+				const replyTo = updated.contact_email;
 				const baseUrl = c.env.PUBLIC_URL ?? `${c.req.raw.headers.get('x-forwarded-proto') ?? 'https'}://${c.req.header('host')}`;
-				await Promise.allSettled([
+				const results = await Promise.allSettled([
 					sendEmail(c.env, {
 						to: updated.email,
 						from,
+						reply_to: replyTo,
 						...buildCustomerAmendmentEmail({
 							tenantName: updated.tenant_name,
 							firstName: updated.first_name,
@@ -507,6 +517,7 @@ reservations.patch('/:id', async (c) => {
 					sendEmail(c.env, {
 						to: updated.contact_email,
 						from,
+						reply_to: replyTo,
 						...buildTenantAmendmentEmail({
 							tenantName: updated.tenant_name,
 							reservationId: id,
@@ -521,6 +532,11 @@ reservations.patch('/:id', async (c) => {
 						}),
 					}),
 				]);
+				results.forEach((r, i) => {
+					if (r.status === 'rejected') {
+						console.error(`[email] send failed (index ${i}):`, r.reason);
+					}
+				});
 			})(),
 		);
 	}
@@ -559,11 +575,13 @@ reservations.delete('/:id', async (c) => {
 
 	c.executionCtx.waitUntil(
 		(async () => {
-			const from = `"${reservation.tenant_name}" <${reservation.contact_email}>`;
-			await Promise.allSettled([
+			const from = `"${reservation.tenant_name} via Maximum Bookings" <${reservation.contact_email}>`;
+			const replyTo = reservation.contact_email;
+			const results = await Promise.allSettled([
 				sendEmail(c.env, {
 					to: reservation.email,
 					from,
+					reply_to: replyTo,
 					...buildCustomerCancellationEmail({
 						tenantName: reservation.tenant_name,
 						firstName: reservation.first_name,
@@ -576,6 +594,7 @@ reservations.delete('/:id', async (c) => {
 				sendEmail(c.env, {
 					to: reservation.contact_email,
 					from,
+					reply_to: replyTo,
 					...buildTenantCancellationEmail({
 						tenantName: reservation.tenant_name,
 						reservationId: id,
@@ -590,6 +609,11 @@ reservations.delete('/:id', async (c) => {
 					}),
 				}),
 			]);
+			results.forEach((r, i) => {
+				if (r.status === 'rejected') {
+					console.error(`[email] send failed (index ${i}):`, r.reason);
+				}
+			});
 		})(),
 	);
 

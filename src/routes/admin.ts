@@ -2,6 +2,9 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { adminAuth } from '../middleware/adminAuth';
 import { Tenant, Reservation, UpdateTenantSchema, UpdateReservationSchema } from '../db/schema';
+import { sendEmail } from '../utils/email';
+import { buildTenantConfirmationEmail } from '../emails/tenant-confirmation';
+import { buildCustomerConfirmationEmail } from '../emails/customer-confirmation';
 
 const admin = new Hono<{ Bindings: Env; Variables: { userId: string; tenantId: string } }>();
 
@@ -89,6 +92,14 @@ admin.post('/reservations', async (c) => {
 	}
 
 	const { first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements } = parsed.data;
+
+	const tenant = await c.env.maximum_bookings_db
+		.prepare('SELECT name, contact_email FROM Tenants WHERE id = ?')
+		.bind(tenantId)
+		.first<{ name: string; contact_email: string }>();
+
+	if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
+
 	const id = crypto.randomUUID();
 	const now = new Date().toISOString();
 
@@ -99,6 +110,58 @@ admin.post('/reservations', async (c) => {
 		)
 		.bind(id, tenantId, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements ?? '', now, now)
 		.run();
+
+	const from = `"${tenant.name} via Maximum Bookings" <${tenant.contact_email}>`;
+	const replyTo = tenant.contact_email;
+
+	c.executionCtx.waitUntil(
+		(async () => {
+			const emailsToSend = [
+				sendEmail(c.env, {
+					to: tenant.contact_email,
+					from,
+					reply_to: replyTo,
+					...buildTenantConfirmationEmail({
+						tenantName: tenant.name,
+						reservationId: id,
+						firstName: first_name,
+						surname,
+						telephone,
+						customerEmail: email,
+						reservationDate: reservation_date,
+						reservationTime: reservation_time,
+						guests,
+						dietaryRequirements: dietary_requirements || null,
+					}),
+				}),
+				...(email
+					? [
+							sendEmail(c.env, {
+								to: email,
+								from,
+								reply_to: replyTo,
+								...buildCustomerConfirmationEmail({
+									tenantName: tenant.name,
+									firstName: first_name,
+									reservationDate: reservation_date,
+									reservationTime: reservation_time,
+									guests,
+									dietaryRequirements: dietary_requirements || null,
+									manageToken: undefined,
+									baseUrl: undefined,
+								}),
+							}),
+					  ]
+					: []),
+			];
+			const results = await Promise.allSettled(emailsToSend);
+			results.forEach((r, i) => {
+				if (r.status === 'rejected') {
+					console.error(`[email] send failed (index ${i}):`, r.reason);
+				}
+			});
+		})(),
+	);
 
 	return c.json({ id }, 201);
 });
