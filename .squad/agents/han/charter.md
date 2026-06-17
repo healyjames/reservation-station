@@ -40,7 +40,7 @@ When I'm unsure: if a decision touches both schema design and widget behaviour, 
 
 ## Model
 
-**Preferred:** claude-sonnet-4.6
+**Preferred:** claude-sonnet-4.8
 **Rationale:** Code review and architecture reasoning require strong multi-step judgment. Sonnet handles the complexity of reviewing Hono route logic, D1 queries, and Workers config in a single pass.
 **Fallback:** claude-sonnet-4.6
 

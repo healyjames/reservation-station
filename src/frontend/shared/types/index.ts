@@ -5,6 +5,5 @@ export * from './booking';
 export type {
   BlockedDatesResponse,
   BlockedTimesResponse,
-  DailyCapacityResponse,
 } from './availability';
 export * from './manage';

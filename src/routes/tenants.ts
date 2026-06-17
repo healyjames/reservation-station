@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { Hono } from 'hono';
 import { Tenant, UpdateTenantSchema, CreateTenantSchema, CreateTenant } from '../db/schema';
+import { superAdminAuth } from '../middleware/superAdminAuth';
 
 const tenants = new Hono<{ Bindings: Env }>();
 
-tenants.get('/', async (c) => {
+tenants.get('/', superAdminAuth, async (c) => {
 	const { results } = await c.env.maximum_bookings_db.prepare('SELECT * FROM Tenants').run<Tenant>();
 	return c.json(results);
 });
@@ -12,10 +13,18 @@ tenants.get('/', async (c) => {
 tenants.get('/:id', async (c) => {
 	const id = c.req.param('id');
 	const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+	// Explicit column list — contact_email, created_date, modified_date are intentionally excluded
+	// to avoid leaking PII to unauthenticated callers. Use GET /api/admin/me for admin access.
+	const publicColumns = 'id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit';
 	const tenant = await c.env.maximum_bookings_db
-		.prepare(isUuid ? 'SELECT * FROM Tenants WHERE id = ?' : 'SELECT * FROM Tenants WHERE tenant_code = ?')
+		.prepare(
+			isUuid
+				? `SELECT ${publicColumns} FROM Tenants WHERE id = ?`
+				: `SELECT ${publicColumns} FROM Tenants WHERE tenant_code = ?`,
+		)
 		.bind(id)
-		.first<Tenant>();
+		.first<Pick<Tenant, 'id' | 'name' | 'tenant_code' | 'max_guests' | 'max_covers' | 'status' | 'concurrent_guests_time_limit'>>();
 
 	if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
 
@@ -29,7 +38,7 @@ tenants.get('/:id', async (c) => {
 	return c.json({ ...tenant, opening_hours: results.length > 0 ? results : null });
 });
 
-tenants.post('/', async (c) => {
+tenants.post('/', superAdminAuth, async (c) => {
 	const rawBody = await c.req.json().catch(() => null);
 	const parsed = CreateTenantSchema.safeParse(rawBody);
 	if (!parsed.success) {
@@ -50,6 +59,9 @@ tenants.post('/', async (c) => {
 			.bind(id, body.name, body.tenant_code, body.max_guests, body.max_covers, body.status, now, now)
 			.run();
 	} catch (err) {
+		if ((err as Error).message?.includes('UNIQUE constraint failed')) {
+			return c.json({ error: 'A tenant with that tenant_code already exists' }, 409);
+		}
 		console.error('[tenants] POST insert failed', { err, tenant_code: body.tenant_code });
 		return c.json({ error: 'Failed to create tenant' }, 500);
 	}
@@ -57,7 +69,7 @@ tenants.post('/', async (c) => {
 	return c.json({ id, ...body, created_date: now, modified_date: now }, 201);
 });
 
-tenants.patch('/:id', async (c) => {
+tenants.patch('/:id', superAdminAuth, async (c) => {
 	const id = c.req.param('id');
 	const rawBody = await c.req.json().catch(() => null);
 	const parsed = UpdateTenantSchema.safeParse(rawBody);
@@ -67,9 +79,10 @@ tenants.patch('/:id', async (c) => {
 	}
 
 	const body = parsed.data;
-	const data = { ...body, modified_date: new Date().toISOString() };
 
-	if (!Object.keys(data).length) return c.json({ error: 'No valid fields to update' }, 400);
+	if (!Object.keys(body).length) return c.json({ error: 'No valid fields to update' }, 400);
+
+	const data = { ...body, modified_date: new Date().toISOString() };
 
 	const fields = Object.keys(data)
 		.map((k) => `${k} = ?`)
@@ -77,11 +90,15 @@ tenants.patch('/:id', async (c) => {
 	const values = Object.values(data);
 
 	try {
-		await c.env.maximum_bookings_db
+		const result = await c.env.maximum_bookings_db
 			.prepare(`UPDATE Tenants SET ${fields} WHERE id = ?`)
 			.bind(...values, id)
 			.run();
+		if (result.meta.changes === 0) return c.json({ error: 'Tenant not found' }, 404);
 	} catch (err) {
+		if ((err as Error).message?.includes('UNIQUE constraint failed')) {
+			return c.json({ error: 'A tenant with that tenant_code already exists' }, 409);
+		}
 		console.error('[tenants] PATCH update failed', { err, id });
 		return c.json({ error: 'Failed to update tenant' }, 500);
 	}
@@ -89,7 +106,7 @@ tenants.patch('/:id', async (c) => {
 	return c.json({ success: true });
 });
 
-tenants.delete('/:id', async (c) => {
+tenants.delete('/:id', superAdminAuth, async (c) => {
 	const id = c.req.param('id');
 
 	try {

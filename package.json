@@ -6,7 +6,7 @@
 		"dev": "concurrently \"wrangler dev\" \"vite\"",
 		"build": "vite build",
 		"deploy": "npm run build && wrangler deploy",
-		"start": "wrangler dev",
+		"start": "concurrently \"wrangler dev\" \"vite\"",
 		"test": "vitest",
 		"test:frontend": "vitest --config vitest.frontend.config.ts",
 		"cf-typegen": "wrangler types"

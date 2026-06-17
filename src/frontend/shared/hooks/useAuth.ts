@@ -21,7 +21,7 @@ export function useAuth(): UseAuthReturn {
   const token = useSignal<string | null>(null);
 
   useEffect(() => {
-    const raw = localStorage.getItem('admin_token');
+    const raw = sessionStorage.getItem('admin_token');
     if (!raw) {
       isLoading.value = false;
       isAuthed.value = false;
@@ -30,8 +30,8 @@ export function useAuth(): UseAuthReturn {
     try {
       const payload = JSON.parse(atob(raw.split('.')[1])) as { exp?: number };
       if (payload.exp && Date.now() / 1000 > payload.exp) {
-        localStorage.removeItem('admin_token');
-        localStorage.removeItem('admin_tenant');
+        sessionStorage.removeItem('admin_token');
+        sessionStorage.removeItem('admin_tenant');
         showExpiredBanner.value = true;
         isAuthed.value = false;
         isLoading.value = false;
@@ -42,7 +42,7 @@ export function useAuth(): UseAuthReturn {
       isLoading.value = false;
       return;
     }
-    const tenantRaw = localStorage.getItem('admin_tenant');
+    const tenantRaw = sessionStorage.getItem('admin_tenant');
     if (tenantRaw) {
       try { tenantConfig.value = JSON.parse(tenantRaw) as TenantConfig; } catch { /* ignore malformed */ }
     }
@@ -61,8 +61,8 @@ export function useAuth(): UseAuthReturn {
       if (r.ok) {
         const body = await r.json() as { data: { token: string; tenant: TenantConfig } };
         const data = body.data;
-        localStorage.setItem('admin_token', data.token);
-        localStorage.setItem('admin_tenant', JSON.stringify(data.tenant));
+        sessionStorage.setItem('admin_token', data.token);
+        sessionStorage.setItem('admin_tenant', JSON.stringify(data.tenant));
         tenantConfig.value = data.tenant;
         token.value = data.token;
         isAuthed.value = true;
@@ -77,8 +77,8 @@ export function useAuth(): UseAuthReturn {
   }
 
   function logout() {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_tenant');
+    sessionStorage.removeItem('admin_token');
+    sessionStorage.removeItem('admin_tenant');
     token.value = null;
     tenantConfig.value = null;
     isAuthed.value = false;

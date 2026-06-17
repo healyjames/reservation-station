@@ -22,7 +22,9 @@ export interface TenantConfig {
   max_covers: number;
   status: TenantStatus;
   concurrent_guests_time_limit: number;
-  contact_email: string;
+  /** Present when loaded via admin-authenticated endpoints (e.g. GET /api/admin/me).
+   *  Intentionally absent from the public GET /api/tenants/:id widget endpoint. */
+  contact_email?: string;
   created_date?: string;
   modified_date?: string;
   /** Null when no opening hours configured */

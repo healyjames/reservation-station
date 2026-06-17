@@ -24,7 +24,9 @@ export function calculateConcurrentGuests(
 ): number {
 	const slotMinutes = toMinutes(slotTime);
 	return reservations.reduce((sum, r) => {
-		const diff = Math.abs(slotMinutes - toMinutes(r.reservation_time));
-		return diff < timeLimitMinutes ? sum + r.guests : sum;
+		const rMin = toMinutes(r.reservation_time);
+		// A reservation at rMin occupies [rMin, rMin + timeLimitMinutes).
+		// Only count it if the slot falls within that window.
+		return rMin <= slotMinutes && slotMinutes < rMin + timeLimitMinutes ? sum + r.guests : sum;
 	}, 0);
 }

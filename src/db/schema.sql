@@ -9,8 +9,8 @@ CREATE TABLE Tenants (
     status TEXT NOT NULL CHECK (status IN ('active', 'cancelled')) DEFAULT 'active',
     concurrent_guests_time_limit INTEGER NOT NULL DEFAULT 120,
     contact_email TEXT NOT NULL DEFAULT '',
-    created_date TEXT DEFAULT (CURRENT_TIMESTAMP) NOT NULL,
-    modified_date TEXT DEFAULT (CURRENT_TIMESTAMP)
+    created_date TEXT DEFAULT NULL,
+    modified_date TEXT DEFAULT NULL
 );
 
 DROP TABLE IF EXISTS Reservations;
@@ -29,6 +29,7 @@ CREATE TABLE Reservations (
     dietary_requirements TEXT,
     created_date TEXT DEFAULT (CURRENT_TIMESTAMP),
     modified_date TEXT DEFAULT (CURRENT_TIMESTAMP),
+    manage_token_hash TEXT,
 
     -- Foreign Key Constraint to ensure the tenant exists
     FOREIGN KEY (tenant_id) REFERENCES Tenants(id) ON DELETE CASCADE
@@ -49,7 +50,9 @@ CREATE TABLE AdminUsers (
 );
 
 CREATE INDEX idx_booking_tenant ON Reservations(tenant_id);
-CREATE INDEX idx_tenants_code ON Tenants(tenant_code);
+CREATE INDEX idx_reservations_tenant_date ON Reservations(tenant_id, reservation_date);
+CREATE UNIQUE INDEX idx_reservations_unique_booking ON Reservations(tenant_id, email, reservation_date, reservation_time);
+CREATE UNIQUE INDEX idx_tenants_code ON Tenants(tenant_code);
 CREATE UNIQUE INDEX idx_admin_users_email ON AdminUsers(email);
 CREATE INDEX idx_admin_users_tenant ON AdminUsers(tenant_id);
 

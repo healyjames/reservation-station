@@ -11,12 +11,14 @@ interface CalendarProps {
   month: number;
   selectedDate: CalendarDate | null;
   blockedDates: Set<string>;
+  blockedDatesError?: string;
+  isFetchingDates?: boolean;
   onMonthChange: (year: number, month: number) => Promise<void>;
   onDateSelect: (year: number, month: number, day: number) => Promise<void>;
 }
 
 export const Calendar: FunctionComponent<CalendarProps> = ({
-  year, month, selectedDate, blockedDates, onMonthChange, onDateSelect
+  year, month, selectedDate, blockedDates, blockedDatesError, isFetchingDates, onMonthChange, onDateSelect
 }) => {
   const tooltipVisible = useSignal(false);
   const tooltipAnchorRect = useSignal<DOMRect | null>(null);
@@ -63,14 +65,14 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
   const onCurrentMonth = year === todayYear && month === todayMonth;
 
   return (
-    <div class={styles.container} role="region" aria-label="Date picker">
+    <div class={styles.container} role="region" aria-labelledby="calendar-title">
       <div class={styles.header}>
         <div class={styles.nav}>
           <Button
             type="button"
             class={styles.nav_button}
             aria-label="Previous month"
-            disabled={onCurrentMonth}
+            disabled={onCurrentMonth || isFetchingDates}
             onClick={prevMonth}
 						size="sm"
 						variant="ghost"
@@ -80,6 +82,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
             type="button"
             class={styles.nav_button}
             aria-label="Next month"
+            disabled={isFetchingDates}
             onClick={nextMonth}
 						size="sm"
 						variant="ghost"
@@ -87,15 +90,26 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
         </div>
       </div>
 
-      <CalendarGrid
-        year={year}
-        month={month}
-        selectedDate={selectedDate}
-        isDisabled={(y, m, d) => isBeforeToday(y, m, d) || isDateBlocked(y, m, d)}
-        isBlocked={(y, m, d) => isDateBlocked(y, m, d)}
-        onSelect={onDateSelect}
-        onBlockedSelect={handleBlockedSelect}
-      />
+      {blockedDatesError && (
+        <div role="alert" style="display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:8px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:13px;color:#664d03;">
+          <span style="flex:1">{blockedDatesError}</span>
+          <Button type="button" size="sm" variant="ghost" onClick={() => onMonthChange(year, month)}>
+            Retry
+          </Button>
+        </div>
+      )}
+
+      <div style={isFetchingDates ? 'opacity:0.5;pointer-events:none;' : undefined}>
+        <CalendarGrid
+          year={year}
+          month={month}
+          selectedDate={selectedDate}
+          isDisabled={(y, m, d) => isFetchingDates || isBeforeToday(y, m, d) || isDateBlocked(y, m, d)}
+          isBlocked={(y, m, d) => isDateBlocked(y, m, d)}
+          onSelect={onDateSelect}
+          onBlockedSelect={handleBlockedSelect}
+        />
+      </div>
 
       <BlockedTooltip
         visible={tooltipVisible.value}

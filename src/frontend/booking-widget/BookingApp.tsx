@@ -18,16 +18,17 @@ export const BookingApp: FunctionComponent = () => {
   const selectedDate = useSignal<CalendarDate | null>(null);
   const currentYear = useSignal(new Date().getFullYear());
   const currentMonth = useSignal(new Date().getMonth());
+  const bookingRef = useSignal<string | undefined>(undefined);
 
   const { tenantConfig, tenantState, tenantError } = useTenant();
   const {
     blockedDates,
+    blockedDatesError,
+    isFetchingDates,
     blockedTimes,
-    dailyCapacity,
     isFetchingTimes,
     fetchBlockedDates,
     fetchBlockedTimes,
-    fetchDailyCapacity,
   } = useAvailability();
   const { formData, submitError, isSubmitting, updateField, submitBooking, resetForm } = useBookingForm();
 
@@ -57,11 +58,8 @@ export const BookingApp: FunctionComponent = () => {
 
   async function handleDateSelect(year: number, month: number, day: number) {
     selectedDate.value = { year, month, day };
-    await Promise.all([
-      fetchBlockedTimes(tenant.id, { year, month, day }, formData.value.guests),
-      fetchDailyCapacity(tenant.id, { year, month, day }),
-    ]);
     step.value = 'form-step1';
+    await fetchBlockedTimes(tenant.id, { year, month, day }, formData.value.guests);
   }
 
   async function handleGuestsChange(guests: number) {
@@ -80,6 +78,7 @@ export const BookingApp: FunctionComponent = () => {
 
   async function handleNewBooking() {
     resetForm();
+    bookingRef.value = undefined;
     step.value = 'calendar';
     selectedDate.value = null;
     await fetchBlockedDates(tenant.id, currentYear.value, currentMonth.value);
@@ -92,6 +91,8 @@ export const BookingApp: FunctionComponent = () => {
         month={currentMonth.value}
         selectedDate={selectedDate.value}
         blockedDates={blockedDates.value}
+        blockedDatesError={blockedDatesError.value}
+        isFetchingDates={isFetchingDates.value}
         onMonthChange={handleMonthChange}
         onDateSelect={handleDateSelect}
       />
@@ -105,7 +106,6 @@ export const BookingApp: FunctionComponent = () => {
         tenantConfig={tenant}
         formData={formData.value}
         blockedTimes={blockedTimes.value}
-        dailyCapacity={dailyCapacity.value}
         isFetchingTimes={isFetchingTimes.value}
         onGuestsChange={handleGuestsChange}
         onTimeChange={(time) => updateField('time', time)}
@@ -125,7 +125,10 @@ export const BookingApp: FunctionComponent = () => {
         onFieldChange={updateField}
         onSubmit={async (formEl) => {
           if (!formEl.checkValidity()) return;
-          await submitBooking(tenant, selectedDate.value!, () => { step.value = 'success'; });
+          await submitBooking(tenant, selectedDate.value!, (ref) => {
+            bookingRef.value = ref;
+            step.value = 'success';
+          });
         }}
         onBack={() => { step.value = 'form-step1'; }}
       />
@@ -137,6 +140,7 @@ export const BookingApp: FunctionComponent = () => {
       formData={formData.value}
       selectedDate={selectedDate.value!}
       onNewBooking={handleNewBooking}
+      bookingRef={bookingRef.value}
     />
   );
 };
