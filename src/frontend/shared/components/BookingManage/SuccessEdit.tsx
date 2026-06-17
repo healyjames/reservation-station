@@ -20,7 +20,7 @@ export const SuccessEdit: FunctionComponent<SuccessEditProps> = ({ reservation, 
           {getGuestsLabel(Number(reservation.guests))}
         </p>
       </MessageCard>
-      <Button variant="secondary" onClick={onBack}>Back to booking details</Button>
+      <Button variant="primary" onClick={onBack}>Back to booking details</Button>
     </div>
   </StandaloneLayout>
 );

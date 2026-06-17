@@ -2,7 +2,7 @@
 import { render, within } from '@testing-library/preact';
 import { describe, it, expect, vi } from 'vitest';
 import { Step1Form } from './Step1Form';
-import type { BookingFormData, CalendarDate, DailyCapacityResponse, TenantConfig } from '@shared/types';
+import type { BookingFormData, CalendarDate, TenantConfig } from '@shared/types';
 
 const testDate: CalendarDate = { year: 2024, month: 0, day: 8 };
 
@@ -35,14 +35,21 @@ function makeFormData(overrides: Partial<BookingFormData> = {}): BookingFormData
   };
 }
 
-function renderStep1Form(dailyCapacity: DailyCapacityResponse | null, formData: BookingFormData = makeFormData()) {
+function renderStep1Form({
+  tenantOverrides = {},
+  formData = makeFormData(),
+  blockedTimes = [],
+}: {
+  tenantOverrides?: Partial<TenantConfig>;
+  formData?: BookingFormData;
+  blockedTimes?: string[];
+} = {}) {
   return render(
     <Step1Form
       date={testDate}
-      tenantConfig={makeTenant()}
+      tenantConfig={makeTenant(tenantOverrides)}
       formData={formData}
-      blockedTimes={[]}
-      dailyCapacity={dailyCapacity}
+      blockedTimes={blockedTimes}
       isFetchingTimes={false}
       onGuestsChange={vi.fn()}
       onTimeChange={vi.fn()}
@@ -53,42 +60,44 @@ function renderStep1Form(dailyCapacity: DailyCapacityResponse | null, formData: 
 }
 
 describe('Step1Form', () => {
-  it('caps guest options and shows a warning when daily capacity is the limiting factor', () => {
-    const { getByLabelText, getByText } = renderStep1Form({
-      max_covers: 40,
-      booked_covers: 36,
-      remaining_covers: 4,
+  it('caps guest options at max_guests when max_guests is set', () => {
+    const { getByLabelText } = renderStep1Form({
+      tenantOverrides: { max_guests: 4, max_covers: 20 },
+      formData: makeFormData({ guests: 4 }),
     });
 
     const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
-    const optionLabels = within(guestSelect).getAllByRole('option').map((option) => option.textContent);
+    const optionLabels = within(guestSelect).getAllByRole('option').map((o) => o.textContent);
 
     expect(optionLabels).toEqual(['2', '3', '4']);
-    expect(getByText(/party sizes may be limited today/i)).toBeTruthy();
   });
 
-  it('does not show the capacity warning when daily capacity is unlimited', () => {
-    const { queryByText } = renderStep1Form({
-      max_covers: 0,
-      booked_covers: 0,
-      remaining_covers: null,
+  it('caps guest options at max_covers when max_guests is 0 (unlimited party size)', () => {
+    const { getByLabelText } = renderStep1Form({
+      tenantOverrides: { max_guests: 0, max_covers: 4 },
+      formData: makeFormData({ guests: 4 }),
     });
 
-    expect(queryByText(/party sizes may be limited today/i)).toBeNull();
+    const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
+    const optionLabels = within(guestSelect).getAllByRole('option').map((o) => o.textContent);
+
+    expect(optionLabels).toEqual(['2', '3', '4']);
   });
 
-  it('shows an inline sold-out message when fewer than two covers remain', () => {
-    const { getAllByText, queryByLabelText, queryByText } = renderStep1Form(
-      {
-        max_covers: 40,
-        booked_covers: 39,
-        remaining_covers: 1,
-      },
-      makeFormData({ guests: 2, time: '' }),
-    );
+  it('does not show the no availability message based on removed daily capacity rules', () => {
+    const { queryByText } = renderStep1Form({
+      tenantOverrides: { max_guests: 8, max_covers: 40 },
+    });
 
-    expect(queryByLabelText(/number of guests/i)).toBeNull();
-    expect(getAllByText(/no availability remaining for this date/i).length).toBeGreaterThan(0);
-    expect(queryByText(/party sizes may be limited today/i)).toBeNull();
+    expect(queryByText(/no availability remaining for this date/i)).toBeNull();
+  });
+
+  it('shows an inline unavailable message when blocked times cover all slots', () => {
+    const { getByText } = renderStep1Form({
+      formData: makeFormData({ guests: 4, time: '' }),
+      blockedTimes: ['18:00', '18:30', '19:00', '19:30'],
+    });
+
+    expect(getByText(/no times available for this date with 4 guests/i)).toBeTruthy();
   });
 });

@@ -95,6 +95,33 @@ The booking widget surface uses the tenant payload to:
 
 ---
 
+## Frontend API Usage
+
+The table below shows which frontend hooks call which API endpoints and why. Public endpoints are called from customer-facing surfaces (booking widget, cancel, manage pages) with no auth token. Admin endpoints require a Bearer JWT.
+
+| Endpoint | Auth | Called from | Purpose |
+|----------|------|-------------|---------|
+| `GET /api/tenants/:id` | None | `useTenant.ts` | Load tenant config (name, capacity, opening hours) when the widget initialises |
+| `GET /api/reservations/blocked-dates` | None | `useAvailability.ts`, `useManageBooking.ts` | Disable unavailable dates on the booking calendar |
+| `GET /api/reservations/blocked-times` | None | `useAvailability.ts`, `useManageBooking.ts` | Grey out full or blocked time slots in the time picker |
+| `POST /api/reservations` | None | `useBookingForm.ts` | Submit a new reservation from the public booking widget |
+| `GET /api/reservations/:id` | None | `useManageBooking.ts`, `useCancelBooking.ts` | Load an existing booking on the manage/cancel pages |
+| `PATCH /api/reservations/:id` | None | `useManageBooking.ts` | Customer amends their booking date, time, or details |
+| `DELETE /api/reservations/:id` | None | `useManageBooking.ts`, `useCancelBooking.ts` | Customer cancels their booking |
+| `POST /api/auth/login` | None | `useAuth.ts` | Admin login — returns JWT on success |
+| `GET /api/admin/reservations` | JWT | `useBookings.ts` | Load the reservation list for the admin day view |
+| `DELETE /api/admin/reservations/:id` | JWT | `useBookings.ts` | Admin deletes a reservation |
+| `GET /api/admin/blocked-dates` | JWT | `useBookings.ts` | Check whether the current day is blocked |
+| `POST /api/admin/blocked-dates` | JWT | `useBookings.ts` | Admin blocks a day |
+| `DELETE /api/admin/blocked-dates/date/:date` | JWT | `useBookings.ts` | Admin unblocks a day |
+| `GET /api/admin/me` | JWT | Admin settings | Load the authenticated tenant's config |
+| `PATCH /api/admin/me` | JWT | Admin settings | Save changes to tenant config |
+| `GET /api/admin/opening-hours` | JWT | Admin settings | Load the tenant's opening hours |
+| `PUT /api/admin/opening-hours` | JWT | Admin settings | Save the tenant's opening hours |
+| `GET /api/reservations` | JWT | *(not used by frontend — admin API only)* | List reservations scoped to the authenticated tenant |
+
+---
+
 ## API Reference
 
 All endpoints return JSON. Error responses have the shape `{ "error": "..." }`.
@@ -294,13 +321,14 @@ Returns per-slot capacity data for a date. Intended for admin dashboards or inte
 
 #### `GET /api/reservations`
 
-Returns reservations, optionally filtered. Results are ordered by `reservation_date` then `reservation_time` ascending.
+> **Requires authentication** — `Authorization: Bearer <token>` header required. Results are automatically scoped to the authenticated tenant; the `tenant_id` query parameter is no longer accepted.
+
+Returns the authenticated tenant's reservations, optionally filtered by date. Results are ordered by `reservation_date` then `reservation_time` ascending.
 
 **Query parameters**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `tenant_id` | `uuid` | ❌ | Filter by tenant |
 | `date` | `string` | ❌ | Filter by date (`YYYY-MM-DD`) |
 
 **Response `200`** - array of reservation objects

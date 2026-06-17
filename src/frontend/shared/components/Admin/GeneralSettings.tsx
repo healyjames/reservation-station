@@ -107,7 +107,7 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             onInput={(e) => { name.value = (e.target as HTMLInputElement).value; }}
           />
         </FormField>
-        <FormField label="Max party size" htmlFor="sf-max-guests">
+        <FormField label="Max party size (per booking)" htmlFor="sf-max-guests">
           <Input
             type="number"
             id="sf-max-guests"
@@ -117,10 +117,10 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             onInput={(e) => { maxGuests.value = parseInt((e.target as HTMLInputElement).value, 10) || 0; }}
           />
         </FormField>
-        <FormField label="Max covers per day" htmlFor="sf-max-covers">
+        <FormField label="Max venue capacity" htmlFor="sf-max-capacity">
           <Input
             type="number"
-            id="sf-max-covers"
+            id="sf-max-capacity"
             name="max_covers"
             min="0"
             value={maxCovers.value}

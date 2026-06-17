@@ -371,7 +371,7 @@ describe('GET /api/reservations/blocked-dates with closed day_of_week', () => {
 describe('GET /api/reservations/blocked-times with opening hours', () => {
 	beforeEach(async () => {
 		await clearDb();
-		await seedTenant({ id: TENANT_ID, max_guests: 0 });
+		await seedTenant({ id: TENANT_ID, max_covers: 0 });
 	});
 
 	it('returns all slots blocked when day is configured as closed', async () => {

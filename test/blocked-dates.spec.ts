@@ -485,7 +485,7 @@ describe('Public: GET /api/reservations/blocked-dates', () => {
 describe('GET /api/reservations/blocked-times - blocked dates integration', () => {
 	beforeEach(async () => {
 		await clearDb();
-		await seedTenant({ id: TENANT_ID, name: 'Blocked Venue', tenant_code: 'blockedvenue', max_guests: 50 });
+		await seedTenant({ id: TENANT_ID, name: 'Blocked Venue', tenant_code: 'blockedvenue', max_covers: 50 });
 	});
 
 	it('returns all 20 time slots as blocked when a full-day block exists for the date', async () => {

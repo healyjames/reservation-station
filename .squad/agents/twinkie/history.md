@@ -41,6 +41,12 @@ Frontend Dev on the Maximum Bookings project. Twinkie owns frontend surface work
 
 ## Learnings
 
+### Concurrent capacity frontend model (2026-06-12)
+
+- The booking widget no longer depends on `daily-capacity`; Step 1 should derive guest limits from tenant config and blocked times only.
+- `max_guests` remains the per-booking cap, `max_covers` is now concurrent venue capacity, and the guest dropdown should use the smallest positive limit between them or fall back to `20`.
+- Date-level sellout messaging should come from blocked slots, not a removed daily-total capacity rule.
+
 ### Migration fully complete (2026-05-30)
 
 - The vanilla JS → Preact migration is now fully complete; all components use CSS Modules.

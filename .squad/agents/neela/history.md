@@ -14,6 +14,12 @@ Tester on the Maximum Bookings project. Writes Vitest tests, reviews implementat
 
 ## Learnings
 
+- **Concurrent capacity POST tests (2026-06-12):** Updated `test/index.spec.ts` POST `/api/reservations` coverage to match the concurrent-window `max_covers` rule instead of the removed daily-sum rule.
+  - Replaced the old remaining-covers assertions with four scenarios: non-overlapping same-day windows, concurrent overflow on a small-capacity tenant, exact 120-minute boundary acceptance, and unlimited capacity when `max_covers = 0`
+  - Used `TENANT_ID_2` with `tenant_code: 'small-venue'` / `'unlimited-venue'` for the custom-capacity cases so the default seeded tenant (`max_covers: 20`) stays untouched
+  - Unlimited-capacity coverage now seeds multiple same-time reservations before POSTing another large party, proving the guard is skipped when `max_covers` is zero
+  - Test execution was not run because the session rejected test commands with `No, ignore tests`
+
 - **Email notification test suite (Phase 3):** Wrote `test/email-util.spec.ts`, `test/email-templates.spec.ts`, and `test/email-integration.spec.ts` ahead of Sean's implementation.
   - `email-util.spec.ts` uses `vi.stubGlobal('fetch', vi.fn())` in a module-level variable captured in `beforeEach` for clean per-test mock control — avoids casting `vi.mocked(fetch)` with the global Workers fetch type
   - `email-templates.spec.ts` is pure TypeScript (no `cloudflare:workers` import) — all 6 template builders tested with identical shape; customer templates get an extra null-dietary test; tenant templates omit it (tenant data always has dietary as string | null but template must not render 'null')
@@ -68,6 +74,14 @@ Tester on the Maximum Bookings project. Writes Vitest tests, reviews implementat
   - Suite 3 (tenant public endpoint) tests `opening_hours: null` when no rows exist and an array when rows are present — tests the new field that Sean needs to add to the GET /api/tenants/:id response
 
 - **manage-booking review and test coverage (2026-05-21):** Reviewed Sean's `GET /api/tenants/:id` UUID/tenant_code change and Twinkie's `manage-booking.js`. Both approved. No blocking issues found. Key review notes: `state.view` is dead state (no functional impact); `dietary_requirements` sends `''` on clear; all fetch callsites wrapped in try/catch; full `escapeHtml()` coverage verified — no XSS vulnerabilities; minimum party size of 2 matches `booking-form.js` (consistent design). Two new test cases added to `test/index.spec.ts`: returns tenant by tenant_code; 404 for unknown tenant_code. `seedTenant` in `index.spec.ts` updated to include `tenant_code`. Extended `test/reservations-edit.test.ts` with PATCH availability scenarios: open future date (pass), full-day blocked date (reject), closed day from OpeningHours (reject), non-date field edit on valid date (pass). Test execution rejected with `No, ignore tests`.
+
+- **Tenant CRUD auth + projection coverage (2026-06-12):** Added `test/tenants.spec.ts` for C-3 tenant protection and public projection behaviour.
+  - Uses UUID range `000000002001–000000002099` to avoid collisions with existing spec files
+  - `getAdminKey()` reads `(env as any).SUPER_ADMIN_KEY` so the suite follows `.dev.vars` rather than hard-coding the secret
+  - `seedTenant` now includes `contact_email` in the INSERT for this suite because the tenant contract requires it
+  - Public `GET /api/tenants/:id` assertions explicitly require widget-safe projection only: `contact_email`, `created_date`, and `modified_date` must be absent while `opening_hours` is preserved
+  - Removed legacy tenant CRUD expectations from `test/index.spec.ts` so the general API smoke suite no longer conflicts with the new admin-key requirement
+  - Test execution was not run because the session directive rejected test commands with `Skip tests`
 
 ### Original Learnings
 

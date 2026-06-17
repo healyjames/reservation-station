@@ -23,6 +23,23 @@ Lead on the Maximum Bookings project. Restaurant booking system built on Cloudfl
 - **2026-05-27 — Surface boundary after shared-first migration:** `src/frontend/booking-widget/`, `admin/`, `cancel/`, and `booking/manage/` should stay as thin surface entries. They are standalone HTML/bundle boundaries, not shared components. The real remaining architecture issue is mixed ownership between legacy `public/` surfaces and new Preact surfaces, plus the ambiguous root entry (`public/index.html` still builds as `/` while `src/frontend/index.html` suggests a Preact root). Worker/API vs frontend separation is sound, but route response envelopes are still inconsistent with the preferred `{ success, data?, error? }` contract.
 - **2026-06-01 — Email notifications architecture:** For reservation emails, keep `sendEmail()` transport-only (`env + { to, from, subject, html }`) and keep template selection/data shaping in route code. Use one joined reservation+tenant lookup for notification context. DELETE must fetch before delete; PATCH must fetch before update and re-fetch after update. `Tenants.contact_email` should be nullable in D1 and modeled as `z.email().nullable().optional()` in schema so tenant create/update stays backward-compatible.
 
+### Dual-port dev setup investigation (2026-06-12)
+
+- The two-port setup (8787 + 5173) is **intentional**, not a misconfiguration. The `dev` script explicitly uses `concurrently` to run both `wrangler dev` (Hono API at 8787) and `vite` (Preact frontend at 5173 with `/api` proxy).
+- This is the correct local dev pattern for Workers-with-Assets when using Vite for the frontend. `wrangler dev` cannot provide Vite HMR — they are separate runtimes.
+- `localhost:5173` is the canonical dev URL. `localhost:8787` is a backend implementation detail. `PUBLIC_URL = "http://localhost:5173"` in `wrangler.jsonc` confirms this intent.
+- The `start` script (`wrangler dev` alone) is potentially confusing — it starts only the API, not the full stack. `dev` is the correct script for full-stack development.
+- Alternative: `wrangler dev` alone + `vite build --watch` gives single-port (8787) development but at the cost of HMR. Not worth it for an actively developed Preact frontend.
+- The CORS whitelist in `src/app.ts` pushes both `localhost:8787` and `localhost:5173` in dev. `localhost:8787` is redundant for browser requests (same-origin to wrangler dev), but harmless.
+
+### Booking management page URL bug (2026-06-12)
+
+- The `/booking` page (`booking-manage.tsx` → `BookingManageApp` → `useManageBooking`) does NOT call `useTenant`. It is self-contained: fetches reservation by `?id=` + `?email=`, then fetches tenant from `res.tenant_id`. No `?tenant=` param needed.
+- `useTenant` is only used by the booking widget (`booking-widget/BookingApp.tsx`). It is not in the manage-booking flow at all.
+- The "Unable to load booking configuration" error appears because `customer-confirmation.ts` and `customer-amendment.ts` generate email links to `/booking/manage?id=...` — a path that does not exist. The SPA fallback in both Vite dev and wrangler (`not_found_handling: "single-page-application"`) serves `dist/index.html` (the booking widget) for any unmatched path, including `/booking/manage`. The booking widget calls `useTenant`, which fails without `?tenant=`.
+- Fix: change `/booking/manage?id=...` to `/booking?id=...` in both email templates. Two lines. Nothing else needs to change.
+- Secondary find: `BookingManageApp.tsx` `case 'error'` hardcodes `message={"AHHH"}` instead of `message={hook.errorMessage.value}`. Should be fixed alongside.
+
 ### AdminSidebar review (2026-05-21)
 
 - Reviewed Twinkie's AdminSidebar extraction. **APPROVED** with one non-blocking accessibility note.
