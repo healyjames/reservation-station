@@ -50,7 +50,7 @@ async function main() {
 
 	const sql = `INSERT INTO AdminUsers (id, tenant_id, email, password_hash, created_date, modified_date) VALUES ('${id}', '${tenantId}', '${email}', '${passwordHash}', '${now}', '${now}');`;
 
-	const localFlag = isLocal ? '--local ' : '';
+	const localFlag = isLocal ? '--local ' : '--remote ';
 	const cmd = `npx wrangler d1 execute maximum_bookings_db ${localFlag}--command "${sql}"`;
 
 	try {
