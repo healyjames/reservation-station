@@ -9,9 +9,10 @@ interface SuccessProps {
   formData: BookingFormData;
   selectedDate: CalendarDate;
   onNewBooking: () => void;
+  bookingRef?: string;
 }
 
-export const Success: FunctionComponent<SuccessProps> = ({ formData, selectedDate, onNewBooking }) => {
+export const Success: FunctionComponent<SuccessProps> = ({ formData, selectedDate, onNewBooking, bookingRef }) => {
   const dateDisplay = formatDateForDisplay(selectedDate);
   const guestLabel = `${formData.guests} guest${formData.guests > 1 ? 's' : ''}`;
 
@@ -24,7 +25,13 @@ export const Success: FunctionComponent<SuccessProps> = ({ formData, selectedDat
           <strong>{formData.time}</strong> has been confirmed.
         </p>
         <p>We've sent a confirmation email to <strong>{formData.email}</strong>.</p>
+        <p>
+          To manage or cancel your booking, use the link in your confirmation email.
+        </p>
       </MessageCard>
+      <Button variant="secondary" class={styles.success_button} fullWidth onClick={onNewBooking}>
+        Book Another Table
+      </Button>
     </div>
   );
 };

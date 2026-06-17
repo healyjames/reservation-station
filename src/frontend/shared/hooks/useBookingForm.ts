@@ -12,7 +12,7 @@ interface UseBookingFormReturn {
   submitBooking: (
     tenantConfig: TenantConfig,
     selectedDate: CalendarDate,
-    onSuccess: () => void
+    onSuccess: (bookingRef?: string) => void
   ) => Promise<void>;
   resetForm: () => void;
 }
@@ -39,7 +39,7 @@ export function useBookingForm(): UseBookingFormReturn {
   async function submitBooking(
     tenantConfig: TenantConfig,
     selectedDate: CalendarDate,
-    onSuccess: () => void
+    onSuccess: (bookingRef?: string) => void
   ): Promise<void> {
     if (isSubmitting.value) return;
     isSubmitting.value = true;
@@ -67,7 +67,8 @@ export function useBookingForm(): UseBookingFormReturn {
       });
 
       if (response.ok) {
-        onSuccess();
+        const body = await response.json() as { id?: string };
+        onSuccess(body.id);
         return;
       }
 

@@ -32,8 +32,10 @@ export const ReservationSchema = z.object({
 	surname: z.string().min(1).max(50),
 	telephone: z.string().regex(/^\+?[\d\s\-]{7,15}$/),
 	email: z.email(),
-	reservation_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
-	reservation_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format (HH:MM)'),
+	reservation_date: z.string()
+		.regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)')
+		.refine(v => !isNaN(new Date(v).getTime()), 'Invalid date (e.g. month or day out of range)'),
+	reservation_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Invalid time format (HH:MM)'),
 	guests: z.number().int().positive(),
 	dietary_requirements: z.string().max(500).optional(),
 	created_date: z.string().optional(),
@@ -44,6 +46,11 @@ export const CreateReservationSchema = ReservationSchema.omit({
   id: true,
   created_date: true,
   modified_date: true,
+}).superRefine((data, ctx) => {
+  const today = new Date().toISOString().split('T')[0];
+  if (data.reservation_date < today) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['reservation_date'], message: 'Reservation date must not be in the past' });
+  }
 });
 
 export const UpdateReservationSchema = ReservationSchema.omit({
@@ -96,7 +103,11 @@ export const UpsertOpeningHoursSchema = z
 			close_time: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(),
 		}),
 	)
-	.length(7);
+	.length(7)
+	.refine(
+		rows => new Set(rows.map(r => r.day_of_week)).size === rows.length,
+		{ message: 'Each day_of_week (0–6) must appear exactly once' },
+	);
 
 export type OpeningHoursEntry = z.infer<typeof OpeningHoursEntrySchema>;
 

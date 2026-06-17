@@ -43,6 +43,7 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
   const blockedDates = useSignal<Set<string>>(new Set());
   const blockedTimes = useSignal<string[]>([]);
   const isFetchingTimes = useSignal(false);
+  let blockedTimesAbortController: AbortController | null = null;
 
   useEffect(() => {
     init();
@@ -57,8 +58,7 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
     view.value = 'loading';
     let res: Reservation | null = null;
     try {
-			console.log('reservationId:', reservationId, 'bookingEmail:', bookingEmail);
-      const tokenParam = bookingToken ? `&token=${encodeURIComponent(bookingToken)}` : '';
+	      const tokenParam = bookingToken ? `&token=${encodeURIComponent(bookingToken)}` : '';
       const r = await fetch(`/api/reservations/${encodeURIComponent(reservationId)}?email=${encodeURIComponent(bookingEmail)}${tokenParam}`);
       if (r.status === 404) {
         errorMessage.value = 'Booking not found. It may have already been cancelled or the link is invalid.';
@@ -142,15 +142,22 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
   async function fetchBlockedTimesForDate(date: CalendarDate): Promise<void> {
     const tenantId = tenantConfig.value?.id;
     if (!tenantId) { blockedTimes.value = []; return; }
+    if (blockedTimesAbortController) {
+      blockedTimesAbortController.abort();
+    }
+    blockedTimesAbortController = new AbortController();
+    const { signal } = blockedTimesAbortController;
+
     isFetchingTimes.value = true;
     try {
       const dateStr = formatDateForAPI(date);
       const guests = Number(reservation.value?.guests) || 2;
-      const r = await fetch(`/api/reservations/blocked-times?tenant_id=${encodeURIComponent(tenantId)}&date=${dateStr}&guests=${guests}`);
+      const r = await fetch(`/api/reservations/blocked-times?tenant_id=${encodeURIComponent(tenantId)}&date=${dateStr}&guests=${guests}`, { signal });
       if (!r.ok) { blockedTimes.value = []; return; }
       const data = await r.json() as { blocked_times: string[] };
       blockedTimes.value = data.blocked_times ?? [];
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       blockedTimes.value = [];
     } finally {
       isFetchingTimes.value = false;

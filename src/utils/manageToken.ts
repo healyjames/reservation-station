@@ -5,6 +5,19 @@ function bufToHex(buf: Uint8Array): string {
 }
 
 /**
+ * Constant-time string comparison to prevent timing side-channel attacks.
+ * Both strings must be the same length (all our hex hashes are fixed-width).
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+	if (a.length !== b.length) return false;
+	let diff = 0;
+	for (let i = 0; i < a.length; i++) {
+		diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+	}
+	return diff === 0;
+}
+
+/**
  * Generate a deterministic HMAC-SHA256 manage token bound to a specific reservation + email.
  * Used in customer-facing manage/cancel email links.
  */
@@ -39,7 +52,10 @@ export async function verifyManageToken(
 	storedHash: string,
 ): Promise<boolean> {
 	if (!presentedToken || !storedHash) return false;
+	// Re-derive the expected token and hash the presented one, then compare hashes
+	// using a constant-time function to prevent timing side-channel attacks.
 	const expectedToken = await generateManageToken(secret, reservationId, email);
+	const expectedHash = await hashManageToken(expectedToken);
 	const presentedHash = await hashManageToken(presentedToken);
-	return expectedToken === presentedToken && presentedHash === storedHash;
+	return timingSafeEqual(presentedHash, expectedHash) && timingSafeEqual(presentedHash, storedHash);
 }

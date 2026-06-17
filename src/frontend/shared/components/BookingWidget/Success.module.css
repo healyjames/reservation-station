@@ -3,6 +3,10 @@
   padding: var(--space-6);
 }
 
+.success_button{
+	margin-top: var(--space-6);
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;

@@ -117,7 +117,7 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             onInput={(e) => { maxGuests.value = parseInt((e.target as HTMLInputElement).value, 10) || 0; }}
           />
         </FormField>
-        <FormField label="Max capacity" htmlFor="sf-max-capacity">
+        <FormField label="Max venue capacity" htmlFor="sf-max-capacity">
           <Input
             type="number"
             id="sf-max-capacity"

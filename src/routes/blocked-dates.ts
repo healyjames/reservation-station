@@ -8,7 +8,10 @@ const BlockDateBodySchema = z.object({
 	start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format (HH:MM)').optional(),
 	end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format (HH:MM)').optional(),
 	reason: z.string().optional(),
-});
+}).refine(
+	d => (d.start_time == null) === (d.end_time == null),
+	{ message: 'start_time and end_time must both be provided or both be omitted' },
+);
 
 const blockedDates = new Hono<{ Bindings: Env; Variables: { userId: string; tenantId: string } }>();
 
@@ -73,10 +76,14 @@ blockedDates.delete('/date/:date', async (c) => {
 	const tenantId = c.get('tenantId');
 	const date = c.req.param('date');
 
-	await c.env.maximum_bookings_db
-		.prepare('DELETE FROM BlockedDates WHERE tenant_id = ? AND date = ?')
+	const result = await c.env.maximum_bookings_db
+		.prepare('DELETE FROM BlockedDates WHERE tenant_id = ? AND date = ? AND start_time IS NULL')
 		.bind(tenantId, date)
 		.run();
+
+	if (result.meta.changes === 0) {
+		return c.json({ error: 'No full-day block found for this date' }, 404);
+	}
 
 	return c.json({ success: true });
 });

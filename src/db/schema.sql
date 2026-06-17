@@ -9,8 +9,8 @@ CREATE TABLE Tenants (
     status TEXT NOT NULL CHECK (status IN ('active', 'cancelled')) DEFAULT 'active',
     concurrent_guests_time_limit INTEGER NOT NULL DEFAULT 120,
     contact_email TEXT NOT NULL DEFAULT '',
-    created_date TEXT DEFAULT (CURRENT_TIMESTAMP) NOT NULL,
-    modified_date TEXT DEFAULT (CURRENT_TIMESTAMP)
+    created_date TEXT DEFAULT NULL,
+    modified_date TEXT DEFAULT NULL
 );
 
 DROP TABLE IF EXISTS Reservations;

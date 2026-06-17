@@ -79,8 +79,10 @@ admin.post('/reservations', async (c) => {
 		surname: z.string().min(1).max(50),
 		telephone: z.string().optional().default(''),
 		email: z.string().optional().default(''),
-		reservation_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-		reservation_time: z.string().regex(/^\d{2}:\d{2}$/),
+		reservation_date: z.string()
+			.regex(/^\d{4}-\d{2}-\d{2}$/)
+			.refine(v => !isNaN(new Date(v).getTime()), 'Invalid date (e.g. month or day out of range)'),
+		reservation_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
 		guests: z.number().int().positive(),
 		dietary_requirements: z.string().max(500).optional().default(''),
 	});
@@ -94,22 +96,65 @@ admin.post('/reservations', async (c) => {
 	const { first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements } = parsed.data;
 
 	const tenant = await c.env.maximum_bookings_db
-		.prepare('SELECT name, contact_email FROM Tenants WHERE id = ?')
+		.prepare('SELECT name, status, max_guests, max_covers, concurrent_guests_time_limit, contact_email FROM Tenants WHERE id = ?')
 		.bind(tenantId)
-		.first<{ name: string; contact_email: string }>();
+		.first<{ name: string; status: string; max_guests: number; max_covers: number; concurrent_guests_time_limit: number; contact_email: string }>();
 
 	if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
+
+	if (tenant.status !== 'active') {
+		return c.json({ error: 'Bookings are not currently available for this tenant' }, 422);
+	}
+
+	if (tenant.max_guests > 0 && guests > tenant.max_guests) {
+		return c.json({ error: `Maximum party size is ${tenant.max_guests}` }, 422);
+	}
+
+	const fullDayBlock = await c.env.maximum_bookings_db
+		.prepare('SELECT id FROM BlockedDates WHERE tenant_id = ? AND date = ? AND start_time IS NULL LIMIT 1')
+		.bind(tenantId, reservation_date)
+		.first<{ id: string }>();
+	if (fullDayBlock) {
+		return c.json({ error: 'Bookings are not available for this date' }, 422);
+	}
 
 	const id = crypto.randomUUID();
 	const now = new Date().toISOString();
 
-	await c.env.maximum_bookings_db
-		.prepare(
-			`INSERT INTO Reservations (id, tenant_id, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements, created_date, modified_date)
-			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-		)
-		.bind(id, tenantId, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements ?? '', now, now)
-		.run();
+	const [rH, rM] = reservation_time.split(':');
+	const slotMinutes = parseInt(rH, 10) * 60 + parseInt(rM, 10);
+
+	let insertResult: D1Result;
+	try {
+		insertResult = await c.env.maximum_bookings_db
+			.prepare(
+				`INSERT INTO Reservations (id, tenant_id, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements, created_date, modified_date)
+				 SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+				 WHERE (? = 0) OR (
+				   SELECT COALESCE(SUM(guests), 0)
+				   FROM Reservations
+				   WHERE tenant_id = ?
+				     AND reservation_date = ?
+				     AND (? - (CAST(SUBSTR(reservation_time, 1, 2) AS INTEGER) * 60 +
+				        CAST(SUBSTR(reservation_time, 4, 2) AS INTEGER))) BETWEEN 0 AND ? - 1
+				 ) + ? <= ?`
+			)
+			.bind(
+				id, tenantId, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements ?? '', now, now,
+				tenant.max_covers,
+				tenantId, reservation_date,
+				slotMinutes, tenant.concurrent_guests_time_limit,
+				guests, tenant.max_covers,
+			)
+			.run();
+	} catch (err) {
+		console.error('[admin] POST insert failed', { err, tenant_id: tenantId, reservation_id: id });
+		return c.json({ error: 'Failed to create reservation' }, 500);
+	}
+
+	if (insertResult.meta.changes === 0) {
+		return c.json({ error: 'Insufficient capacity for the requested time' }, 422);
+	}
 
 	const from = `"${tenant.name} via Maximum Bookings" <${tenant.contact_email}>`;
 	const replyTo = tenant.contact_email;

@@ -20,6 +20,7 @@ export function useAvailability(): UseAvailabilityReturn {
   const isFetchingDates = useSignal(false);
   const blockedTimes = useSignal<string[]>([]);
   const isFetchingTimes = useSignal(false);
+  let blockedTimesAbortController: AbortController | null = null;
 
   async function fetchBlockedDates(tenantId: string, year: number, month: number): Promise<void> {
     const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
@@ -41,14 +42,21 @@ export function useAvailability(): UseAvailabilityReturn {
   }
 
   async function fetchBlockedTimes(tenantId: string, date: CalendarDate, guests: number): Promise<void> {
+    if (blockedTimesAbortController) {
+      blockedTimesAbortController.abort();
+    }
+    blockedTimesAbortController = new AbortController();
+    const { signal } = blockedTimesAbortController;
+
     isFetchingTimes.value = true;
     try {
       const dateStr = formatDateForAPI(date);
-      const res = await fetch(`/api/reservations/blocked-times?tenant_id=${encodeURIComponent(tenantId)}&date=${dateStr}&guests=${guests}`);
+      const res = await fetch(`/api/reservations/blocked-times?tenant_id=${encodeURIComponent(tenantId)}&date=${dateStr}&guests=${guests}`, { signal });
       if (!res.ok) { blockedTimes.value = []; return; }
       const data = await res.json() as BlockedTimesResponse;
       blockedTimes.value = data.blocked_times ?? [];
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       blockedTimes.value = [];
     } finally {
       isFetchingTimes.value = false;

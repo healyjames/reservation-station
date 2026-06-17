@@ -7,17 +7,16 @@ import admin from './routes/admin';
 import blockedDates from './routes/blocked-dates';
 import openingHours from './routes/opening-hours';
 
-const PROD_ORIGINS = ['https://maximum-bookings.jameshealydesign.workers.dev'];
-const DEV_ORIGINS = ['http://localhost:8787', 'http://localhost:3000', 'http://localhost:5173'];
-
 const app = new Hono<{ Bindings: Env }>();
 
 app.use('/api/*', cors({
   origin: (origin, c) => {
-    const allowed = c.env.ENVIRONMENT === 'development'
-      ? [...PROD_ORIGINS, ...DEV_ORIGINS]
-      : PROD_ORIGINS;
-    return allowed.includes(origin) ? origin : null;
+    if (!origin) return null;
+    // Development: allow all origins (localhost, dev servers)
+    if (c.env.ENVIRONMENT === 'development') return origin;
+    // Production: allow any HTTPS origin so the widget can be embedded on any restaurant website.
+    // Security is enforced by route-level credentials (admin JWT / manage token), not origin-checking.
+    return origin.startsWith('https://') ? origin : null;
   },
   allowHeaders: ['Content-Type', 'Authorization'],
   allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Hono } from 'hono';
 import { Reservation, CreateReservationSchema, UpdateReservationSchema, CreateReservation } from '../db/schema';
-import { generateTimeSlots, calculateConcurrentGuests, SlotReservation } from '../utils/slots';
+import { generateTimeSlots, calculateConcurrentGuests, toMinutes, SlotReservation } from '../utils/slots';
 import { sendEmail } from '../utils/email';
 import { buildCustomerConfirmationEmail } from '../emails/customer-confirmation';
 import { buildCustomerAmendmentEmail } from '../emails/customer-amendment';
@@ -113,7 +113,11 @@ reservations.get('/blocked-times', async (c) => {
 
 	if (tenant.max_covers === 0) {
 		const blockedTimes = slots.filter((slot) =>
-			blockedDateRows.some((r) => r.start_time !== null && r.end_time !== null && slot >= r.start_time && slot < r.end_time),
+			blockedDateRows.some((r) => {
+				if (r.start_time === null || r.end_time === null) return false;
+				const s = toMinutes(slot), a = toMinutes(r.start_time), b = toMinutes(r.end_time);
+				return b <= a ? s >= a || s < b : s >= a && s < b;
+			}),
 		);
 		return c.json({ blocked_times: blockedTimes, time_limit_minutes: tenant.concurrent_guests_time_limit });
 	}
@@ -125,9 +129,11 @@ reservations.get('/blocked-times', async (c) => {
 
 	const blockedTimes: string[] = [];
 	for (const slot of slots) {
-		const partiallyBlocked = blockedDateRows.some(
-			(r) => r.start_time !== null && r.end_time !== null && slot >= r.start_time && slot < r.end_time,
-		);
+		const partiallyBlocked = blockedDateRows.some((r) => {
+			if (r.start_time === null || r.end_time === null) return false;
+			const s = toMinutes(slot), a = toMinutes(r.start_time), b = toMinutes(r.end_time);
+			return b <= a ? s >= a || s < b : s >= a && s < b;
+		});
 		if (partiallyBlocked) {
 			blockedTimes.push(slot);
 			continue;
@@ -237,9 +243,9 @@ reservations.post('/', async (c) => {
 	const now = new Date().toISOString();
 
 	const tenant = await c.env.maximum_bookings_db
-		.prepare('SELECT name, status, max_covers, concurrent_guests_time_limit, contact_email FROM Tenants WHERE id = ?')
+		.prepare('SELECT name, status, max_guests, max_covers, concurrent_guests_time_limit, contact_email FROM Tenants WHERE id = ?')
 		.bind(data.tenant_id)
-		.first<{ name: string; status: string; max_covers: number; concurrent_guests_time_limit: number; contact_email: string }>();
+		.first<{ name: string; status: string; max_guests: number; max_covers: number; concurrent_guests_time_limit: number; contact_email: string }>();
 
 	if (!tenant) {
 		console.error('[reservations] POST tenant not found', { tenant_id: data.tenant_id });
@@ -248,6 +254,10 @@ reservations.post('/', async (c) => {
 
 	if (tenant.status !== 'active') {
 		return c.json({ error: 'Bookings are not currently available' }, 422);
+	}
+
+	if (tenant.max_guests > 0 && data.guests > tenant.max_guests) {
+		return c.json({ error: `Maximum party size is ${tenant.max_guests}` }, 422);
 	}
 
 	const fullDayBlock = await c.env.maximum_bookings_db
@@ -271,7 +281,15 @@ reservations.post('/', async (c) => {
 			return c.json({ error: 'Bookings are not available for this date' }, 422);
 		}
 		if (openingHours.open_time && openingHours.close_time) {
-			if (data.reservation_time < openingHours.open_time || data.reservation_time >= openingHours.close_time) {
+			const reqMin = toMinutes(data.reservation_time);
+			const openMin = toMinutes(openingHours.open_time);
+			const closeMin = toMinutes(openingHours.close_time);
+			// Handle midnight-crossing hours (e.g. open 22:00, close 02:00)
+			const outsideHours =
+				closeMin <= openMin
+					? reqMin < openMin && reqMin >= closeMin // midnight-crossing: reject the gap
+					: reqMin < openMin || reqMin >= closeMin; // normal hours
+			if (outsideHours) {
 				return c.json({ error: 'Bookings are not available for this time' }, 422);
 			}
 		}
@@ -421,38 +439,14 @@ reservations.patch('/:id', async (c) => {
 	const body = parsed.data;
 
 	// H-10: Re-validate capacity when guests, date, or time is being changed
-	if (body.guests !== undefined || body.reservation_date !== undefined || body.reservation_time !== undefined) {
-		const effectiveGuests = body.guests ?? existing.guests;
-		const effectiveDate = body.reservation_date ?? existing.reservation_date;
-		const effectiveTime = body.reservation_time ?? existing.reservation_time;
+	const needsCapacityCheck =
+		body.guests !== undefined || body.reservation_date !== undefined || body.reservation_time !== undefined;
+	const effectiveGuests = body.guests ?? existing.guests;
+	const effectiveDate = body.reservation_date ?? existing.reservation_date;
+	const effectiveTime = body.reservation_time ?? existing.reservation_time;
 
-		// max_guests caps the party size per booking
-		if (existing.max_guests > 0 && effectiveGuests > existing.max_guests) {
-			return c.json({ error: `Maximum party size is ${existing.max_guests}` }, 422);
-		}
-
-		// max_covers: check concurrent occupancy at the new slot, excluding this reservation
-		if (existing.max_covers > 0) {
-			const [eH, eM] = effectiveTime.split(':');
-			const slotMin = parseInt(eH, 10) * 60 + parseInt(eM, 10);
-			const tl = existing.concurrent_guests_time_limit;
-			const row = await c.env.maximum_bookings_db
-				.prepare(
-					`SELECT COALESCE(SUM(guests), 0) AS concurrent
-					 FROM Reservations
-					 WHERE tenant_id = ?
-					   AND reservation_date = ?
-					   AND id != ?
-					   AND (CAST(SUBSTR(reservation_time,1,2) AS INTEGER)*60 + CAST(SUBSTR(reservation_time,4,2) AS INTEGER)) <= ?
-					   AND (CAST(SUBSTR(reservation_time,1,2) AS INTEGER)*60 + CAST(SUBSTR(reservation_time,4,2) AS INTEGER)) + ? > ?`,
-				)
-				.bind(existing.tenant_id, effectiveDate, id, slotMin, tl, slotMin)
-				.first<{ concurrent: number }>();
-
-			if ((row?.concurrent ?? 0) + effectiveGuests > existing.max_covers) {
-				return c.json({ error: 'Insufficient capacity for the requested time' }, 422);
-			}
-		}
+	if (needsCapacityCheck && existing.max_guests > 0 && effectiveGuests > existing.max_guests) {
+		return c.json({ error: `Maximum party size is ${existing.max_guests}` }, 422);
 	}
 
 	const data = { ...body, modified_date: new Date().toISOString() };
@@ -465,10 +459,38 @@ reservations.patch('/:id', async (c) => {
 	const values = Object.values(data);
 
 	try {
-		await c.env.maximum_bookings_db
-			.prepare(`UPDATE Reservations SET ${fields} WHERE id = ?`)
-			.bind(...values, id)
-			.run();
+		if (needsCapacityCheck && existing.max_covers > 0) {
+			// Atomic UPDATE: capacity check lives inside the WHERE clause, eliminating the TOCTOU race.
+			// If capacity is exceeded the UPDATE matches no row; meta.changes === 0 → 422.
+			const slotMin = toMinutes(effectiveTime);
+			const tl = existing.concurrent_guests_time_limit;
+			const updateResult = await c.env.maximum_bookings_db
+				.prepare(
+					`UPDATE Reservations SET ${fields}
+					 WHERE id = ?
+					   AND (
+					     (? = 0) OR (
+					       SELECT COALESCE(SUM(guests), 0)
+					       FROM Reservations
+					       WHERE tenant_id = ?
+					         AND reservation_date = ?
+					         AND id != ?
+					         AND (CAST(SUBSTR(reservation_time,1,2) AS INTEGER)*60 + CAST(SUBSTR(reservation_time,4,2) AS INTEGER)) <= ?
+					         AND (CAST(SUBSTR(reservation_time,1,2) AS INTEGER)*60 + CAST(SUBSTR(reservation_time,4,2) AS INTEGER)) + ? > ?
+					     ) + ? <= ?
+					   )`,
+				)
+				.bind(...values, id, existing.max_covers, existing.tenant_id, effectiveDate, id, slotMin, tl, slotMin, effectiveGuests, existing.max_covers)
+				.run();
+			if (updateResult.meta.changes === 0) {
+				return c.json({ error: 'Insufficient capacity for the requested time' }, 422);
+			}
+		} else {
+			await c.env.maximum_bookings_db
+				.prepare(`UPDATE Reservations SET ${fields} WHERE id = ?`)
+				.bind(...values, id)
+				.run();
+		}
 	} catch (err) {
 		console.error('[reservations] PATCH update failed', { err, id });
 		return c.json({ error: 'Failed to update reservation' }, 500);

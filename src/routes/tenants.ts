@@ -79,9 +79,10 @@ tenants.patch('/:id', superAdminAuth, async (c) => {
 	}
 
 	const body = parsed.data;
-	const data = { ...body, modified_date: new Date().toISOString() };
 
-	if (!Object.keys(data).length) return c.json({ error: 'No valid fields to update' }, 400);
+	if (!Object.keys(body).length) return c.json({ error: 'No valid fields to update' }, 400);
+
+	const data = { ...body, modified_date: new Date().toISOString() };
 
 	const fields = Object.keys(data)
 		.map((k) => `${k} = ?`)
@@ -89,10 +90,11 @@ tenants.patch('/:id', superAdminAuth, async (c) => {
 	const values = Object.values(data);
 
 	try {
-		await c.env.maximum_bookings_db
+		const result = await c.env.maximum_bookings_db
 			.prepare(`UPDATE Tenants SET ${fields} WHERE id = ?`)
 			.bind(...values, id)
 			.run();
+		if (result.meta.changes === 0) return c.json({ error: 'Tenant not found' }, 404);
 	} catch (err) {
 		if ((err as Error).message?.includes('UNIQUE constraint failed')) {
 			return c.json({ error: 'A tenant with that tenant_code already exists' }, 409);

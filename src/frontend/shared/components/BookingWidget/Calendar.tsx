@@ -65,7 +65,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
   const onCurrentMonth = year === todayYear && month === todayMonth;
 
   return (
-    <div class={styles.container} role="region" aria-label="Date picker">
+    <div class={styles.container} role="region" aria-labelledby="calendar-title">
       <div class={styles.header}>
         <div class={styles.nav}>
           <Button

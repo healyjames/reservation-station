@@ -102,6 +102,7 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
         </FormField>
 
         <Button
+          type="button"
           variant="primary"
           fullWidth
           disabled={!isValid}
