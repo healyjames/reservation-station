@@ -15,10 +15,13 @@ interface CalendarProps {
   isFetchingDates?: boolean;
   onMonthChange: (year: number, month: number) => Promise<void>;
   onDateSelect: (year: number, month: number, day: number) => Promise<void>;
+  isStandalone?: boolean;
+  tenantName?: string;
 }
 
 export const Calendar: FunctionComponent<CalendarProps> = ({
-  year, month, selectedDate, blockedDates, blockedDatesError, isFetchingDates, onMonthChange, onDateSelect
+  year, month, selectedDate, blockedDates, blockedDatesError, isFetchingDates, onMonthChange, onDateSelect,
+  isStandalone = false, tenantName,
 }) => {
   const tooltipVisible = useSignal(false);
   const tooltipAnchorRect = useSignal<DOMRect | null>(null);
@@ -66,6 +69,16 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
 
   return (
     <div class={styles.container} role="region" aria-labelledby="calendar-title">
+      {isStandalone && (
+        <div class={styles.welcome}>
+          <h1 class={styles.welcome_title}>
+            {tenantName ? `${tenantName} Reservations` : 'Make a Reservation'}
+          </h1>
+          <p class={styles.welcome_subtitle}>
+            Select a date below to check availability and book your table.
+          </p>
+        </div>
+      )}
       <div class={styles.header}>
         <div class={styles.nav}>
           <Button
@@ -99,7 +112,17 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
         </div>
       )}
 
-      <div style={isFetchingDates ? 'opacity:0.5;pointer-events:none;' : undefined}>
+      <div style={{
+				...(isFetchingDates && {
+					opacity: 0.5,
+					pointerEvents: 'none',
+				}),
+				...(isStandalone && {
+					padding: '1rem',
+					maxWidth: '800px',
+					margin: '0 auto',
+				}),
+			}}>
         <CalendarGrid
           year={year}
           month={month}

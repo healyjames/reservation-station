@@ -11,6 +11,8 @@ import { Step2Form } from '@shared/components/BookingWidget/Step2Form';
 import { Success } from '@shared/components/BookingWidget/Success';
 import { Spinner, MessageCard } from '@shared/components';
 
+import { isStandaloneMode } from '@shared/utils/userJourney';
+
 const loadingStyles = 'display:grid;place-items:center;padding:var(--space-12)';
 
 export const BookingApp: FunctionComponent = () => {
@@ -95,6 +97,8 @@ export const BookingApp: FunctionComponent = () => {
         isFetchingDates={isFetchingDates.value}
         onMonthChange={handleMonthChange}
         onDateSelect={handleDateSelect}
+        isStandalone={isStandaloneMode()}
+        tenantName={tenant.name}
       />
     );
   }

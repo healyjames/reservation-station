@@ -1,7 +1,7 @@
 import type { FunctionComponent } from 'preact';
 import type { BookingFormData, CalendarDate, TenantConfig } from '@shared/types';
 import { FormField, SelectedDateInfo, Select, Button, Spinner } from '@shared/components';
-import { getAvailableSlots } from '@shared/utils';
+import { getAvailableSlots, isStandaloneMode } from '@shared/utils';
 import styles from './Step1Form.module.css';
 
 interface Step1FormProps {
@@ -43,7 +43,10 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
   const isValid = formData.guests >= 2 && formData.guests <= effectiveMaxGuests && formData.time !== '';
 
   return (
-    <div class={styles.content}>
+    <div
+      class={styles.content}
+      style={isStandaloneMode() ? 'max-width: 520px; margin: 2rem auto' : undefined}
+    >
 			<div class={styles.nav}>
 				<div class={styles.stepIndicator}>Step 1 of 2</div>
 				<button

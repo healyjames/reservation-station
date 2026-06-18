@@ -3,6 +3,7 @@ import type { FunctionComponent } from 'preact';
 import type { TenantConfig } from '@shared/types';
 import { Input, Textarea, FormField, Button, MessageCard } from '@shared/components';
 import type { BookingFormData } from '@shared/types';
+import { isStandaloneMode } from '@shared/utils';
 import styles from './Step2Form.module.css';
 
 interface Step2FormProps {
@@ -26,7 +27,10 @@ export const Step2Form: FunctionComponent<Step2FormProps> = ({
   }
 
   return (
-    <div class={styles.content}>
+    <div
+      class={styles.content}
+      style={isStandaloneMode() ? 'max-width:520px;margin:2rem auto' : undefined}
+    >
 			<div class={styles.nav}>
 				<div class={styles.stepIndicator}>Step 2 of 2</div>
 				<button type="button" class={styles.backBtn} id="prev-step-btn" aria-label="Previous step" onClick={onBack}>
