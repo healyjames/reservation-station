@@ -1,8 +1,11 @@
+import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { BookingFormData, CalendarDate, TenantConfig } from '@shared/types';
 import { FormField, SelectedDateInfo, Select, Button, Spinner } from '@shared/components';
 import { getAvailableSlots, isStandaloneMode } from '@shared/utils';
 import styles from './Step1Form.module.css';
+
+const LARGE_PARTY_SENTINEL = 'large';
 
 interface Step1FormProps {
   date: CalendarDate;
@@ -27,20 +30,41 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
   onNext,
   onChangeDate,
 }) => {
+  const displayGuestValue = useSignal<number | string>(formData.guests);
+
+  const isUnlimited = tenantConfig.max_guests === 0;
   const bookingPartyLimit = tenantConfig.max_guests > 0 ? tenantConfig.max_guests : null;
   const venueCapacityLimit = tenantConfig.max_covers > 0 ? tenantConfig.max_covers : null;
   const effectiveMaxGuests = bookingPartyLimit !== null && venueCapacityLimit !== null
     ? Math.min(bookingPartyLimit, venueCapacityLimit)
     : bookingPartyLimit ?? venueCapacityLimit ?? 20;
 
-  const guestOptions = Array.from(
-    { length: Math.max(0, effectiveMaxGuests - 1) },
-    (_, i) => ({ value: i + 2, label: `${i + 2}` }),
-  );
+  const regularMax = isUnlimited ? 9 : effectiveMaxGuests;
+  const callThreshold = isUnlimited ? 10 : effectiveMaxGuests + 1;
+  const isLargeParty = displayGuestValue.value === LARGE_PARTY_SENTINEL;
+
+  const guestOptions = effectiveMaxGuests < 2 ? [] : [
+    ...Array.from(
+      { length: Math.max(0, regularMax - 1) },
+      (_, i) => ({ value: i + 2, label: `${i + 2}` }),
+    ),
+    { value: LARGE_PARTY_SENTINEL, label: `${callThreshold}+` },
+  ];
+
+  function handleGuestChange(e: Event) {
+    const raw = (e.target as HTMLSelectElement).value;
+    if (raw === LARGE_PARTY_SENTINEL) {
+      displayGuestValue.value = LARGE_PARTY_SENTINEL;
+    } else {
+      const val = parseInt(raw, 10) || 2;
+      displayGuestValue.value = val;
+      onGuestsChange(val);
+    }
+  }
 
   const availableSlots = getAvailableSlots(date, tenantConfig, blockedTimes);
   const timeOptions = availableSlots.map((slot) => ({ value: slot, label: slot }));
-  const isValid = formData.guests >= 2 && formData.guests <= effectiveMaxGuests && formData.time !== '';
+  const isValid = !isLargeParty && formData.guests >= 2 && formData.guests <= effectiveMaxGuests && formData.time !== '';
 
   return (
     <div
@@ -66,14 +90,23 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
               No availability remaining for this date. Please select a different date or call us to arrange your booking.
             </p>
           ) : (
-            <Select
-              id="guests"
-              name="guests"
-              value={formData.guests}
-              options={guestOptions}
-              required
-              onChange={(e) => onGuestsChange(parseInt((e.target as HTMLSelectElement).value, 10) || 2)}
-            />
+            <>
+              <Select
+                id="guests"
+                name="guests"
+                value={displayGuestValue.value}
+                options={guestOptions}
+                required
+                onChange={handleGuestChange}
+              />
+              {isLargeParty && (
+								<div role="alert" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:13px;color:#664d03;max-width: 800px;">
+									<p>
+										<strong>For bookings of {callThreshold} or more guests, please call the venue directly.</strong>
+									</p>
+								</div>
+              )}
+            </>
           )}
         </FormField>
 

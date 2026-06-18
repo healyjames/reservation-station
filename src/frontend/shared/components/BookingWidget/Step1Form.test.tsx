@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, within } from '@testing-library/preact';
+import { render, within, fireEvent } from '@testing-library/preact';
 import { describe, it, expect, vi } from 'vitest';
 import { Step1Form } from './Step1Form';
 import type { BookingFormData, CalendarDate, TenantConfig } from '@shared/types';
@@ -60,7 +60,7 @@ function renderStep1Form({
 }
 
 describe('Step1Form', () => {
-  it('caps guest options at max_guests when max_guests is set', () => {
+  it('caps guest options at max_guests and appends a large-party sentinel when max_guests is set', () => {
     const { getByLabelText } = renderStep1Form({
       tenantOverrides: { max_guests: 4, max_covers: 20 },
       formData: makeFormData({ guests: 4 }),
@@ -69,10 +69,10 @@ describe('Step1Form', () => {
     const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
     const optionLabels = within(guestSelect).getAllByRole('option').map((o) => o.textContent);
 
-    expect(optionLabels).toEqual(['2', '3', '4']);
+    expect(optionLabels).toEqual(['2', '3', '4', '5+']);
   });
 
-  it('caps guest options at max_covers when max_guests is 0 (unlimited party size)', () => {
+  it('shows options from 2 to 10+ when max_guests is 0 (unlimited party size)', () => {
     const { getByLabelText } = renderStep1Form({
       tenantOverrides: { max_guests: 0, max_covers: 4 },
       formData: makeFormData({ guests: 4 }),
@@ -81,7 +81,7 @@ describe('Step1Form', () => {
     const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
     const optionLabels = within(guestSelect).getAllByRole('option').map((o) => o.textContent);
 
-    expect(optionLabels).toEqual(['2', '3', '4']);
+    expect(optionLabels).toEqual(['2', '3', '4', '5', '6', '7', '8', '9', '10+']);
   });
 
   it('does not show the no availability message based on removed daily capacity rules', () => {
@@ -99,5 +99,31 @@ describe('Step1Form', () => {
     });
 
     expect(getByText(/no times available for this date with 4 guests/i)).toBeTruthy();
+  });
+
+  it('shows a call-the-venue alert and disables Next when the large-party sentinel is selected (limited)', () => {
+    const { getByLabelText, getByRole, getByText } = renderStep1Form({
+      tenantOverrides: { max_guests: 4, max_covers: 20 },
+      formData: makeFormData({ guests: 4, time: '18:00' }),
+    });
+
+    const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
+    fireEvent.change(guestSelect, { target: { value: 'large' } });
+
+    expect(getByText(/for bookings of 5 or more guests, please call the venue directly/i)).toBeTruthy();
+    expect((getByRole('button', { name: /next/i }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('shows a call-the-venue alert and disables Next when 10+ is selected (unlimited)', () => {
+    const { getByLabelText, getByRole, getByText } = renderStep1Form({
+      tenantOverrides: { max_guests: 0, max_covers: 40 },
+      formData: makeFormData({ guests: 4, time: '18:00' }),
+    });
+
+    const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
+    fireEvent.change(guestSelect, { target: { value: 'large' } });
+
+    expect(getByText(/for bookings of 10 or more guests, please call the venue directly/i)).toBeTruthy();
+    expect((getByRole('button', { name: /next/i }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

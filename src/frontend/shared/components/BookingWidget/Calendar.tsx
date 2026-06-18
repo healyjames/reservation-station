@@ -104,9 +104,9 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
       </div>
 
       {blockedDatesError && (
-        <div role="alert" style="display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:8px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:13px;color:#664d03;">
+        <div role="alert" style={`display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:8px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:13px;color:#664d03;${isStandalone && 'max-width: 800px; margin: 1rem auto;'}`}>
           <span style="flex:1">{blockedDatesError}</span>
-          <Button type="button" size="sm" variant="ghost" onClick={() => onMonthChange(year, month)}>
+          <Button type="button" size="sm" variant="primary" onClick={() => onMonthChange(year, month)}>
             Retry
           </Button>
         </div>
