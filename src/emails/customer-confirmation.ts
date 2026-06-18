@@ -60,7 +60,7 @@ export function buildCustomerConfirmationEmail(data: CustomerReservationEmailDat
         <td style="padding-bottom:8px;">
           <a href="${data.baseUrl}/booking/?id=${data.reservationId}&email=${encodeURIComponent(data.customerEmail)}${data.manageToken ? `&token=${data.manageToken}` : ''}"
              style="display:inline-block;padding:10px 20px;background-color:#266663;color:#ffffff;text-decoration:none;font-size:14px;border-radius:4px;">
-            Manage my booking
+            Amend booking
           </a>
         </td>
       </tr>
