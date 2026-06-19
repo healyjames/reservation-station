@@ -2,7 +2,7 @@
   width: 100%;
   font-size: 0.8rem;
   overflow: hidden;
-	border-collapse: collapse;
+  border-collapse: collapse;
 }
 
 .admin_table thead {
@@ -20,13 +20,13 @@
 }
 
 .admin_table th:last-child {
-	border-top-right-radius: var(--radius-xs);
-	border-bottom-right-radius: var(--radius-xs);
+  border-top-right-radius: var(--radius-xs);
+  border-bottom-right-radius: var(--radius-xs);
 }
 
 .admin_table th:first-child {
-	border-top-left-radius: var(--radius-xs);
-	border-bottom-left-radius: var(--radius-xs);
+  border-top-left-radius: var(--radius-xs);
+  border-bottom-left-radius: var(--radius-xs);
 }
 
 .admin_table td {

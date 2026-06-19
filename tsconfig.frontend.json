@@ -14,13 +14,6 @@
       "@shared/*": ["./src/frontend/shared/*"]
     }
   },
-  "include": [
-    "src/frontend/**/*.ts",
-    "src/frontend/**/*.tsx",
-    "vite.config.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/frontend/**/*.ts", "src/frontend/**/*.tsx", "vite.config.ts"],
+  "exclude": ["node_modules", "dist"]
 }

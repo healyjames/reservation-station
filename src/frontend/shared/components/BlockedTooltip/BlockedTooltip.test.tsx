@@ -17,38 +17,28 @@ const mockRect = {
 
 describe('BlockedTooltip', () => {
   it('renders nothing when visible=false', () => {
-    const { queryByRole } = render(
-      <BlockedTooltip visible={false} message="Fully booked" anchorRect={mockRect} onClose={() => {}} />
-    );
+    const { queryByRole } = render(<BlockedTooltip visible={false} message="Fully booked" anchorRect={mockRect} onClose={() => {}} />);
     expect(queryByRole('tooltip')).toBeNull();
   });
 
   it('renders nothing when anchorRect=null', () => {
-    const { queryByRole } = render(
-      <BlockedTooltip visible={true} message="Fully booked" anchorRect={null} onClose={() => {}} />
-    );
+    const { queryByRole } = render(<BlockedTooltip visible={true} message="Fully booked" anchorRect={null} onClose={() => {}} />);
     expect(queryByRole('tooltip')).toBeNull();
   });
 
   it('renders tooltip when visible=true and anchorRect provided', () => {
-    const { getByRole } = render(
-      <BlockedTooltip visible={true} message="Fully booked" anchorRect={mockRect} onClose={() => {}} />
-    );
+    const { getByRole } = render(<BlockedTooltip visible={true} message="Fully booked" anchorRect={mockRect} onClose={() => {}} />);
     expect(getByRole('tooltip')).toBeTruthy();
   });
 
   it('displays the message text', () => {
-    const { getByText } = render(
-      <BlockedTooltip visible={true} message="No availability" anchorRect={mockRect} onClose={() => {}} />
-    );
+    const { getByText } = render(<BlockedTooltip visible={true} message="No availability" anchorRect={mockRect} onClose={() => {}} />);
     expect(getByText('No availability')).toBeTruthy();
   });
 
   it('calls onClose when close button is clicked', () => {
     const onClose = vi.fn();
-    const { getByLabelText } = render(
-      <BlockedTooltip visible={true} message="Fully booked" anchorRect={mockRect} onClose={onClose} />
-    );
+    const { getByLabelText } = render(<BlockedTooltip visible={true} message="Fully booked" anchorRect={mockRect} onClose={onClose} />);
     fireEvent.click(getByLabelText('Close tooltip'));
     expect(onClose).toHaveBeenCalledOnce();
   });

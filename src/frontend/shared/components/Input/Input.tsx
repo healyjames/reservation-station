@@ -64,7 +64,11 @@ const Input: FunctionComponent<InputProps> = ({
       onInput={onInput}
       onChange={onChange}
     />
-    {error && <span class={styles.error} role="alert">{error}</span>}
+    {error && (
+      <span class={styles.error} role="alert">
+        {error}
+      </span>
+    )}
     {!error && hint && <span class={styles.hint}>{hint}</span>}
   </div>
 );

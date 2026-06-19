@@ -74,12 +74,7 @@ export const BookingManageApp: FunctionComponent<BookingManageAppProps> = ({ res
         />
       );
     case 'success-edit':
-      return (
-        <SuccessEdit
-          reservation={hook.reservation.value!}
-          onBack={hook.goToOverview}
-        />
-      );
+      return <SuccessEdit reservation={hook.reservation.value!} onBack={hook.goToOverview} />;
     case 'success-cancel':
       return <SuccessCancel reservation={hook.reservation.value!} />;
     default:

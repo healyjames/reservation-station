@@ -29,12 +29,12 @@ interface BlockedDatesSettingsProps {
 }
 
 const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ token }) => {
-  const viewYear  = useSignal(new Date().getFullYear());
+  const viewYear = useSignal(new Date().getFullYear());
   const viewMonth = useSignal(new Date().getMonth());
   const blockedSet = useSignal<Set<string>>(new Set());
   const rangeStart = useSignal<RangePoint | null>(null);
-  const hoverDate  = useSignal<RangePoint | null>(null);
-  const isLoading  = useSignal(false);
+  const hoverDate = useSignal<RangePoint | null>(null);
+  const isLoading = useSignal(false);
   const errorMessage = useSignal('');
 
   useEffect(() => {
@@ -43,7 +43,9 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
 
   function showError(msg: string) {
     errorMessage.value = msg;
-    setTimeout(() => { errorMessage.value = ''; }, 5000);
+    setTimeout(() => {
+      errorMessage.value = '';
+    }, 5000);
   }
 
   async function loadMonth(y: number, m: number) {
@@ -52,10 +54,8 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
     try {
       const r = await adminFetch(`/api/admin/blocked-dates?month=${toMonthStr(y, m)}`, token);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const data = await r.json() as Array<{ date: string; start_time: string | null }>;
-      blockedSet.value = new Set(
-        (data || []).filter(b => !b.start_time).map(b => b.date)
-      );
+      const data = (await r.json()) as Array<{ date: string; start_time: string | null }>;
+      blockedSet.value = new Set((data || []).filter((b) => !b.start_time).map((b) => b.date));
     } catch {
       showError('Failed to load blocked dates.');
     } finally {
@@ -68,7 +68,10 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
     hoverDate.value = null;
     let m = viewMonth.value - 1;
     let y = viewYear.value;
-    if (m < 0) { m = 11; y -= 1; }
+    if (m < 0) {
+      m = 11;
+      y -= 1;
+    }
     viewMonth.value = m;
     viewYear.value = y;
     loadMonth(y, m);
@@ -79,7 +82,10 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
     hoverDate.value = null;
     let m = viewMonth.value + 1;
     let y = viewYear.value;
-    if (m > 11) { m = 0; y += 1; }
+    if (m > 11) {
+      m = 0;
+      y += 1;
+    }
     viewMonth.value = m;
     viewYear.value = y;
     loadMonth(y, m);
@@ -154,10 +160,10 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
           adminFetch('/api/admin/blocked-dates', token, {
             method: 'POST',
             body: JSON.stringify({ date: dateStr }),
-          }).then(r => {
+          }).then((r) => {
             if (!r.ok) throw new Error(`HTTP ${r.status}`);
             blockedSet.value = new Set([...blockedSet.value, dateStr]);
-          })
+          }),
         );
       }
       await Promise.all(ops);
@@ -211,16 +217,13 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
     <div class={styles.bd_settings}>
       <h3 class={styles.bd_section_title}>Blocked Dates</h3>
       {errorMessage.value && (
-        <div class={styles.error_text} role="alert">{errorMessage.value}</div>
+        <div class={styles.error_text} role="alert">
+          {errorMessage.value}
+        </div>
       )}
       <div class={`${styles.date_picker_popup} ${styles.date_picker_popup_inline}`}>
         <div class={styles.date_picker_header}>
-          <button
-            class={styles.bd_prev_btn}
-            aria-label="Previous month"
-            disabled={isCurrent}
-            onClick={prevMonth}
-          >
+          <button class={styles.bd_prev_btn} aria-label="Previous month" disabled={isCurrent} onClick={prevMonth}>
             &#8592;
           </button>
           <span class={styles.bd_month_label}>
@@ -230,9 +233,7 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
             &#8594;
           </button>
         </div>
-        {isLoading.value && (
-          <div class={`${styles.bd_calendar_loading} ${styles.loading_text}`}>Loading…</div>
-        )}
+        {isLoading.value && <div class={`${styles.bd_calendar_loading} ${styles.loading_text}`}>Loading…</div>}
         <div style={isLoading.value ? 'visibility:hidden' : undefined}>
           <CalendarGrid
             year={viewYear.value}
@@ -243,17 +244,19 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
             isInRange={isInRangeFn}
             isRangeEnd={isRangeEndFn}
             onSelect={handleDayClick}
-            onHoverDate={(y, m, d) => { hoverDate.value = { y, m, d }; }}
-            onLeaveGrid={() => { hoverDate.value = null; }}
+            onHoverDate={(y, m, d) => {
+              hoverDate.value = { y, m, d };
+            }}
+            onLeaveGrid={() => {
+              hoverDate.value = null;
+            }}
           />
         </div>
         <div class={styles.bd_legend}>
           <span class={styles.bd_legend_item}>
             <span class={`${styles.bd_legend_swatch} ${styles.bd_legend_swatch_blocked}`} /> Blocked
           </span>
-          <span class={`${styles.bd_legend_item} ${styles.bd_legend_hint}`}>
-            ◌ Click to toggle · Click two days to block a range
-          </span>
+          <span class={`${styles.bd_legend_item} ${styles.bd_legend_hint}`}>◌ Click to toggle · Click two days to block a range</span>
         </div>
       </div>
     </div>

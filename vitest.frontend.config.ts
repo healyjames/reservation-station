@@ -15,7 +15,7 @@ export default defineConfig({
     alias: {
       '@frontend': resolve(__dirname, 'src/frontend'),
       '@shared': resolve(__dirname, 'src/frontend/shared'),
-      'react': 'preact/compat',
+      react: 'preact/compat',
       'react-dom': 'preact/compat',
     },
   },

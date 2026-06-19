@@ -16,9 +16,7 @@ interface Step2FormProps {
   onBack: () => void;
 }
 
-export const Step2Form: FunctionComponent<Step2FormProps> = ({
-  formData, submitError, isSubmitting, onFieldChange, onSubmit, onBack
-}) => {
+export const Step2Form: FunctionComponent<Step2FormProps> = ({ formData, submitError, isSubmitting, onFieldChange, onSubmit, onBack }) => {
   const formRef = useRef<HTMLFormElement>(null);
 
   function handleSubmit(e: Event) {
@@ -27,16 +25,13 @@ export const Step2Form: FunctionComponent<Step2FormProps> = ({
   }
 
   return (
-    <div
-      class={styles.content}
-      style={isStandaloneMode() ? 'max-width:520px;margin:2rem auto' : undefined}
-    >
-			<div class={styles.nav}>
-				<div class={styles.stepIndicator}>Step 2 of 2</div>
-				<button type="button" class={styles.backBtn} id="prev-step-btn" aria-label="Previous step" onClick={onBack}>
-					&#8592;
-				</button>
-			</div>
+    <div class={styles.content} style={isStandaloneMode() ? 'max-width:520px;margin:2rem auto' : undefined}>
+      <div class={styles.nav}>
+        <div class={styles.stepIndicator}>Step 2 of 2</div>
+        <button type="button" class={styles.backBtn} id="prev-step-btn" aria-label="Previous step" onClick={onBack}>
+          &#8592;
+        </button>
+      </div>
 
       <form id="booking-form-step2" class={styles.form} ref={formRef} onSubmit={handleSubmit}>
         <FormField label="First Name" htmlFor="firstName" required>
@@ -110,12 +105,7 @@ export const Step2Form: FunctionComponent<Step2FormProps> = ({
           </MessageCard>
         )}
 
-        <Button
-          type="submit"
-          variant="primary"
-          fullWidth
-          isLoading={isSubmitting}
-        >
+        <Button type="submit" variant="primary" fullWidth isLoading={isSubmitting}>
           {isSubmitting ? 'Booking...' : 'Book Now'}
         </Button>
       </form>

@@ -21,7 +21,7 @@
 }
 
 .toggle_list {
-	flex: 1;
+  flex: 1;
   border: var(--border-width) solid var(--background-light);
   border-radius: var(--radius-md);
   background: var(--background-light);

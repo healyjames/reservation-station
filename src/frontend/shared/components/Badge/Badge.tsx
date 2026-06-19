@@ -8,9 +8,7 @@ interface BadgeProps {
 }
 
 const Badge: FunctionComponent<BadgeProps> = ({ variant = 'default', children, class: className }) => (
-  <span class={`${styles.badge} ${styles[variant]} ${className ?? ''}`}>
-    {children}
-  </span>
+  <span class={`${styles.badge} ${styles[variant]} ${className ?? ''}`}>{children}</span>
 );
 
 export default Badge;

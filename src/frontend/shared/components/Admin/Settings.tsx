@@ -30,11 +30,7 @@ const Settings: FunctionComponent<SettingsProps> = ({ auth, onLogout, onGoDashbo
         <AdminHeader venueName={venueName} onLogout={onLogout} />
 
         <main id="main-content" class={styles.main_content}>
-          <SettingsPanel
-            tenantConfig={auth.tenantConfig}
-            token={token}
-            onSave={handleSave}
-          />
+          <SettingsPanel tenantConfig={auth.tenantConfig} token={token} onSave={handleSave} />
         </main>
       </div>
     </div>

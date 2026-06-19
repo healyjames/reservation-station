@@ -14,13 +14,13 @@ export const SuccessEdit: FunctionComponent<SuccessEditProps> = ({ reservation, 
     <div class={styles.content}>
       <MessageCard variant="success" title="Booking updated.">
         <p>
-          <strong>{getFullName(reservation)}</strong> &mdash;{' '}
-          {formatDate(reservation.reservation_date)} at{' '}
-          <strong>{reservation.reservation_time || 'Unknown time'}</strong> &mdash;{' '}
-          {getGuestsLabel(Number(reservation.guests))}
+          <strong>{getFullName(reservation)}</strong> &mdash; {formatDate(reservation.reservation_date)} at{' '}
+          <strong>{reservation.reservation_time || 'Unknown time'}</strong> &mdash; {getGuestsLabel(Number(reservation.guests))}
         </p>
       </MessageCard>
-      <Button variant="primary" onClick={onBack}>Back to booking details</Button>
+      <Button variant="primary" onClick={onBack}>
+        Back to booking details
+      </Button>
     </div>
   </StandaloneLayout>
 );

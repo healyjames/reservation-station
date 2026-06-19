@@ -8,12 +8,7 @@ interface AlertProps {
   ariaLive?: 'polite' | 'assertive';
 }
 
-const Alert: FunctionComponent<AlertProps> = ({
-  variant,
-  message,
-  visible = true,
-  ariaLive = 'polite',
-}) => (
+const Alert: FunctionComponent<AlertProps> = ({ variant, message, visible = true, ariaLive = 'polite' }) => (
   <div
     class={`${styles.alert} ${styles[variant]} ${!visible ? styles.hidden : ''}`}
     role="alert"

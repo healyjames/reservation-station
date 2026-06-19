@@ -39,8 +39,8 @@
 }
 
 .current_date_display {
-	font-size: 1.5rem;
-	font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .today_label {
@@ -49,8 +49,8 @@
   font-size: 0.75rem;
   font-weight: 600;
   margin-left: var(--space-1);
-	text-transform: uppercase;
-	position: absolute;
+  text-transform: uppercase;
+  position: absolute;
 }
 
 .day_summary {
@@ -60,21 +60,21 @@
 }
 
 @media (min-width: 767px) {
-	.date_nav {
-		justify-content: center;
-		background: var(--background);
-  	border: var(--border-width) solid var(--background);
-	}
-	.date_nav_center {
-		flex: none;
-	}
-	.current_date_display {
-		font-size: 2.5rem;
-		min-width: 350px;
-	}
-	.btn_action {
-		background: var(--background);
-		color: var(--foreground);
-		transition: background 0.15s ease;
-	}
+  .date_nav {
+    justify-content: center;
+    background: var(--background);
+    border: var(--border-width) solid var(--background);
+  }
+  .date_nav_center {
+    flex: none;
+  }
+  .current_date_display {
+    font-size: 2.5rem;
+    min-width: 350px;
+  }
+  .btn_action {
+    background: var(--background);
+    color: var(--foreground);
+    transition: background 0.15s ease;
+  }
 }

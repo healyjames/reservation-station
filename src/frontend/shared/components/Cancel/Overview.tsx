@@ -10,12 +10,7 @@ interface OverviewProps {
   onCancel: () => void;
 }
 
-export const Overview: FunctionComponent<OverviewProps> = ({
-  reservation,
-  inlineError,
-  isCancelling,
-  onCancel,
-}) => {
+export const Overview: FunctionComponent<OverviewProps> = ({ reservation, inlineError, isCancelling, onCancel }) => {
   const details = [
     { label: 'Name', value: getFullName(reservation) },
     { label: 'Date', value: formatDate(reservation.reservation_date) },
@@ -38,12 +33,7 @@ export const Overview: FunctionComponent<OverviewProps> = ({
 
       <BookingDetailsList details={details} />
 
-      <Button
-        variant="danger"
-        fullWidth
-        isLoading={isCancelling}
-        onClick={onCancel}
-      >
+      <Button variant="danger" fullWidth isLoading={isCancelling} onClick={onCancel}>
         {isCancelling ? 'Cancelling...' : 'Cancel My Booking'}
       </Button>
     </StandaloneLayout>

@@ -21,7 +21,9 @@
   cursor: pointer;
   border-bottom: var(--border-width-md) solid transparent;
   margin-bottom: -1px;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .tab_btn:hover {

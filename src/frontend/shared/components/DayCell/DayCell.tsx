@@ -23,9 +23,19 @@ interface DayCellProps {
 }
 
 const DayCell: FunctionComponent<DayCellProps> = ({
-  day, isToday, isPast, isSelected, isBlocked, isDisabled,
-  isRangeStart, isInRange, isRangeEnd,
-  onSelect, onBlockedSelect, onMouseEnter, styles
+  day,
+  isToday,
+  isPast,
+  isSelected,
+  isBlocked,
+  isDisabled,
+  isRangeStart,
+  isInRange,
+  isRangeEnd,
+  onSelect,
+  onBlockedSelect,
+  onMouseEnter,
+  styles,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -38,7 +48,9 @@ const DayCell: FunctionComponent<DayCellProps> = ({
     isRangeStart ? styles.rangeStart : '',
     isInRange ? styles.inRange : '',
     isRangeEnd ? styles.rangeEnd : '',
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   // Past + not blocked: purely disabled, no interaction
   if (isDisabled && !isBlocked) {

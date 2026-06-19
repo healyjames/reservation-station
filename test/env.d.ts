@@ -1,3 +1,3 @@
 declare module 'cloudflare:workers' {
-	interface ProvidedEnv extends Env {}
+  interface ProvidedEnv extends Env {}
 }

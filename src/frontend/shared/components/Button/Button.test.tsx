@@ -31,7 +31,11 @@ describe('Button', () => {
 
   it('does not call onClick when disabled', () => {
     const onClick = vi.fn();
-    const { container } = render(<Button disabled onClick={onClick}>Click</Button>);
+    const { container } = render(
+      <Button disabled onClick={onClick}>
+        Click
+      </Button>,
+    );
     fireEvent.click(container.querySelector('button')!);
     expect(onClick).not.toHaveBeenCalled();
   });

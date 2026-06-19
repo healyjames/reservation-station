@@ -74,7 +74,9 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
             maxLength={50}
             autocomplete="given-name"
             required
-            onInput={(e) => { firstName.value = (e.target as HTMLInputElement).value; }}
+            onInput={(e) => {
+              firstName.value = (e.target as HTMLInputElement).value;
+            }}
           />
         </FormField>
         <FormField label="Surname" htmlFor="edit-surname" required>
@@ -86,7 +88,9 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
             maxLength={50}
             autocomplete="family-name"
             required
-            onInput={(e) => { surname.value = (e.target as HTMLInputElement).value; }}
+            onInput={(e) => {
+              surname.value = (e.target as HTMLInputElement).value;
+            }}
           />
         </FormField>
         <FormField label="Phone Number" htmlFor="edit-telephone" required>
@@ -100,7 +104,9 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
             pattern="\+?[\d\s\-]{7,15}"
             title="Please enter a valid phone number (7–15 digits)"
             required
-            onInput={(e) => { telephone.value = (e.target as HTMLInputElement).value; }}
+            onInput={(e) => {
+              telephone.value = (e.target as HTMLInputElement).value;
+            }}
           />
         </FormField>
         <FormField label="Email" htmlFor="edit-email" required>
@@ -111,7 +117,9 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
             value={email.value}
             autocomplete="email"
             required
-            onInput={(e) => { email.value = (e.target as HTMLInputElement).value; }}
+            onInput={(e) => {
+              email.value = (e.target as HTMLInputElement).value;
+            }}
           />
         </FormField>
         <FormField label="Dietary Requirements (Optional)" htmlFor="edit-dietary">
@@ -122,7 +130,9 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
             rows={3}
             maxLength={500}
             placeholder="Let us know about any allergies or dietary preferences..."
-            onInput={(e) => { dietary.value = (e.target as HTMLTextAreaElement).value; }}
+            onInput={(e) => {
+              dietary.value = (e.target as HTMLTextAreaElement).value;
+            }}
           />
         </FormField>
         <FormField label="Number of Guests" htmlFor="edit-guests">
@@ -132,11 +142,15 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
             value={guests.value}
             options={guestOptions}
             required
-            onChange={(e) => { guests.value = parseInt((e.target as HTMLSelectElement).value, 10); }}
+            onChange={(e) => {
+              guests.value = parseInt((e.target as HTMLSelectElement).value, 10);
+            }}
           />
         </FormField>
         <div class={`${styles.action_group} mt-2`}>
-          <Button type="button" variant="secondary" onClick={goToOverview}>← Back</Button>
+          <Button type="button" variant="secondary" onClick={goToOverview}>
+            ← Back
+          </Button>
           <Button type="submit" variant="primary" isLoading={isSaving.value}>
             {isSaving.value ? 'Saving...' : 'Save Changes'}
           </Button>

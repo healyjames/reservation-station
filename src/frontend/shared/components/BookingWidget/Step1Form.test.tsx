@@ -15,9 +15,7 @@ function makeTenant(overrides: Partial<TenantConfig> = {}): TenantConfig {
     max_covers: 40,
     status: 'active',
     concurrent_guests_time_limit: 120,
-    opening_hours: [
-      { id: '1', tenant_id: 'tenant-1', day_of_week: 1, is_closed: false, open_time: '18:00', close_time: '20:00' },
-    ],
+    opening_hours: [{ id: '1', tenant_id: 'tenant-1', day_of_week: 1, is_closed: false, open_time: '18:00', close_time: '20:00' }],
     ...overrides,
   };
 }
@@ -67,7 +65,9 @@ describe('Step1Form', () => {
     });
 
     const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
-    const optionLabels = within(guestSelect).getAllByRole('option').map((o) => o.textContent);
+    const optionLabels = within(guestSelect)
+      .getAllByRole('option')
+      .map((o) => o.textContent);
 
     expect(optionLabels).toEqual(['2', '3', '4', '5+']);
   });
@@ -79,7 +79,9 @@ describe('Step1Form', () => {
     });
 
     const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
-    const optionLabels = within(guestSelect).getAllByRole('option').map((o) => o.textContent);
+    const optionLabels = within(guestSelect)
+      .getAllByRole('option')
+      .map((o) => o.textContent);
 
     expect(optionLabels).toEqual(['2', '3', '4', '5', '6', '7', '8', '9', '10+']);
   });

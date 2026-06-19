@@ -26,7 +26,7 @@ const DeleteConfirmModal: FunctionComponent<DeleteConfirmModalProps> = ({ reserv
         onClose();
         return;
       }
-      const data = await r.json().catch(() => ({})) as { error?: string };
+      const data = (await r.json().catch(() => ({}))) as { error?: string };
       errorMessage.value = data.error ?? `Delete failed (${r.status})`;
     } catch {
       errorMessage.value = 'Unable to connect. Please try again.';
@@ -59,7 +59,9 @@ const DeleteConfirmModal: FunctionComponent<DeleteConfirmModalProps> = ({ reserv
       <dl class={styles.booking_details}>
         <div class={styles.detail_row}>
           <dt>Name</dt>
-          <dd>{reservation.first_name} {reservation.surname}</dd>
+          <dd>
+            {reservation.first_name} {reservation.surname}
+          </dd>
         </div>
         <div class={styles.detail_row}>
           <dt>Date</dt>

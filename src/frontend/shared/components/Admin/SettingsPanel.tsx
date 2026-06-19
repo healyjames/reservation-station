@@ -24,36 +24,36 @@ const SettingsPanel: FunctionComponent<SettingsProps> = ({ tenantConfig, token, 
         <button
           class={`${styles.tab_btn} ${styles.tab_btn_sub}${activeTab.value === 'general' ? ` ${styles.active}` : ''}`}
           data-hash="general"
-          onClick={() => { activeTab.value = 'general'; }}
+          onClick={() => {
+            activeTab.value = 'general';
+          }}
         >
           General
         </button>
         <button
           class={`${styles.tab_btn} ${styles.tab_btn_sub}${activeTab.value === 'opening-hours' ? ` ${styles.active}` : ''}`}
           data-hash="opening-hours"
-          onClick={() => { activeTab.value = 'opening-hours'; }}
+          onClick={() => {
+            activeTab.value = 'opening-hours';
+          }}
         >
           Opening Hours
         </button>
         <button
           class={`${styles.tab_btn} ${styles.tab_btn_sub}${activeTab.value === 'blocked-dates' ? ` ${styles.active}` : ''}`}
           data-hash="blocked-dates"
-          onClick={() => { activeTab.value = 'blocked-dates'; }}
+          onClick={() => {
+            activeTab.value = 'blocked-dates';
+          }}
         >
           Blocked Dates
         </button>
       </div>
 
       <div id="settings-view" class={styles.settings_panel}>
-        {activeTab.value === 'general' && (
-          <GeneralSettings tenantConfig={tenantConfig} token={token} onSave={onSave} />
-        )}
-        {activeTab.value === 'opening-hours' && (
-          <OpeningHoursSettings token={token} />
-        )}
-        {activeTab.value === 'blocked-dates' && (
-          <BlockedDatesSettings token={token} />
-        )}
+        {activeTab.value === 'general' && <GeneralSettings tenantConfig={tenantConfig} token={token} onSave={onSave} />}
+        {activeTab.value === 'opening-hours' && <OpeningHoursSettings token={token} />}
+        {activeTab.value === 'blocked-dates' && <BlockedDatesSettings token={token} />}
       </div>
     </div>
   );

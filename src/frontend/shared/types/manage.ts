@@ -18,4 +18,3 @@ export interface EditData {
   dietary_requirements: string;
   guests: number;
 }
-

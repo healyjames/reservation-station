@@ -34,7 +34,7 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
     try {
       const r = await adminFetch('/api/admin/me', token);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const tenant = await r.json() as TenantConfig;
+      const tenant = (await r.json()) as TenantConfig;
       name.value = tenant.name ?? '';
       maxGuests.value = tenant.max_guests ?? 0;
       maxCovers.value = tenant.max_covers ?? 0;
@@ -65,12 +65,14 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
         body: JSON.stringify(body),
       });
       if (!r.ok) {
-        const data = await r.json().catch(() => ({})) as { error?: string };
+        const data = (await r.json().catch(() => ({}))) as { error?: string };
         throw new Error(data.error ?? `HTTP ${r.status}`);
       }
       successMessage.value = 'Settings saved.';
       onSave(body);
-      setTimeout(() => { successMessage.value = ''; }, 3500);
+      setTimeout(() => {
+        successMessage.value = '';
+      }, 3500);
     } catch (err) {
       errorMessage.value = err instanceof Error ? err.message : 'Failed to save settings.';
     } finally {
@@ -104,7 +106,9 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             required
             autocomplete="organization"
             value={name.value}
-            onInput={(e) => { name.value = (e.target as HTMLInputElement).value; }}
+            onInput={(e) => {
+              name.value = (e.target as HTMLInputElement).value;
+            }}
           />
         </FormField>
         <FormField label="Max party size (per booking)" htmlFor="sf-max-guests">
@@ -114,7 +118,9 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             name="max_guests"
             min="0"
             value={maxGuests.value}
-            onInput={(e) => { maxGuests.value = parseInt((e.target as HTMLInputElement).value, 10) || 0; }}
+            onInput={(e) => {
+              maxGuests.value = parseInt((e.target as HTMLInputElement).value, 10) || 0;
+            }}
           />
         </FormField>
         <FormField label="Max venue capacity" htmlFor="sf-max-capacity">
@@ -124,7 +130,9 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             name="max_covers"
             min="0"
             value={maxCovers.value}
-            onInput={(e) => { maxCovers.value = parseInt((e.target as HTMLInputElement).value, 10) || 0; }}
+            onInput={(e) => {
+              maxCovers.value = parseInt((e.target as HTMLInputElement).value, 10) || 0;
+            }}
           />
         </FormField>
         <FormField label="Concurrent guest time window (minutes)" htmlFor="sf-time-window">
@@ -134,7 +142,9 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             name="concurrent_guests_time_limit"
             min="0"
             value={timeWindow.value}
-            onInput={(e) => { timeWindow.value = parseInt((e.target as HTMLInputElement).value, 10) || 0; }}
+            onInput={(e) => {
+              timeWindow.value = parseInt((e.target as HTMLInputElement).value, 10) || 0;
+            }}
           />
         </FormField>
         <FormField label="Notification email address" htmlFor="sf-contact-email" required>
@@ -145,11 +155,14 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             required
             autocomplete="email"
             value={contactEmail.value}
-            onInput={(e) => { contactEmail.value = (e.target as HTMLInputElement).value; }}
+            onInput={(e) => {
+              contactEmail.value = (e.target as HTMLInputElement).value;
+            }}
           />
         </FormField>
         <div class={`${styles.alert} ${styles.alert_warning}`} role="note">
-          <strong>⚠ Important:</strong> This email address is used for reservation notification emails sent to your guests when they make, amend, or cancel a booking. Changing it may affect email delivery. If you need to update this address, please contact support.
+          <strong>⚠ Important:</strong> This email address is used for reservation notification emails sent to your guests when they make,
+          amend, or cancel a booking. Changing it may affect email delivery. If you need to update this address, please contact support.
         </div>
         <Button variant="primary" type="submit" isLoading={isSaving.value}>
           Save settings

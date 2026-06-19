@@ -23,15 +23,8 @@ export const BookingApp: FunctionComponent = () => {
   const bookingRef = useSignal<string | undefined>(undefined);
 
   const { tenantConfig, tenantState, tenantError } = useTenant();
-  const {
-    blockedDates,
-    blockedDatesError,
-    isFetchingDates,
-    blockedTimes,
-    isFetchingTimes,
-    fetchBlockedDates,
-    fetchBlockedTimes,
-  } = useAvailability();
+  const { blockedDates, blockedDatesError, isFetchingDates, blockedTimes, isFetchingTimes, fetchBlockedDates, fetchBlockedTimes } =
+    useAvailability();
   const { formData, submitError, isSubmitting, updateField, submitBooking, resetForm } = useBookingForm();
 
   if (tenantState.value === 'loading') {
@@ -113,7 +106,9 @@ export const BookingApp: FunctionComponent = () => {
         isFetchingTimes={isFetchingTimes.value}
         onGuestsChange={handleGuestsChange}
         onTimeChange={(time) => updateField('time', time)}
-        onNext={() => { step.value = 'form-step2'; }}
+        onNext={() => {
+          step.value = 'form-step2';
+        }}
         onChangeDate={handleChangeDate}
       />
     );
@@ -134,17 +129,14 @@ export const BookingApp: FunctionComponent = () => {
             step.value = 'success';
           });
         }}
-        onBack={() => { step.value = 'form-step1'; }}
+        onBack={() => {
+          step.value = 'form-step1';
+        }}
       />
     );
   }
 
   return (
-    <Success
-      formData={formData.value}
-      selectedDate={selectedDate.value!}
-      onNewBooking={handleNewBooking}
-      bookingRef={bookingRef.value}
-    />
+    <Success formData={formData.value} selectedDate={selectedDate.value!} onNewBooking={handleNewBooking} bookingRef={bookingRef.value} />
   );
 };

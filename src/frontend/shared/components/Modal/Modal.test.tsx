@@ -8,7 +8,7 @@ describe('Modal', () => {
     const { getByText } = render(
       <Modal open onClose={() => {}}>
         <p>Modal content</p>
-      </Modal>
+      </Modal>,
     );
     expect(getByText('Modal content')).toBeTruthy();
   });
@@ -17,7 +17,7 @@ describe('Modal', () => {
     const { getByText } = render(
       <Modal open onClose={() => {}} title="Confirm">
         <p>Body</p>
-      </Modal>
+      </Modal>,
     );
     expect(getByText('Confirm')).toBeTruthy();
   });
@@ -26,7 +26,7 @@ describe('Modal', () => {
     const { getByText } = render(
       <Modal open onClose={() => {}} footer={<button>OK</button>}>
         <p>Body</p>
-      </Modal>
+      </Modal>,
     );
     expect(getByText('OK')).toBeTruthy();
   });
@@ -36,7 +36,7 @@ describe('Modal', () => {
     const { getByLabelText } = render(
       <Modal open onClose={onClose} title="Test">
         <p>Body</p>
-      </Modal>
+      </Modal>,
     );
     getByLabelText('Close').click();
     expect(onClose).toHaveBeenCalled();

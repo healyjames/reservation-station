@@ -52,7 +52,7 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
         errorMessage.value = `Failed to load bookings (HTTP ${r.status})`;
         return;
       }
-      const data = await r.json() as Reservation[];
+      const data = (await r.json()) as Reservation[];
       reservations.value = data;
       guestCount.value = data.reduce((sum, r) => sum + (r.guests || 0), 0);
       await fetchBlockState(dateStr, tok);
@@ -66,9 +66,12 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
   async function fetchBlockState(dateStr: string, tok: string): Promise<void> {
     try {
       const r = await adminFetch(`/api/admin/blocked-dates?date=${dateStr}`, tok);
-      if (!r.ok) { isDayBlocked.value = false; return; }
-      const data = await r.json() as Array<{ start_time: string | null }>;
-      isDayBlocked.value = (data || []).some(b => b.start_time === null);
+      if (!r.ok) {
+        isDayBlocked.value = false;
+        return;
+      }
+      const data = (await r.json()) as Array<{ start_time: string | null }>;
+      isDayBlocked.value = (data || []).some((b) => b.start_time === null);
     } catch {
       isDayBlocked.value = false;
     }
@@ -119,8 +122,17 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
   }
 
   return {
-    currentDate, reservations, isLoading, errorMessage,
-    guestCount, isDayBlocked, isBlockLoading,
-    fetchBookings, prevDay, nextDay, deleteBooking, toggleDayBlock,
+    currentDate,
+    reservations,
+    isLoading,
+    errorMessage,
+    guestCount,
+    isDayBlocked,
+    isBlockLoading,
+    fetchBookings,
+    prevDay,
+    nextDay,
+    deleteBooking,
+    toggleDayBlock,
   };
 }

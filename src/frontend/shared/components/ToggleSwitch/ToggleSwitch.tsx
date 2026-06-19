@@ -16,18 +16,16 @@ const ToggleSwitch: FunctionComponent<ToggleSwitchProps> = ({ checked, onChange,
   const inputId = id ?? `toggle-${Math.random().toString(36).slice(2)}`;
 
   return (
-    <label
-      class={`${styles.wrapper} ${disabled ? styles.disabled : ''}`}
-      htmlFor={inputId}
-      data-checked={checked ? 'true' : 'false'}
-    >
+    <label class={`${styles.wrapper} ${disabled ? styles.disabled : ''}`} htmlFor={inputId} data-checked={checked ? 'true' : 'false'}>
       <input
         type="checkbox"
         id={inputId}
         class={styles.input}
         checked={checked}
         disabled={disabled}
-        onChange={(e) => { if (!disabled) onChange((e.target as HTMLInputElement).checked); }}
+        onChange={(e) => {
+          if (!disabled) onChange((e.target as HTMLInputElement).checked);
+        }}
       />
       <span class={styles.track} aria-hidden="true">
         <span class={styles.thumb} />

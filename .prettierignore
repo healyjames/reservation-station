@@ -1,0 +1,9 @@
+.github
+.copilot
+.squad
+.vscode
+.wrangler
+/dist
+/documentation
+/node_modules
+*.md

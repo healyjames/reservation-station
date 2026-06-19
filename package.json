@@ -1,33 +1,34 @@
 {
-	"name": "maximum_bookings",
-	"version": "0.0.0",
-	"private": true,
-	"scripts": {
-		"dev": "concurrently \"wrangler dev\" \"vite\"",
-		"build": "vite build",
-		"deploy": "npm run build && wrangler deploy",
-		"start": "concurrently \"wrangler dev\" \"vite\"",
-		"test": "vitest",
-		"test:frontend": "vitest --config vitest.frontend.config.ts",
-		"cf-typegen": "wrangler types"
-	},
-	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "^0.13.3",
-		"@testing-library/preact": "^3.2.4",
-		"@types/node": "^25.5.0",
-		"concurrently": "^9.0.0",
-		"jsdom": "^28.1.0",
-		"tsx": "^4.19.2",
-		"typescript": "^5.5.2",
-		"vite": "^6.0.0",
-		"vitest": "^4.1.0",
-		"wrangler": "^4.76.0"
-	},
-	"dependencies": {
-		"@preact/preset-vite": "^2.10.5",
-		"@preact/signals": "^2.9.0",
-		"hono": "^4.12.9",
-		"preact": "^10.29.2",
-		"zod": "^4.3.6"
-	}
+  "name": "maximum_bookings",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"wrangler dev\" \"vite\"",
+    "build": "vite build",
+    "deploy": "npm run build && wrangler deploy",
+    "start": "concurrently \"wrangler dev\" \"vite\"",
+    "test": "vitest",
+    "test:frontend": "vitest --config vitest.frontend.config.ts",
+    "cf-typegen": "wrangler types"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.13.3",
+    "@testing-library/preact": "^3.2.4",
+    "@types/node": "^25.5.0",
+    "concurrently": "^9.0.0",
+    "jsdom": "^28.1.0",
+    "prettier": "^3.8.4",
+    "tsx": "^4.19.2",
+    "typescript": "^5.5.2",
+    "vite": "^6.0.0",
+    "vitest": "^4.1.0",
+    "wrangler": "^4.76.0"
+  },
+  "dependencies": {
+    "@preact/preset-vite": "^2.10.5",
+    "@preact/signals": "^2.9.0",
+    "hono": "^4.12.9",
+    "preact": "^10.29.2",
+    "zod": "^4.3.6"
+  }
 }

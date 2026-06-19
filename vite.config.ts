@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import preact from '@preact/preset-vite'
-import { resolve } from 'path'
+import { defineConfig } from 'vite';
+import preact from '@preact/preset-vite';
+import { resolve } from 'path';
 
 export default defineConfig({
   root: resolve(__dirname, 'src/frontend'),
@@ -14,9 +14,9 @@ export default defineConfig({
       input: {
         index: resolve(__dirname, 'src/frontend/index.html'),
         'booking-widget': resolve(__dirname, 'src/frontend/booking-widget/index.html'),
-        'booking': resolve(__dirname, 'src/frontend/booking/index.html'),
-        'admin': resolve(__dirname, 'src/frontend/admin/index.html'),
-        'cancel': resolve(__dirname, 'src/frontend/cancel/index.html'),
+        booking: resolve(__dirname, 'src/frontend/booking/index.html'),
+        admin: resolve(__dirname, 'src/frontend/admin/index.html'),
+        cancel: resolve(__dirname, 'src/frontend/cancel/index.html'),
       },
     },
   },
@@ -37,4 +37,4 @@ export default defineConfig({
       '@shared': resolve(__dirname, 'src/frontend/shared'),
     },
   },
-})
+});

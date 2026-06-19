@@ -6,7 +6,7 @@
 .nav {
   display: flex;
   justify-content: flex-end;
-	align-items: center;
+  align-items: center;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
@@ -29,7 +29,9 @@
   font: inherit;
   font-size: 1rem;
   cursor: pointer;
-  transition: background 0.2s ease, opacity 0.2s ease;
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .closeBtn:hover {

@@ -10,7 +10,7 @@ export interface OpeningHoursEntry {
   day_of_week: number;
   /** D1 returns 0/1 integers; normalise to boolean before use */
   is_closed: boolean | 0 | 1;
-  open_time: string | null;  // "HH:MM"
+  open_time: string | null; // "HH:MM"
   close_time: string | null; // "HH:MM"
 }
 

@@ -31,15 +31,9 @@ const AdminSidebar: FunctionComponent<AdminSidebarProps> = ({ activePage, onGoBo
         {isOpen.value ? '✕' : '☰'}
       </button>
 
-      {isOpen.value && (
-        <div class={styles.overlay} onClick={close} aria-hidden="true" />
-      )}
+      {isOpen.value && <div class={styles.overlay} onClick={close} aria-hidden="true" />}
 
-      <nav
-        id="admin-sidebar-nav"
-        class={`${styles.sidebar_nav}${isOpen.value ? ` ${styles.open}` : ''}`}
-        aria-label="Admin navigation"
-      >
+      <nav id="admin-sidebar-nav" class={`${styles.sidebar_nav}${isOpen.value ? ` ${styles.open}` : ''}`} aria-label="Admin navigation">
         <div class={styles.sidebar_logo} aria-hidden="true" />
         <button
           class={`${styles.tab_btn}${activePage === 'bookings' ? ` ${styles.active}` : ''}`}

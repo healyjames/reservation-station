@@ -14,7 +14,11 @@ interface UseCancelBookingReturn {
   handleCancel: () => Promise<void>;
 }
 
-export function useCancelBooking(reservationId: string | null, bookingEmail: string | null, bookingToken: string | null): UseCancelBookingReturn {
+export function useCancelBooking(
+  reservationId: string | null,
+  bookingEmail: string | null,
+  bookingToken: string | null,
+): UseCancelBookingReturn {
   const view = useSignal<CancelView>('loading');
   const reservation = useSignal<Reservation | null>(null);
   const errorMessage = useSignal('');
@@ -46,7 +50,7 @@ export function useCancelBooking(reservationId: string | null, bookingEmail: str
         view.value = 'error';
         return;
       }
-      reservation.value = await response.json() as Reservation;
+      reservation.value = (await response.json()) as Reservation;
       inlineError.value = '';
       view.value = 'overview';
     } catch {
@@ -70,9 +74,10 @@ export function useCancelBooking(reservationId: string | null, bookingEmail: str
         view.value = 'success';
         return;
       }
-      inlineError.value = response.status === 404
-        ? 'Booking not found. It may have already been cancelled.'
-        : 'We could not cancel your booking right now. Please try again later.';
+      inlineError.value =
+        response.status === 404
+          ? 'Booking not found. It may have already been cancelled.'
+          : 'We could not cancel your booking right now. Please try again later.';
     } catch {
       inlineError.value = 'We could not cancel your booking right now. Please try again later.';
     } finally {

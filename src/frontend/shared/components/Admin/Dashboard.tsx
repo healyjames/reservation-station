@@ -71,7 +71,9 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
             <div class={styles.toggle_list} id="day-block-container">
               <div class={styles.toggle_list_item}>
                 <div class={styles.toggle_list_item_content}>
-                  <p class={styles.toggle_list_item_header}><strong>Block this day</strong></p>
+                  <p class={styles.toggle_list_item_header}>
+                    <strong>Block this day</strong>
+                  </p>
                   <p class={styles.toggle_list_item_subtext}>
                     Customers will no longer be able to make reservations on this date. Existing reservations will not be affected.
                   </p>
@@ -90,10 +92,10 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
 
             <div class={styles.new_booking_card}>
               <div class={styles.toggle_list_item_content}>
-                <p class={styles.toggle_list_item_header}><strong>New booking</strong></p>
-                <p class={styles.toggle_list_item_subtext}>
-                  Manually add a reservation for this date.
+                <p class={styles.toggle_list_item_header}>
+                  <strong>New booking</strong>
                 </p>
+                <p class={styles.toggle_list_item_subtext}>Manually add a reservation for this date.</p>
               </div>
               <button class={styles.btn_primary} onClick={openCreate}>
                 + New Booking
@@ -102,27 +104,15 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
           </div>
 
           <div id="bookings-list" aria-busy={bookings.isLoading.value}>
-            {bookings.isLoading.value && (
-              <p class={styles.loading_text}>Loading…</p>
-            )}
-            {!bookings.isLoading.value && bookings.errorMessage.value && (
-              <p class={styles.error_text}>{bookings.errorMessage.value}</p>
-            )}
+            {bookings.isLoading.value && <p class={styles.loading_text}>Loading…</p>}
+            {!bookings.isLoading.value && bookings.errorMessage.value && <p class={styles.error_text}>{bookings.errorMessage.value}</p>}
             {!bookings.isLoading.value && !bookings.errorMessage.value && reservations.length === 0 && (
               <p class={styles.empty_state}>No bookings for this date.</p>
             )}
             {!bookings.isLoading.value && reservations.length > 0 && (
               <>
-                <ReservationList
-                  reservations={reservations}
-                  onEdit={openEdit}
-                  onDelete={handleDeleteClick}
-                />
-                <BookingCards
-                  reservations={reservations}
-                  onEdit={openEdit}
-                  onDelete={handleDeleteClick}
-                />
+                <ReservationList reservations={reservations} onEdit={openEdit} onDelete={handleDeleteClick} />
+                <BookingCards reservations={reservations} onEdit={openEdit} onDelete={handleDeleteClick} />
               </>
             )}
           </div>
@@ -136,7 +126,9 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
           defaultDate={modalMode.value === 'create' ? formatDate(bookings.currentDate.value) : undefined}
           token={auth.token.value}
           onSuccess={() => bookings.fetchBookings(bookings.currentDate.value)}
-          onClose={() => { modalOpen.value = false; }}
+          onClose={() => {
+            modalOpen.value = false;
+          }}
         />
       )}
 
@@ -145,7 +137,9 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
           reservation={deleteReservation.value}
           token={auth.token.value}
           onSuccess={() => bookings.fetchBookings(bookings.currentDate.value)}
-          onClose={() => { deleteModalOpen.value = false; }}
+          onClose={() => {
+            deleteModalOpen.value = false;
+          }}
         />
       )}
     </div>

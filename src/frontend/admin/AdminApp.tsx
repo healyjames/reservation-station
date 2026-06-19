@@ -53,7 +53,9 @@ export const AdminApp: FunctionComponent = () => {
         <Dashboard
           auth={auth}
           onLogout={onLogout}
-          onGoSettings={() => { view.value = 'settings'; }}
+          onGoSettings={() => {
+            view.value = 'settings';
+          }}
         />
       );
     case 'settings':
@@ -61,7 +63,9 @@ export const AdminApp: FunctionComponent = () => {
         <Settings
           auth={auth}
           onLogout={onLogout}
-          onGoDashboard={() => { view.value = 'dashboard'; }}
+          onGoDashboard={() => {
+            view.value = 'dashboard';
+          }}
         />
       );
     default:

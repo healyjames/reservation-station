@@ -30,7 +30,11 @@ export interface UseManageBookingReturn {
   selectDate: (year: number, month: number, day: number) => Promise<void>;
 }
 
-export function useManageBooking(reservationId: string | null, bookingEmail: string | null, bookingToken: string | null): UseManageBookingReturn {
+export function useManageBooking(
+  reservationId: string | null,
+  bookingEmail: string | null,
+  bookingToken: string | null,
+): UseManageBookingReturn {
   const view = useSignal<ManageView>('loading');
   const reservation = useSignal<Reservation | null>(null);
   const tenantConfig = useSignal<TenantConfig | null>(null);
@@ -58,8 +62,10 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
     view.value = 'loading';
     let res: Reservation | null = null;
     try {
-	      const tokenParam = bookingToken ? `&token=${encodeURIComponent(bookingToken)}` : '';
-      const r = await fetch(`/api/reservations/${encodeURIComponent(reservationId)}?email=${encodeURIComponent(bookingEmail)}${tokenParam}`);
+      const tokenParam = bookingToken ? `&token=${encodeURIComponent(bookingToken)}` : '';
+      const r = await fetch(
+        `/api/reservations/${encodeURIComponent(reservationId)}?email=${encodeURIComponent(bookingEmail)}${tokenParam}`,
+      );
       if (r.status === 404) {
         errorMessage.value = 'Booking not found. It may have already been cancelled or the link is invalid.';
         view.value = 'error';
@@ -70,7 +76,7 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
         view.value = 'error';
         return;
       }
-      res = await r.json() as Reservation;
+      res = (await r.json()) as Reservation;
     } catch {
       errorMessage.value = 'We could not load your booking right now. Please try again later.';
       view.value = 'error';
@@ -78,8 +84,10 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
     }
     try {
       const t = await fetch(`/api/tenants/${encodeURIComponent(res.tenant_id)}`);
-      if (t.ok) tenantConfig.value = await t.json() as TenantConfig;
-    } catch { /* non-fatal */ }
+      if (t.ok) tenantConfig.value = (await t.json()) as TenantConfig;
+    } catch {
+      /* non-fatal */
+    }
     reservation.value = res;
     view.value = 'overview';
   }
@@ -127,12 +135,18 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
 
   async function fetchBlockedDatesForMonth(year: number, month: number): Promise<void> {
     const tenantId = tenantConfig.value?.id;
-    if (!tenantId) { blockedDates.value = new Set(); return; }
+    if (!tenantId) {
+      blockedDates.value = new Set();
+      return;
+    }
     const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
     try {
       const r = await fetch(`/api/reservations/blocked-dates?tenant_id=${encodeURIComponent(tenantId)}&month=${monthStr}`);
-      if (!r.ok) { blockedDates.value = new Set(); return; }
-      const data = await r.json() as { blocked_dates: string[] };
+      if (!r.ok) {
+        blockedDates.value = new Set();
+        return;
+      }
+      const data = (await r.json()) as { blocked_dates: string[] };
       blockedDates.value = new Set(data.blocked_dates ?? []);
     } catch {
       blockedDates.value = new Set();
@@ -141,7 +155,10 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
 
   async function fetchBlockedTimesForDate(date: CalendarDate): Promise<void> {
     const tenantId = tenantConfig.value?.id;
-    if (!tenantId) { blockedTimes.value = []; return; }
+    if (!tenantId) {
+      blockedTimes.value = [];
+      return;
+    }
     if (blockedTimesAbortController) {
       blockedTimesAbortController.abort();
     }
@@ -152,9 +169,14 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
     try {
       const dateStr = formatDateForAPI(date);
       const guests = Number(reservation.value?.guests) || 2;
-      const r = await fetch(`/api/reservations/blocked-times?tenant_id=${encodeURIComponent(tenantId)}&date=${dateStr}&guests=${guests}`, { signal });
-      if (!r.ok) { blockedTimes.value = []; return; }
-      const data = await r.json() as { blocked_times: string[] };
+      const r = await fetch(`/api/reservations/blocked-times?tenant_id=${encodeURIComponent(tenantId)}&date=${dateStr}&guests=${guests}`, {
+        signal,
+      });
+      if (!r.ok) {
+        blockedTimes.value = [];
+        return;
+      }
+      const data = (await r.json()) as { blocked_times: string[] };
       blockedTimes.value = data.blocked_times ?? [];
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
@@ -193,9 +215,10 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
         view.value = 'success-edit';
         return;
       }
-      errorMessage.value = r.status === 404
-        ? 'Booking not found. It may have already been cancelled.'
-        : 'We could not save your changes. Please try again later.';
+      errorMessage.value =
+        r.status === 404
+          ? 'Booking not found. It may have already been cancelled.'
+          : 'We could not save your changes. Please try again later.';
     } catch {
       errorMessage.value = 'We could not save your changes. Please try again later.';
     }
@@ -221,9 +244,10 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
         view.value = 'success-edit';
         return;
       }
-      errorMessage.value = r.status === 404
-        ? 'Booking not found. It may have already been cancelled.'
-        : 'We could not save your changes. Please try again later.';
+      errorMessage.value =
+        r.status === 404
+          ? 'Booking not found. It may have already been cancelled.'
+          : 'We could not save your changes. Please try again later.';
     } catch {
       errorMessage.value = 'We could not save your changes. Please try again later.';
     }
@@ -241,20 +265,37 @@ export function useManageBooking(reservationId: string | null, bookingEmail: str
         view.value = 'success-cancel';
         return;
       }
-      errorMessage.value = r.status === 404
-        ? 'Booking not found. It may have already been cancelled.'
-        : 'We could not cancel your booking right now. Please try again later.';
+      errorMessage.value =
+        r.status === 404
+          ? 'Booking not found. It may have already been cancelled.'
+          : 'We could not cancel your booking right now. Please try again later.';
     } catch {
       errorMessage.value = 'We could not cancel your booking right now. Please try again later.';
     }
   }
 
   return {
-    view, reservation, tenantConfig, errorMessage, editData,
-    calYear, calMonth, selectedDate, selectedTime,
-    blockedDates, blockedTimes, isFetchingTimes,
-    goToOverview, goToEditDetails, goToChangeDatetime, goToCancelConfirm,
-    saveEditDetails, saveDatetime, confirmCancel,
-    fetchBlockedDatesForMonth, fetchBlockedTimesForDate, selectDate,
+    view,
+    reservation,
+    tenantConfig,
+    errorMessage,
+    editData,
+    calYear,
+    calMonth,
+    selectedDate,
+    selectedTime,
+    blockedDates,
+    blockedTimes,
+    isFetchingTimes,
+    goToOverview,
+    goToEditDetails,
+    goToChangeDatetime,
+    goToCancelConfirm,
+    saveEditDetails,
+    saveDatetime,
+    confirmCancel,
+    fetchBlockedDatesForMonth,
+    fetchBlockedTimesForDate,
+    selectDate,
   };
 }

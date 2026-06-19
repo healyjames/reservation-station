@@ -32,7 +32,7 @@ export function useAvailability(): UseAvailabilityReturn {
         blockedDatesError.value = 'Could not load availability. Please try again.';
         return;
       }
-      const data = await res.json() as BlockedDatesResponse;
+      const data = (await res.json()) as BlockedDatesResponse;
       blockedDates.value = new Set(data.blocked_dates ?? []);
     } catch {
       blockedDatesError.value = 'Could not load availability. Please try again.';
@@ -51,9 +51,15 @@ export function useAvailability(): UseAvailabilityReturn {
     isFetchingTimes.value = true;
     try {
       const dateStr = formatDateForAPI(date);
-      const res = await fetch(`/api/reservations/blocked-times?tenant_id=${encodeURIComponent(tenantId)}&date=${dateStr}&guests=${guests}`, { signal });
-      if (!res.ok) { blockedTimes.value = []; return; }
-      const data = await res.json() as BlockedTimesResponse;
+      const res = await fetch(
+        `/api/reservations/blocked-times?tenant_id=${encodeURIComponent(tenantId)}&date=${dateStr}&guests=${guests}`,
+        { signal },
+      );
+      if (!res.ok) {
+        blockedTimes.value = [];
+        return;
+      }
+      const data = (await res.json()) as BlockedTimesResponse;
       blockedTimes.value = data.blocked_times ?? [];
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;

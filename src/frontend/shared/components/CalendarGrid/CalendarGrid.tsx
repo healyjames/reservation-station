@@ -22,8 +22,19 @@ interface CalendarGridProps {
 }
 
 const CalendarGrid: FunctionComponent<CalendarGridProps> = ({
-  year, month, selectedDate, isDisabled, isBlocked, isRangeStart, isInRange, isRangeEnd,
-  onSelect, onBlockedSelect, onHoverDate, onLeaveGrid, class: className
+  year,
+  month,
+  selectedDate,
+  isDisabled,
+  isBlocked,
+  isRangeStart,
+  isInRange,
+  isRangeEnd,
+  onSelect,
+  onBlockedSelect,
+  onHoverDate,
+  onLeaveGrid,
+  class: className,
 }) => {
   const today = new Date();
   const todayYear = today.getFullYear();
@@ -36,14 +47,9 @@ const CalendarGrid: FunctionComponent<CalendarGridProps> = ({
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   return (
-    <div
-      class={`${styles.grid} ${className ?? ''}`}
-      role="grid"
-      aria-label={`${MONTHS[month]} ${year}`}
-      onMouseLeave={onLeaveGrid}
-    >
+    <div class={`${styles.grid} ${className ?? ''}`} role="grid" aria-label={`${MONTHS[month]} ${year}`} onMouseLeave={onLeaveGrid}>
       {/* Day name column headers */}
-      {DAY_NAMES.map(name => (
+      {DAY_NAMES.map((name) => (
         <div key={name} class={styles.dayName} role="columnheader" aria-label={name}>
           {name}
         </div>
@@ -58,15 +64,12 @@ const CalendarGrid: FunctionComponent<CalendarGridProps> = ({
       {Array.from({ length: daysInMonth }, (_, i) => {
         const day = i + 1;
         const isTodayCell = year === todayYear && month === todayMonth && day === todayDay;
-        const isPast = year < todayYear ||
-          (year === todayYear && month < todayMonth) ||
-          (year === todayYear && month === todayMonth && day < todayDay);
+        const isPast =
+          year < todayYear || (year === todayYear && month < todayMonth) || (year === todayYear && month === todayMonth && day < todayDay);
         const disabled = isDisabled?.(year, month, day) ?? false;
         const blocked = !isPast && (isBlocked?.(year, month, day) ?? false);
-        const isSelectedCell = selectedDate != null &&
-          selectedDate.year === year &&
-          selectedDate.month === month &&
-          selectedDate.day === day;
+        const isSelectedCell =
+          selectedDate != null && selectedDate.year === year && selectedDate.month === month && selectedDate.day === day;
 
         return (
           <DayCell

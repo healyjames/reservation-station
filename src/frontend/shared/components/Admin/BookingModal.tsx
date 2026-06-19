@@ -61,7 +61,7 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
         onClose();
         return;
       }
-      const data = await r.json().catch(() => ({})) as { error?: string };
+      const data = (await r.json().catch(() => ({}))) as { error?: string };
       errorMessage.value = data.error ?? `Request failed (${r.status})`;
     } catch {
       errorMessage.value = 'Unable to connect. Please try again.';
@@ -81,7 +81,7 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
         onClose();
         return;
       }
-      const data = await r.json().catch(() => ({})) as { error?: string };
+      const data = (await r.json().catch(() => ({}))) as { error?: string };
       errorMessage.value = data.error ?? `Delete failed (${r.status})`;
     } catch {
       errorMessage.value = 'Unable to connect. Please try again.';
@@ -112,7 +112,9 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
               value={firstName.value}
               required
               autocomplete="off"
-              onInput={(e) => { firstName.value = (e.target as HTMLInputElement).value; }}
+              onInput={(e) => {
+                firstName.value = (e.target as HTMLInputElement).value;
+              }}
             />
           </FormField>
           <FormField label="Surname" htmlFor="bm-surname" required>
@@ -122,7 +124,9 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
               value={surname.value}
               required
               autocomplete="off"
-              onInput={(e) => { surname.value = (e.target as HTMLInputElement).value; }}
+              onInput={(e) => {
+                surname.value = (e.target as HTMLInputElement).value;
+              }}
             />
           </FormField>
         </div>
@@ -134,7 +138,9 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
               name="telephone"
               value={telephone.value}
               autocomplete="off"
-              onInput={(e) => { telephone.value = (e.target as HTMLInputElement).value; }}
+              onInput={(e) => {
+                telephone.value = (e.target as HTMLInputElement).value;
+              }}
             />
           </FormField>
           <FormField label="Email" htmlFor="bm-email">
@@ -144,7 +150,9 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
               name="email"
               value={email.value}
               autocomplete="off"
-              onInput={(e) => { email.value = (e.target as HTMLInputElement).value; }}
+              onInput={(e) => {
+                email.value = (e.target as HTMLInputElement).value;
+              }}
             />
           </FormField>
         </div>
@@ -156,7 +164,9 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
               name="reservation_date"
               value={reservationDate.value}
               required
-              onChange={(e) => { reservationDate.value = (e.target as HTMLInputElement).value; }}
+              onChange={(e) => {
+                reservationDate.value = (e.target as HTMLInputElement).value;
+              }}
             />
           </FormField>
           <FormField label="Time" htmlFor="bm-time" required>
@@ -166,31 +176,37 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
               name="reservation_time"
               value={reservationTime.value}
               required
-              onChange={(e) => { reservationTime.value = (e.target as HTMLInputElement).value; }}
+              onChange={(e) => {
+                reservationTime.value = (e.target as HTMLInputElement).value;
+              }}
             />
           </FormField>
         </div>
-				<div class={styles.fields}>
-					<FormField label="Guests" htmlFor="bm-guests" required>
-						<Input
-							id="bm-guests"
-							type="number"
-							name="guests"
-							value={guests.value}
-							required
-							onChange={(e) => { guests.value = parseInt((e.target as HTMLInputElement).value, 10) || 1; }}
-						/>
-					</FormField>
-					<FormField label="Dietary requirements" htmlFor="bm-dietary">
-						<Textarea
-							id="bm-dietary"
-							name="dietary_requirements"
-							value={dietary.value}
-							rows={2}
-							onInput={(e) => { dietary.value = (e.target as HTMLTextAreaElement).value; }}
-						/>
-					</FormField>
-				</div>
+        <div class={styles.fields}>
+          <FormField label="Guests" htmlFor="bm-guests" required>
+            <Input
+              id="bm-guests"
+              type="number"
+              name="guests"
+              value={guests.value}
+              required
+              onChange={(e) => {
+                guests.value = parseInt((e.target as HTMLInputElement).value, 10) || 1;
+              }}
+            />
+          </FormField>
+          <FormField label="Dietary requirements" htmlFor="bm-dietary">
+            <Textarea
+              id="bm-dietary"
+              name="dietary_requirements"
+              value={dietary.value}
+              rows={2}
+              onInput={(e) => {
+                dietary.value = (e.target as HTMLTextAreaElement).value;
+              }}
+            />
+          </FormField>
+        </div>
       </form>
     </Modal>
   );
