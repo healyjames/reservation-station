@@ -3,9 +3,7 @@ import type { FunctionComponent } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { Spinner } from '@shared/components';
 import { useAuth } from '@shared/hooks/useAuth';
-import Login from '@shared/components/Admin/Login';
-import Dashboard from '@shared/components/Admin/Dashboard';
-import Settings from '@shared/components/Admin/Settings';
+import { Login, Dashboard, Settings } from '@shared/components/Admin';
 import styles from './AdminApp.module.css';
 
 type AdminView = 'login' | 'dashboard' | 'settings';

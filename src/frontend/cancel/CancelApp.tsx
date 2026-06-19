@@ -1,8 +1,5 @@
 import type { FunctionComponent } from 'preact';
-import { Loading } from '@shared/components/Cancel/Loading';
-import { Error } from '@shared/components/Cancel/Error';
-import { Overview } from '@shared/components/Cancel/Overview';
-import { Success } from '@shared/components/Cancel/Success';
+import { Loading, Error, Overview, Success } from '@shared/components/Cancel';
 import { useCancelBooking } from '@shared/hooks/useCancelBooking';
 
 interface CancelAppProps {

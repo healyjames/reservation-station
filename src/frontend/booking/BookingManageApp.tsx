@@ -3,14 +3,16 @@ import type { Signal } from '@preact/signals';
 import type { Reservation, TenantConfig, CalendarDate } from '@shared/types';
 import type { EditData } from '@shared/types';
 import { useManageBooking } from '@shared/hooks/useManageBooking';
-import { Loading } from '@shared/components/BookingManage/Loading';
-import { Error } from '@shared/components/BookingManage/Error';
-import { Overview } from '@shared/components/BookingManage/Overview';
-import { EditDetails } from '@shared/components/BookingManage/EditDetails';
-import { ChangeDateTime } from '@shared/components/BookingManage/ChangeDateTime';
-import { CancelConfirm } from '@shared/components/BookingManage/CancelConfirm';
-import { SuccessEdit } from '@shared/components/BookingManage/SuccessEdit';
-import { SuccessCancel } from '@shared/components/BookingManage/SuccessCancel';
+import {
+  Loading,
+  Error,
+  Overview,
+  EditDetails,
+  ChangeDateTime,
+  CancelConfirm,
+  SuccessEdit,
+  SuccessCancel,
+} from '@shared/components/BookingManage';
 
 interface BookingManageAppProps {
   reservationId: string | null;

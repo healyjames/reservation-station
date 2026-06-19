@@ -5,10 +5,7 @@ import type { BookingStep } from '@shared/types';
 import { useTenant } from '@shared/hooks/useTenant';
 import { useAvailability } from '@shared/hooks/useAvailability';
 import { useBookingForm } from '@shared/hooks/useBookingForm';
-import { Calendar } from '@shared/components/BookingWidget/Calendar';
-import { Step1Form } from '@shared/components/BookingWidget/Step1Form';
-import { Step2Form } from '@shared/components/BookingWidget/Step2Form';
-import { Success } from '@shared/components/BookingWidget/Success';
+import { Calendar, Step1Form, Step2Form, Success } from '@shared/components/BookingWidget';
 import { Spinner, MessageCard } from '@shared/components';
 
 import { isStandaloneMode } from '@shared/utils/userJourney';
