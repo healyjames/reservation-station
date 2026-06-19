@@ -1,4 +1,4 @@
-import type { EmailTemplate, TenantReservationEmailData } from '../utils/email';
+import type { EmailTemplate, TenantReservationEmailData } from '../types';
 
 function detailsTable(rows: [string, string][]): string {
   const cells = rows

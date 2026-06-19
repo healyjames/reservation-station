@@ -1,3 +1,9 @@
+import type { JwtPayload } from '../types';
+
+// Re-export so middleware and route files can import JwtPayload from here
+// if they prefer a shorter relative path.
+export type { JwtPayload } from '../types';
+
 function toBase64Url(bytes: Uint8Array): string {
   return btoa(String.fromCharCode(...bytes))
     .replace(/\+/g, '-')
@@ -45,7 +51,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
 }
 
 export async function signJWT(
-  payload: { userId: string; tenantId: string },
+  payload: JwtPayload,
   secret: string,
   expiresInSeconds = 8 * 60 * 60,
 ): Promise<string> {
@@ -59,7 +65,7 @@ export async function signJWT(
   return `${signingInput}.${signature}`;
 }
 
-export async function verifyJWT(token: string, secret: string): Promise<{ userId: string; tenantId: string } | null> {
+export async function verifyJWT(token: string, secret: string): Promise<JwtPayload | null> {
   const parts = token.split('.');
   if (parts.length !== 3) return null;
   const [header, body, signature] = parts;

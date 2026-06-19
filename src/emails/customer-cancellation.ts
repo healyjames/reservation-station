@@ -1,4 +1,4 @@
-import type { CustomerReservationEmailData, EmailTemplate } from '../utils/email';
+import type { CustomerReservationEmailData, EmailTemplate } from '../types';
 
 function detailsTable(rows: [string, string][]): string {
   const cells = rows

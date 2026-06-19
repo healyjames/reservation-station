@@ -1,4 +1,8 @@
-export type SlotReservation = { reservation_time: string; guests: number };
+import type { SlotReservation } from '../types';
+
+// Re-export so any existing `import { SlotReservation } from '../utils/slots'` callers
+// continue to work without changes.
+export type { SlotReservation } from '../types';
 
 export function toMinutes(time: string): number {
   const [h, m] = time.split(':').map(Number);
