@@ -1,20 +1,45 @@
 import { z } from 'zod';
 import { Hono } from 'hono';
-import { Reservation, CreateReservationSchema, UpdateReservationSchema, CreateReservation } from '../schema';
-import { generateTimeSlots, calculateConcurrentGuests, toMinutes, SlotReservation } from '../utils/slots';
+import {
+	Reservation,
+	CreateReservationSchema,
+	UpdateReservationSchema,
+	CreateReservation
+} from '../schema';
+import {
+	generateTimeSlots,
+	calculateConcurrentGuests,
+	toMinutes,
+	SlotReservation
+} from '../utils/slots';
+import {
+	generateManageToken,
+	hashManageToken,
+	verifyManageToken
+} from '../utils/manageToken';
 import { sendEmail } from '../utils/email';
+import { adminAuth } from '../middleware/adminAuth';
+
 import { buildCustomerConfirmationEmail } from '../emails/customer-confirmation';
 import { buildCustomerAmendmentEmail } from '../emails/customer-amendment';
 import { buildCustomerCancellationEmail } from '../emails/customer-cancellation';
 import { buildTenantConfirmationEmail } from '../emails/tenant-confirmation';
 import { buildTenantAmendmentEmail } from '../emails/tenant-amendment';
 import { buildTenantCancellationEmail } from '../emails/tenant-cancellation';
-import { generateManageToken, hashManageToken, verifyManageToken } from '../utils/manageToken';
-import { adminAuth } from '../middleware/adminAuth';
 
-type ReservationWithTenant = Reservation & { tenant_name: string; contact_email: string };
+type ReservationWithTenant = Reservation & {
+	tenant_name: string;
+	contact_email: string
+};
 
-const reservations = new Hono<{ Bindings: Env; Variables: { userId: string; tenantId: string } }>();
+const reservations = new Hono<{
+	Bindings: Env;
+	Variables: {
+		userId: string;
+		tenantId: string
+	}
+}>();
+
 reservations.get('/blocked-dates', async (c) => {
   const tenantId = c.req.query('tenant_id');
   const month = c.req.query('month');
@@ -27,7 +52,10 @@ reservations.get('/blocked-dates', async (c) => {
     return c.json({ error: 'month must be in YYYY-MM format' }, 400);
   }
 
-  const tenant = await c.env.maximum_bookings_db.prepare('SELECT id FROM Tenants WHERE id = ?').bind(tenantId).first<{ id: string }>();
+  const tenant = await c.env.maximum_bookings_db
+		.prepare('SELECT id FROM Tenants WHERE id = ?')
+		.bind(tenantId)
+		.first<{ id: string }>();
 
   if (!tenant) {
     return c.json({ error: 'Tenant not found' }, 404);
@@ -46,8 +74,8 @@ reservations.get('/blocked-dates', async (c) => {
   const blockedSet = new Set(results.map((r) => r.date));
 
   if (closedDays.length > 0) {
+		const [year, monthNum] = month.split('-').map(Number);
     const closedDowSet = new Set(closedDays.map((r) => r.day_of_week));
-    const [year, monthNum] = month.split('-').map(Number);
     const daysInMonth = new Date(year, monthNum, 0).getDate();
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${month}-${day.toString().padStart(2, '0')}`;
@@ -277,7 +305,7 @@ reservations.post('/', async (c) => {
     return c.json({ error: 'Bookings are not available for this date' }, 422);
   }
 
-  // H-8: Reject bookings outside opening hours
+  // Reject bookings outside opening hours
   const dow = new Date(data.reservation_date + 'T12:00:00Z').getUTCDay();
   const openingHours = await c.env.maximum_bookings_db
     .prepare('SELECT is_closed, open_time, close_time FROM OpeningHours WHERE tenant_id = ? AND day_of_week = ?')
@@ -460,7 +488,7 @@ reservations.patch('/:id', async (c) => {
 
   const body = parsed.data;
 
-  // H-10: Re-validate capacity when guests, date, or time is being changed
+  // Re-validate capacity when guests, date, or time is being changed
   const needsCapacityCheck = body.guests !== undefined || body.reservation_date !== undefined || body.reservation_time !== undefined;
   const effectiveGuests = body.guests ?? existing.guests;
   const effectiveDate = body.reservation_date ?? existing.reservation_date;

@@ -15,7 +15,10 @@ auth.post('/login', async (c) => {
 
   const { email, password } = parsed.data;
 
-  const user = await c.env.maximum_bookings_db.prepare('SELECT * FROM AdminUsers WHERE email = ?').bind(email).first<AdminUser>();
+  const user = await c.env.maximum_bookings_db
+		.prepare('SELECT * FROM AdminUsers WHERE email = ?')
+		.bind(email)
+		.first<AdminUser>();
 
   if (!user) {
     return c.json({ success: false, error: 'Invalid credentials' }, 401);

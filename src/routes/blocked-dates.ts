@@ -3,7 +3,13 @@ import { z } from 'zod';
 import { adminAuth } from '../middleware/adminAuth';
 import { BlockedDate, BlockedDateSchema, CreateBlockedDateSchema, CreateBlockedDate, BlockDateBodySchema } from '../schema';
 
-const blockedDates = new Hono<{ Bindings: Env; Variables: { userId: string; tenantId: string } }>();
+const blockedDates = new Hono<{
+	Bindings: Env;
+	Variables: {
+		userId: string;
+		tenantId: string
+	}
+}>();
 
 blockedDates.use('*', adminAuth);
 
@@ -51,7 +57,15 @@ blockedDates.post('/', async (c) => {
 
   await c.env.maximum_bookings_db
     .prepare('INSERT INTO BlockedDates (id, tenant_id, date, start_time, end_time, reason, created_date) VALUES (?, ?, ?, ?, ?, ?, ?)')
-    .bind(id, tenantId, data.date, data.start_time ?? null, data.end_time ?? null, data.reason ?? null, now)
+    .bind(
+			id,
+			tenantId,
+			data.date,
+			data.start_time ?? null,
+			data.end_time ?? null,
+			data.reason ?? null,
+			now
+		)
     .run();
 
   const row = await c.env.maximum_bookings_db.prepare('SELECT * FROM BlockedDates WHERE id = ?').bind(id).first<BlockedDate>();

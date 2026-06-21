@@ -88,19 +88,28 @@ admin.post('/reservations', async (c) => {
     return c.json({ error: z.prettifyError(parsed.error) }, 400);
   }
 
-  const { first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements } = parsed.data;
+  const {
+		first_name,
+		surname,
+		telephone,
+		email,
+		reservation_date,
+		reservation_time,
+		guests,
+		dietary_requirements
+	} = parsed.data;
 
   const tenant = await c.env.maximum_bookings_db
     .prepare('SELECT name, status, max_guests, max_covers, concurrent_guests_time_limit, contact_email FROM Tenants WHERE id = ?')
     .bind(tenantId)
-    .first<{
+    .first<({
       name: string;
       status: string;
       max_guests: number;
       max_covers: number;
       concurrent_guests_time_limit: number;
       contact_email: string;
-    }>();
+    })>();
 
   if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
 
@@ -231,7 +240,10 @@ admin.patch('/reservations/:id', async (c) => {
   const tenantId = c.get('tenantId');
   const id = c.req.param('id');
 
-  const existing = await c.env.maximum_bookings_db.prepare('SELECT * FROM Reservations WHERE id = ?').bind(id).first<Reservation>();
+  const existing = await c.env.maximum_bookings_db
+		.prepare('SELECT * FROM Reservations WHERE id = ?')
+		.bind(id)
+		.first<Reservation>();
 
   if (!existing || existing.tenant_id !== tenantId) {
     return c.json({ error: 'Reservation not found' }, 404);
