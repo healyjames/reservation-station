@@ -20,8 +20,16 @@ interface CalendarProps {
 }
 
 export const Calendar: FunctionComponent<CalendarProps> = ({
-  year, month, selectedDate, blockedDates, blockedDatesError, isFetchingDates, onMonthChange, onDateSelect,
-  isStandalone = false, tenantName,
+  year,
+  month,
+  selectedDate,
+  blockedDates,
+  blockedDatesError,
+  isFetchingDates,
+  onMonthChange,
+  onDateSelect,
+  isStandalone = false,
+  tenantName,
 }) => {
   const tooltipVisible = useSignal(false);
   const tooltipAnchorRect = useSignal<DOMRect | null>(null);
@@ -48,21 +56,29 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
     if (year === todayYear && month === todayMonth) return;
     let newMonth = month - 1;
     let newYear = year;
-    if (newMonth < 0) { newMonth = 11; newYear -= 1; }
+    if (newMonth < 0) {
+      newMonth = 11;
+      newYear -= 1;
+    }
     onMonthChange(newYear, newMonth);
   }
 
   function nextMonth() {
     let newMonth = month + 1;
     let newYear = year;
-    if (newMonth > 11) { newMonth = 0; newYear += 1; }
+    if (newMonth > 11) {
+      newMonth = 0;
+      newYear += 1;
+    }
     onMonthChange(newYear, newMonth);
   }
 
   function handleBlockedSelect(_y: number, _m: number, _d: number, el: HTMLDivElement) {
     tooltipAnchorRect.value = el.getBoundingClientRect();
     tooltipVisible.value = true;
-    setTimeout(() => { tooltipVisible.value = false; }, 3000);
+    setTimeout(() => {
+      tooltipVisible.value = false;
+    }, 3000);
   }
 
   const onCurrentMonth = year === todayYear && month === todayMonth;
@@ -71,12 +87,8 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
     <div class={styles.container} role="region" aria-labelledby="calendar-title">
       {isStandalone && (
         <div class={styles.welcome}>
-          <h1 class={styles.welcome_title}>
-            {tenantName ? `${tenantName} Reservations` : 'Make a Reservation'}
-          </h1>
-          <p class={styles.welcome_subtitle}>
-            Select a date below to check availability and book your table.
-          </p>
+          <h1 class={styles.welcome_title}>{tenantName ? `${tenantName} Reservations` : 'Make a Reservation'}</h1>
+          <p class={styles.welcome_subtitle}>Select a date below to check availability and book your table.</p>
         </div>
       )}
       <div class={styles.header}>
@@ -87,24 +99,33 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
             aria-label="Previous month"
             disabled={onCurrentMonth || isFetchingDates}
             onClick={prevMonth}
-						size="sm"
-						variant="ghost"
-          >&#8592;</Button>
-					<h2 id="calendar-title">{MONTHS[month]} {year}</h2>
+            size="sm"
+            variant="ghost"
+          >
+            &#8592;
+          </Button>
+          <h2 id="calendar-title">
+            {MONTHS[month]} {year}
+          </h2>
           <Button
             type="button"
             class={styles.nav_button}
             aria-label="Next month"
             disabled={isFetchingDates}
             onClick={nextMonth}
-						size="sm"
-						variant="ghost"
-          >&#8594;</Button>
+            size="sm"
+            variant="ghost"
+          >
+            &#8594;
+          </Button>
         </div>
       </div>
 
       {blockedDatesError && (
-        <div role="alert" style={`display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:8px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:13px;color:#664d03;${isStandalone && 'max-width: 800px; margin: 1rem auto;'}`}>
+        <div
+          role="alert"
+          style={`display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:8px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:13px;color:#664d03;${isStandalone && 'max-width: 800px; margin: 1rem auto;'}`}
+        >
           <span style="flex:1">{blockedDatesError}</span>
           <Button type="button" size="sm" variant="primary" onClick={() => onMonthChange(year, month)}>
             Retry
@@ -112,17 +133,19 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
         </div>
       )}
 
-      <div style={{
-				...(isFetchingDates && {
-					opacity: 0.5,
-					pointerEvents: 'none',
-				}),
-				...(isStandalone && {
-					padding: '1rem',
-					maxWidth: '800px',
-					margin: '0 auto',
-				}),
-			}}>
+      <div
+        style={{
+          ...(isFetchingDates && {
+            opacity: 0.5,
+            pointerEvents: 'none',
+          }),
+          ...(isStandalone && {
+            padding: '1rem',
+            maxWidth: '800px',
+            margin: '0 auto',
+          }),
+        }}
+      >
         <CalendarGrid
           year={year}
           month={month}
@@ -138,7 +161,9 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
         visible={tooltipVisible.value}
         message="Bookings currently unavailable for this date"
         anchorRect={tooltipAnchorRect.value}
-        onClose={() => { tooltipVisible.value = false; }}
+        onClose={() => {
+          tooltipVisible.value = false;
+        }}
       />
     </div>
   );

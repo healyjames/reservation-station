@@ -14,7 +14,9 @@ export function generateSlots(openTime: string, closeTime: string): string[] {
   const open = toMinutes(openTime);
   const close = toMinutes(closeTime);
   for (let mins = open; mins < close; mins += 30) {
-    const h = Math.floor(mins / 60).toString().padStart(2, '0');
+    const h = Math.floor(mins / 60)
+      .toString()
+      .padStart(2, '0');
     const m = (mins % 60).toString().padStart(2, '0');
     slots.push(`${h}:${m}`);
   }
@@ -29,7 +31,7 @@ export function getSlotsForDate(date: CalendarDate, tenantConfig: TenantConfig |
   const dateStr = `${date.year}-${String(date.month + 1).padStart(2, '0')}-${String(date.day).padStart(2, '0')}T12:00:00Z`;
   const dow = new Date(dateStr).getUTCDay();
 
-  const entry = hours.find(h => Number(h.day_of_week) === dow);
+  const entry = hours.find((h) => Number(h.day_of_week) === dow);
   if (!entry || entry.is_closed) return [];
   if (!entry.open_time || !entry.close_time) return generateSlots(DEFAULT_OPEN, DEFAULT_CLOSE);
   return generateSlots(entry.open_time, entry.close_time);
@@ -49,15 +51,11 @@ export function getEarliestTodaySlot(): string {
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 }
 
-export function getAvailableSlots(
-  date: CalendarDate,
-  tenantConfig: TenantConfig | null,
-  blockedTimes: string[],
-): string[] {
-  let slots = getSlotsForDate(date, tenantConfig).filter(s => !blockedTimes.includes(s));
+export function getAvailableSlots(date: CalendarDate, tenantConfig: TenantConfig | null, blockedTimes: string[]): string[] {
+  let slots = getSlotsForDate(date, tenantConfig).filter((s) => !blockedTimes.includes(s));
   if (isToday(date)) {
     const earliest = getEarliestTodaySlot();
-    slots = slots.filter(s => s >= earliest);
+    slots = slots.filter((s) => s >= earliest);
   }
   return slots;
 }

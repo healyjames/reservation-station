@@ -3,7 +3,7 @@ export async function adminFetch(url: string, token: string, options?: RequestIn
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       ...options?.headers,
     },
   });

@@ -11,19 +11,18 @@ interface FormFieldProps {
   children: ComponentChildren;
 }
 
-const FormField: FunctionComponent<FormFieldProps> = ({
-  label,
-  htmlFor,
-  error,
-  hint,
-  required,
-  class: className,
-  children,
-}) => (
+const FormField: FunctionComponent<FormFieldProps> = ({ label, htmlFor, error, hint, required, class: className, children }) => (
   <div class={`${styles.field} ${className ?? ''}`}>
-    <label htmlFor={htmlFor}>{label}{required && ' *'}</label>
+    <label htmlFor={htmlFor}>
+      {label}
+      {required && ' *'}
+    </label>
     {children}
-    {error && <span class={styles.error} role="alert">{error}</span>}
+    {error && (
+      <span class={styles.error} role="alert">
+        {error}
+      </span>
+    )}
     {!error && hint && <span class={styles.hint}>{hint}</span>}
   </div>
 );

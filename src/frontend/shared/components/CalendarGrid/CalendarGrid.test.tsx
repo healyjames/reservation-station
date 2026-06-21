@@ -57,18 +57,16 @@ describe('CalendarGrid', () => {
 
     // Find the cell that contains today's day number and verify today class
     const allCells = container.querySelectorAll('[role="button"], [role="gridcell"]');
-    const todayCell = Array.from(allCells).find(el => el.textContent === String(day)) as HTMLElement | undefined;
+    const todayCell = Array.from(allCells).find((el) => el.textContent === String(day)) as HTMLElement | undefined;
     expect(todayCell).toBeTruthy();
     expect(todayCell!.className).toContain('today');
   });
 
   it('marks selected date cell with selected class', () => {
     const selectedDate: CalendarDate = { year: 2099, month: 5, day: 15 };
-    const { container } = render(
-      <CalendarGrid year={2099} month={5} selectedDate={selectedDate} />
-    );
+    const { container } = render(<CalendarGrid year={2099} month={5} selectedDate={selectedDate} />);
     const allButtons = container.querySelectorAll('[role="button"]');
-    const selected = Array.from(allButtons).find(el => el.textContent === '15') as HTMLElement | undefined;
+    const selected = Array.from(allButtons).find((el) => el.textContent === '15') as HTMLElement | undefined;
     expect(selected).toBeTruthy();
     expect(selected!.className).toContain('selected');
   });

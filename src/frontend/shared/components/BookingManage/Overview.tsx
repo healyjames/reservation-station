@@ -26,9 +26,7 @@ export const Overview: FunctionComponent<OverviewProps> = ({
     { label: 'Date', value: formatDate(r.reservation_date) },
     { label: 'Time', value: r.reservation_time || 'Unknown time' },
     { label: 'Party size', value: getGuestsLabel(Number(r.guests)) },
-    ...(r.dietary_requirements?.trim()
-      ? [{ label: 'Dietary requirements', value: r.dietary_requirements.trim() }]
-      : []),
+    ...(r.dietary_requirements?.trim() ? [{ label: 'Dietary requirements', value: r.dietary_requirements.trim() }] : []),
   ];
 
   return (
@@ -41,10 +39,16 @@ export const Overview: FunctionComponent<OverviewProps> = ({
       )}
       <BookingDetailsList details={details} />
       <div class={styles.action_group}>
-        <Button variant="primary" onClick={goToEditDetails}>Edit Details</Button>
-        <Button variant="secondary" onClick={() => goToChangeDatetime()}>Change Date &amp; Time</Button>
+        <Button variant="primary" onClick={goToEditDetails}>
+          Edit Details
+        </Button>
+        <Button variant="secondary" onClick={() => goToChangeDatetime()}>
+          Change Date &amp; Time
+        </Button>
       </div>
-      <Button variant="danger" fullWidth onClick={goToCancelConfirm}>Cancel Booking</Button>
+      <Button variant="danger" fullWidth onClick={goToCancelConfirm}>
+        Cancel Booking
+      </Button>
     </StandaloneLayout>
   );
 };

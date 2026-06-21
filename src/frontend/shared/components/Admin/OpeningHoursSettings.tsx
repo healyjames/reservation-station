@@ -15,13 +15,13 @@ interface DayConfig {
 }
 
 const DAY_ORDER: Array<{ label: string; dow: number }> = [
-  { label: 'Monday',    dow: 1 },
-  { label: 'Tuesday',   dow: 2 },
+  { label: 'Monday', dow: 1 },
+  { label: 'Tuesday', dow: 2 },
   { label: 'Wednesday', dow: 3 },
-  { label: 'Thursday',  dow: 4 },
-  { label: 'Friday',    dow: 5 },
-  { label: 'Saturday',  dow: 6 },
-  { label: 'Sunday',    dow: 0 },
+  { label: 'Thursday', dow: 4 },
+  { label: 'Friday', dow: 5 },
+  { label: 'Saturday', dow: 6 },
+  { label: 'Sunday', dow: 0 },
 ];
 
 interface OpeningHoursSettingsProps {
@@ -31,8 +31,12 @@ interface OpeningHoursSettingsProps {
 const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ token }) => {
   const days = useSignal<DayConfig[]>(
     DAY_ORDER.map(({ label, dow }) => ({
-      label, dow, isClosed: false, openTime: '12:00', closeTime: '22:00',
-    }))
+      label,
+      dow,
+      isClosed: false,
+      openTime: '12:00',
+      closeTime: '22:00',
+    })),
   );
   const isLoading = useSignal(true);
   const isSaving = useSignal(false);
@@ -48,13 +52,13 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
     try {
       const r = await adminFetch('/api/admin/opening-hours', token);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const json = await r.json() as { data?: OpeningHoursEntry[] };
-      const data: OpeningHoursEntry[] = (json.data && json.data.length > 0) ? json.data : [];
+      const json = (await r.json()) as { data?: OpeningHoursEntry[] };
+      const data: OpeningHoursEntry[] = json.data && json.data.length > 0 ? json.data : [];
       days.value = DAY_ORDER.map(({ label, dow }) => {
-        const entry = data.find(e => e.day_of_week === dow);
+        const entry = data.find((e) => e.day_of_week === dow);
         const isClosed = entry ? !!entry.is_closed : false;
-        const openTime = (entry && !entry.is_closed && entry.open_time) ? entry.open_time : '12:00';
-        const closeTime = (entry && !entry.is_closed && entry.close_time) ? entry.close_time : '22:00';
+        const openTime = entry && !entry.is_closed && entry.open_time ? entry.open_time : '12:00';
+        const closeTime = entry && !entry.is_closed && entry.close_time ? entry.close_time : '22:00';
         return { label, dow, isClosed, openTime, closeTime };
       });
     } catch {
@@ -67,19 +71,21 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
   function showBanner(type: 'success' | 'error', message: string) {
     bannerType.value = type;
     bannerMessage.value = message;
-    setTimeout(() => { bannerMessage.value = ''; }, 3500);
+    setTimeout(() => {
+      bannerMessage.value = '';
+    }, 3500);
   }
 
   function updateDay(dow: number, patch: Partial<DayConfig>) {
-    days.value = days.value.map(d => d.dow === dow ? { ...d, ...patch } : d);
+    days.value = days.value.map((d) => (d.dow === dow ? { ...d, ...patch } : d));
   }
 
   async function handleSave() {
     isSaving.value = true;
-    const body = days.value.map(d => ({
+    const body = days.value.map((d) => ({
       day_of_week: d.dow,
       is_closed: d.isClosed,
-      open_time:  d.isClosed ? null : d.openTime,
+      open_time: d.isClosed ? null : d.openTime,
       close_time: d.isClosed ? null : d.closeTime,
     }));
     try {
@@ -88,7 +94,7 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
         body: JSON.stringify(body),
       });
       if (!r.ok) {
-        const data = await r.json().catch(() => ({})) as { error?: string };
+        const data = (await r.json().catch(() => ({}))) as { error?: string };
         throw new Error(data.error ?? `HTTP ${r.status}`);
       }
       showBanner('success', 'Opening hours saved.');
@@ -107,7 +113,11 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
     <div>
       <h3 class={styles.oh_section_title}>Opening Hours</h3>
       {bannerMessage.value && (
-        <div class={`${styles.alert} ${styles.oh_banner} ${bannerType.value === 'success' ? styles.alert_success : styles.alert_error}`} role="status" aria-live="polite">
+        <div
+          class={`${styles.alert} ${styles.oh_banner} ${bannerType.value === 'success' ? styles.alert_success : styles.alert_error}`}
+          role="status"
+          aria-live="polite"
+        >
           {bannerMessage.value}
         </div>
       )}
@@ -123,7 +133,7 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
           </tr>
         </thead>
         <tbody>
-          {days.value.map(d => (
+          {days.value.map((d) => (
             <tr key={d.dow} class={styles.oh_row} data-dow={String(d.dow)}>
               <td class={styles.oh_day_name}>{d.label}</td>
               <td class={styles.oh_time_cell}>
@@ -165,7 +175,7 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
 
       {/* Mobile card view */}
       <div class={styles.oh_cards}>
-        {days.value.map(d => (
+        {days.value.map((d) => (
           <div key={d.dow} class={styles.oh_card} data-dow={String(d.dow)}>
             <div class={styles.oh_card_header}>
               <span class={styles.oh_card_day}>{d.label}</span>

@@ -52,7 +52,11 @@ const Select: FunctionComponent<SelectProps> = ({
         </option>
       ))}
     </select>
-    {error && <span class={styles.error} role="alert">{error}</span>}
+    {error && (
+      <span class={styles.error} role="alert">
+        {error}
+      </span>
+    )}
   </div>
 );
 

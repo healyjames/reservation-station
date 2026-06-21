@@ -70,7 +70,7 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
     const hours = tenantConfig.value?.opening_hours;
     if (hours && hours.length > 0) {
       const dow = new Date(`${dateStr}T12:00:00Z`).getUTCDay();
-      const entry = hours.find(h => Number(h.day_of_week) === dow);
+      const entry = hours.find((h) => Number(h.day_of_week) === dow);
       if (!entry || !!entry.is_closed) return true;
     }
     return false;
@@ -84,14 +84,19 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
   function handleBlockedSelect(_y: number, _m: number, _d: number, el: HTMLDivElement) {
     tooltipAnchorRect.value = el.getBoundingClientRect();
     tooltipVisible.value = true;
-    setTimeout(() => { tooltipVisible.value = false; }, 3000);
+    setTimeout(() => {
+      tooltipVisible.value = false;
+    }, 3000);
   }
 
   async function prevMonth() {
     if (calYear.value === todayYear && calMonth.value === todayMonth) return;
     let newMonth = calMonth.value - 1;
     let newYear = calYear.value;
-    if (newMonth < 0) { newMonth = 11; newYear -= 1; }
+    if (newMonth < 0) {
+      newMonth = 11;
+      newYear -= 1;
+    }
     calYear.value = newYear;
     calMonth.value = newMonth;
     await fetchBlockedDatesForMonth(newYear, newMonth);
@@ -100,17 +105,18 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
   async function nextMonth() {
     let newMonth = calMonth.value + 1;
     let newYear = calYear.value;
-    if (newMonth > 11) { newMonth = 0; newYear += 1; }
+    if (newMonth > 11) {
+      newMonth = 0;
+      newYear += 1;
+    }
     calYear.value = newYear;
     calMonth.value = newMonth;
     await fetchBlockedDatesForMonth(newYear, newMonth);
   }
 
-  const available = selectedDate.value
-    ? getAvailableSlots(selectedDate.value, tenantConfig.value, blockedTimes.value)
-    : [];
+  const available = selectedDate.value ? getAvailableSlots(selectedDate.value, tenantConfig.value, blockedTimes.value) : [];
 
-  const timeOptions = available.map(s => ({ value: s, label: s }));
+  const timeOptions = available.map((s) => ({ value: s, label: s }));
   const canSave = !!(selectedDate.value && selectedTime.value);
   const onCurrentMonth = calYear.value === todayYear && calMonth.value === todayMonth;
 
@@ -129,29 +135,18 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
         </MessageCard>
       )}
 
-			{selectedDate.value && (
-				<SelectedDateInfo date={selectedDate.value} hideLabel={true} />
-			)}
+      {selectedDate.value && <SelectedDateInfo date={selectedDate.value} hideLabel={true} />}
 
       <div class={styles.container} role="region" aria-label="Date picker">
         <div class={styles.header}>
-          <h2>{MONTHS[calMonth.value]} {calYear.value}</h2>
+          <h2>
+            {MONTHS[calMonth.value]} {calYear.value}
+          </h2>
           <div class={styles.nav}>
-            <button
-              type="button"
-              class={styles.nav_btn}
-              aria-label="Previous month"
-              disabled={onCurrentMonth}
-              onClick={prevMonth}
-            >
+            <button type="button" class={styles.nav_btn} aria-label="Previous month" disabled={onCurrentMonth} onClick={prevMonth}>
               &#8592;
             </button>
-            <button
-              type="button"
-              class={styles.nav_btn}
-              aria-label="Next month"
-              onClick={nextMonth}
-            >
+            <button type="button" class={styles.nav_btn} aria-label="Next month" onClick={nextMonth}>
               &#8594;
             </button>
           </div>
@@ -169,11 +164,13 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
           visible={tooltipVisible.value}
           message="Bookings currently unavailable for this date"
           anchorRect={tooltipAnchorRect.value}
-          onClose={() => { tooltipVisible.value = false; }}
+          onClose={() => {
+            tooltipVisible.value = false;
+          }}
         />
       </div>
 
-			{selectedDate.value && (
+      {selectedDate.value && (
         <div>
           <FormField label="Time" htmlFor="mb-time-select">
             {isFetchingTimes.value ? (
@@ -187,7 +184,9 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
                 value={selectedTime.value}
                 options={timeOptions}
                 placeholder="Select a time"
-                onChange={(e) => { selectedTime.value = (e.target as HTMLSelectElement).value; }}
+                onChange={(e) => {
+                  selectedTime.value = (e.target as HTMLSelectElement).value;
+                }}
               />
             ) : (
               <p class={`${styles.inline_helper} ${styles.inline_helper_error}`}>
@@ -199,18 +198,13 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
       )}
 
       <div class={`${styles.action_group} mt-2`}>
-        <Button type="button" variant="secondary" onClick={goToOverview}>← Back</Button>
-        <Button
-          type="button"
-          variant="primary"
-          disabled={!canSave}
-          isLoading={isSaving.value}
-          onClick={handleSave}
-        >
+        <Button type="button" variant="secondary" onClick={goToOverview}>
+          ← Back
+        </Button>
+        <Button type="button" variant="primary" disabled={!canSave} isLoading={isSaving.value} onClick={handleSave}>
           {isSaving.value ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
     </StandaloneLayout>
   );
 };
-

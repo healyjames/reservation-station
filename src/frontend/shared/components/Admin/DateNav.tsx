@@ -29,7 +29,9 @@ const DateNav: FunctionComponent<DateNavProps> = ({ currentDate, guestCount, onP
 
   return (
     <div class={styles.date_nav}>
-      <button class={styles.btn_action} onClick={onPrev} aria-label="Previous day">&#8592;</button>
+      <button class={styles.btn_action} onClick={onPrev} aria-label="Previous day">
+        &#8592;
+      </button>
       <div class={styles.date_nav_center}>
         <span class={styles.current_date_display} id="current-date-display">
           {displayDate}
@@ -39,7 +41,9 @@ const DateNav: FunctionComponent<DateNavProps> = ({ currentDate, guestCount, onP
           {guestCount} cover{guestCount !== 1 ? 's' : ''}
         </span>
       </div>
-      <button class={styles.btn_action} onClick={onNext} aria-label="Next day">&#8594;</button>
+      <button class={styles.btn_action} onClick={onNext} aria-label="Next day">
+        &#8594;
+      </button>
     </div>
   );
 };

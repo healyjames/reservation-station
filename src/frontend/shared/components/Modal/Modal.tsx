@@ -25,7 +25,9 @@ const Modal: FunctionComponent<ModalProps> = ({ open, onClose, title, footer, ch
       if (dialog.open && typeof dialog.close === 'function') dialog.close();
       document.body.style.overflow = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [open]);
 
   const handleDialogClick = (e: MouseEvent) => {
@@ -36,7 +38,10 @@ const Modal: FunctionComponent<ModalProps> = ({ open, onClose, title, footer, ch
     <dialog
       ref={dialogRef}
       class={`${styles.dialog} ${className ?? ''}`}
-      onCancel={(e) => { e.preventDefault(); onClose(); }}
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
       onClick={handleDialogClick}
     >
       <div class={styles.content}>
@@ -52,7 +57,7 @@ const Modal: FunctionComponent<ModalProps> = ({ open, onClose, title, footer, ch
         {footer && <div class={styles.footer}>{footer}</div>}
       </div>
     </dialog>,
-    document.body
+    document.body,
   );
 };
 

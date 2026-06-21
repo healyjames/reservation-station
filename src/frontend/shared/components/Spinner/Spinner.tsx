@@ -7,11 +7,7 @@ interface SpinnerProps {
 }
 
 const Spinner: FunctionComponent<SpinnerProps> = ({ size = 'md', label = 'Loading' }) => (
-  <span
-    class={`${styles.spinner} ${styles[size]}`}
-    role="status"
-    aria-label={label}
-  />
+  <span class={`${styles.spinner} ${styles[size]}`} role="status" aria-label={label} />
 );
 
 export default Spinner;

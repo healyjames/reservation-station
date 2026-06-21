@@ -115,11 +115,5 @@
 }
 
 .bd_legend_swatch_blocked {
-  background: repeating-linear-gradient(
-    45deg,
-    var(--error-dark),
-    var(--error-dark) 3px,
-    var(--error-light) 3px,
-    var(--error-light) 6px
-  );
+  background: repeating-linear-gradient(45deg, var(--error-dark), var(--error-dark) 3px, var(--error-light) 3px, var(--error-light) 6px);
 }

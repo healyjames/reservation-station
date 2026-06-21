@@ -11,7 +11,7 @@ interface BookingCardsProps {
 
 const BookingCards: FunctionComponent<BookingCardsProps> = ({ reservations, onEdit, onDelete }) => (
   <div class={styles.booking_cards}>
-    {reservations.map(r => (
+    {reservations.map((r) => (
       <BookingCard key={r.id} reservation={r} onEdit={onEdit} onDelete={onDelete} />
     ))}
   </div>

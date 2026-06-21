@@ -27,7 +27,7 @@ export function useTenant(): UseTenantReturn {
     fetch(`/api/tenants/${encodeURIComponent(tenantId)}`)
       .then(async (res) => {
         if (!res.ok) {
-          const err = await res.json().catch(() => ({})) as { error?: string };
+          const err = (await res.json().catch(() => ({}))) as { error?: string };
           throw new Error(err.error ?? `HTTP ${res.status}`);
         }
         return res.json() as Promise<TenantConfig>;

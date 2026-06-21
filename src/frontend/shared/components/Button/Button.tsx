@@ -46,9 +46,13 @@ const Button: FunctionComponent<ButtonProps> = ({
       fullWidth ? styles.fullWidth : '',
       isLoading ? styles.loading : '',
       className ?? '',
-    ].filter(Boolean).join(' ')}
+    ]
+      .filter(Boolean)
+      .join(' ')}
     disabled={disabled || isLoading}
-    onClick={(e) => { if (!disabled && !isLoading && onClick) onClick(e as MouseEvent); }}
+    onClick={(e) => {
+      if (!disabled && !isLoading && onClick) onClick(e as MouseEvent);
+    }}
     style={isLoading ? 'pointer-events: none' : undefined}
   >
     {isLoading && <Spinner size="sm" />}

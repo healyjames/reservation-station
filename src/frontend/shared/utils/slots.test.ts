@@ -51,18 +51,14 @@ describe('getSlotsForDate', () => {
 
   it('returns empty array when day is closed', () => {
     const tenant = makeTenant({
-      opening_hours: [
-        { id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed: true, open_time: null, close_time: null },
-      ],
+      opening_hours: [{ id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed: true, open_time: null, close_time: null }],
     });
     expect(getSlotsForDate(monday, tenant)).toEqual([]);
   });
 
   it('returns slots for open day', () => {
     const tenant = makeTenant({
-      opening_hours: [
-        { id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed: false, open_time: '18:00', close_time: '21:00' },
-      ],
+      opening_hours: [{ id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed: false, open_time: '18:00', close_time: '21:00' }],
     });
     const slots = getSlotsForDate(monday, tenant);
     expect(slots).toEqual(['18:00', '18:30', '19:00', '19:30', '20:00', '20:30']);
@@ -70,18 +66,14 @@ describe('getSlotsForDate', () => {
 
   it('handles D1 integer is_closed (0 = open, 1 = closed)', () => {
     const tenant = makeTenant({
-      opening_hours: [
-        { id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed: 1, open_time: '18:00', close_time: '21:00' },
-      ],
+      opening_hours: [{ id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed: 1, open_time: '18:00', close_time: '21:00' }],
     });
     expect(getSlotsForDate(monday, tenant)).toEqual([]);
   });
 
   it('falls back to defaults when open_time/close_time are null', () => {
     const tenant = makeTenant({
-      opening_hours: [
-        { id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed: false, open_time: null, close_time: null },
-      ],
+      opening_hours: [{ id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed: false, open_time: null, close_time: null }],
     });
     const slots = getSlotsForDate(monday, tenant);
     expect(slots[0]).toBe('12:00');
@@ -107,9 +99,7 @@ describe('getAvailableSlots', () => {
 
   it('excludes blocked times', () => {
     const tenant = makeTenant({
-      opening_hours: [
-        { id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed: false, open_time: '18:00', close_time: '19:00' },
-      ],
+      opening_hours: [{ id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed: false, open_time: '18:00', close_time: '19:00' }],
     });
     const slots = getAvailableSlots(monday, tenant, ['18:00']);
     expect(slots).toEqual(['18:30']);

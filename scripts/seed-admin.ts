@@ -21,45 +21,41 @@ const password = process.env.ADMIN_PASSWORD;
 const isLocal = process.env.LOCAL === 'true';
 
 if (!tenantId || !email || !password) {
-	console.error('Error: TENANT_ID, ADMIN_EMAIL, and ADMIN_PASSWORD environment variables are required.');
-	process.exit(1);
+  console.error('Error: TENANT_ID, ADMIN_EMAIL, and ADMIN_PASSWORD environment variables are required.');
+  process.exit(1);
 }
 
 async function hashPassword(pwd: string): Promise<string> {
-	const encoder = new TextEncoder();
-	const salt = crypto.getRandomValues(new Uint8Array(16));
-	const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(pwd), 'PBKDF2', false, ['deriveBits']);
-	const hashBuffer = await crypto.subtle.deriveBits(
-		{ name: 'PBKDF2', salt, hash: 'SHA-256', iterations: 100_000 },
-		keyMaterial,
-		256,
-	);
-	const saltHex = Array.from(salt)
-		.map((b) => b.toString(16).padStart(2, '0'))
-		.join('');
-	const hashHex = Array.from(new Uint8Array(hashBuffer))
-		.map((b) => b.toString(16).padStart(2, '0'))
-		.join('');
-	return `${saltHex}:${hashHex}`;
+  const encoder = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(pwd), 'PBKDF2', false, ['deriveBits']);
+  const hashBuffer = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, hash: 'SHA-256', iterations: 100_000 }, keyMaterial, 256);
+  const saltHex = Array.from(salt)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  const hashHex = Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return `${saltHex}:${hashHex}`;
 }
 
 async function main() {
-	const id = crypto.randomUUID();
-	const now = new Date().toISOString();
-	const passwordHash = await hashPassword(password!);
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  const passwordHash = await hashPassword(password!);
 
-	const sql = `INSERT INTO AdminUsers (id, tenant_id, email, password_hash, created_date, modified_date) VALUES ('${id}', '${tenantId}', '${email}', '${passwordHash}', '${now}', '${now}');`;
+  const sql = `INSERT INTO AdminUsers (id, tenant_id, email, password_hash, created_date, modified_date) VALUES ('${id}', '${tenantId}', '${email}', '${passwordHash}', '${now}', '${now}');`;
 
-	const localFlag = isLocal ? '--local ' : '--remote ';
-	const cmd = `npx wrangler d1 execute maximum_bookings_db ${localFlag}--command "${sql}"`;
+  const localFlag = isLocal ? '--local ' : '--remote ';
+  const cmd = `npx wrangler d1 execute maximum_bookings_db ${localFlag}--command "${sql}"`;
 
-	try {
-		execSync(cmd, { stdio: 'inherit' });
-		console.log(`\n✅ Admin user created: ${email} (tenant: ${tenantId})`);
-	} catch {
-		console.error(`\n❌ Failed to create admin user.`);
-		process.exit(1);
-	}
+  try {
+    execSync(cmd, { stdio: 'inherit' });
+    console.log(`\n✅ Admin user created: ${email} (tenant: ${tenantId})`);
+  } catch {
+    console.error(`\n❌ Failed to create admin user.`);
+    process.exit(1);
+  }
 }
 
 main();

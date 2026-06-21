@@ -21,19 +21,16 @@ const ReservationList: FunctionComponent<ReservationListProps> = ({ reservations
       </tr>
     </thead>
     <tbody>
-      {reservations.map(r => (
+      {reservations.map((r) => (
         <tr key={r.id}>
           <td>{r.reservation_time}</td>
-          <td>{r.first_name} {r.surname}</td>
+          <td>
+            {r.first_name} {r.surname}
+          </td>
           <td>{r.guests}</td>
           <td>{r.dietary_requirements || '–'}</td>
           <td class={styles.actions_cell}>
-            <Button
-              variant="action-edit"
-              size="sm"
-              onClick={() => onEdit(r)}
-              aria-label={`Edit booking for ${r.first_name} ${r.surname}`}
-            >
+            <Button variant="action-edit" size="sm" onClick={() => onEdit(r)} aria-label={`Edit booking for ${r.first_name} ${r.surname}`}>
               Edit
             </Button>
             <Button

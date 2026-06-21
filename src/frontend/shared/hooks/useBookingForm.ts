@@ -9,11 +9,7 @@ interface UseBookingFormReturn {
   submitError: Signal<string>;
   isSubmitting: Signal<boolean>;
   updateField: <K extends keyof BookingFormData>(field: K, value: BookingFormData[K]) => void;
-  submitBooking: (
-    tenantConfig: TenantConfig,
-    selectedDate: CalendarDate,
-    onSuccess: (bookingRef?: string) => void
-  ) => Promise<void>;
+  submitBooking: (tenantConfig: TenantConfig, selectedDate: CalendarDate, onSuccess: (bookingRef?: string) => void) => Promise<void>;
   resetForm: () => void;
 }
 
@@ -39,7 +35,7 @@ export function useBookingForm(): UseBookingFormReturn {
   async function submitBooking(
     tenantConfig: TenantConfig,
     selectedDate: CalendarDate,
-    onSuccess: (bookingRef?: string) => void
+    onSuccess: (bookingRef?: string) => void,
   ): Promise<void> {
     if (isSubmitting.value) return;
     isSubmitting.value = true;
@@ -67,12 +63,12 @@ export function useBookingForm(): UseBookingFormReturn {
       });
 
       if (response.ok) {
-        const body = await response.json() as { id?: string };
+        const body = (await response.json()) as { id?: string };
         onSuccess(body.id);
         return;
       }
 
-      const errorData = await response.json().catch(() => null) as { error?: string } | null;
+      const errorData = (await response.json().catch(() => null)) as { error?: string } | null;
       submitError.value = errorData?.error ?? 'Failed to create reservation. Please try again.';
     } catch {
       submitError.value = 'Network error. Please check your connection and try again.';

@@ -10,9 +10,7 @@ interface BlockedTooltipProps {
   class?: string;
 }
 
-const BlockedTooltip: FunctionComponent<BlockedTooltipProps> = ({
-  visible, message, anchorRect, onClose, class: className
-}) => {
+const BlockedTooltip: FunctionComponent<BlockedTooltipProps> = ({ visible, message, anchorRect, onClose, class: className }) => {
   if (!visible || !anchorRect) return null;
 
   const style = {
@@ -24,25 +22,16 @@ const BlockedTooltip: FunctionComponent<BlockedTooltipProps> = ({
   };
 
   return createPortal(
-    <div
-      class={`${styles.tooltip} ${className ?? ''}`}
-      style={style}
-      role="tooltip"
-    >
+    <div class={`${styles.tooltip} ${className ?? ''}`} style={style} role="tooltip">
       <div class={styles.content}>
         <span class={styles.message}>{message}</span>
-        <button
-          type="button"
-          class={styles.closeBtn}
-          onClick={onClose}
-          aria-label="Close tooltip"
-        >
+        <button type="button" class={styles.closeBtn} onClick={onClose} aria-label="Close tooltip">
           ✕
         </button>
       </div>
       <div class={styles.arrow} />
     </div>,
-    document.body
+    document.body,
   );
 };
 

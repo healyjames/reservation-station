@@ -68,7 +68,9 @@ const Login: FunctionComponent<LoginProps> = ({ auth, onLoginSuccess }) => {
                 required
                 placeholder="you@example.com"
                 value={email.value}
-                onInput={(e) => { email.value = (e.target as HTMLInputElement).value; }}
+                onInput={(e) => {
+                  email.value = (e.target as HTMLInputElement).value;
+                }}
               />
             </FormField>
             <FormField label="Password" htmlFor="login-password" required>
@@ -80,10 +82,16 @@ const Login: FunctionComponent<LoginProps> = ({ auth, onLoginSuccess }) => {
                 required
                 placeholder="••••••••"
                 value={password.value}
-                onInput={(e) => { password.value = (e.target as HTMLInputElement).value; }}
+                onInput={(e) => {
+                  password.value = (e.target as HTMLInputElement).value;
+                }}
               />
             </FormField>
-            <button type="submit" class={`${styles.btn_primary}${isSubmitting.value ? ` ${styles.loading}` : ''}`} disabled={isSubmitting.value}>
+            <button
+              type="submit"
+              class={`${styles.btn_primary}${isSubmitting.value ? ` ${styles.loading}` : ''}`}
+              disabled={isSubmitting.value}
+            >
               {isSubmitting.value ? 'Signing in…' : 'Sign in'}
             </button>
           </form>

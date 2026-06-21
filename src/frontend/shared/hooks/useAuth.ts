@@ -44,7 +44,11 @@ export function useAuth(): UseAuthReturn {
     }
     const tenantRaw = sessionStorage.getItem('admin_tenant');
     if (tenantRaw) {
-      try { tenantConfig.value = JSON.parse(tenantRaw) as TenantConfig; } catch { /* ignore malformed */ }
+      try {
+        tenantConfig.value = JSON.parse(tenantRaw) as TenantConfig;
+      } catch {
+        /* ignore malformed */
+      }
     }
     token.value = raw;
     isAuthed.value = true;
@@ -59,7 +63,7 @@ export function useAuth(): UseAuthReturn {
         body: JSON.stringify({ email, password }),
       });
       if (r.ok) {
-        const body = await r.json() as { data: { token: string; tenant: TenantConfig } };
+        const body = (await r.json()) as { data: { token: string; tenant: TenantConfig } };
         const data = body.data;
         sessionStorage.setItem('admin_token', data.token);
         sessionStorage.setItem('admin_tenant', JSON.stringify(data.tenant));

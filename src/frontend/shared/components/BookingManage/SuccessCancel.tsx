@@ -13,10 +13,8 @@ export const SuccessCancel: FunctionComponent<SuccessCancelProps> = ({ reservati
     <div class={styles.content}>
       <MessageCard variant="success" title="Your booking has been cancelled.">
         <p>
-          <strong>{getFullName(reservation)}</strong> on{' '}
-          <strong>{formatDate(reservation.reservation_date)}</strong> at{' '}
-          <strong>{reservation.reservation_time || 'Unknown time'}</strong>{' '}
-          has been cancelled.
+          <strong>{getFullName(reservation)}</strong> on <strong>{formatDate(reservation.reservation_date)}</strong> at{' '}
+          <strong>{reservation.reservation_time || 'Unknown time'}</strong> has been cancelled.
         </p>
       </MessageCard>
     </div>

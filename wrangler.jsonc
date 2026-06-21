@@ -3,68 +3,65 @@
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "maximum-bookings",
-	"main": "src/index.ts",
-	"compatibility_date": "2026-03-10",
-	"compatibility_flags": [
-		"nodejs_compat",
-		"global_fetch_strictly_public"
-	],
-	"assets": {
-		// Vite build output — run `npm run build` before `wrangler deploy`
-		"directory": "./dist",
-		"not_found_handling": "single-page-application",
-	},
-	"observability": {
-		"enabled": true,
-	},
-	"d1_databases": [
-		{
-			"binding": "maximum_bookings_db",
-			"database_name": "maximum_bookings_db",
-			"database_id": "c651aac0-88f4-4332-8a87-1136a575c861",
-			"migrations_dir": "./migrations",
-		},
-	],
-	/**
-	 * Smart Placement
-	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-	 */
-	// "placement": {  "mode": "smart" }
-	/**
-	 * Bindings
-	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-	 * databases, object storage, AI inference, real-time communication and more.
-	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-	 */
-	/**
-	 * Secrets
-	 * Set via: npx wrangler secret put JWT_SECRET
-	 * For local dev, add JWT_SECRET=<value> to .env
-	 * After running `wrangler secret put`, run `npx wrangler types` to regenerate
-	 * worker-configuration.d.ts - until then, src/types/env.d.ts provides the type.
-	 * Set via: npx wrangler secret put RESEND_API_KEY
-	 * For local dev, add RESEND_API_KEY=re_test_... to .env
-	 * Set via: npx wrangler secret put SUPER_ADMIN_KEY
-	 * For local dev, add SUPER_ADMIN_KEY=<value> to .env
-	 * All email from/to addresses come from Tenants.contact_email in the database
-	 */
-	// "vars": { "MY_VARIABLE": "production_value" }
-	"vars": {
-		// Safe production default. Override with ENVIRONMENT=development in .env for local dev.
-		"ENVIRONMENT": "production",
-		// Public-facing URL used to generate cancel/manage links in emails.
-		// Must be set in the Cloudflare dashboard for production deployments.
-		// Set PUBLIC_URL=https://yourdomain.com in the Cloudflare dashboard, or in .env for local dev.
-		"PUBLIC_URL": "",
-	},
-	/**
-	 * D1 Databases (see binding above)
-	 */
-	/**
-	 * Service Bindings (communicate between multiple Workers)
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-	 */
-	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "maximum-bookings",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-03-10",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    // Vite build output — run `npm run build` before `wrangler deploy`
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+  },
+  "observability": {
+    "enabled": true,
+  },
+  "d1_databases": [
+    {
+      "binding": "maximum_bookings_db",
+      "database_name": "maximum_bookings_db",
+      "database_id": "c651aac0-88f4-4332-8a87-1136a575c861",
+      "migrations_dir": "./migrations",
+    },
+  ],
+  /**
+   * Smart Placement
+   * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+   */
+  // "placement": {  "mode": "smart" }
+  /**
+   * Bindings
+   * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
+   * databases, object storage, AI inference, real-time communication and more.
+   * https://developers.cloudflare.com/workers/runtime-apis/bindings/
+   */
+  /**
+   * Secrets
+   * Set via: npx wrangler secret put JWT_SECRET
+   * For local dev, add JWT_SECRET=<value> to .env
+   * After running `wrangler secret put`, run `npx wrangler types` to regenerate
+   * worker-configuration.d.ts - until then, src/types/env.d.ts provides the type.
+   * Set via: npx wrangler secret put RESEND_API_KEY
+   * For local dev, add RESEND_API_KEY=re_test_... to .env
+   * Set via: npx wrangler secret put SUPER_ADMIN_KEY
+   * For local dev, add SUPER_ADMIN_KEY=<value> to .env
+   * All email from/to addresses come from Tenants.contact_email in the database
+   */
+  // "vars": { "MY_VARIABLE": "production_value" }
+  "vars": {
+    // Safe production default. Override with ENVIRONMENT=development in .env for local dev.
+    "ENVIRONMENT": "production",
+    // Public-facing URL used to generate cancel/manage links in emails.
+    // Must be set in the Cloudflare dashboard for production deployments.
+    // Set PUBLIC_URL=https://yourdomain.com in the Cloudflare dashboard, or in .env for local dev.
+    "PUBLIC_URL": "",
+  },
+  /**
+   * D1 Databases (see binding above)
+   */
+  /**
+   * Service Bindings (communicate between multiple Workers)
+   * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+   */
+  // "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
 }

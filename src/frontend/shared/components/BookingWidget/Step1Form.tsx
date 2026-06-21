@@ -35,21 +35,22 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
   const isUnlimited = tenantConfig.max_guests === 0;
   const bookingPartyLimit = tenantConfig.max_guests > 0 ? tenantConfig.max_guests : null;
   const venueCapacityLimit = tenantConfig.max_covers > 0 ? tenantConfig.max_covers : null;
-  const effectiveMaxGuests = bookingPartyLimit !== null && venueCapacityLimit !== null
-    ? Math.min(bookingPartyLimit, venueCapacityLimit)
-    : bookingPartyLimit ?? venueCapacityLimit ?? 20;
+  const effectiveMaxGuests =
+    bookingPartyLimit !== null && venueCapacityLimit !== null
+      ? Math.min(bookingPartyLimit, venueCapacityLimit)
+      : (bookingPartyLimit ?? venueCapacityLimit ?? 20);
 
   const regularMax = isUnlimited ? 9 : effectiveMaxGuests;
   const callThreshold = isUnlimited ? 10 : effectiveMaxGuests + 1;
   const isLargeParty = displayGuestValue.value === LARGE_PARTY_SENTINEL;
 
-  const guestOptions = effectiveMaxGuests < 2 ? [] : [
-    ...Array.from(
-      { length: Math.max(0, regularMax - 1) },
-      (_, i) => ({ value: i + 2, label: `${i + 2}` }),
-    ),
-    { value: LARGE_PARTY_SENTINEL, label: `${callThreshold}+` },
-  ];
+  const guestOptions =
+    effectiveMaxGuests < 2
+      ? []
+      : [
+          ...Array.from({ length: Math.max(0, regularMax - 1) }, (_, i) => ({ value: i + 2, label: `${i + 2}` })),
+          { value: LARGE_PARTY_SENTINEL, label: `${callThreshold}+` },
+        ];
 
   function handleGuestChange(e: Event) {
     const raw = (e.target as HTMLSelectElement).value;
@@ -67,19 +68,13 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
   const isValid = !isLargeParty && formData.guests >= 2 && formData.guests <= effectiveMaxGuests && formData.time !== '';
 
   return (
-    <div
-      class={styles.content}
-      style={isStandaloneMode() ? 'max-width: 520px; margin: 2rem auto' : undefined}
-    >
-			<div class={styles.nav}>
-				<div class={styles.stepIndicator}>Step 1 of 2</div>
-				<button
-						type="button"
-						class={styles.closeBtn}
-						aria-label="Close booking form"
-						onClick={onChangeDate}
-					>&#10006;</button>
-			</div>
+    <div class={styles.content} style={isStandaloneMode() ? 'max-width: 520px; margin: 2rem auto' : undefined}>
+      <div class={styles.nav}>
+        <div class={styles.stepIndicator}>Step 1 of 2</div>
+        <button type="button" class={styles.closeBtn} aria-label="Close booking form" onClick={onChangeDate}>
+          &#10006;
+        </button>
+      </div>
 
       <SelectedDateInfo date={date} onChangeDate={onChangeDate} />
 
@@ -100,11 +95,14 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
                 onChange={handleGuestChange}
               />
               {isLargeParty && (
-								<div role="alert" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:13px;color:#664d03;max-width: 800px;">
-									<p>
-										<strong>For bookings of {callThreshold} or more guests, please call the venue directly.</strong>
-									</p>
-								</div>
+                <div
+                  role="alert"
+                  style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:13px;color:#664d03;max-width: 800px;"
+                >
+                  <p>
+                    <strong>For bookings of {callThreshold} or more guests, please call the venue directly.</strong>
+                  </p>
+                </div>
               )}
             </>
           )}
@@ -137,13 +135,7 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
           )}
         </FormField>
 
-        <Button
-          type="button"
-          variant="primary"
-          fullWidth
-          disabled={!isValid}
-          onClick={onNext}
-        >
+        <Button type="button" variant="primary" fullWidth disabled={!isValid} onClick={onNext}>
           Next &rarr;
         </Button>
       </form>

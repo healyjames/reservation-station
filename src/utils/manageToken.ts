@@ -1,7 +1,7 @@
 function bufToHex(buf: Uint8Array): string {
-	return Array.from(buf)
-		.map((b) => b.toString(16).padStart(2, '0'))
-		.join('');
+  return Array.from(buf)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 /**
@@ -9,12 +9,12 @@ function bufToHex(buf: Uint8Array): string {
  * Both strings must be the same length (all our hex hashes are fixed-width).
  */
 function timingSafeEqual(a: string, b: string): boolean {
-	if (a.length !== b.length) return false;
-	let diff = 0;
-	for (let i = 0; i < a.length; i++) {
-		diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-	}
-	return diff === 0;
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
 }
 
 /**
@@ -22,22 +22,16 @@ function timingSafeEqual(a: string, b: string): boolean {
  * Used in customer-facing manage/cancel email links.
  */
 export async function generateManageToken(secret: string, reservationId: string, email: string): Promise<string> {
-	const key = await crypto.subtle.importKey(
-		'raw',
-		new TextEncoder().encode(secret),
-		{ name: 'HMAC', hash: 'SHA-256' },
-		false,
-		['sign'],
-	);
-	const message = new TextEncoder().encode(`manage:${reservationId}:${email.toLowerCase()}`);
-	const sig = await crypto.subtle.sign('HMAC', key, message);
-	return bufToHex(new Uint8Array(sig));
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const message = new TextEncoder().encode(`manage:${reservationId}:${email.toLowerCase()}`);
+  const sig = await crypto.subtle.sign('HMAC', key, message);
+  return bufToHex(new Uint8Array(sig));
 }
 
 /** SHA-256 hash a token for safe storage in the database. */
 export async function hashManageToken(token: string): Promise<string> {
-	const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
-	return bufToHex(new Uint8Array(buf));
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+  return bufToHex(new Uint8Array(buf));
 }
 
 /**
@@ -45,17 +39,17 @@ export async function hashManageToken(token: string): Promise<string> {
  * Re-derives the expected HMAC and compares both values before accepting.
  */
 export async function verifyManageToken(
-	secret: string,
-	reservationId: string,
-	email: string,
-	presentedToken: string,
-	storedHash: string,
+  secret: string,
+  reservationId: string,
+  email: string,
+  presentedToken: string,
+  storedHash: string,
 ): Promise<boolean> {
-	if (!presentedToken || !storedHash) return false;
-	// Re-derive the expected token and hash the presented one, then compare hashes
-	// using a constant-time function to prevent timing side-channel attacks.
-	const expectedToken = await generateManageToken(secret, reservationId, email);
-	const expectedHash = await hashManageToken(expectedToken);
-	const presentedHash = await hashManageToken(presentedToken);
-	return timingSafeEqual(presentedHash, expectedHash) && timingSafeEqual(presentedHash, storedHash);
+  if (!presentedToken || !storedHash) return false;
+  // Re-derive the expected token and hash the presented one, then compare hashes
+  // using a constant-time function to prevent timing side-channel attacks.
+  const expectedToken = await generateManageToken(secret, reservationId, email);
+  const expectedHash = await hashManageToken(expectedToken);
+  const presentedHash = await hashManageToken(presentedToken);
+  return timingSafeEqual(presentedHash, expectedHash) && timingSafeEqual(presentedHash, storedHash);
 }
