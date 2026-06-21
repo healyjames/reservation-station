@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { adminAuth } from '../middleware/adminAuth';
-import { OpeningHoursEntry, UpsertOpeningHoursSchema } from '../db/schema';
+import { OpeningHoursEntry, UpsertOpeningHoursSchema } from '../schema';
 
 const openingHours = new Hono<{ Bindings: Env; Variables: { userId: string; tenantId: string } }>();
 

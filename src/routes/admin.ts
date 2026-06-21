@@ -1,18 +1,27 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { adminAuth } from '../middleware/adminAuth';
-import { Tenant, Reservation, UpdateTenantSchema, UpdateReservationSchema } from '../db/schema';
+import { Tenant, Reservation, UpdateTenantSchema, UpdateReservationSchema, CreateAdminReservationSchema } from '../schema';
 import { sendEmail } from '../utils/email';
 import { buildTenantConfirmationEmail } from '../emails/tenant-confirmation';
 import { buildCustomerConfirmationEmail } from '../emails/customer-confirmation';
 
-const admin = new Hono<{ Bindings: Env; Variables: { userId: string; tenantId: string } }>();
+const admin = new Hono<{
+	Bindings: Env;
+	Variables: {
+		userId: string;
+		tenantId: string
+	}
+}>();
 
 admin.use('*', adminAuth);
 
 admin.get('/me', async (c) => {
   const tenantId = c.get('tenantId');
-  const tenant = await c.env.maximum_bookings_db.prepare('SELECT * FROM Tenants WHERE id = ?').bind(tenantId).first<Tenant>();
+  const tenant = await c.env.maximum_bookings_db
+		.prepare('SELECT * FROM Tenants WHERE id = ?')
+		.bind(tenantId)
+		.first<Tenant>();
 
   if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
   return c.json(tenant);
@@ -26,13 +35,15 @@ admin.patch('/me', async (c) => {
     return c.json({ error: z.prettifyError(parsed.error) }, 400);
   }
 
-  // Strip immutable fields that may have slipped through (tenant_code is in UpdateTenantSchema)
+  // Protect tenant code from being updated (thrown away with _tc)
   const { tenant_code: _tc, ...rest } = parsed.data as typeof parsed.data & { tenant_code?: string };
-  const data = { ...rest, modified_date: new Date().toISOString() };
+  const data = { ...rest, modified_date: new Date().toISOString() }; // inject modified_date so it can never be faked
 
+	// Make sure something is being updated e.g. empty PATCH requests orno-op updates
   const updatableKeys = Object.keys(data).filter((k) => k !== 'modified_date');
   if (updatableKeys.length === 0) return c.json({ error: 'No valid fields to update' }, 400);
 
+	// Build SQL dynamically based on updated fields
   const fields = Object.keys(data)
     .map((k) => `${k} = ?`)
     .join(', ');
@@ -70,20 +81,6 @@ admin.get('/reservations', async (c) => {
 
 admin.post('/reservations', async (c) => {
   const tenantId = c.get('tenantId');
-
-  const CreateAdminReservationSchema = z.object({
-    first_name: z.string().min(1).max(50),
-    surname: z.string().min(1).max(50),
-    telephone: z.string().optional().default(''),
-    email: z.string().optional().default(''),
-    reservation_date: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/)
-      .refine((v) => !isNaN(new Date(v).getTime()), 'Invalid date (e.g. month or day out of range)'),
-    reservation_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
-    guests: z.number().int().positive(),
-    dietary_requirements: z.string().max(500).optional().default(''),
-  });
 
   const msg = await c.req.json().catch(() => null);
   const parsed = CreateAdminReservationSchema.safeParse(msg);

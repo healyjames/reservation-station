@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Hono } from 'hono';
-import { Reservation, CreateReservationSchema, UpdateReservationSchema, CreateReservation } from '../db/schema';
+import { Reservation, CreateReservationSchema, UpdateReservationSchema, CreateReservation } from '../schema';
 import { generateTimeSlots, calculateConcurrentGuests, toMinutes, SlotReservation } from '../utils/slots';
 import { sendEmail } from '../utils/email';
 import { buildCustomerConfirmationEmail } from '../emails/customer-confirmation';

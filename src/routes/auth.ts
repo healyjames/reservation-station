@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { LoginSchema } from '../db/schema';
+import { LoginSchema } from '../schema';
 import { verifyPassword, signJWT } from '../utils/auth';
-import type { AdminUser } from '../db/schema';
+import type { AdminUser } from '../schema';
 
 const auth = new Hono<{ Bindings: Env }>();
 

@@ -1,24 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { adminAuth } from '../middleware/adminAuth';
-import { BlockedDate, BlockedDateSchema, CreateBlockedDateSchema, CreateBlockedDate } from '../db/schema';
-
-const BlockDateBodySchema = z
-  .object({
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
-    start_time: z
-      .string()
-      .regex(/^\d{2}:\d{2}$/, 'Invalid time format (HH:MM)')
-      .optional(),
-    end_time: z
-      .string()
-      .regex(/^\d{2}:\d{2}$/, 'Invalid time format (HH:MM)')
-      .optional(),
-    reason: z.string().optional(),
-  })
-  .refine((d) => (d.start_time == null) === (d.end_time == null), {
-    message: 'start_time and end_time must both be provided or both be omitted',
-  });
+import { BlockedDate, BlockedDateSchema, CreateBlockedDateSchema, CreateBlockedDate, BlockDateBodySchema } from '../schema';
 
 const blockedDates = new Hono<{ Bindings: Env; Variables: { userId: string; tenantId: string } }>();
 

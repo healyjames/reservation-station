@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Hono } from 'hono';
-import { Tenant, UpdateTenantSchema, CreateTenantSchema, CreateTenant } from '../db/schema';
+import { Tenant, UpdateTenantSchema, CreateTenantSchema, CreateTenant } from '../schema';
 import { superAdminAuth } from '../middleware/superAdminAuth';
 
 const tenants = new Hono<{ Bindings: Env }>();

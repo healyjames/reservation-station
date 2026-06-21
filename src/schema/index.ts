@@ -1,4 +1,4 @@
-import z from 'zod';
+import { z } from 'zod';
 
 export const TenantSchema = z.object({
   id: z.uuid(),
@@ -28,6 +28,10 @@ export const UpdateTenantSchema = TenantSchema.omit({
   created_date: true,
   modified_date: true,
 }).partial();
+
+export type Tenant = z.infer<typeof TenantSchema>;
+export type CreateTenant = z.infer<typeof CreateTenantSchema>;
+export type UpdateTenant = z.infer<typeof UpdateTenantSchema>;
 
 export const ReservationSchema = z.object({
   id: z.uuid(),
@@ -65,9 +69,6 @@ export const UpdateReservationSchema = ReservationSchema.omit({
   modified_date: true,
 }).partial();
 
-export type Tenant = z.infer<typeof TenantSchema>;
-export type CreateTenant = z.infer<typeof CreateTenantSchema>;
-export type UpdateTenant = z.infer<typeof UpdateTenantSchema>;
 export type Reservation = z.infer<typeof ReservationSchema>;
 export type CreateReservation = z.infer<typeof CreateReservationSchema>;
 export type UpdateReservation = z.infer<typeof UpdateReservationSchema>;
@@ -153,3 +154,34 @@ export const LoginSchema = z.object({
 
 export type AdminUser = z.infer<typeof AdminUserSchema>;
 export type LoginPayload = z.infer<typeof LoginSchema>;
+
+export const BlockDateBodySchema = z
+  .object({
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
+    start_time: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/, 'Invalid time format (HH:MM)')
+      .optional(),
+    end_time: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/, 'Invalid time format (HH:MM)')
+      .optional(),
+    reason: z.string().optional(),
+  })
+  .refine((d) => (d.start_time == null) === (d.end_time == null), {
+    message: 'start_time and end_time must both be provided or both be omitted',
+  });
+
+export const CreateAdminReservationSchema = z.object({
+  first_name: z.string().min(1).max(50),
+  surname: z.string().min(1).max(50),
+  telephone: z.string().optional().default(''),
+  email: z.string().optional().default(''),
+  reservation_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine((v) => !isNaN(new Date(v).getTime()), 'Invalid date (e.g. month or day out of range)'),
+  reservation_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  guests: z.number().int().positive(),
+  dietary_requirements: z.string().max(500).optional().default(''),
+});
