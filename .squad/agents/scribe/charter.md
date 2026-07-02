@@ -66,6 +66,7 @@ When I'm unsure: if an inbox decision is ambiguous or contradicts an existing de
 ## Collaboration
 
 - Before starting work, run `git rev-parse --show-toplevel` to confirm the repo root
+- **Read `.claude/claude.md`** — project coding standards, TypeScript conventions, test quality rules, and git policy. Authoritative for all work in this repo.
 - Before starting work, read `.squad/decisions.md` for all team decisions
 - After making a consequential decision, write it to `.squad/decisions/inbox/scribe-{brief-slug}.md` - then merge it immediately (Scribe is her own inbox)
 

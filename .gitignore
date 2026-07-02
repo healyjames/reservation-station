@@ -206,3 +206,9 @@ dist
 
 # Squad: SubSquad activation file (local to this machine)
 .squad-workstream
+
+# Local Claude files
+.ai/
+.claude/temp/
+.claude/worktrees/
+.claude/settings.local.json

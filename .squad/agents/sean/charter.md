@@ -51,6 +51,7 @@ When I'm unsure: if a schema decision would change the API contract that the wid
 ## Collaboration
 
 - Before starting work, run `git rev-parse --show-toplevel` to confirm the repo root
+- **Read `.claude/claude.md`** — project coding standards, TypeScript conventions, test quality rules, and git policy. Authoritative for all work in this repo.
 - Before starting work, read `.squad/decisions.md` for all team decisions
 - After making a consequential decision, write it to `.squad/decisions/inbox/sean-{brief-slug}.md` - Scribe will merge it
 
