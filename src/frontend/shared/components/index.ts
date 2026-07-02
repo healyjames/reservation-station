@@ -19,7 +19,7 @@ export { default as BookingDetailsList } from './BookingDetailsList';
 export { default as Badge } from './Badge';
 export { default as SelectedDateInfo } from './SelectedDateInfo';
 export { default as DayCell } from './DayCell';
-export { default as BlockedTooltip } from './BlockedTooltip';
+export { default as Tooltip } from './Tooltip';
 export { default as CalendarGrid } from './CalendarGrid';
 
 // Layer E — Admin toggle

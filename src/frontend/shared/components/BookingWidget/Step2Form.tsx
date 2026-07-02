@@ -87,14 +87,13 @@ export const Step2Form: FunctionComponent<Step2FormProps> = ({ formData, submitE
           />
         </FormField>
 
-        <FormField label="Dietary Requirements (Optional)" htmlFor="dietary">
+        <FormField label="Dietary Requirements & Special Requests (Optional)" htmlFor="dietary">
           <Textarea
             id="dietary"
             name="dietary"
             value={formData.dietary}
             rows={3}
             maxLength={500}
-            placeholder="Let us know about any allergies or dietary preferences..."
             onInput={(e) => onFieldChange('dietary', (e.target as HTMLTextAreaElement).value)}
           />
         </FormField>

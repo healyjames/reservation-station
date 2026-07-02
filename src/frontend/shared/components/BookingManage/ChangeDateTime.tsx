@@ -6,7 +6,7 @@ import { MONTHS } from '@shared/types';
 import {
   StandaloneLayout,
   CalendarGrid,
-  BlockedTooltip,
+  Tooltip,
   SelectedDateInfo,
   Select,
   Button,
@@ -160,7 +160,7 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
           onSelect={(y, m, d) => selectDate(y, m, d)}
           onBlockedSelect={handleBlockedSelect}
         />
-        <BlockedTooltip
+        <Tooltip
           visible={tooltipVisible.value}
           message="Bookings currently unavailable for this date"
           anchorRect={tooltipAnchorRect.value}

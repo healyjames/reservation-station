@@ -1,16 +1,16 @@
 import { createPortal } from 'preact/compat';
 import type { FunctionComponent } from 'preact';
-import styles from './BlockedTooltip.module.css';
+import styles from './Tooltip.module.css';
 
-interface BlockedTooltipProps {
+interface TooltipProps {
   visible: boolean;
   message: string;
   anchorRect: DOMRect | null;
-  onClose: () => void;
+  onClose?: () => void;
   class?: string;
 }
 
-const BlockedTooltip: FunctionComponent<BlockedTooltipProps> = ({ visible, message, anchorRect, onClose, class: className }) => {
+const Tooltip: FunctionComponent<TooltipProps> = ({ visible, message, anchorRect, onClose, class: className }) => {
   if (!visible || !anchorRect) return null;
 
   const style = {
@@ -25,9 +25,11 @@ const BlockedTooltip: FunctionComponent<BlockedTooltipProps> = ({ visible, messa
     <div class={`${styles.tooltip} ${className ?? ''}`} style={style} role="tooltip">
       <div class={styles.content}>
         <span class={styles.message}>{message}</span>
-        <button type="button" class={styles.closeBtn} onClick={onClose} aria-label="Close tooltip">
-          ✕
-        </button>
+        {onClose && (
+          <button type="button" class={styles.closeBtn} onClick={onClose} aria-label="Close tooltip">
+            ✕
+          </button>
+        )}
       </div>
       <div class={styles.arrow} />
     </div>,
@@ -35,4 +37,4 @@ const BlockedTooltip: FunctionComponent<BlockedTooltipProps> = ({ visible, messa
   );
 };
 
-export default BlockedTooltip;
+export default Tooltip;

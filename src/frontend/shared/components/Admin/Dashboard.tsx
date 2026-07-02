@@ -11,6 +11,7 @@ import BookingModal from './BookingModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import AdminSidebar from './AdminSidebar';
 import AdminHeader from './AdminHeader';
+import CalendarPickerModal from './CalendarPickerModal';
 import styles from './Dashboard.module.css';
 
 interface DashboardProps {
@@ -26,6 +27,7 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
   const modalReservation = useSignal<Reservation | undefined>(undefined);
   const deleteModalOpen = useSignal(false);
   const deleteReservation = useSignal<Reservation | undefined>(undefined);
+  const calendarPickerOpen = useSignal(false);
 
   const venueName = auth.tenantConfig.value?.name ?? 'Dashboard';
 
@@ -65,6 +67,7 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
             guestCount={bookings.guestCount.value}
             onPrev={bookings.prevDay}
             onNext={bookings.nextDay}
+            onOpenCalendar={() => { calendarPickerOpen.value = true; }}
           />
 
           <div class={styles.day_actions_row}>
@@ -139,6 +142,18 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
           onSuccess={() => bookings.fetchBookings(bookings.currentDate.value)}
           onClose={() => {
             deleteModalOpen.value = false;
+          }}
+        />
+      )}
+      {calendarPickerOpen.value && auth.tenantConfig.value && (
+        <CalendarPickerModal
+          open={calendarPickerOpen.value}
+          onClose={() => { calendarPickerOpen.value = false; }}
+          currentDate={bookings.currentDate.value}
+          tenantId={auth.tenantConfig.value.id}
+          onDateSelect={(date) => {
+            bookings.currentDate.value = date;
+            bookings.fetchBookings(date);
           }}
         />
       )}

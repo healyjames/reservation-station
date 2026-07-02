@@ -135,7 +135,11 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             }}
           />
         </FormField>
-        <FormField label="Concurrent guest time window (minutes)" htmlFor="sf-time-window">
+        <FormField
+          label="Guest time window (minutes)"
+          htmlFor="sf-time-window"
+					tooltip="How long a guest is considered to be present for the purposes of calculating concurrent guests. For example, if set to 60, a guest who books at 6:00pm will be considered present until 7:00pm."
+        >
           <Input
             type="number"
             id="sf-time-window"
@@ -152,12 +156,12 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             type="email"
             id="sf-contact-email"
             name="contact_email"
-            required
             autocomplete="email"
             value={contactEmail.value}
             onInput={(e) => {
               contactEmail.value = (e.target as HTMLInputElement).value;
             }}
+						disabled
           />
         </FormField>
         <div class={`${styles.alert} ${styles.alert_warning}`} role="note">

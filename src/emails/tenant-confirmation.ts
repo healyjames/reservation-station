@@ -61,7 +61,7 @@ export function buildTenantConfirmationEmail(data: TenantReservationEmailData): 
       ['Date', data.reservationDate],
       ['Time', data.reservationTime],
       ['Guests', String(data.guests)],
-      ['Dietary Requirements', data.dietaryRequirements || 'None'],
+      ['Dietary Requirements & Special Requests', data.dietaryRequirements || 'None'],
       ['Booking ID', data.reservationId],
     ])}`;
 

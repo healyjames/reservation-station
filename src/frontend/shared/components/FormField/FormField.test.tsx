@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render } from '@testing-library/preact';
+import { render, fireEvent } from '@testing-library/preact';
 import { describe, it, expect } from 'vitest';
 import FormField from './FormField';
 
@@ -56,5 +56,26 @@ describe('FormField', () => {
       </FormField>,
     );
     expect(getByText('Name *')).toBeTruthy();
+  });
+
+  it('shows tooltip on label hover', () => {
+    const { getByText } = render(
+      <FormField label="Name" tooltip="Some helpful info">
+        <input />
+      </FormField>,
+    );
+    fireEvent.mouseEnter(getByText('Name'));
+    expect(document.body.querySelector('[role="tooltip"]')).toBeTruthy();
+    fireEvent.mouseLeave(getByText('Name'));
+    expect(document.body.querySelector('[role="tooltip"]')).toBeNull();
+  });
+
+  it('does not render tooltip when tooltip prop is absent', () => {
+    render(
+      <FormField label="Name">
+        <input />
+      </FormField>,
+    );
+    expect(document.body.querySelector('[role="tooltip"]')).toBeNull();
   });
 });

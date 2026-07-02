@@ -41,6 +41,21 @@
 .current_date_display {
   font-size: 1.5rem;
   font-weight: 600;
+  background: none;
+  border: none;
+  padding: var(--space-1) var(--space-2);
+  margin: 0;
+  font: inherit;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  transition: background 0.15s ease;
+}
+
+.current_date_display:hover {
+  background: var(--background-lighter);
 }
 
 .today_label {

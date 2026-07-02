@@ -122,14 +122,13 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
             }}
           />
         </FormField>
-        <FormField label="Dietary Requirements (Optional)" htmlFor="edit-dietary">
+        <FormField label="Dietary Requirements & Special Requests (Optional)" htmlFor="edit-dietary">
           <Textarea
             id="edit-dietary"
             name="dietary_requirements"
             value={dietary.value}
             rows={3}
             maxLength={500}
-            placeholder="Let us know about any allergies or dietary preferences..."
             onInput={(e) => {
               dietary.value = (e.target as HTMLTextAreaElement).value;
             }}

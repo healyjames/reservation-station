@@ -53,7 +53,7 @@ describe('buildCustomerConfirmationEmail', () => {
     expect(buildCustomerConfirmationEmail(customerData).html).toContain('19:00');
   });
 
-  it('html does not contain raw null when dietary requirements is null', () => {
+  it('html does not contain raw null when dietary requirements & special requests is null', () => {
     const result = buildCustomerConfirmationEmail({ ...customerData, dietaryRequirements: null });
     expect(result.html).not.toContain('>null<');
     expect(result.html).not.toContain('null');
@@ -85,7 +85,7 @@ describe('buildCustomerAmendmentEmail', () => {
     expect(buildCustomerAmendmentEmail(customerData).html).toContain('19:00');
   });
 
-  it('html does not contain raw null when dietary requirements is null', () => {
+  it('html does not contain raw null when dietary requirements & special requests is null', () => {
     const result = buildCustomerAmendmentEmail({ ...customerData, dietaryRequirements: null });
     expect(result.html).not.toContain('>null<');
     expect(result.html).not.toContain('null');
@@ -117,7 +117,7 @@ describe('buildCustomerCancellationEmail', () => {
     expect(buildCustomerCancellationEmail(customerData).html).toContain('19:00');
   });
 
-  it('html does not contain raw null when dietary requirements is null', () => {
+  it('html does not contain raw null when dietary requirements & special requests is null', () => {
     const result = buildCustomerCancellationEmail({ ...customerData, dietaryRequirements: null });
     expect(result.html).not.toContain('>null<');
     expect(result.html).not.toContain('null');

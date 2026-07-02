@@ -11,6 +11,8 @@ interface CalendarGridProps {
   selectedDate?: CalendarDate | null;
   isDisabled?: (year: number, month: number, day: number) => boolean;
   isBlocked?: (year: number, month: number, day: number) => boolean;
+  /** When true, past dates are visually marked but remain selectable */
+  allowPastDates?: boolean;
   isRangeStart?: (year: number, month: number, day: number) => boolean;
   isInRange?: (year: number, month: number, day: number) => boolean;
   isRangeEnd?: (year: number, month: number, day: number) => boolean;
@@ -27,6 +29,7 @@ const CalendarGrid: FunctionComponent<CalendarGridProps> = ({
   selectedDate,
   isDisabled,
   isBlocked,
+  allowPastDates = false,
   isRangeStart,
   isInRange,
   isRangeEnd,
@@ -79,7 +82,7 @@ const CalendarGrid: FunctionComponent<CalendarGridProps> = ({
             isPast={isPast}
             isSelected={isSelectedCell}
             isBlocked={blocked}
-            isDisabled={disabled || isPast}
+            isDisabled={allowPastDates ? disabled : disabled || isPast}
             isRangeStart={isRangeStart?.(year, month, day) ?? false}
             isInRange={isInRange?.(year, month, day) ?? false}
             isRangeEnd={isRangeEnd?.(year, month, day) ?? false}

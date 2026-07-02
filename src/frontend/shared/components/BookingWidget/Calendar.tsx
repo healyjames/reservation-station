@@ -3,7 +3,7 @@ import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
 import { MONTHS } from '@shared/types';
-import { CalendarGrid, BlockedTooltip, Button } from '@shared/components';
+import { CalendarGrid, Tooltip, Button } from '@shared/components';
 import styles from './Calendar.module.css';
 
 interface CalendarProps {
@@ -17,6 +17,8 @@ interface CalendarProps {
   onDateSelect: (year: number, month: number, day: number) => Promise<void>;
   isStandalone?: boolean;
   tenantName?: string;
+  /** When true, past dates are selectable and the calendar can navigate to past months */
+  allowPastDates?: boolean;
 }
 
 export const Calendar: FunctionComponent<CalendarProps> = ({
@@ -30,6 +32,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
   onDateSelect,
   isStandalone = false,
   tenantName,
+  allowPastDates = false,
 }) => {
   const tooltipVisible = useSignal(false);
   const tooltipAnchorRect = useSignal<DOMRect | null>(null);
@@ -53,7 +56,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
   }
 
   function prevMonth() {
-    if (year === todayYear && month === todayMonth) return;
+    if (!allowPastDates && year === todayYear && month === todayMonth) return;
     let newMonth = month - 1;
     let newYear = year;
     if (newMonth < 0) {
@@ -97,7 +100,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
             type="button"
             class={styles.nav_button}
             aria-label="Previous month"
-            disabled={onCurrentMonth || isFetchingDates}
+            disabled={(!allowPastDates && onCurrentMonth) || isFetchingDates}
             onClick={prevMonth}
             size="sm"
             variant="ghost"
@@ -150,14 +153,15 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
           year={year}
           month={month}
           selectedDate={selectedDate}
-          isDisabled={(y, m, d) => isFetchingDates || isBeforeToday(y, m, d) || isDateBlocked(y, m, d)}
+          isDisabled={(y, m, d) => (isFetchingDates ?? false) || (!allowPastDates && isBeforeToday(y, m, d)) || isDateBlocked(y, m, d)}
           isBlocked={(y, m, d) => isDateBlocked(y, m, d)}
+          allowPastDates={allowPastDates}
           onSelect={onDateSelect}
           onBlockedSelect={handleBlockedSelect}
         />
       </div>
 
-      <BlockedTooltip
+      <Tooltip
         visible={tooltipVisible.value}
         message="Bookings currently unavailable for this date"
         anchorRect={tooltipAnchorRect.value}

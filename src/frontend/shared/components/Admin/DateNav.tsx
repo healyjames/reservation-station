@@ -20,9 +20,10 @@ interface DateNavProps {
   guestCount: number;
   onPrev: () => void;
   onNext: () => void;
+  onOpenCalendar?: () => void;
 }
 
-const DateNav: FunctionComponent<DateNavProps> = ({ currentDate, guestCount, onPrev, onNext }) => {
+const DateNav: FunctionComponent<DateNavProps> = ({ currentDate, guestCount, onPrev, onNext, onOpenCalendar }) => {
   const d = currentDate.value;
   const displayDate = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long' });
   const todayFlag = isToday(d);
@@ -33,10 +34,17 @@ const DateNav: FunctionComponent<DateNavProps> = ({ currentDate, guestCount, onP
         &#8592;
       </button>
       <div class={styles.date_nav_center}>
-        <span class={styles.current_date_display} id="current-date-display">
+        <button
+          type="button"
+          class={styles.current_date_display}
+          id="current-date-display"
+          onClick={onOpenCalendar}
+          aria-label="Open date picker"
+          title="Click to open calendar"
+        >
           {displayDate}
           {todayFlag && <span class={styles.today_label}> today</span>}
-        </span>
+        </button>
         <span id="summary-text" class={styles.day_summary}>
           {guestCount} cover{guestCount !== 1 ? 's' : ''}
         </span>
