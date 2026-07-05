@@ -1,5 +1,5 @@
 import type { EmailTemplate, TenantReservationEmailData } from '../types';
-import { formatEmailDate } from './formatEmailDate';
+import { formatEmailDate } from '../utils/formatEmailDate';
 
 function detailsTable(rows: [string, string][]): string {
   const cells = rows

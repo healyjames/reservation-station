@@ -11,7 +11,8 @@
     "noEmit": true,
     "paths": {
       "@frontend/*": ["./src/frontend/*"],
-      "@shared/*": ["./src/frontend/shared/*"]
+      "@shared/*": ["./src/frontend/shared/*"],
+      "@constants": ["./src/constants/index.ts"]
     }
   },
   "include": ["src/frontend/**/*.ts", "src/frontend/**/*.tsx", "vite.config.ts"],

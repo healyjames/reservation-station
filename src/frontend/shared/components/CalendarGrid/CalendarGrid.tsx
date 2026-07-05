@@ -1,6 +1,6 @@
 import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
-import { MONTHS, DAY_NAMES } from '@shared/types';
+import { MONTH_NAMES, DAY_NAMES } from '@constants';
 import DayCell from '../DayCell';
 import styles from './CalendarGrid.module.css';
 
@@ -52,7 +52,7 @@ const CalendarGrid: FunctionComponent<CalendarGridProps> = ({
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   return (
-    <div class={`${styles.grid} ${className ?? ''}`} role="grid" aria-label={`${MONTHS[month]} ${year}`} onMouseLeave={onLeaveGrid}>
+    <div class={`${styles.grid} ${className ?? ''}`} role="grid" aria-label={`${MONTH_NAMES[month]} ${year}`} onMouseLeave={onLeaveGrid}>
       {/* Day name column headers */}
       {DAY_NAMES.map((name) => (
         <div key={name} class={styles.dayName} role="columnheader" aria-label={name}>

@@ -2,7 +2,7 @@ import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { CalendarGrid } from '@shared/components';
-import { MONTHS } from '@shared/types';
+import { MONTH_NAMES } from '@constants';
 import { adminFetch } from '@shared/utils/adminFetch';
 import styles from './BlockedDatesSettings.module.css';
 
@@ -257,7 +257,7 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
             &#8592;
           </button>
           <span class={styles.bd_month_label}>
-            {MONTHS[viewMonth.value]} {viewYear.value}
+            {MONTH_NAMES[viewMonth.value]} {viewYear.value}
           </span>
           <button class={styles.bd_next_btn} aria-label="Next month" onClick={nextMonth}>
             &#8594;
