@@ -5,6 +5,16 @@ import { Tenant, Reservation, UpdateTenantSchema, UpdateReservationSchema, Creat
 import { sendEmail } from '../utils/email';
 import { buildTenantConfirmationEmail } from '../emails/tenant-confirmation';
 import { buildCustomerConfirmationEmail } from '../emails/customer-confirmation';
+import { buildCustomerAmendmentEmail } from '../emails/customer-amendment';
+import { buildTenantAmendmentEmail } from '../emails/tenant-amendment';
+import { buildCustomerCancellationEmail } from '../emails/customer-cancellation';
+import { buildTenantCancellationEmail } from '../emails/tenant-cancellation';
+import { generateManageToken, hashManageToken } from '../utils/manageToken';
+
+type ReservationWithTenant = Reservation & {
+	tenant_name: string;
+	contact_email: string;
+};
 
 const admin = new Hono<{
 	Bindings: Env;
@@ -60,6 +70,18 @@ admin.patch('/me', async (c) => {
 admin.get('/reservations', async (c) => {
   const tenantId = c.get('tenantId');
   const date = c.req.query('date');
+  const month = c.req.query('month');
+
+  if (month) {
+    if (!/^\d{4}-\d{2}$/.test(month)) {
+      return c.json({ error: 'Invalid month format. Expected YYYY-MM' }, 400);
+    }
+    const { results } = await c.env.maximum_bookings_db
+      .prepare('SELECT * FROM Reservations WHERE tenant_id = ? AND reservation_date LIKE ? ORDER BY reservation_date ASC, reservation_time ASC')
+      .bind(tenantId, `${month}-%`)
+      .run<Reservation>();
+    return c.json(results);
+  }
 
   let query = 'SELECT * FROM Reservations WHERE tenant_id = ?';
   const bindings: string[] = [tenantId];
@@ -67,9 +89,10 @@ admin.get('/reservations', async (c) => {
   if (date) {
     query += ' AND reservation_date = ?';
     bindings.push(date);
+    query += ' ORDER BY reservation_time ASC';
+  } else {
+    query += ' ORDER BY reservation_date ASC, reservation_time ASC';
   }
-
-  query += ' ORDER BY reservation_time ASC';
 
   const { results } = await c.env.maximum_bookings_db
     .prepare(query)
@@ -135,12 +158,15 @@ admin.post('/reservations', async (c) => {
   const [rH, rM] = reservation_time.split(':');
   const slotMinutes = parseInt(rH, 10) * 60 + parseInt(rM, 10);
 
+  const manageToken = email ? await generateManageToken(c.env.JWT_SECRET, id, email) : null;
+  const manageTokenHash = manageToken ? await hashManageToken(manageToken) : null;
+
   let insertResult: D1Result;
   try {
     insertResult = await c.env.maximum_bookings_db
       .prepare(
-        `INSERT INTO Reservations (id, tenant_id, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements, created_date, modified_date)
-				 SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        `INSERT INTO Reservations (id, tenant_id, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements, created_date, modified_date, manage_token_hash)
+				 SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 				 WHERE (? = 0) OR (
 				   SELECT COALESCE(SUM(guests), 0)
 				   FROM Reservations
@@ -163,6 +189,7 @@ admin.post('/reservations', async (c) => {
         dietary_requirements ?? '',
         now,
         now,
+        manageTokenHash,
         tenant.max_covers,
         tenantId,
         reservation_date,
@@ -181,6 +208,7 @@ admin.post('/reservations', async (c) => {
     return c.json({ error: 'Insufficient capacity for the requested time' }, 422);
   }
 
+  const baseUrl = c.env.PUBLIC_URL || `${c.req.raw.headers.get('x-forwarded-proto') ?? 'https'}://${c.req.header('host')}`;
   const from = `"${tenant.name} via Maximum Bookings" <${tenant.contact_email}>`;
   const replyTo = tenant.contact_email;
 
@@ -217,8 +245,10 @@ admin.post('/reservations', async (c) => {
                   reservationTime: reservation_time,
                   guests,
                   dietaryRequirements: dietary_requirements || null,
-                  manageToken: undefined,
-                  baseUrl: undefined,
+                  reservationId: id,
+                  customerEmail: email,
+                  baseUrl,
+                  manageToken: manageToken ?? undefined,
                 }),
               }),
             ]
@@ -270,6 +300,75 @@ admin.patch('/reservations/:id', async (c) => {
     .bind(...values, id, tenantId)
     .run();
 
+  // If the email changed, regenerate the manage token hash so the amendment link stays valid
+  if (body.email && body.email.toLowerCase() !== (existing.email ?? '').toLowerCase()) {
+    const newToken = await generateManageToken(c.env.JWT_SECRET, id, body.email);
+    const newHash = await hashManageToken(newToken);
+    await c.env.maximum_bookings_db.prepare('UPDATE Reservations SET manage_token_hash = ? WHERE id = ?').bind(newHash, id).run();
+  }
+
+  const updated = await c.env.maximum_bookings_db
+    .prepare('SELECT r.*, t.name AS tenant_name, t.contact_email FROM Reservations r JOIN Tenants t ON t.id = r.tenant_id WHERE r.id = ?')
+    .bind(id)
+    .first<ReservationWithTenant>();
+
+  if (updated) {
+    c.executionCtx.waitUntil(
+      (async () => {
+        const from = `"${updated.tenant_name} via Maximum Bookings" <${updated.contact_email}>`;
+        const replyTo = updated.contact_email;
+        const baseUrl = c.env.PUBLIC_URL ?? `${c.req.raw.headers.get('x-forwarded-proto') ?? 'https'}://${c.req.header('host')}`;
+        const emailsToSend = [
+          sendEmail(c.env, {
+            to: updated.contact_email,
+            from,
+            reply_to: replyTo,
+            ...buildTenantAmendmentEmail({
+              tenantName: updated.tenant_name,
+              reservationId: id,
+              firstName: updated.first_name,
+              surname: updated.surname,
+              telephone: updated.telephone,
+              customerEmail: updated.email,
+              reservationDate: updated.reservation_date,
+              reservationTime: updated.reservation_time,
+              guests: updated.guests,
+              dietaryRequirements: updated.dietary_requirements ?? null,
+            }),
+          }),
+        ];
+        if (updated.email) {
+          const amendManageToken = await generateManageToken(c.env.JWT_SECRET, id, updated.email);
+          emailsToSend.push(
+            sendEmail(c.env, {
+              to: updated.email,
+              from,
+              reply_to: replyTo,
+              ...buildCustomerAmendmentEmail({
+                tenantName: updated.tenant_name,
+                firstName: updated.first_name,
+                reservationDate: updated.reservation_date,
+                reservationTime: updated.reservation_time,
+                guests: updated.guests,
+                dietaryRequirements: updated.dietary_requirements ?? null,
+                reservationId: id,
+                customerEmail: updated.email,
+                baseUrl,
+                manageToken: amendManageToken,
+              }),
+            }),
+          );
+        }
+        const results = await Promise.allSettled(emailsToSend);
+        results.forEach((r, i) => {
+          if (r.status === 'rejected') {
+            console.error(`[email] send failed (index ${i}):`, r.reason);
+          }
+        });
+      })(),
+    );
+  }
+
   return c.json({ success: true });
 });
 
@@ -277,12 +376,68 @@ admin.delete('/reservations/:id', async (c) => {
   const tenantId = c.get('tenantId');
   const id = c.req.param('id');
 
+  const reservation = await c.env.maximum_bookings_db
+    .prepare('SELECT r.*, t.name AS tenant_name, t.contact_email FROM Reservations r JOIN Tenants t ON t.id = r.tenant_id WHERE r.id = ? AND r.tenant_id = ?')
+    .bind(id, tenantId)
+    .first<ReservationWithTenant>();
+
+  if (!reservation) return c.json({ error: 'Reservation not found' }, 404);
+
   const result = await c.env.maximum_bookings_db
     .prepare('DELETE FROM Reservations WHERE id = ? AND tenant_id = ?')
     .bind(id, tenantId)
     .run();
 
   if (result.meta.changes === 0) return c.json({ error: 'Reservation not found' }, 404);
+
+  c.executionCtx.waitUntil(
+    (async () => {
+      const from = `"${reservation.tenant_name} via Maximum Bookings" <${reservation.contact_email}>`;
+      const replyTo = reservation.contact_email;
+      const emailsToSend = [
+        sendEmail(c.env, {
+          to: reservation.contact_email,
+          from,
+          reply_to: replyTo,
+          ...buildTenantCancellationEmail({
+            tenantName: reservation.tenant_name,
+            reservationId: id,
+            firstName: reservation.first_name,
+            surname: reservation.surname,
+            telephone: reservation.telephone,
+            customerEmail: reservation.email,
+            reservationDate: reservation.reservation_date,
+            reservationTime: reservation.reservation_time,
+            guests: reservation.guests,
+            dietaryRequirements: reservation.dietary_requirements ?? null,
+          }),
+        }),
+      ];
+      if (reservation.email) {
+        emailsToSend.push(
+          sendEmail(c.env, {
+            to: reservation.email,
+            from,
+            reply_to: replyTo,
+            ...buildCustomerCancellationEmail({
+              tenantName: reservation.tenant_name,
+              firstName: reservation.first_name,
+              reservationDate: reservation.reservation_date,
+              reservationTime: reservation.reservation_time,
+              guests: reservation.guests,
+              dietaryRequirements: reservation.dietary_requirements ?? null,
+            }),
+          }),
+        );
+      }
+      const results = await Promise.allSettled(emailsToSend);
+      results.forEach((r, i) => {
+        if (r.status === 'rejected') {
+          console.error(`[email] send failed (index ${i}):`, r.reason);
+        }
+      });
+    })(),
+  );
 
   return c.json({ success: true });
 });

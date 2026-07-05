@@ -102,8 +102,21 @@
   font-weight: 600;
 }
 
+.rangeStartUnblock,
+.rangeEndUnblock {
+  background: var(--error-dark);
+  border-color: var(--error-dark);
+  color: white;
+  font-weight: 600;
+}
+
 .inRange {
   background: color-mix(in srgb, var(--primary) 15%, transparent);
+  border-color: transparent;
+}
+
+.inRangeUnblock {
+  background: color-mix(in srgb, var(--error-dark) 15%, transparent);
   border-color: transparent;
 }
 

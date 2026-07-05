@@ -4,6 +4,7 @@ import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
 import { Calendar } from '@shared/components/BookingWidget/Calendar';
 import Modal from '@shared/components/Modal/Modal';
+import { fetchBlockedDatesForMonth } from '@shared/utils/fetchBlockedDatesForMonth';
 
 interface CalendarPickerModalProps {
   open: boolean;
@@ -40,23 +41,21 @@ const CalendarPickerModal: FunctionComponent<CalendarPickerModalProps> = ({
         month: currentDate.getMonth(),
         day: currentDate.getDate(),
       };
+      void fetchBlockedDates(currentDate.getFullYear(), currentDate.getMonth());
     }
   }, [open]);
 
   async function fetchBlockedDates(year: number, month: number): Promise<void> {
-    const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
     blockedDatesError.value = '';
     isFetchingDates.value = true;
     try {
-      const res = await fetch(`/api/reservations/blocked-dates?tenant_id=${encodeURIComponent(tenantId)}&month=${monthStr}`);
-      if (!res.ok) {
-        blockedDatesError.value = 'Could not load availability.';
+      const { adminBlocked, closed, aborted, error } = await fetchBlockedDatesForMonth(tenantId, year, month);
+      if (aborted) return;
+      if (error) {
+        blockedDatesError.value = 'Could not load availability. Please try again.';
         return;
       }
-      const data = (await res.json()) as { blocked_dates?: string[] };
-      blockedDates.value = new Set(data.blocked_dates ?? []);
-    } catch {
-      blockedDatesError.value = 'Could not load availability.';
+      blockedDates.value = new Set([...adminBlocked, ...closed]);
     } finally {
       isFetchingDates.value = false;
     }

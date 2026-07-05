@@ -22,6 +22,7 @@ interface RangePoint {
   y: number;
   m: number;
   d: number;
+  unblockMode: boolean;
 }
 
 interface BlockedDatesSettingsProps {
@@ -95,7 +96,7 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
     if (isLoading.value) return;
     const start = rangeStart.value;
     if (!start) {
-      rangeStart.value = { y, m, d };
+      rangeStart.value = { y, m, d, unblockMode: isBlockedFn(y, m, d) };
       return;
     }
     rangeStart.value = null;
@@ -103,6 +104,11 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
     if (start.y === y && start.m === m && start.d === d) {
       await toggleDay(y, m, d);
     } else if (start.y === y && start.m === m) {
+      if (start.unblockMode) {
+        await unblockRange(y, m, Math.min(start.d, d), Math.max(start.d, d));
+        return;
+      }
+
       await blockRange(y, m, Math.min(start.d, d), Math.max(start.d, d));
     } else {
       await toggleDay(y, m, d);
@@ -174,6 +180,30 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
     }
   }
 
+  async function unblockRange(y: number, m: number, startDay: number, endDay: number) {
+    isLoading.value = true;
+    try {
+      const ops: Promise<void>[] = [];
+      for (let d = startDay; d <= endDay; d++) {
+        const dateStr = toDateStr(y, m, d);
+        if (!blockedSet.value.has(dateStr)) continue;
+        ops.push(
+          adminFetch(`/api/admin/blocked-dates/date/${dateStr}`, token, { method: 'DELETE' }).then((r) => {
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            const next = new Set(blockedSet.value);
+            next.delete(dateStr);
+            blockedSet.value = next;
+          }),
+        );
+      }
+      await Promise.all(ops);
+    } catch {
+      showError('Failed to unblock some dates.');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   const today = new Date();
 
   function isDisabled(y: number, m: number, d: number): boolean {
@@ -234,7 +264,7 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
           </button>
         </div>
         {isLoading.value && <div class={`${styles.bd_calendar_loading} ${styles.loading_text}`}>Loading…</div>}
-        <div style={isLoading.value ? 'visibility:hidden' : undefined}>
+        <div style={isLoading.value ? 'visibility:hidden' : undefined} class={styles.bd_calendar_grid_wrapper}>
           <CalendarGrid
             year={viewYear.value}
             month={viewMonth.value}
@@ -243,9 +273,10 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
             isRangeStart={isRangeStartFn}
             isInRange={isInRangeFn}
             isRangeEnd={isRangeEndFn}
+            rangeMode={rangeStart.value?.unblockMode ? 'unblock' : 'block'}
             onSelect={handleDayClick}
             onHoverDate={(y, m, d) => {
-              hoverDate.value = { y, m, d };
+              hoverDate.value = { y, m, d, unblockMode: rangeStart.value?.unblockMode ?? false };
             }}
             onLeaveGrid={() => {
               hoverDate.value = null;
@@ -256,7 +287,10 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
           <span class={styles.bd_legend_item}>
             <span class={`${styles.bd_legend_swatch} ${styles.bd_legend_swatch_blocked}`} /> Blocked
           </span>
-          <span class={`${styles.bd_legend_item} ${styles.bd_legend_hint}`}>◌ Click to toggle · Click two days to block a range</span>
+          <span class={styles.bd_legend_item}>
+            <span class={`${styles.bd_legend_swatch} ${styles.bd_legend_swatch_unblock}`} /> Unblock range
+          </span>
+          <span class={`${styles.bd_legend_item} ${styles.bd_legend_hint}`}>Click to toggle · Click two days to block or unblock a range</span>
         </div>
       </div>
     </div>

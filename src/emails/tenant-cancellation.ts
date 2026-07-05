@@ -1,4 +1,5 @@
 import type { EmailTemplate, TenantReservationEmailData } from '../types';
+import { formatEmailDate } from './formatEmailDate';
 
 function detailsTable(rows: [string, string][]): string {
   const cells = rows
@@ -50,7 +51,7 @@ function emailWrapper(tenantName: string, heading: string, body: string): string
 }
 
 export function buildTenantCancellationEmail(data: TenantReservationEmailData): EmailTemplate {
-  const subject = `Booking cancelled: ${data.firstName} ${data.surname} — ${data.reservationDate} at ${data.reservationTime}`;
+  const subject = `Booking cancelled: ${data.firstName} ${data.surname} — ${formatEmailDate(data.reservationDate)} at ${data.reservationTime}`;
 
   const body = `
     <p style="margin:0 0 16px;font-size:15px;color:#333333;">A booking has been cancelled.</p>
@@ -58,7 +59,7 @@ export function buildTenantCancellationEmail(data: TenantReservationEmailData): 
       ['Customer Name', `${data.firstName} ${data.surname}`],
       ['Email', data.customerEmail],
       ['Phone', data.telephone],
-      ['Date', data.reservationDate],
+      ['Date', formatEmailDate(data.reservationDate)],
       ['Time', data.reservationTime],
       ['Guests', String(data.guests)],
       ['Dietary Requirements & Special Requests', data.dietaryRequirements || 'None'],

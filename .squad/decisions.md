@@ -475,6 +475,59 @@ Localhost origins (8787, 3000, 5173) are only included when `ENVIRONMENT=develop
 **What:** Keep C-3 tenant CRUD auth coverage in `test/tenants.spec.ts` and remove outdated unauthenticated tenant CRUD expectations from `test/index.spec.ts`. Protected routes must require `X-Admin-Key`; public tenant lookup remains read-only and projected.
 **Why:** Matches the super-admin tenant contract without mixing unrelated concerns into the main reservation suite.
 
+
+### 2026-06-19: Type centralization architecture
+**By:** James Healy
+**What:** Backend shared types live in `src/types/types.ts`. Rule: types used in 2+ files across different directories go there. Zod-inferred types stay co-located with their schemas in `src/db/schema.ts`. Frontend types stay in `src/frontend/shared/types/` and are accessed via the `@shared/types` alias. Component prop types and hook-local types stay in their own files.
+**Why:** Eliminates scattered type definitions across utility files; creates a single lookup for shared backend types.
+
+# Decision: API request optimisations — client-side cache, debounce, double-submit guards
+
+**By:** Twinkie (Frontend Dev)
+**Date:** 2026-07-02
+
+## What
+
+Implemented Items 1–5 from `documentation/api-request-optimisation.md`.
+
+**Item 1+2+3 — Shared fetch util with cache and AbortController:**
+Created `src/frontend/shared/utils/fetchBlockedDatesForMonth.ts` — a module-level singleton with a 5-minute `Map` cache keyed by `tenantId:YYYY-MM` and a shared `AbortController` that cancels any in-flight request when a new month is requested. Exported from `@shared/utils/index.ts`. The three previous copy-paste implementations in `useAvailability.ts`, `useManageBooking.ts`, and `CalendarPickerModal.tsx` all delegate to this util. Error string standardised to `'Could not load availability. Please try again.'` across all three callers.
+
+**Item 1 (continued) — `fetchBlockedTimes` result cache in `useAvailability`:**
+Added module-level `timesCache` (60-second TTL) keyed by `bt:tenantId:date:guests`. Cache hit returns immediately without creating a new `AbortController`, so back-navigation to a previously-seen (date, guests) combination is instant.
+
+**Item 1 (continued) — `bustBlockedDatesCache` re-export:**
+`useAvailability.ts` re-exports `bustMonth as bustBlockedDatesCache` at module level. `BookingApp.handleNewBooking` calls this before re-fetching, ensuring the calendar reflects the just-completed booking.
+
+**Item 2 (continued) — `CalendarPickerModal` open-effect bug fix:**
+The `useEffect([open])` reset calendar state but never fetched blocked dates, so the admin date picker showed no blocked days until month navigation. Fixed by adding `void fetchBlockedDates(...)` at the end of the `if (open)` block.
+
+**Item 4 — 250ms debounce on guest-count changes:**
+`BookingApp.handleGuestsChange` now uses a plain `setTimeout`/`clearTimeout` debounce. A user stepping 2→8 guests fires one fetch instead of six.
+
+**Item 5 — Double-submit guards in `useManageBooking`:**
+Added `isSaving` and `isCancelling` signals to the hook. `saveEditDetails` and `saveDatetime` guard on `isSaving`; `confirmCancel` guards on `isCancelling`. All three use `finally` blocks to reset the flags. Both signals exported from the hook return.
+
+## Why
+
+`/api/reservations/blocked-dates` was fetched unconditionally on every month navigation across three separate implementations, with no abort protection against stale responses and no deduplication. Users on slow connections could see incorrect blocked-day indicators due to out-of-order responses. The shared util eliminates the duplication and fixes the race in one place. The guest debounce and mutation guards are low-effort follow-ons that protect the Worker from unnecessary load.
+
+## Notes
+
+- `EditDetails`, `ChangeDateTime`, and `CancelConfirm` components already maintain their own local `isSaving`/`isCancelling` signals for UI loading state; the new hook-level guards are defence-in-depth at the API layer. No component threading was required.
+- The module-level `AbortController` in the shared util is intentional: only one calendar is active at a time, so aborting a previous fetch when a new month is requested is always correct.
+- `CalendarPickerModal` error string updated from `'Could not load availability.'` to `'Could not load availability. Please try again.'` to match the other callers.
+
+### 2026-07-02: Added Cache-Control headers
+**By:** Sean
+**What:** Added Cache-Control headers to GET /api/reservations/blocked-dates (public, max-age=300), GET /api/reservations/blocked-times (private, max-age=60), and GET /api/tenants/:id (public, max-age=3600).
+**Why:** Approved in documentation/api-request-optimisation.md — reduces redundant D1 queries and Worker invocations.
+
+### 2026-07-02: Test coverage for API request optimisations
+**By:** Neela
+**What:** Written tests for fetchBlockedDatesForMonth util (cache, abort, bust), useAvailability times cache, useManageBooking double-submit guards, and BookingApp debounce.
+**Why:** Coverage for all changes in documentation/api-request-optimisation.md implementation.
+
 ## Directives
 
 ### 2026-05-23T07-31-02: User directive
@@ -487,9 +540,14 @@ Localhost origins (8787, 3000, 5173) are only included when `ENVIRONMENT=develop
 **What:** Agents must NEVER run any of the following git commands: `git add`, `git commit`, `git push`, `git merge`. No exceptions. All git operations are James's responsibility.
 **Why:** User request - captured for team memory
 
+
+### 2026-06-12T22-24-56: User directive
+**By:** James (via Copilot)
+**What:** The squad must NEVER run git add, git commit, or git push. No member should prompt the user to run these commands either.
+**Why:** User request - captured for team memory
+
 ## Governance
 
 - All meaningful changes require team consensus
 - Document architectural decisions here
 - Keep history focused on work, decisions focused on direction
-

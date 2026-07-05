@@ -2,7 +2,7 @@
 
 ## Core Context
 
-Frontend Dev on the Maximum Bookings project. Twinkie owns frontend surface work, shared Preact UI implementation, and the public/admin stylesheet boundary.
+Frontend Dev on the Maximum Bookings project. Owns the public widget, manage-booking flow, admin UI surface work, and shared Preact runtime boundaries.
 
 **User:** James Healy
 **Team:** Han (Lead), Sean (Backend), Twinkie (Frontend), Neela (Tester), Scribe, Ralph
@@ -12,144 +12,52 @@ Frontend Dev on the Maximum Bookings project. Twinkie owns frontend surface work
 - No inline code comments unless genuinely necessary.
 - Write-ups, planning docs, and analysis markdown belong in `./documentation/`.
 - `theme.js` remains a blocking script in HTML `<head>` so theme state applies before first paint.
-- Frontend surfaces stay as thin entries under `src/frontend/`; reusable runtime code lives under `src/frontend/shared/`.
+- Frontend surface folders under `src/frontend/` stay as thin entrypoints; reusable runtime code lives under `src/frontend/shared/`.
 - `public/shared.css` is the shared base layer; `public/styles.css` and `public/admin/styles/admin.css` are surface layers on top of it.
-- Shared components still depend on a few intentional global hooks from `public/shared.css` such as `.details-list` and `.detail-row`.
+- CSS module class names use underscores, not camelCase.
+- Keep shared components compatible with the small set of intentional globals still owned by `public/shared.css`.
 
-### Condensed Work History
+## Condensed Work History
 
-- **Asset split / vanilla widget baseline (2026-04-01):** `public/index.html` was split into `public/styles.css`, blocking `public/js/theme.js`, and module `public/js/calendar.js`. Calendar starts on Monday, uses a burgundy palette, marks today with a dot, and fully re-renders on each call.
-- **Booking flows (2026-04-01 to 2026-05-21):** The multi-step booking form, blocked-times handling, cancel page, manage-booking page, and settings hash-routing all use explicit view/state transitions, fail-open fetch handling where appropriate, and UTC-safe date formatting (`T12:00:00Z`) to avoid timezone drift.
-- **Admin foundation (2026-04-05 to 2026-05-18):** Admin login/dashboard/settings shipped first in vanilla form, then gained spacing tokens, the two-panel layout, date picker extraction, Blocked Dates UI, and Opening Hours management.
-- **Preact migration (2026-05-22 to 2026-05-24):** Vite + `tsconfig.frontend.json` established the multi-entry frontend build; shared utilities and component layers landed under `src/frontend/shared/`; the cancel, booking widget, manage-booking, and admin surfaces were migrated to Preact with zero TypeScript errors.
-- **CalendarGrid extension (2026-05-24):** Range-selection props (`isRangeStart`, `isInRange`, `isRangeEnd`, `onHoverDate`, `onLeaveGrid`) were added to `CalendarGrid`/`DayCell` with safe defaults so non-admin consumers stay unaffected.
+- Established the vanilla widget/calendar baseline and booking-flow patterns, including UTC-safe date handling.
+- Built and refined admin dashboard/settings UI, blocked-dates controls, and opening-hours management.
+- Led the Preact migration into thin surface entries plus shared hooks, types, utilities, and components.
+- Extended `CalendarGrid` for admin range-selection workflows without breaking widget or manage-booking consumers.
 
 ## Recent Learnings
 
-### Frontend structure + canonical entrypoints (2026-05-27)
+### Blocked-times widget UX analysis (2026-07-02)
 
-- Surface folders remain entry-only: `booking-widget/`, `admin/`, `cancel/`, and `booking/manage/` keep HTML/bootstrap/app files, while shared hooks, types, components, and the admin fetch helper live under `src/frontend/shared/`.
-- `src/frontend/index.html` is the canonical built root entry; legacy public surface files that already had Preact replacements were retired.
-- `public/styles.css`, `public/shared.css`, `public/admin/styles/admin.css`, fonts, and `public/js/theme.js` remain live runtime dependencies for the Preact HTML entries.
-
-### CSS audit + cleanup boundary (2026-05-27 to 2026-05-28)
-
-- The audit token layer was first introduced as `public/frontend-audit.css`, then folded into the existing surface stylesheets (`public/styles.css`, `public/shared.css`, `public/admin/styles/admin.css`) so extra audit `<link>` tags could be removed without changing cascade order.
-- Admin HTML must not link `/shared.css` directly when `public/admin/styles/admin.css` already imports it; otherwise the shared base loads twice.
-- `public/shared.css` should stay focused on tokens, resets, shared primitives, standalone-page helpers, and the few intentional global hooks used by shared components. Surface presentation belongs in `public/styles.css` or `public/admin/styles/admin.css`.
-- Form element CSS modules must explicitly set `font-family: inherit`; otherwise buttons, inputs, and selects fall back to browser defaults after the Preact migration.
-
-## Learnings
+- Guest changes currently update `guests` immediately, clear `time` immediately, then wait 250ms before fetching guest-keyed blocked times.
+- That debounce reduces request volume but still leaves a stale-data window and often replaces the Time control with a spinner on cache miss.
+- If the team optimises this flow later, the preferred frontend shape is a date-level availability cache keyed by `(tenant, date)`, synchronous blocked-time recomputation on guest change, and preserving the selected time unless it becomes invalid.
 
 ### Concurrent capacity frontend model (2026-06-12)
 
 - The booking widget no longer depends on `daily-capacity`; Step 1 should derive guest limits from tenant config and blocked times only.
-- `max_guests` remains the per-booking cap, `max_covers` is now concurrent venue capacity, and the guest dropdown should use the smallest positive limit between them or fall back to `20`.
+- `max_guests` remains the per-booking cap, `max_covers` is venue concurrent capacity, and the guest dropdown should use the smallest positive limit between them or fall back to `20`.
 - Date-level sellout messaging should come from blocked slots, not a removed daily-total capacity rule.
 
-### Migration fully complete (2026-05-30)
+### Frontend structure + CSS boundaries (2026-05-27 to 2026-05-30)
 
-- The vanilla JS → Preact migration is now fully complete; all components use CSS Modules.
-- `escapeHtml` shim deleted from `formatting.ts` (other exports in that file remain).
-- `modal-actions` global wrapper class eliminated from `BookingModal.tsx` and `DeleteConfirmModal.tsx`; footer children are now inline.
-- `booking-form-content` global wrapper class eliminated from `BookingApp.tsx`; the error `MessageCard` renders without a wrapping div.
-- `stack` global utility class eliminated from `BookingModal.tsx` (replaced with `styles.fields`) and `Login.tsx` (replaced with `styles.form`).
-- `BookingDetailsList` migrated to its own `BookingDetailsList.module.css`, faithfully replicating the `shared.css` global definitions for `details-list`, `detail-row`, `detail-term`, `detail-value`.
+- `src/frontend/index.html` is the canonical built root entry.
+- Form controls in CSS modules must explicitly set `font-family: inherit`.
+- `public/shared.css` stays focused on tokens, resets, shared primitives, and the few intentional globals used by shared components.
+- The migration is complete: active frontend surfaces now run through Preact + CSS Modules.
 
-### Booking widget daily-capacity guardrails (2026-05-30)
+### useBookings month-cache rewrite (2026-07-03)
 
-- `useAvailability()` now owns both blocked-times and daily-capacity fetches, so the booking widget can load date-specific slot blocks and remaining-cover limits together on date selection.
-- In `Step1Form.tsx`, `remaining_covers: null` means unlimited and should not trigger any warning; only finite values below `tenantConfig.max_guests` count as a daily-capacity constraint.
-- When `remaining_covers < 2`, the guest selector should be replaced with an inline sold-out message instead of rendering a 0- or 1-person dropdown.
+- `useBookings.ts` fully rewritten: month-keyed cache, three-branch `fetchBookings` (cold load, warm same-month navigation, targeted same-day refresh), `refreshMonth()`, and cache-mutating `deleteBooking()` / `toggleDayBlock()`.
+- `Dashboard.tsx` gains a Refresh button wired to `refreshMonth()`.
+- Critical bug fixed: calendar picker no longer sets `currentDate.value` externally — prevents stale renders after month navigation.
 
-### BookingManage Overview CSS module extraction (2026-05-27)
+### fetchBlockedTimes shared utility (2026-07-03)
 
-- `Overview.tsx` referenced one global class: `action-group`.
-- `action-group` is shared by `CancelConfirm.tsx`, `ChangeDateTime.tsx`, and `EditDetails.tsx`, so its global rules stay in `public/shared.css`.
-- Copied the equivalent rules into `Overview.module.css`, including the `@media (min-width: 640px)` grid-column layout.
-- Mapping used: `action-group` → `action_group`.
+- `src/frontend/shared/utils/fetchBlockedTimes.ts` centralises the blocked-times fetch/cache across `useAvailability.ts`, `useManageBooking.ts`, and `BookingApp.tsx`.
+- Cache key is guest-agnostic for `maxCovers === 0` (unlimited-capacity) venues; guest-keyed for capacity-limited venues.
+- Prefix-bust clears all cache entries for a given tenant+date prefix when a mutation occurs.
 
-### BookingManage ChangeDateTime CSS module extraction (2026-05-27)
+### Blocked date range intent (2026-07-05)
 
-- `ChangeDateTime.tsx` referenced `calendar-container`, `calendar-header`, `calendar-nav`, `calendar-nav-btn`, `loading-indicator`, `compact-loading`, `inline-helper`, `inline-helper-error`, `action-group`, and `mt-2`.
-- `action-group` is still shared with `CancelConfirm.tsx` and `EditDetails.tsx`, so its global rules stay in `public/shared.css`; `calendar-*`, `loading-indicator`, `compact-loading`, and `inline-helper*` were only found in `ChangeDateTime.tsx` and are now candidates for later global cleanup.
-- Mapping used: `calendar-container` → `container`, `calendar-header` → `header`, `calendar-nav` → `nav`, `calendar-nav-btn` → `nav_btn`, `loading-indicator` → `loading_indicator`, `compact-loading` → `compact_loading`, `inline-helper` → `inline_helper`, `inline-helper-error` → `inline_helper_error`, `action-group` → `action_group`.
-- No CSS rule exists for `mt-2` in `public/shared.css` or `public/styles.css`, so the literal class was left in place while the extracted styles moved to the module.
-
-### BookingManage EditDetails CSS module extraction (2026-05-27)
-
-- `EditDetails.tsx` referenced `action-group` and `mt-2`.
-- `action-group` is still shared with `CancelConfirm.tsx` and `ChangeDateTime.tsx`, so its global rules stay in `public/shared.css`; no global CSS rule exists for `mt-2`, so that literal class remains in the markup.
-- Mapping used: `action-group` → `action_group`.
-
-### BookingManage SuccessCancel CSS module extraction (2026-05-27)
-
-- `SuccessCancel.tsx` referenced no literal `class=` or `className=` selectors, so the success screen was scoped with a local wrapper based on the existing `booking-form-content` rule from `public/styles.css`.
-- `booking-form-content` is still shared with `src/frontend/booking-widget/BookingApp.tsx`, so its global rule stays in place and no new orphaned globals were introduced.
-- Mapping used: `booking-form-content` → `content`.
-
-### BookingManage CancelConfirm CSS module extraction (2026-05-27)
-
-- `CancelConfirm.tsx` referenced one global class: `action-group`.
-- `action-group` rules were found in `public/shared.css` (base grid + `@media (min-width: 640px)` two-column layout) and not in `public/styles.css`.
-- `action-group` had no remaining TSX consumers under `src/` beyond `CancelConfirm.tsx`, so the global rule now appears newly orphaned; it stays in `public/shared.css` for James's later cleanup pass.
-- Mapping used: `action-group` → `action_group`.
-
-### BookingManage SuccessEdit CSS module extraction (2026-05-27)
-
-- `SuccessEdit.tsx` had no literal `class` or `className` references to extract, so the success screen was scoped with a new local wrapper based on the existing `booking-form-content` rule from `public/styles.css`.
-- `booking-form-content` is still shared with `src/frontend/booking-widget/BookingApp.tsx`, so the global rule stays in place and no new orphaned globals were introduced.
-- Mapping used: `booking-form-content` → `content`.
-
-### BookingManage Loading CSS module extraction (2026-05-27)
-
-- `Loading.tsx` now uses module classes equivalent to the old `loading-indicator compact-loading` wrapper for the spinner row and loading copy.
-- `loading-indicator` and `compact-loading` were found in `public/shared.css` and not in `public/styles.css`; grepping `src/**/*.tsx` showed no remaining TSX consumers outside the migrated module, so both globals now appear orphaned.
-- Mapping used: `loading-indicator` → `loading_indicator`, `compact-loading` → `compact_loading`.
-
-### Admin component CSS module extraction (2026-05-29)
-
-- Created 13 CSS module files covering all Admin components + AdminApp entry: `AdminApp.module.css` (in `src/frontend/admin/`), and `Login`, `Dashboard`, `Settings`, `DateNav`, `BookingCard`, `BookingCards`, `BookingModal`, `ReservationList`, `SettingsPanel`, `GeneralSettings`, `OpeningHoursSettings`, `BlockedDatesSettings` modules in `src/frontend/shared/components/Admin/`.
-- Settings.tsx shares the same layout class names as Dashboard.tsx (dashboard-layout, sidebar-nav, etc.) — each got its own module file rather than cross-importing.
-- `modal-actions` in `BookingModal.tsx` was intentionally left as a global string class; the `Modal` component owns footer layout styling.
-- Responsive show/hide logic (`admin-table` hidden on mobile, `booking-cards`/`oh-cards` hidden on desktop) was baked into each component's module file using `@media` queries.
-- camelCase mapping for BEM modifiers: `tab-btn--sub` → `tabBtnSub`, `date-picker-popup--inline` → `datePickerPopupInline`, `bd-legend-swatch--blocked` → `bdLegendSwatchBlocked`.
-- Multi-class combos use template literals: `` class={`${styles.adminTable} ${styles.bookingTable}`} ``.
-- Conditional active states use: `` class={`${styles.tabBtn}${isActive ? ` ${styles.active}` : ''}`} ``.
-- OpeningHoursSettings banner used a dynamic `alert-${type}` pattern; converted to ternary: `` `${styles.alert} ${styles.ohBanner} ${type === 'success' ? styles.alertSuccess : styles.alertError}` ``.
-- `form-group` is defined globally in `public/shared.css` but was redefined locally in Login and GeneralSettings modules so those components are fully self-contained with scoped styles.
-
-
-- `Error.tsx` had no literal `class` or `className` references to extract, so the error screen was scoped with a new local wrapper based on the existing `booking-form-content` rule from `public/styles.css`.
-- `booking-form-content` is still shared with `src/frontend/booking-widget/BookingApp.tsx`, so the global rule stays in place; `error-container` appears globally orphaned because it has no TSX consumers under `src/`.
-- Mapping used: `booking-form-content` → `content`.
-
-### Admin CSS module naming compliance fix (2026-05-30)
-
-- All 12 Admin CSS module files and their paired TSX files were corrected to comply with the css-module-extraction skill.
-- The underscore naming rule is absolute: **every multi-word CSS module class name must use underscores, never camelCase**. loginLayout ❌ → login_layout ✅.
-- The previous extraction work had used camelCase (e.g. 	abBtn, mainPanel, 	oggleListItem) — these were all converted to underscore form across both .module.css files and styles.xxx references in the TSX.
-- dateNav in DateNav.module.css was also renamed to date_nav — even single-apparent-word names that contain hidden camelCase boundaries must follow the rule.
-- AdminApp.module.css loadingScreen → loading_screen was corrected in both the module and AdminApp.tsx.
-
-### Admin shared input adoption (2026-05-28)
-
-- `Login.tsx` and `GeneralSettings.tsx` now follow the same `FormField` + `Input` pattern already used in `Admin/BookingModal.tsx`.
-- Local `.form_group` input styling was removed from `Login.module.css` and `GeneralSettings.module.css` because the shared `Input` component now owns those states and visuals.
-- `Input.tsx` gained a `min` prop so numeric admin settings can keep their existing minimum constraints while using the shared field primitive.
-- `OpeningHoursSettings.tsx` was intentionally left on raw time inputs because its controls require `step={1800}` and the shared `Input` component still does not support `step`.
-
-### AdminHeader component extraction + Han review (2026-05-30)
-
-- Extracted shared `<header>` from `Dashboard.tsx` and `Settings.tsx` into `src/frontend/shared/components/Admin/AdminHeader.tsx` with props `{ venueName: string; onLogout: () => void }`.
-- Created `AdminHeader.module.css` with `.main_header`, `.header_brand`, `.btn_logout` rules plus `@media (max-width: 767px)` padding rule: `padding-left: calc(36px + var(--space-3) * 2)` to clear the `AdminSidebar` hamburger (width 36px, left `var(--space-3)`).
-- Removed the three header rules from `Dashboard.module.css` and `Settings.module.css`.
-- Han reviewed and **approved**: all criteria passed — props correct, `id="venue-name"` preserved, CSS complete, no regressions.
-
-### AdminSidebar component extraction (2026-05-21)
-
-- Extracted duplicated `<nav>` sidebar from Dashboard.tsx and Settings.tsx into `src/frontend/shared/components/Admin/AdminSidebar.tsx` with paired `AdminSidebar.module.css`.
-- Component accepts `activePage: 'bookings' | 'settings'`, `onGoBookings`, `onGoSettings` props; owns mobile open/close state internally via `useSignal(false)`.
-- Mobile behaviour: sidebar `position: fixed`, off-screen left by default (`translateX(-100%)`), slides in on open. Hamburger button `position: fixed` top-left, z-index 60, `display: none` on desktop. Z-index stack: overlay (40) → sidebar (50) → hamburger (60).
-- Removed `sidebar_nav`, `sidebar_logo`, `tab_btn` rules from Dashboard.module.css and Settings.module.css — now owned by AdminSidebar.module.css.
-- Han reviewed and **approved** (2026-05-21). Non-blocking follow-up: make hamburger `aria-label` dynamic — `aria-label={isOpen.value ? 'Close navigation' : 'Open navigation'}`.
+- `BlockedDatesSettings.tsx` now treats the first clicked day as the range intent: starting on a blocked day previews and performs range unblocking, starting on an open day previews and performs range blocking.
+- The admin calendar preview uses red range styling for unblock mode so range intent stays visible before the second click.

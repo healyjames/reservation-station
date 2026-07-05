@@ -71,8 +71,9 @@ reservations.get('/blocked-dates', async (c) => {
     .bind(tenantId)
     .run<{ day_of_week: number }>();
 
-  const blockedSet = new Set(results.map((r) => r.date));
+  const adminBlockedSet = new Set(results.map((r) => r.date));
 
+  const closedDatesSet = new Set<string>();
   if (closedDays.length > 0) {
 		const [year, monthNum] = month.split('-').map(Number);
     const closedDowSet = new Set(closedDays.map((r) => r.day_of_week));
@@ -81,12 +82,17 @@ reservations.get('/blocked-dates', async (c) => {
       const dateStr = `${month}-${day.toString().padStart(2, '0')}`;
       const dow = new Date(dateStr + 'T12:00:00Z').getUTCDay();
       if (closedDowSet.has(dow)) {
-        blockedSet.add(dateStr);
+        closedDatesSet.add(dateStr);
       }
     }
   }
 
-  return c.json({ blocked_dates: Array.from(blockedSet) });
+  return c.json({
+    blocked_dates: Array.from(adminBlockedSet),
+    closed_dates: Array.from(closedDatesSet),
+  }, 200, {
+    'Cache-Control': 'private, max-age=300',
+  });
 });
 
 reservations.get('/blocked-times', async (c) => {
@@ -118,7 +124,9 @@ reservations.get('/blocked-times', async (c) => {
     .run<{ start_time: string | null; end_time: string | null }>();
 
   if (blockedDateRows.some((r) => r.start_time === null)) {
-    return c.json({ blocked_times: generateTimeSlots(), time_limit_minutes: tenant.concurrent_guests_time_limit });
+    return c.json({ blocked_times: generateTimeSlots(), time_limit_minutes: tenant.concurrent_guests_time_limit }, 200, {
+      'Cache-Control': 'private, max-age=60',
+    });
   }
 
   const dow = new Date(date + 'T12:00:00Z').getUTCDay();
@@ -128,7 +136,9 @@ reservations.get('/blocked-times', async (c) => {
     .first<{ is_closed: number; open_time: string | null; close_time: string | null }>();
 
   if (openingHoursRow?.is_closed === 1) {
-    return c.json({ blocked_times: generateTimeSlots(), time_limit_minutes: tenant.concurrent_guests_time_limit });
+    return c.json({ blocked_times: generateTimeSlots(), time_limit_minutes: tenant.concurrent_guests_time_limit }, 200, {
+      'Cache-Control': 'private, max-age=60',
+    });
   }
 
   const slots =
@@ -146,7 +156,9 @@ reservations.get('/blocked-times', async (c) => {
         return b <= a ? s >= a || s < b : s >= a && s < b;
       }),
     );
-    return c.json({ blocked_times: blockedTimes, time_limit_minutes: tenant.concurrent_guests_time_limit });
+    return c.json({ blocked_times: blockedTimes, time_limit_minutes: tenant.concurrent_guests_time_limit }, 200, {
+      'Cache-Control': 'private, max-age=60',
+    });
   }
 
   const { results: slotReservations } = await c.env.maximum_bookings_db
@@ -176,6 +188,8 @@ reservations.get('/blocked-times', async (c) => {
   return c.json({
     blocked_times: blockedTimes,
     time_limit_minutes: tenant.concurrent_guests_time_limit,
+  }, 200, {
+    'Cache-Control': 'private, max-age=60',
   });
 });
 
@@ -305,6 +319,24 @@ reservations.post('/', async (c) => {
     return c.json({ error: 'Bookings are not available for this date' }, 422);
   }
 
+  // Reject bookings that fall within an admin-defined partial-day time block
+  const { results: partialBlocks } = await c.env.maximum_bookings_db
+    .prepare('SELECT start_time, end_time FROM BlockedDates WHERE tenant_id = ? AND date = ? AND start_time IS NOT NULL AND end_time IS NOT NULL')
+    .bind(data.tenant_id, data.reservation_date)
+    .run<{ start_time: string; end_time: string }>();
+
+  if (partialBlocks.length > 0) {
+    const reqMin = toMinutes(data.reservation_time);
+    const isBlocked = partialBlocks.some((r) => {
+      const a = toMinutes(r.start_time);
+      const b = toMinutes(r.end_time);
+      return b <= a ? reqMin >= a || reqMin < b : reqMin >= a && reqMin < b;
+    });
+    if (isBlocked) {
+      return c.json({ error: 'Bookings are not available for this time' }, 422);
+    }
+  }
+
   // Reject bookings outside opening hours
   const dow = new Date(data.reservation_date + 'T12:00:00Z').getUTCDay();
   const openingHours = await c.env.maximum_bookings_db
@@ -394,11 +426,12 @@ reservations.post('/', async (c) => {
     return c.json({ error: 'Insufficient capacity for the requested time' }, 422);
   }
 
+  const baseUrl = c.env.PUBLIC_URL || `${c.req.raw.headers.get('x-forwarded-proto') ?? 'https'}://${c.req.header('host')}`;
+
   c.executionCtx.waitUntil(
     (async () => {
       const from = `"${tenant.name} via Maximum Bookings" <${tenant.contact_email}>`;
       const replyTo = tenant.contact_email;
-      const baseUrl = c.env.PUBLIC_URL ?? `${c.req.raw.headers.get('x-forwarded-proto') ?? 'https'}://${c.req.header('host')}`;
       const results = await Promise.allSettled([
         sendEmail(c.env, {
           to: data.email,

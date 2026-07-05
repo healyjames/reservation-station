@@ -1,4 +1,5 @@
 import type { CustomerReservationEmailData, EmailTemplate } from '../types';
+import { formatEmailDate } from './formatEmailDate';
 
 function detailsTable(rows: [string, string][]): string {
   const cells = rows
@@ -79,13 +80,14 @@ export function buildCustomerConfirmationEmail(data: CustomerReservationEmailDat
     <p style="margin:0 0 16px;font-size:15px;color:#333333;">Hi ${data.firstName},</p>
     <p style="margin:0 0 16px;font-size:15px;color:#333333;">Your booking has been confirmed. Here are your details:</p>
     ${detailsTable([
-      ['Date', data.reservationDate],
+      ['Date', formatEmailDate(data.reservationDate)],
       ['Time', data.reservationTime],
       ['Guests', String(data.guests)],
       ['Dietary requirements', data.dietaryRequirements || 'None'],
     ])}
     <p style="margin:16px 0 0;font-size:15px;color:#333333;">We look forward to seeing you!</p>
-    ${links}`;
+    ${links}
+		<p style="margin:16px 0 0;font-size:11px;color:#333333;">Note: We cannot guarantee requests for specific tables but will endeavor to accommodate them where possible.</p>`;
 
   return { subject, html: emailWrapper(data.tenantName, 'Booking Confirmed', body) };
 }

@@ -46,3 +46,10 @@ Lead on the Maximum Bookings project. Restaurant booking system built on Cloudfl
 - All six criteria passed: correctness, code quality, CSS, accessibility, integration, no regressions.
 - `aria-expanded`, `aria-controls`, `aria-label`, `aria-hidden`, `aria-current="page"` all correct. Z-index stack (overlay 40, sidebar 50, hamburger 60) confirmed. Dashboard.module.css and Settings.module.css confirmed clean.
 - Non-blocking follow-up: hamburger `aria-label="Open navigation"` is static. Dynamic label is best practice: `aria-label={isOpen.value ? 'Close navigation' : 'Open navigation'}`. `aria-expanded` is sufficient for screen readers — not a blocker.
+
+### Blocked-times API optimisation analysis (2026-07-02)
+
+- The current debounce + abort + cache pattern is already acceptable for normal widget traffic; the real waste is narrower.
+- For unlimited-capacity tenants (`max_covers = 0`), blocked-times responses are guest-agnostic, so guest-specific cache keys and guest-specific URLs are unnecessary duplication.
+- The recommended first step is a shared blocked-times fetch/cache utility plus a date-level cache key for unlimited-capacity venues.
+- A broader availability-matrix redesign is valid only if guest-change latency or request volume becomes a measured problem; if pursued, keep occupancy math server-side and expose `availableCapacity`, not raw occupancy.

@@ -96,4 +96,27 @@ describe('DayCell', () => {
     const el = container.firstElementChild as HTMLElement;
     expect(el.className).toContain('today');
   });
+
+  it('uses unblock range classes when requested', () => {
+    const { container } = render(
+      <DayCell
+        day={12}
+        isToday={false}
+        isPast={false}
+        isSelected={false}
+        isBlocked={true}
+        isDisabled={false}
+        isRangeStart={true}
+        isInRange={true}
+        isRangeEnd={true}
+        isUnblockRange={true}
+        styles={styles}
+      />,
+    );
+    const el = container.firstElementChild as HTMLElement;
+    expect(el.className).toContain('rangeStartUnblock');
+    expect(el.className).toContain('inRangeUnblock');
+    expect(el.className).toContain('rangeEndUnblock');
+    expect(el.className).not.toContain('rangeStart ');
+  });
 });

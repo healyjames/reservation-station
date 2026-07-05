@@ -4,6 +4,8 @@ import { useEffect } from 'preact/hooks';
 import type { Reservation, TenantConfig, CalendarDate } from '@shared/types';
 import type { ManageView, EditData } from '@shared/types';
 import { formatDateForAPI, getAvailableSlots } from '@shared/utils';
+import { fetchBlockedDatesForMonth as sharedFetchBlockedDates } from '@shared/utils/fetchBlockedDatesForMonth';
+import { fetchBlockedTimes as sharedFetchBlockedTimes } from '@shared/utils/fetchBlockedTimes';
 
 export interface UseManageBookingReturn {
   view: Signal<ManageView>;
@@ -16,8 +18,11 @@ export interface UseManageBookingReturn {
   selectedDate: Signal<CalendarDate | null>;
   selectedTime: Signal<string>;
   blockedDates: Signal<Set<string>>;
+  closedDates: Signal<Set<string>>;
   blockedTimes: Signal<string[]>;
   isFetchingTimes: Signal<boolean>;
+  isSaving: Signal<boolean>;
+  isCancelling: Signal<boolean>;
   goToOverview: () => void;
   goToEditDetails: () => void;
   goToChangeDatetime: () => Promise<void>;
@@ -45,9 +50,11 @@ export function useManageBooking(
   const selectedDate = useSignal<CalendarDate | null>(null);
   const selectedTime = useSignal('');
   const blockedDates = useSignal<Set<string>>(new Set());
+  const closedDates = useSignal<Set<string>>(new Set());
   const blockedTimes = useSignal<string[]>([]);
   const isFetchingTimes = useSignal(false);
-  let blockedTimesAbortController: AbortController | null = null;
+  const isSaving = useSignal(false);
+  const isCancelling = useSignal(false);
 
   useEffect(() => {
     init();
@@ -120,6 +127,7 @@ export function useManageBooking(
     selectedDate.value = { year: resYear, month: resMonth - 1, day: resDay };
     selectedTime.value = r.reservation_time || '';
     blockedDates.value = new Set();
+    closedDates.value = new Set();
     blockedTimes.value = [];
     view.value = 'change-datetime';
     await fetchBlockedDatesForMonth(resYear, resMonth - 1);
@@ -139,18 +147,15 @@ export function useManageBooking(
       blockedDates.value = new Set();
       return;
     }
-    const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
-    try {
-      const r = await fetch(`/api/reservations/blocked-dates?tenant_id=${encodeURIComponent(tenantId)}&month=${monthStr}`);
-      if (!r.ok) {
-        blockedDates.value = new Set();
-        return;
-      }
-      const data = (await r.json()) as { blocked_dates: string[] };
-      blockedDates.value = new Set(data.blocked_dates ?? []);
-    } catch {
+    const { adminBlocked, closed, aborted, error } = await sharedFetchBlockedDates(tenantId, year, month);
+    if (aborted) return;
+    if (error) {
       blockedDates.value = new Set();
+      closedDates.value = new Set();
+      return;
     }
+    blockedDates.value = adminBlocked;
+    closedDates.value = closed;
   }
 
   async function fetchBlockedTimesForDate(date: CalendarDate): Promise<void> {
@@ -159,28 +164,14 @@ export function useManageBooking(
       blockedTimes.value = [];
       return;
     }
-    if (blockedTimesAbortController) {
-      blockedTimesAbortController.abort();
-    }
-    blockedTimesAbortController = new AbortController();
-    const { signal } = blockedTimesAbortController;
+    const guests = Number(reservation.value?.guests) || 2;
+    const maxCovers = tenantConfig.value?.max_covers ?? 0;
 
     isFetchingTimes.value = true;
     try {
-      const dateStr = formatDateForAPI(date);
-      const guests = Number(reservation.value?.guests) || 2;
-      const r = await fetch(`/api/reservations/blocked-times?tenant_id=${encodeURIComponent(tenantId)}&date=${dateStr}&guests=${guests}`, {
-        signal,
-      });
-      if (!r.ok) {
-        blockedTimes.value = [];
-        return;
-      }
-      const data = (await r.json()) as { blocked_times: string[] };
-      blockedTimes.value = data.blocked_times ?? [];
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
-      blockedTimes.value = [];
+      const { blockedTimes: result, aborted } = await sharedFetchBlockedTimes({ tenantId, date, guests, maxCovers });
+      if (aborted) return;
+      blockedTimes.value = result;
     } finally {
       isFetchingTimes.value = false;
     }
@@ -201,6 +192,8 @@ export function useManageBooking(
   }
 
   async function saveEditDetails(data: EditData): Promise<void> {
+    if (isSaving.value) return;
+    isSaving.value = true;
     errorMessage.value = '';
     const tokenParam = bookingToken ? `&token=${encodeURIComponent(bookingToken)}` : '';
     const emailParam = bookingEmail ? `?email=${encodeURIComponent(bookingEmail)}` : '';
@@ -221,11 +214,15 @@ export function useManageBooking(
           : 'We could not save your changes. Please try again later.';
     } catch {
       errorMessage.value = 'We could not save your changes. Please try again later.';
+    } finally {
+      isSaving.value = false;
     }
   }
 
   async function saveDatetime(): Promise<void> {
     if (!selectedDate.value || !selectedTime.value) return;
+    if (isSaving.value) return;
+    isSaving.value = true;
     errorMessage.value = '';
     const patchData = {
       reservation_date: formatDateForAPI(selectedDate.value),
@@ -250,10 +247,14 @@ export function useManageBooking(
           : 'We could not save your changes. Please try again later.';
     } catch {
       errorMessage.value = 'We could not save your changes. Please try again later.';
+    } finally {
+      isSaving.value = false;
     }
   }
 
   async function confirmCancel(): Promise<void> {
+    if (isCancelling.value) return;
+    isCancelling.value = true;
     errorMessage.value = '';
     const tokenParam = bookingToken ? `&token=${encodeURIComponent(bookingToken)}` : '';
     const emailParam = bookingEmail ? `?email=${encodeURIComponent(bookingEmail)}` : '';
@@ -271,6 +272,8 @@ export function useManageBooking(
           : 'We could not cancel your booking right now. Please try again later.';
     } catch {
       errorMessage.value = 'We could not cancel your booking right now. Please try again later.';
+    } finally {
+      isCancelling.value = false;
     }
   }
 
@@ -285,8 +288,11 @@ export function useManageBooking(
     selectedDate,
     selectedTime,
     blockedDates,
+    closedDates,
     blockedTimes,
     isFetchingTimes,
+    isSaving,
+    isCancelling,
     goToOverview,
     goToEditDetails,
     goToChangeDatetime,

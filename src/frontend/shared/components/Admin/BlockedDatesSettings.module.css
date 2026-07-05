@@ -22,11 +22,12 @@
 .date_picker_popup {
   border: var(--border-width) solid var(--background-lighter);
   border-radius: var(--radius-md);
-  background: var(--background-light);
+  background: var(--background);
   overflow: hidden;
 }
 
 .date_picker_popup_inline {
+	max-width: 750px;
   position: static;
 }
 
@@ -76,6 +77,10 @@
   /* combined with loadingText for calendar loading state */
 }
 
+.bd_calendar_grid_wrapper {
+	padding: var(--space-3);
+}
+
 .loading_text {
   text-align: center;
   padding: var(--space-4);
@@ -116,4 +121,8 @@
 
 .bd_legend_swatch_blocked {
   background: repeating-linear-gradient(45deg, var(--error-dark), var(--error-dark) 3px, var(--error-light) 3px, var(--error-light) 6px);
+}
+
+.bd_legend_swatch_unblock {
+  background: var(--error-dark);
 }

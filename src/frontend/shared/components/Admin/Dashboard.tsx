@@ -100,10 +100,20 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
                 </p>
                 <p class={styles.toggle_list_item_subtext}>Manually add a reservation for this date.</p>
               </div>
-              <button class={styles.btn_primary} onClick={openCreate}>
-                + New Booking
-              </button>
+              <div class={styles.action_buttons}>
+                <button class={styles.btn_primary} onClick={openCreate}>
+                  + New Booking
+                </button>
+              </div>
             </div>
+						<button
+							type="button"
+							class={styles.btn_secondary}
+							onClick={() => void bookings.refreshMonth()}
+							disabled={bookings.isLoading.value || bookings.isBlockLoading.value}
+						>
+							Refresh
+						</button>
           </div>
 
           <div id="bookings-list" aria-busy={bookings.isLoading.value}>
@@ -152,8 +162,7 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
           currentDate={bookings.currentDate.value}
           tenantId={auth.tenantConfig.value.id}
           onDateSelect={(date) => {
-            bookings.currentDate.value = date;
-            bookings.fetchBookings(date);
+            void bookings.fetchBookings(date);
           }}
         />
       )}

@@ -21,11 +21,16 @@
 }
 
 .toggle_list {
-  flex: 1;
   border: var(--border-width) solid var(--background-light);
   border-radius: var(--radius-md);
   background: var(--background-light);
   overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .toggle_list {
+    flex: 1;
+  }
 }
 
 .toggle_list_item {
@@ -92,6 +97,12 @@
   background: var(--background-light);
 }
 
+@media (min-width: 640px) {
+  .new_booking_card {
+    flex: 1;
+  }
+}
+
 .btn_primary {
   border: none;
   border-radius: var(--radius-xs);
@@ -111,6 +122,33 @@
 .btn_primary:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.btn_secondary {
+  border: var(--border-width) solid var(--foreground-dark);
+  border-radius: var(--radius-xs);
+  padding: var(--space-3) var(--space-5);
+  background: transparent;
+  color: var(--foreground-dark);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.btn_secondary:hover:not(:disabled) {
+  background: var(--background-light);
+}
+
+.btn_secondary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.action_buttons {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
 }
 
 .loading_text {

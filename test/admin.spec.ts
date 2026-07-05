@@ -194,6 +194,87 @@ describe('GET /api/admin/reservations', () => {
     const body = (await res.json()) as any[];
     expect(body.every((r: any) => r.tenant_id === TENANT_ID)).toBe(true);
   });
+
+  it('returns 400 when month format is invalid', async () => {
+    const token = await getAuthToken();
+    const res = await exports.default.fetch('http://localhost/api/admin/reservations?month=2099-6', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as any;
+    expect(body.error).toBe('Invalid month format. Expected YYYY-MM');
+  });
+
+  it('returns only own-tenant bookings for the given month', async () => {
+    await seedReservation({ id: '00000000-0000-4000-8000-000000000503', tenant_id: TENANT_ID, reservation_date: '2099-06-15' });
+    const token = await getAuthToken();
+    const res = await exports.default.fetch('http://localhost/api/admin/reservations?month=2099-06', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any[];
+    expect(body.length).toBeGreaterThanOrEqual(2);
+    expect(body.every((r: any) => r.tenant_id === TENANT_ID)).toBe(true);
+    expect(body.every((r: any) => r.reservation_date.startsWith('2099-06'))).toBe(true);
+  });
+
+  it('does not return other tenant bookings when querying by month', async () => {
+    const token = await getAuthToken();
+    const res = await exports.default.fetch('http://localhost/api/admin/reservations?month=2099-06', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const body = (await res.json()) as any[];
+    expect(res.status).toBe(200);
+    expect(body.some((r: any) => r.tenant_id === TENANT_ID_OTHER)).toBe(false);
+  });
+  it('returns an empty array when the requested month has no bookings', async () => {
+    const token = await getAuthToken();
+    const res = await exports.default.fetch('http://localhost/api/admin/reservations?month=2099-07', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any[];
+    expect(Array.isArray(body)).toBe(true);
+    expect(body).toEqual([]);
+  });
+
+  it('uses the month branch when both month and date are provided', async () => {
+    await seedReservation({ id: '00000000-0000-4000-8000-000000000504', tenant_id: TENANT_ID, reservation_date: '2099-06-15' });
+    const token = await getAuthToken();
+    const res = await exports.default.fetch('http://localhost/api/admin/reservations?month=2099-06&date=2099-06-01', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any[];
+    expect(body.some((r: any) => r.reservation_date === '2099-06-15')).toBe(true);
+    expect(body.every((r: any) => r.reservation_date.startsWith('2099-06'))).toBe(true);
+  });
+
+  it('orders month results by date and time ascending', async () => {
+    await seedReservation({
+      id: '00000000-0000-4000-8000-000000000505',
+      tenant_id: TENANT_ID,
+      reservation_date: '2099-06-01',
+      reservation_time: '20:00',
+    });
+    await seedReservation({
+      id: '00000000-0000-4000-8000-000000000506',
+      tenant_id: TENANT_ID,
+      reservation_date: '2099-06-02',
+      reservation_time: '17:00',
+    });
+    const token = await getAuthToken();
+    const res = await exports.default.fetch('http://localhost/api/admin/reservations?month=2099-06', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any[];
+    expect(body.map((r: any) => `${r.reservation_date} ${r.reservation_time}`)).toEqual([
+      '2099-06-01 19:00',
+      '2099-06-01 20:00',
+      '2099-06-02 17:00',
+    ]);
+  });
 });
 
 // ─── Admin: PATCH /api/admin/reservations/:id ────────────────────────────────

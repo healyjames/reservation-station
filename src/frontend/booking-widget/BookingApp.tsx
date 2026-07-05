@@ -1,9 +1,10 @@
 import { useSignal } from '@preact/signals';
+import { useRef } from 'preact/hooks';
 import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
 import type { BookingStep } from '@shared/types';
 import { useTenant } from '@shared/hooks/useTenant';
-import { useAvailability } from '@shared/hooks/useAvailability';
+import { useAvailability, bustBlockedDatesCache, bustBlockedTimesCache } from '@shared/hooks/useAvailability';
 import { useBookingForm } from '@shared/hooks/useBookingForm';
 import { Calendar, Step1Form, Step2Form, Success } from '@shared/components/BookingWidget';
 import { Spinner, MessageCard } from '@shared/components';
@@ -20,9 +21,10 @@ export const BookingApp: FunctionComponent = () => {
   const bookingRef = useSignal<string | undefined>(undefined);
 
   const { tenantConfig, tenantState, tenantError } = useTenant();
-  const { blockedDates, blockedDatesError, isFetchingDates, blockedTimes, isFetchingTimes, fetchBlockedDates, fetchBlockedTimes } =
+  const { blockedDates, closedDates, blockedDatesError, isFetchingDates, blockedTimes, isFetchingTimes, fetchBlockedDates, fetchBlockedTimes } =
     useAvailability();
   const { formData, submitError, isSubmitting, updateField, submitBooking, resetForm } = useBookingForm();
+  const guestsDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   if (tenantState.value === 'loading') {
     return (
@@ -51,15 +53,19 @@ export const BookingApp: FunctionComponent = () => {
   async function handleDateSelect(year: number, month: number, day: number) {
     selectedDate.value = { year, month, day };
     step.value = 'form-step1';
-    await fetchBlockedTimes(tenant.id, { year, month, day }, formData.value.guests);
+    await fetchBlockedTimes(tenant.id, { year, month, day }, formData.value.guests, tenant.max_covers);
   }
 
-  async function handleGuestsChange(guests: number) {
+  function handleGuestsChange(guests: number) {
     updateField('guests', guests);
     updateField('time', '');
-    if (selectedDate.value) {
-      await fetchBlockedTimes(tenant.id, selectedDate.value, guests);
-    }
+    if (!selectedDate.value) return;
+
+    if (guestsDebounceTimer.current !== null) clearTimeout(guestsDebounceTimer.current);
+    guestsDebounceTimer.current = setTimeout(() => {
+      guestsDebounceTimer.current = null;
+      void fetchBlockedTimes(tenant.id, selectedDate.value!, guests, tenant.max_covers);
+    }, 250);
   }
 
   function handleChangeDate() {
@@ -69,11 +75,16 @@ export const BookingApp: FunctionComponent = () => {
   }
 
   async function handleNewBooking() {
+    const { guests } = formData.value;
+    if (selectedDate.value) {
+      bustBlockedTimesCache(tenant.id, selectedDate.value);
+    }
     resetForm();
     bookingRef.value = undefined;
     step.value = 'calendar';
     selectedDate.value = null;
-    await fetchBlockedDates(tenant.id, currentYear.value, currentMonth.value);
+    bustBlockedDatesCache(tenant.id, currentYear.value, currentMonth.value);
+    await fetchBlockedDates(tenant.id, currentYear.value, currentMonth.value, true);
   }
 
   if (step.value === 'calendar') {
@@ -83,6 +94,7 @@ export const BookingApp: FunctionComponent = () => {
         month={currentMonth.value}
         selectedDate={selectedDate.value}
         blockedDates={blockedDates.value}
+        closedDates={closedDates.value}
         blockedDatesError={blockedDatesError.value}
         isFetchingDates={isFetchingDates.value}
         onMonthChange={handleMonthChange}

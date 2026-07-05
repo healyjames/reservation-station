@@ -31,7 +31,9 @@ tenants.get('/:id', async (c) => {
     .bind(tenant.id)
     .run<{ id: string; tenant_id: string; day_of_week: number; is_closed: number; open_time: string | null; close_time: string | null }>();
 
-  return c.json({ ...tenant, opening_hours: results.length > 0 ? results : null });
+  return c.json({ ...tenant, opening_hours: results.length > 0 ? results : null }, 200, {
+    'Cache-Control': 'public, max-age=3600',
+  });
 });
 
 tenants.post('/', superAdminAuth, async (c) => {

@@ -16,6 +16,7 @@ interface CalendarGridProps {
   isRangeStart?: (year: number, month: number, day: number) => boolean;
   isInRange?: (year: number, month: number, day: number) => boolean;
   isRangeEnd?: (year: number, month: number, day: number) => boolean;
+  rangeMode?: 'block' | 'unblock';
   onSelect?: (year: number, month: number, day: number) => void;
   onBlockedSelect?: (year: number, month: number, day: number, el: HTMLDivElement) => void;
   onHoverDate?: (year: number, month: number, day: number) => void;
@@ -33,6 +34,7 @@ const CalendarGrid: FunctionComponent<CalendarGridProps> = ({
   isRangeStart,
   isInRange,
   isRangeEnd,
+  rangeMode,
   onSelect,
   onBlockedSelect,
   onHoverDate,
@@ -86,6 +88,7 @@ const CalendarGrid: FunctionComponent<CalendarGridProps> = ({
             isRangeStart={isRangeStart?.(year, month, day) ?? false}
             isInRange={isInRange?.(year, month, day) ?? false}
             isRangeEnd={isRangeEnd?.(year, month, day) ?? false}
+            isUnblockRange={rangeMode === 'unblock'}
             onSelect={() => onSelect?.(year, month, day)}
             onBlockedSelect={(el) => onBlockedSelect?.(year, month, day, el)}
             onMouseEnter={() => onHoverDate?.(year, month, day)}

@@ -1,4 +1,5 @@
 import type { CustomerReservationEmailData, EmailTemplate } from '../types';
+import { formatEmailDate } from './formatEmailDate';
 
 function detailsTable(rows: [string, string][]): string {
   const cells = rows
@@ -71,7 +72,7 @@ export function buildCustomerAmendmentEmail(data: CustomerReservationEmailData):
     <p style="margin:0 0 16px;font-size:15px;color:#333333;">Hi ${data.firstName},</p>
     <p style="margin:0 0 16px;font-size:15px;color:#333333;">Your booking has been updated. Here are your new details:</p>
     ${detailsTable([
-      ['Date', data.reservationDate],
+      ['Date', formatEmailDate(data.reservationDate)],
       ['Time', data.reservationTime],
       ['Guests', String(data.guests)],
       ['Dietary requirements', data.dietaryRequirements || 'None'],

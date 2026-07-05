@@ -11,6 +11,7 @@ interface CalendarProps {
   month: number;
   selectedDate: CalendarDate | null;
   blockedDates: Set<string>;
+  closedDates?: Set<string>;
   blockedDatesError?: string;
   isFetchingDates?: boolean;
   onMonthChange: (year: number, month: number) => Promise<void>;
@@ -26,6 +27,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
   month,
   selectedDate,
   blockedDates,
+  closedDates,
   blockedDatesError,
   isFetchingDates,
   onMonthChange,
@@ -36,6 +38,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
 }) => {
   const tooltipVisible = useSignal(false);
   const tooltipAnchorRect = useSignal<DOMRect | null>(null);
+  const tooltipMessage = useSignal('');
   const today = new Date();
   const todayYear = today.getFullYear();
   const todayMonth = today.getMonth();
@@ -52,7 +55,12 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
   }
 
   function isDateBlocked(y: number, m: number, d: number): boolean {
-    return blockedDates.has(`${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+    return !!blockedDates?.has(`${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+  }
+
+  function isDateClosed(y: number, m: number, d: number): boolean {
+    const cd = closedDates ?? new Set<string>();
+    return cd.has(`${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
   }
 
   function prevMonth() {
@@ -76,7 +84,12 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
     onMonthChange(newYear, newMonth);
   }
 
-  function handleBlockedSelect(_y: number, _m: number, _d: number, el: HTMLDivElement) {
+  function handleBlockedSelect(y: number, m: number, d: number, el: HTMLDivElement) {
+    const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const cd = closedDates ?? new Set<string>();
+    tooltipMessage.value = cd.has(dateStr)
+      ? 'Closed'
+      : 'Online bookings are no longer available for this date. Please call the venue instead';
     tooltipAnchorRect.value = el.getBoundingClientRect();
     tooltipVisible.value = true;
     setTimeout(() => {
@@ -153,8 +166,8 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
           year={year}
           month={month}
           selectedDate={selectedDate}
-          isDisabled={(y, m, d) => (isFetchingDates ?? false) || (!allowPastDates && isBeforeToday(y, m, d)) || isDateBlocked(y, m, d)}
-          isBlocked={(y, m, d) => isDateBlocked(y, m, d)}
+          isDisabled={(y, m, d) => (isFetchingDates ?? false) || (!allowPastDates && isBeforeToday(y, m, d)) || isDateBlocked(y, m, d) || isDateClosed(y, m, d)}
+          isBlocked={(y, m, d) => isDateBlocked(y, m, d) || isDateClosed(y, m, d)}
           allowPastDates={allowPastDates}
           onSelect={onDateSelect}
           onBlockedSelect={handleBlockedSelect}
@@ -163,7 +176,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
 
       <Tooltip
         visible={tooltipVisible.value}
-        message="Bookings currently unavailable for this date"
+        message={tooltipMessage.value}
         anchorRect={tooltipAnchorRect.value}
         onClose={() => {
           tooltipVisible.value = false;

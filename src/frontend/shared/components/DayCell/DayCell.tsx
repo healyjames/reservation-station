@@ -15,6 +15,7 @@ interface DayCellProps {
   isRangeStart?: boolean;
   isInRange?: boolean;
   isRangeEnd?: boolean;
+  isUnblockRange?: boolean;
   onSelect?: () => void;
   onBlockedSelect?: (el: HTMLDivElement) => void;
   onMouseEnter?: () => void;
@@ -32,6 +33,7 @@ const DayCell: FunctionComponent<DayCellProps> = ({
   isRangeStart,
   isInRange,
   isRangeEnd,
+  isUnblockRange,
   onSelect,
   onBlockedSelect,
   onMouseEnter,
@@ -45,9 +47,9 @@ const DayCell: FunctionComponent<DayCellProps> = ({
     isPast ? styles.past : '',
     isSelected ? styles.selected : '',
     isBlocked ? styles.blocked : '',
-    isRangeStart ? styles.rangeStart : '',
-    isInRange ? styles.inRange : '',
-    isRangeEnd ? styles.rangeEnd : '',
+    isRangeStart ? (isUnblockRange ? styles.rangeStartUnblock : styles.rangeStart) : '',
+    isInRange ? (isUnblockRange ? styles.inRangeUnblock : styles.inRange) : '',
+    isRangeEnd ? (isUnblockRange ? styles.rangeEndUnblock : styles.rangeEnd) : '',
   ]
     .filter(Boolean)
     .join(' ');

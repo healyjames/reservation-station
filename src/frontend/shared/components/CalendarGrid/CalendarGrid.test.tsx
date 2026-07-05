@@ -70,4 +70,24 @@ describe('CalendarGrid', () => {
     expect(selected).toBeTruthy();
     expect(selected!.className).toContain('selected');
   });
+
+  it('applies unblock preview classes when rangeMode is unblock', () => {
+    const { container } = render(
+      <CalendarGrid
+        year={2099}
+        month={5}
+        rangeMode="unblock"
+        isRangeStart={(_year, _month, day) => day === 10}
+        isInRange={(_year, _month, day) => day === 11}
+        isRangeEnd={(_year, _month, day) => day === 12}
+      />,
+    );
+    const allButtons = container.querySelectorAll('[role="button"]');
+    const start = Array.from(allButtons).find((el) => el.textContent === '10') as HTMLElement | undefined;
+    const middle = Array.from(allButtons).find((el) => el.textContent === '11') as HTMLElement | undefined;
+    const end = Array.from(allButtons).find((el) => el.textContent === '12') as HTMLElement | undefined;
+    expect(start?.className).toContain('rangeStartUnblock');
+    expect(middle?.className).toContain('inRangeUnblock');
+    expect(end?.className).toContain('rangeEndUnblock');
+  });
 });
