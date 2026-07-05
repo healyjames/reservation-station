@@ -10,11 +10,7 @@ import { buildTenantAmendmentEmail } from '../emails/tenant-amendment';
 import { buildCustomerCancellationEmail } from '../emails/customer-cancellation';
 import { buildTenantCancellationEmail } from '../emails/tenant-cancellation';
 import { generateManageToken, hashManageToken } from '../utils/manageToken';
-
-type ReservationWithTenant = Reservation & {
-	tenant_name: string;
-	contact_email: string;
-};
+import type { ReservationWithTenant } from '../types';
 
 const admin = new Hono<{
 	Bindings: Env;

@@ -17,6 +17,15 @@ function fromBase64Url(str: string): Uint8Array {
   return Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
 }
 
+export function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 export async function hashPassword(password: string): Promise<string> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
@@ -41,13 +50,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
 
-  // Constant-time compare
-  if (derivedHex.length !== hashHex.length) return false;
-  let diff = 0;
-  for (let i = 0; i < derivedHex.length; i++) {
-    diff |= derivedHex.charCodeAt(i) ^ hashHex.charCodeAt(i);
-  }
-  return diff === 0;
+  return timingSafeEqual(derivedHex, hashHex);
 }
 
 export async function signJWT(

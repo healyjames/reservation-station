@@ -19,6 +19,7 @@ import {
 } from '../utils/manageToken';
 import { sendEmail } from '../utils/email';
 import { adminAuth } from '../middleware/adminAuth';
+import type { ReservationWithTenant } from '../types';
 
 import { buildCustomerConfirmationEmail } from '../emails/customer-confirmation';
 import { buildCustomerAmendmentEmail } from '../emails/customer-amendment';
@@ -26,11 +27,6 @@ import { buildCustomerCancellationEmail } from '../emails/customer-cancellation'
 import { buildTenantConfirmationEmail } from '../emails/tenant-confirmation';
 import { buildTenantAmendmentEmail } from '../emails/tenant-amendment';
 import { buildTenantCancellationEmail } from '../emails/tenant-cancellation';
-
-type ReservationWithTenant = Reservation & {
-	tenant_name: string;
-	contact_email: string
-};
 
 const reservations = new Hono<{
 	Bindings: Env;

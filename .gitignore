@@ -208,7 +208,7 @@ dist
 .squad-workstream
 
 # Local Claude files
-.ai/
+ai/
 .claude/temp/
 .claude/worktrees/
 .claude/settings.local.json

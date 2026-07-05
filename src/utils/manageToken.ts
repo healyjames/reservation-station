@@ -1,20 +1,9 @@
+import { timingSafeEqual } from './auth';
+
 function bufToHex(buf: Uint8Array): string {
   return Array.from(buf)
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
-}
-
-/**
- * Constant-time string comparison to prevent timing side-channel attacks.
- * Both strings must be the same length (all our hex hashes are fixed-width).
- */
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return diff === 0;
 }
 
 /**

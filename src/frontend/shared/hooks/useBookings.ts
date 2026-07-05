@@ -3,6 +3,7 @@ import type { Signal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
 import type { Reservation } from '@shared/types';
 import { adminFetch } from '@shared/utils/adminFetch';
+import { padTwo } from '@shared/utils/dates';
 
 type AdminBlockedDateRow = {
   id: string;
@@ -45,16 +46,12 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
   const monthCache = useSignal<Map<string, MonthCacheEntry>>(new Map());
   const inFlightMonthKey = useSignal<string | null>(null);
 
-  function pad(n: number): string {
-    return String(n).padStart(2, '0');
-  }
-
   function monthKeyFromDate(date: Date): string {
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
+    return `${date.getFullYear()}-${padTwo(date.getMonth() + 1)}`;
   }
 
   function dateKeyFromDate(date: Date): string {
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    return `${date.getFullYear()}-${padTwo(date.getMonth() + 1)}-${padTwo(date.getDate())}`;
   }
 
   function cloneCache(): Map<string, MonthCacheEntry> {

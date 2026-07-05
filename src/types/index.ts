@@ -1,4 +1,5 @@
 export type {
+  ReservationWithTenant,
   ResendEnv,
   EmailTemplate,
   SendEmailRequest,
