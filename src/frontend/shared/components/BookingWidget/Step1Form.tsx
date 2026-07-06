@@ -108,32 +108,34 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
           )}
         </FormField>
 
-        <FormField label="Time" htmlFor="time" required>
-          {isFetchingTimes ? (
-            <div class={styles.loadingIndicator}>
-              <Spinner size="sm" label="Loading available times" />
-              <span>Loading times...</span>
-            </div>
-          ) : effectiveMaxGuests < 2 ? (
-            <p class={`${styles.inlineHelper} ${styles.inlineHelperError}`}>
-              No availability remaining for this date. Please select a different date or call us to arrange your booking.
-            </p>
-          ) : availableSlots.length > 0 ? (
-            <Select
-              id="time"
-              name="time"
-              value={formData.time}
-              options={timeOptions}
-              placeholder="Select a time"
-              required
-              onChange={(e) => onTimeChange((e.target as HTMLSelectElement).value)}
-            />
-          ) : (
-            <p class={`${styles.inlineHelper} ${styles.inlineHelperError}`}>
-              No times available for this date with {formData.guests} guests. Try a different date or fewer guests.
-            </p>
-          )}
-        </FormField>
+				{!isLargeParty &&
+					<FormField label="Time" htmlFor="time" required>
+						{isFetchingTimes ? (
+							<div class={styles.loadingIndicator}>
+								<Spinner size="sm" label="Loading available times" />
+								<span>Loading times...</span>
+							</div>
+						) : effectiveMaxGuests < 2 ? (
+							<p class={`${styles.inlineHelper} ${styles.inlineHelperError}`}>
+								No availability remaining for this date. Please select a different date or call us to arrange your booking.
+							</p>
+						) : availableSlots.length > 0 ? (
+							<Select
+								id="time"
+								name="time"
+								value={formData.time}
+								options={timeOptions}
+								placeholder="Select a time"
+								required
+								onChange={(e) => onTimeChange((e.target as HTMLSelectElement).value)}
+							/>
+						) : (
+							<p class={`${styles.inlineHelper} ${styles.inlineHelperError}`}>
+								No times available for this date with {formData.guests} guests. Try a different date or fewer guests.
+							</p>
+						)}
+					</FormField>
+				}
 
         <Button type="button" variant="primary" fullWidth disabled={!isValid} onClick={onNext}>
           Next &rarr;
