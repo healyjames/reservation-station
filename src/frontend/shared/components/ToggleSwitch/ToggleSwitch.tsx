@@ -1,10 +1,10 @@
-// CSS strategy: data-checked attribute on wrapper div drives track styling.
+﻿// CSS strategy: data-checked attribute on wrapper div drives track styling.
 // :has(input:checked) was considered but data-checked is more reliable across
 // CSS Modules scoping and test environments.
 import type { FunctionComponent } from 'preact';
 import styles from './ToggleSwitch.module.css';
 
-interface ToggleSwitchProps {
+type ToggleSwitchProps = {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label?: string;

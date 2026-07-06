@@ -1,7 +1,7 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import styles from './Alert.module.css';
 
-interface AlertProps {
+type AlertProps = {
   variant: 'error' | 'info' | 'success';
   message: string;
   visible?: boolean;

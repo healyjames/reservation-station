@@ -1,7 +1,7 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import styles from './Textarea.module.css';
 
-interface TextareaProps {
+type TextareaProps = {
   id?: string;
   name?: string;
   value?: string;

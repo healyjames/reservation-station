@@ -1,4 +1,4 @@
-import { useRef } from 'preact/hooks';
+﻿import { useRef } from 'preact/hooks';
 import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { Signal } from '@preact/signals';
@@ -7,7 +7,7 @@ import { StandaloneLayout, Input, Select, Textarea, FormField, Button, MessageCa
 import type { EditData } from '@shared/types';
 import styles from './EditDetails.module.css';
 
-interface EditDetailsProps {
+type EditDetailsProps = {
   editData: Signal<EditData | null>;
   tenantConfig: Signal<TenantConfig | null>;
   errorMessage: Signal<string>;

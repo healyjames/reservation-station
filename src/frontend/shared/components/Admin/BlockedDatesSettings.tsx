@@ -1,4 +1,4 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { CalendarGrid } from '@shared/components';
@@ -18,14 +18,14 @@ function toMonthStr(y: number, m: number): string {
   return `${y}-${pad(m + 1)}`;
 }
 
-interface RangePoint {
+type RangePoint = {
   y: number;
   m: number;
   d: number;
   unblockMode: boolean;
 }
 
-interface BlockedDatesSettingsProps {
+type BlockedDatesSettingsProps = {
   token: string;
 }
 

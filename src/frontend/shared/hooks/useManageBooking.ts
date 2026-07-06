@@ -1,4 +1,4 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { Signal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
 import type { Reservation, TenantConfig, CalendarDate } from '@shared/types';
@@ -7,7 +7,7 @@ import { formatDateForAPI, getAvailableSlots } from '@shared/utils';
 import { fetchBlockedDatesForMonth as sharedFetchBlockedDates } from '@shared/utils/fetchBlockedDatesForMonth';
 import { fetchBlockedTimes as sharedFetchBlockedTimes } from '@shared/utils/fetchBlockedTimes';
 
-export interface UseManageBookingReturn {
+export type UseManageBookingReturn = {
   view: Signal<ManageView>;
   reservation: Signal<Reservation | null>;
   tenantConfig: Signal<TenantConfig | null>;

@@ -1,4 +1,4 @@
-import { useEffect } from 'preact/hooks';
+﻿import { useEffect } from 'preact/hooks';
 import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
@@ -6,7 +6,7 @@ import { MONTH_NAMES } from '@constants';
 import { CalendarGrid, Tooltip, Button } from '@shared/components';
 import styles from './Calendar.module.css';
 
-interface CalendarProps {
+type CalendarProps = {
   year: number;
   month: number;
   selectedDate: CalendarDate | null;

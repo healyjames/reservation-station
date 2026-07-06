@@ -1,4 +1,4 @@
-import type { Reservation, TenantConfig, CalendarDate } from '@shared/types';
+﻿import type { Reservation, TenantConfig, CalendarDate } from '@shared/types';
 
 export type ManageView =
   | 'loading'
@@ -10,7 +10,7 @@ export type ManageView =
   | 'success-edit'
   | 'success-cancel';
 
-export interface EditData {
+export type EditData = {
   first_name: string;
   surname: string;
   telephone: string;

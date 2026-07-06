@@ -1,8 +1,8 @@
-import type { FunctionComponent, ComponentChildren } from 'preact';
+﻿import type { FunctionComponent, ComponentChildren } from 'preact';
 import Spinner from '../Spinner';
 import styles from './Button.module.css';
 
-interface ButtonProps {
+type ButtonProps = {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'action-edit' | 'action-delete';
   type?: 'button' | 'submit' | 'reset';
   form?: string;

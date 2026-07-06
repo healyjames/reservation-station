@@ -1,11 +1,11 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import { Modal, Button } from '@shared/components';
 import { adminFetch } from '@shared/utils/adminFetch';
 import styles from './DeleteConfirmModal.module.css';
 
-interface DeleteConfirmModalProps {
+type DeleteConfirmModalProps = {
   reservation: Reservation;
   token: string;
   onSuccess: () => void;

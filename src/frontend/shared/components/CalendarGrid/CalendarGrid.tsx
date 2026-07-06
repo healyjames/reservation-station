@@ -1,10 +1,10 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
 import { MONTH_NAMES, DAY_NAMES } from '@constants';
 import DayCell from '../DayCell';
 import styles from './CalendarGrid.module.css';
 
-interface CalendarGridProps {
+type CalendarGridProps = {
   year: number;
   /** 0-indexed: 0 = January */
   month: number;

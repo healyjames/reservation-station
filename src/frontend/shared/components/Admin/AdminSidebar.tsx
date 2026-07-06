@@ -1,8 +1,8 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import styles from './AdminSidebar.module.css';
 
-interface AdminSidebarProps {
+type AdminSidebarProps = {
   activePage: 'bookings' | 'settings';
   onGoBookings: () => void;
   onGoSettings: () => void;

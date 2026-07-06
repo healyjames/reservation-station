@@ -1,12 +1,12 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import styles from './BookingDetailsList.module.css';
 
-interface BookingDetail {
+type BookingDetail = {
   label: string;
   value: string | number;
 }
 
-interface BookingDetailsListProps {
+type BookingDetailsListProps = {
   details: BookingDetail[];
 }
 

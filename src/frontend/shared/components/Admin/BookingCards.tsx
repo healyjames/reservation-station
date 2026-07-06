@@ -1,9 +1,9 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import BookingCard from './BookingCard';
 import styles from './BookingCards.module.css';
 
-interface BookingCardsProps {
+type BookingCardsProps = {
   reservations: Reservation[];
   onEdit: (reservation: Reservation) => void;
   onDelete: (reservation: Reservation) => void;

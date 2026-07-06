@@ -1,4 +1,4 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { Signal } from '@preact/signals';
 import type { Reservation } from '@shared/types';
@@ -6,7 +6,7 @@ import { StandaloneLayout, BookingDetailsList, Button, MessageCard } from '@shar
 import { formatDate, getFullName, getGuestsLabel } from '@shared/utils';
 import styles from './CancelConfirm.module.css';
 
-interface CancelConfirmProps {
+type CancelConfirmProps = {
   reservation: Signal<Reservation | null>;
   errorMessage: Signal<string>;
   goToOverview: () => void;

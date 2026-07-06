@@ -1,10 +1,10 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import { StandaloneLayout, MessageCard } from '@shared/components';
 import { formatDate, getFullName } from '@shared/utils';
 import styles from './SuccessCancel.module.css';
 
-interface SuccessCancelProps {
+type SuccessCancelProps = {
   reservation: Reservation;
 }
 

@@ -1,9 +1,9 @@
-export type TenantStatus = 'active' | 'cancelled';
+﻿export type TenantStatus = 'active' | 'cancelled';
 
 export type ThemeName = string; // tenant_code used as CSS class/theme identifier
 export type ThemeMode = 'light' | 'dark';
 
-export interface OpeningHoursEntry {
+export type OpeningHoursEntry = {
   id: string;
   tenant_id: string;
   /** 0 = Sunday, 1 = Monday, ... 6 = Saturday (JS Date.getUTCDay() convention) */
@@ -14,7 +14,7 @@ export interface OpeningHoursEntry {
   close_time: string | null; // "HH:MM"
 }
 
-export interface TenantConfig {
+export type TenantConfig = {
   id: string;
   name: string;
   tenant_code: string;

@@ -1,9 +1,9 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import { StandaloneLayout, BookingDetailsList, Button, MessageCard } from '@shared/components';
 import { formatDate, getFullName, getGuestsLabel } from '@shared/utils';
 
-interface OverviewProps {
+type OverviewProps = {
   reservation: Reservation;
   inlineError: string;
   isCancelling: boolean;

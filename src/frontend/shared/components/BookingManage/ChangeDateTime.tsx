@@ -1,4 +1,4 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { Signal } from '@preact/signals';
 import type { TenantConfig, CalendarDate } from '@shared/types';
@@ -17,7 +17,7 @@ import {
 import { getAvailableSlots } from '@shared/utils';
 import styles from './ChangeDateTime.module.css';
 
-interface ChangeDateTimeProps {
+type ChangeDateTimeProps = {
   tenantConfig: Signal<TenantConfig | null>;
   errorMessage: Signal<string>;
   calYear: Signal<number>;

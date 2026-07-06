@@ -1,9 +1,9 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import { StandaloneLayout, MessageCard } from '@shared/components';
 import { formatDate, getFullName } from '@shared/utils';
 
-interface SuccessProps {
+type SuccessProps = {
   reservation: Reservation;
 }
 

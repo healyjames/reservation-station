@@ -1,11 +1,11 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { Signal } from '@preact/signals';
 import type { TenantConfig } from '@shared/types';
 import { useEffect } from 'preact/hooks';
 
 type TenantState = 'loading' | 'ready' | 'error';
 
-interface UseTenantReturn {
+type UseTenantReturn = {
   tenantConfig: Signal<TenantConfig | null>;
   tenantState: Signal<TenantState>;
   tenantError: Signal<string>;

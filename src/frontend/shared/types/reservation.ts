@@ -1,4 +1,4 @@
-export interface Reservation {
+﻿export type Reservation = {
   id: string;
   tenant_id: string;
   first_name: string;
@@ -15,7 +15,7 @@ export interface Reservation {
   modified_date?: string;
 }
 
-export interface CreateReservationPayload {
+export type CreateReservationPayload = {
   tenant_id: string;
   first_name: string;
   surname: string;

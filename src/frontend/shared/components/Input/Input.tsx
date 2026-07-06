@@ -1,7 +1,7 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import styles from './Input.module.css';
 
-interface InputProps {
+type InputProps = {
   type?: 'text' | 'email' | 'tel' | 'password' | 'number' | 'date' | 'time' | 'search';
   id?: string;
   name?: string;

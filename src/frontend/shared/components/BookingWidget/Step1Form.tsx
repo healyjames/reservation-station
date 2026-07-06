@@ -1,4 +1,4 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { BookingFormData, CalendarDate, TenantConfig } from '@shared/types';
 import { FormField, SelectedDateInfo, Select, Button, Spinner } from '@shared/components';
@@ -7,7 +7,7 @@ import styles from './Step1Form.module.css';
 
 const LARGE_PARTY_SENTINEL = 'large';
 
-interface Step1FormProps {
+type Step1FormProps = {
   date: CalendarDate;
   tenantConfig: TenantConfig;
   formData: BookingFormData;

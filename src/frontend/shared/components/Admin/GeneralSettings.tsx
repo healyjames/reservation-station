@@ -1,4 +1,4 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import { useEffect } from 'preact/hooks';
 import type { Signal } from '@preact/signals';
@@ -7,7 +7,7 @@ import type { TenantConfig } from '@shared/types';
 import { adminFetch } from '@shared/utils/adminFetch';
 import styles from './GeneralSettings.module.css';
 
-interface GeneralSettingsProps {
+type GeneralSettingsProps = {
   tenantConfig: Signal<TenantConfig | null>;
   token: string;
   onSave: (updated: Partial<TenantConfig>) => void;

@@ -1,4 +1,4 @@
-import type { Reservation } from '../schema';
+﻿import type { Reservation } from '../schema';
 
 /**
  * Shared backend types for the Maximum Bookings Worker.
@@ -22,18 +22,18 @@ export type ReservationWithTenant = Reservation & {
 // Used by src/utils/email.ts and all src/emails/* template builders.
 
 /** Minimal subset of the Worker Env required to send email via Resend. */
-export interface ResendEnv {
+export type ResendEnv = {
   RESEND_API_KEY: string;
 }
 
 /** The subject + HTML body returned by every email template builder. */
-export interface EmailTemplate {
+export type EmailTemplate = {
   subject: string;
   html: string;
 }
 
 /** Arguments passed to the sendEmail utility. */
-export interface SendEmailRequest {
+export type SendEmailRequest = {
   to: string;
   from: string;
   reply_to?: string;
@@ -45,7 +45,7 @@ export interface SendEmailRequest {
  * Full context object available when building any reservation-related email.
  * Includes both tenant and customer data; template builders pick what they need.
  */
-export interface ReservationEmailContext {
+export type ReservationEmailContext = {
   reservationId: string;
   tenantId: string;
   tenantName: string;
@@ -64,7 +64,7 @@ export interface ReservationEmailContext {
  * Data required by customer-facing email template builders
  * (confirmation, amendment, cancellation).
  */
-export interface CustomerReservationEmailData {
+export type CustomerReservationEmailData = {
   tenantName: string;
   firstName: string;
   reservationDate: string;
@@ -82,7 +82,7 @@ export interface CustomerReservationEmailData {
  * Data required by tenant-facing email template builders
  * (confirmation, amendment, cancellation).
  */
-export interface TenantReservationEmailData {
+export type TenantReservationEmailData = {
   tenantName: string;
   reservationId: string;
   firstName: string;

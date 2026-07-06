@@ -1,11 +1,11 @@
-// DayCell has no separate CSS module.
+﻿// DayCell has no separate CSS module.
 // Its styles are defined in CalendarGrid.module.css and passed in via the `styles` prop.
 // This avoids a circular CSS Module reference between DayCell and CalendarGrid.
 
 import { useRef } from 'preact/hooks';
 import type { FunctionComponent } from 'preact';
 
-interface DayCellProps {
+type DayCellProps = {
   day: number;
   isToday: boolean;
   isPast: boolean;

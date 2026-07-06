@@ -1,7 +1,7 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import styles from './Spinner.module.css';
 
-interface SpinnerProps {
+type SpinnerProps = {
   size?: 'sm' | 'md';
   label?: string;
 }

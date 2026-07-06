@@ -1,12 +1,12 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import styles from './Select.module.css';
 
-interface SelectOption {
+type SelectOption = {
   value: string | number;
   label: string;
 }
 
-interface SelectProps {
+type SelectProps = {
   id?: string;
   name?: string;
   value?: string | number;

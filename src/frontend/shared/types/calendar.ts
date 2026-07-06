@@ -1,7 +1,7 @@
-import { MONTH_NAMES, DAY_NAMES } from '@constants';
+﻿import { MONTH_NAMES, DAY_NAMES } from '@constants';
 
 /** Represents a calendar date as year/month(0-indexed)/day integers */
-export interface CalendarDate {
+export type CalendarDate = {
   year: number;
   /** 0-indexed: 0 = January, 11 = December */
   month: number;
