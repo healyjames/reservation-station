@@ -1,12 +1,12 @@
-import { useEffect } from 'preact/hooks';
+﻿import { useEffect } from 'preact/hooks';
 import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
-import { MONTHS } from '@shared/types';
+import { MONTH_NAMES } from '@constants';
 import { CalendarGrid, Tooltip, Button } from '@shared/components';
 import styles from './Calendar.module.css';
 
-interface CalendarProps {
+type CalendarProps = {
   year: number;
   month: number;
   selectedDate: CalendarDate | null;
@@ -18,7 +18,6 @@ interface CalendarProps {
   onDateSelect: (year: number, month: number, day: number) => Promise<void>;
   isStandalone?: boolean;
   tenantName?: string;
-  /** When true, past dates are selectable and the calendar can navigate to past months */
   allowPastDates?: boolean;
 }
 
@@ -121,7 +120,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
             &#8592;
           </Button>
           <h2 id="calendar-title">
-            {MONTHS[month]} {year}
+            {MONTH_NAMES[month]} {year}
           </h2>
           <Button
             type="button"

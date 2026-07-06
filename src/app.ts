@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import tenants from './routes/tenants';
 import reservations from './routes/reservations';
+import availability from './routes/availability';
 import auth from './routes/auth';
 import admin from './routes/admin';
 import blockedDates from './routes/blocked-dates';
@@ -14,7 +15,6 @@ app.use(
   cors({
     origin: (origin, c) => {
       if (!origin) return null;
-      // Development: allow all origins (localhost, dev servers)
       if (c.env.ENVIRONMENT === 'development') return origin;
       // Production: allow any HTTPS origin so the widget can be embedded on any restaurant website.
       // Security is enforced by route-level credentials (admin JWT / manage token), not origin-checking.
@@ -29,6 +29,7 @@ app.use(
 );
 
 app.route('/api/tenants', tenants);
+app.route('/api/reservations', availability);
 app.route('/api/reservations', reservations);
 app.route('/api/auth', auth);
 app.route('/api/admin', admin);

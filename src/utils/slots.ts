@@ -1,19 +1,16 @@
 import type { SlotReservation } from '../types';
-
-// Re-export so any existing `import { SlotReservation } from '../utils/slots'` callers
-// continue to work without changes.
-export type { SlotReservation } from '../types';
+import { DEFAULT_OPEN_TIME, DEFAULT_CLOSE_TIME, SLOT_INTERVAL_MINUTES } from '../constants';
 
 export function toMinutes(time: string): number {
   const [h, m] = time.split(':').map(Number);
   return h * 60 + m;
 }
 
-export function generateTimeSlots(openTime = '12:00', closeTime = '22:00'): string[] {
+export function generateTimeSlots(openTime = DEFAULT_OPEN_TIME, closeTime = DEFAULT_CLOSE_TIME): string[] {
   const slots: string[] = [];
   const open = toMinutes(openTime);
   const close = toMinutes(closeTime);
-  for (let m = open; m < close; m += 30) {
+  for (let m = open; m < close; m += SLOT_INTERVAL_MINUTES) {
     const hour = Math.floor(m / 60)
       .toString()
       .padStart(2, '0');

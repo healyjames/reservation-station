@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'preact/hooks';
+﻿import { useEffect, useRef } from 'preact/hooks';
 import { createPortal } from 'preact/compat';
 import type { FunctionComponent, ComponentChildren } from 'preact';
 import styles from './Modal.module.css';
 
-interface ModalProps {
+type ModalProps = {
   open: boolean;
   onClose: () => void;
   title?: string;

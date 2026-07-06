@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { generateSlots, getSlotsForDate, getEarliestTodaySlot, getAvailableSlots } from './slots';
+import { generateTimeSlots, getSlotsForDate, getEarliestTodaySlot, getAvailableSlots } from './slots';
 import type { CalendarDate } from '../types/calendar';
 import type { TenantConfig } from '../types/tenant';
 
@@ -17,17 +17,17 @@ function makeTenant(overrides: Partial<TenantConfig> = {}): TenantConfig {
   };
 }
 
-describe('generateSlots', () => {
+describe('generateTimeSlots', () => {
   it('generates 30-minute slots from 12:00 to 14:00', () => {
-    expect(generateSlots('12:00', '14:00')).toEqual(['12:00', '12:30', '13:00', '13:30']);
+    expect(generateTimeSlots('12:00', '14:00')).toEqual(['12:00', '12:30', '13:00', '13:30']);
   });
 
   it('handles same open and close time (empty)', () => {
-    expect(generateSlots('12:00', '12:00')).toEqual([]);
+    expect(generateTimeSlots('12:00', '12:00')).toEqual([]);
   });
 
   it('pads hours and minutes correctly', () => {
-    const slots = generateSlots('09:00', '09:30');
+    const slots = generateTimeSlots('09:00', '09:30');
     expect(slots).toEqual(['09:00']);
   });
 });

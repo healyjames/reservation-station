@@ -1,7 +1,7 @@
-import type { FunctionComponent, ComponentChildren } from 'preact';
+﻿import type { FunctionComponent, ComponentChildren } from 'preact';
 import styles from './Badge.module.css';
 
-interface BadgeProps {
+type BadgeProps = {
   variant?: 'default' | 'primary' | 'today';
   children: ComponentChildren;
   class?: string;

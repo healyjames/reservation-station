@@ -1,17 +1,16 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
-import { MONTHS, DAY_NAMES } from '@shared/types';
+import { MONTH_NAMES, DAY_NAMES } from '@constants';
 import DayCell from '../DayCell';
 import styles from './CalendarGrid.module.css';
 
-interface CalendarGridProps {
+type CalendarGridProps = {
   year: number;
   /** 0-indexed: 0 = January */
   month: number;
   selectedDate?: CalendarDate | null;
   isDisabled?: (year: number, month: number, day: number) => boolean;
   isBlocked?: (year: number, month: number, day: number) => boolean;
-  /** When true, past dates are visually marked but remain selectable */
   allowPastDates?: boolean;
   isRangeStart?: (year: number, month: number, day: number) => boolean;
   isInRange?: (year: number, month: number, day: number) => boolean;
@@ -52,20 +51,17 @@ const CalendarGrid: FunctionComponent<CalendarGridProps> = ({
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   return (
-    <div class={`${styles.grid} ${className ?? ''}`} role="grid" aria-label={`${MONTHS[month]} ${year}`} onMouseLeave={onLeaveGrid}>
-      {/* Day name column headers */}
+    <div class={`${styles.grid} ${className ?? ''}`} role="grid" aria-label={`${MONTH_NAMES[month]} ${year}`} onMouseLeave={onLeaveGrid}>
       {DAY_NAMES.map((name) => (
         <div key={name} class={styles.dayName} role="columnheader" aria-label={name}>
           {name}
         </div>
       ))}
 
-      {/* Leading empty cells to align day 1 to the correct weekday column */}
       {Array.from({ length: leadingEmpties }, (_, i) => (
         <div key={`empty-${i}`} class={styles.empty} aria-hidden="true" />
       ))}
 
-      {/* Day cells — styles object passed down so DayCell avoids a direct CSS Module import */}
       {Array.from({ length: daysInMonth }, (_, i) => {
         const day = i + 1;
         const isTodayCell = year === todayYear && month === todayMonth && day === todayDay;

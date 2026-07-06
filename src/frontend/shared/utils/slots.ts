@@ -1,19 +1,17 @@
 import type { CalendarDate } from '../types/calendar';
 import type { TenantConfig } from '../types/tenant';
-
-const DEFAULT_OPEN = '12:00';
-const DEFAULT_CLOSE = '22:00';
+import { DEFAULT_OPEN_TIME, DEFAULT_CLOSE_TIME, SLOT_INTERVAL_MINUTES } from '@constants';
 
 export function toMinutes(time: string): number {
   const [h, m] = time.split(':').map(Number);
   return h * 60 + m;
 }
 
-export function generateSlots(openTime: string, closeTime: string): string[] {
+export function generateTimeSlots(openTime: string, closeTime: string): string[] {
   const slots: string[] = [];
   const open = toMinutes(openTime);
   const close = toMinutes(closeTime);
-  for (let mins = open; mins < close; mins += 30) {
+  for (let mins = open; mins < close; mins += SLOT_INTERVAL_MINUTES) {
     const h = Math.floor(mins / 60)
       .toString()
       .padStart(2, '0');
@@ -25,7 +23,7 @@ export function generateSlots(openTime: string, closeTime: string): string[] {
 
 export function getSlotsForDate(date: CalendarDate, tenantConfig: TenantConfig | null): string[] {
   const hours = tenantConfig?.opening_hours;
-  if (!hours || hours.length === 0) return generateSlots(DEFAULT_OPEN, DEFAULT_CLOSE);
+  if (!hours || hours.length === 0) return generateTimeSlots(DEFAULT_OPEN_TIME, DEFAULT_CLOSE_TIME);
 
   // Use UTC noon to avoid DST edge cases when computing day-of-week
   const dateStr = `${date.year}-${String(date.month + 1).padStart(2, '0')}-${String(date.day).padStart(2, '0')}T12:00:00Z`;
@@ -33,15 +31,10 @@ export function getSlotsForDate(date: CalendarDate, tenantConfig: TenantConfig |
 
   const entry = hours.find((h) => Number(h.day_of_week) === dow);
   if (!entry || entry.is_closed) return [];
-  if (!entry.open_time || !entry.close_time) return generateSlots(DEFAULT_OPEN, DEFAULT_CLOSE);
-  return generateSlots(entry.open_time, entry.close_time);
+  if (!entry.open_time || !entry.close_time) return generateTimeSlots(DEFAULT_OPEN_TIME, DEFAULT_CLOSE_TIME);
+  return generateTimeSlots(entry.open_time, entry.close_time);
 }
 
-/**
- * Returns the earliest bookable slot for today:
- * current time + 30 min, rounded up to next 30-min boundary.
- * e.g. 18:30 → "19:00", 18:42 → "19:30"
- */
 export function getEarliestTodaySlot(): string {
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();

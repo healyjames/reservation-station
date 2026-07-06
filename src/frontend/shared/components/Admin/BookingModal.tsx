@@ -1,11 +1,11 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import { Modal, Button, FormField, Input, Textarea } from '@shared/components';
 import { adminFetch } from '@shared/utils/adminFetch';
 import styles from './BookingModal.module.css';
 
-interface BookingModalProps {
+type BookingModalProps = {
   mode: 'create' | 'edit';
   reservation?: Reservation;
   defaultDate?: string;

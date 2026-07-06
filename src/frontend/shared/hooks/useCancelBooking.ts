@@ -1,11 +1,11 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { Signal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
 import type { Reservation } from '@shared/types';
 
 type CancelView = 'loading' | 'error' | 'overview' | 'success';
 
-interface UseCancelBookingReturn {
+type UseCancelBookingReturn = {
   view: Signal<CancelView>;
   reservation: Signal<Reservation | null>;
   errorMessage: Signal<string>;

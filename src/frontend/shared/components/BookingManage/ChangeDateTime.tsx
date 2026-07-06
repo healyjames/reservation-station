@@ -1,8 +1,8 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { Signal } from '@preact/signals';
 import type { TenantConfig, CalendarDate } from '@shared/types';
-import { MONTHS } from '@shared/types';
+import { MONTH_NAMES } from '@constants';
 import {
   StandaloneLayout,
   CalendarGrid,
@@ -17,7 +17,7 @@ import {
 import { getAvailableSlots } from '@shared/utils';
 import styles from './ChangeDateTime.module.css';
 
-interface ChangeDateTimeProps {
+type ChangeDateTimeProps = {
   tenantConfig: Signal<TenantConfig | null>;
   errorMessage: Signal<string>;
   calYear: Signal<number>;
@@ -140,7 +140,7 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
       <div class={styles.container} role="region" aria-label="Date picker">
         <div class={styles.header}>
           <h2>
-            {MONTHS[calMonth.value]} {calYear.value}
+            {MONTH_NAMES[calMonth.value]} {calYear.value}
           </h2>
           <div class={styles.nav}>
             <button type="button" class={styles.nav_btn} aria-label="Previous month" disabled={onCurrentMonth} onClick={prevMonth}>

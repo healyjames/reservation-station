@@ -10,11 +10,7 @@ import { buildTenantAmendmentEmail } from '../emails/tenant-amendment';
 import { buildCustomerCancellationEmail } from '../emails/customer-cancellation';
 import { buildTenantCancellationEmail } from '../emails/tenant-cancellation';
 import { generateManageToken, hashManageToken } from '../utils/manageToken';
-
-type ReservationWithTenant = Reservation & {
-	tenant_name: string;
-	contact_email: string;
-};
+import type { ReservationWithTenant } from '../types';
 
 const admin = new Hono<{
 	Bindings: Env;
@@ -45,15 +41,12 @@ admin.patch('/me', async (c) => {
     return c.json({ error: z.prettifyError(parsed.error) }, 400);
   }
 
-  // Protect tenant code from being updated (thrown away with _tc)
   const { tenant_code: _tc, ...rest } = parsed.data as typeof parsed.data & { tenant_code?: string };
-  const data = { ...rest, modified_date: new Date().toISOString() }; // inject modified_date so it can never be faked
+  const data = { ...rest, modified_date: new Date().toISOString() };
 
-	// Make sure something is being updated e.g. empty PATCH requests orno-op updates
   const updatableKeys = Object.keys(data).filter((k) => k !== 'modified_date');
   if (updatableKeys.length === 0) return c.json({ error: 'No valid fields to update' }, 400);
 
-	// Build SQL dynamically based on updated fields
   const fields = Object.keys(data)
     .map((k) => `${k} = ?`)
     .join(', ');
@@ -300,7 +293,6 @@ admin.patch('/reservations/:id', async (c) => {
     .bind(...values, id, tenantId)
     .run();
 
-  // If the email changed, regenerate the manage token hash so the amendment link stays valid
   if (body.email && body.email.toLowerCase() !== (existing.email ?? '').toLowerCase()) {
     const newToken = await generateManageToken(c.env.JWT_SECRET, id, body.email);
     const newHash = await hashManageToken(newToken);

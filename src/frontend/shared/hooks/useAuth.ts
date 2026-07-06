@@ -1,9 +1,9 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { Signal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
 import type { TenantConfig } from '@shared/types';
 
-export interface UseAuthReturn {
+export type UseAuthReturn = {
   isAuthed: Signal<boolean>;
   isLoading: Signal<boolean>;
   showExpiredBanner: Signal<boolean>;

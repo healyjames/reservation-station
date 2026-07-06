@@ -1,9 +1,9 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import { StandaloneLayout, BookingDetailsList, Button, MessageCard } from '@shared/components';
 import { formatDate, getFullName, getGuestsLabel } from '@shared/utils';
 
-interface OverviewProps {
+type OverviewProps = {
   reservation: Reservation;
   inlineError: string;
   isCancelling: boolean;
@@ -17,7 +17,7 @@ export const Overview: FunctionComponent<OverviewProps> = ({ reservation, inline
     { label: 'Time', value: reservation.reservation_time || 'Unknown time' },
     { label: 'Party size', value: getGuestsLabel(Number(reservation.guests) || 0) },
     ...(reservation.dietary_requirements?.trim()
-      ? [{ label: 'Dietary requirements', value: reservation.dietary_requirements.trim() }]
+      ? [{ label: 'Dietary requirements & special requests', value: reservation.dietary_requirements.trim() }]
       : []),
   ];
 

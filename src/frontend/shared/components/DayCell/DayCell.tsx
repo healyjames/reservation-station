@@ -1,11 +1,11 @@
-// DayCell has no separate CSS module.
+﻿// DayCell has no separate CSS module.
 // Its styles are defined in CalendarGrid.module.css and passed in via the `styles` prop.
 // This avoids a circular CSS Module reference between DayCell and CalendarGrid.
 
 import { useRef } from 'preact/hooks';
 import type { FunctionComponent } from 'preact';
 
-interface DayCellProps {
+type DayCellProps = {
   day: number;
   isToday: boolean;
   isPast: boolean;
@@ -19,7 +19,6 @@ interface DayCellProps {
   onSelect?: () => void;
   onBlockedSelect?: (el: HTMLDivElement) => void;
   onMouseEnter?: () => void;
-  /** CSS module classnames passed from CalendarGrid — DayCell receives the module object rather than importing it directly */
   styles: Record<string, string>;
 }
 
@@ -54,7 +53,6 @@ const DayCell: FunctionComponent<DayCellProps> = ({
     .filter(Boolean)
     .join(' ');
 
-  // Past + not blocked: purely disabled, no interaction
   if (isDisabled && !isBlocked) {
     return (
       <div class={classNames} aria-disabled="true" role="gridcell">
@@ -63,7 +61,6 @@ const DayCell: FunctionComponent<DayCellProps> = ({
     );
   }
 
-  // Blocked (non-past): shows tooltip on click/keyboard
   if (isDisabled && isBlocked) {
     return (
       <div
@@ -85,9 +82,7 @@ const DayCell: FunctionComponent<DayCellProps> = ({
     );
   }
 
-  // Normal selectable day
-  return (
-    <div
+  return (    <div
       class={classNames}
       role="button"
       aria-pressed={isSelected}

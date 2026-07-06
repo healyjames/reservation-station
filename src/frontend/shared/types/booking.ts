@@ -1,6 +1,6 @@
-export type BookingStep = 'calendar' | 'form-step1' | 'form-step2' | 'success';
+﻿export type BookingStep = 'calendar' | 'form-step1' | 'form-step2' | 'success';
 
-export interface BookingFormData {
+export type BookingFormData = {
   guests: number;
   time: string;
   firstName: string;
@@ -10,7 +10,7 @@ export interface BookingFormData {
   dietary: string;
 }
 
-export interface BookingRequest {
+export type BookingRequest = {
   tenant_id: string;
   first_name: string;
   surname: string;

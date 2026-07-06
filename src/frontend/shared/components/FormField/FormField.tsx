@@ -1,9 +1,9 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent, ComponentChildren } from 'preact';
 import styles from './FormField.module.css';
 import Tooltip from '../Tooltip/Tooltip';
 
-interface FormFieldProps {
+type FormFieldProps = {
   label: string;
   htmlFor?: string;
   error?: string;

@@ -1,4 +1,4 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import type { Signal } from '@preact/signals';
 import styles from './DateNav.module.css';
 
@@ -15,7 +15,7 @@ function isToday(d: Date): boolean {
   return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
 }
 
-interface DateNavProps {
+type DateNavProps = {
   currentDate: Signal<Date>;
   guestCount: number;
   onPrev: () => void;

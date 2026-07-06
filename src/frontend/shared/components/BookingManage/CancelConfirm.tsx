@@ -1,4 +1,4 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { Signal } from '@preact/signals';
 import type { Reservation } from '@shared/types';
@@ -6,7 +6,7 @@ import { StandaloneLayout, BookingDetailsList, Button, MessageCard } from '@shar
 import { formatDate, getFullName, getGuestsLabel } from '@shared/utils';
 import styles from './CancelConfirm.module.css';
 
-interface CancelConfirmProps {
+type CancelConfirmProps = {
   reservation: Signal<Reservation | null>;
   errorMessage: Signal<string>;
   goToOverview: () => void;
@@ -21,7 +21,7 @@ export const CancelConfirm: FunctionComponent<CancelConfirmProps> = ({ reservati
     { label: 'Date', value: formatDate(r.reservation_date) },
     { label: 'Time', value: r.reservation_time || 'Unknown time' },
     { label: 'Party size', value: getGuestsLabel(Number(r.guests)) },
-    ...(r.dietary_requirements?.trim() ? [{ label: 'Dietary requirements', value: r.dietary_requirements.trim() }] : []),
+    ...(r.dietary_requirements?.trim() ? [{ label: 'Dietary requirements & special requests', value: r.dietary_requirements.trim() }] : []),
   ];
 
   async function handleCancel() {

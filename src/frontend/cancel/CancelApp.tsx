@@ -1,8 +1,8 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import { Loading, Error, Overview, Success } from '@shared/components/Cancel';
 import { useCancelBooking } from '@shared/hooks/useCancelBooking';
 
-interface CancelAppProps {
+type CancelAppProps = {
   reservationId: string | null;
   bookingEmail: string | null;
   bookingToken: string | null;

@@ -1,11 +1,11 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
 import { MessageCard, Button } from '@shared/components';
 import { formatDateForDisplay } from '@shared/utils';
 import type { BookingFormData } from '@shared/types';
 import styles from './Success.module.css';
 
-interface SuccessProps {
+type SuccessProps = {
   formData: BookingFormData;
   selectedDate: CalendarDate;
   onNewBooking: () => void;

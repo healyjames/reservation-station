@@ -1,11 +1,11 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import { Modal, Button } from '@shared/components';
 import { adminFetch } from '@shared/utils/adminFetch';
 import styles from './DeleteConfirmModal.module.css';
 
-interface DeleteConfirmModalProps {
+type DeleteConfirmModalProps = {
   reservation: Reservation;
   token: string;
   onSuccess: () => void;
@@ -77,7 +77,7 @@ const DeleteConfirmModal: FunctionComponent<DeleteConfirmModalProps> = ({ reserv
         </div>
         {reservation.dietary_requirements && (
           <div class={styles.detail_row}>
-            <dt>Dietary requirements</dt>
+            <dt>Dietary requirements & special requests</dt>
             <dd>{reservation.dietary_requirements}</dd>
           </div>
         )}

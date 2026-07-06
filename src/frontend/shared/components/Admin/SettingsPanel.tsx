@@ -1,4 +1,4 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { Signal } from '@preact/signals';
 import type { TenantConfig } from '@shared/types';
@@ -9,7 +9,7 @@ import styles from './SettingsPanel.module.css';
 
 type SettingsTab = 'general' | 'opening-hours' | 'blocked-dates';
 
-interface SettingsProps {
+type SettingsProps = {
   tenantConfig: Signal<TenantConfig | null>;
   token: string;
   onSave: (updated: Partial<TenantConfig>) => void;

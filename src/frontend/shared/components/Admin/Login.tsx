@@ -1,10 +1,10 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import { FormField, Input } from '@shared/components';
 import type { UseAuthReturn } from '@shared/hooks/useAuth';
 import styles from './Login.module.css';
 
-interface LoginProps {
+type LoginProps = {
   auth: UseAuthReturn;
   onLoginSuccess: () => void;
 }

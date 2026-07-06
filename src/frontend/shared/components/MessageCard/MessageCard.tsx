@@ -1,7 +1,7 @@
-import type { FunctionComponent, ComponentChildren } from 'preact';
+﻿import type { FunctionComponent, ComponentChildren } from 'preact';
 import styles from './MessageCard.module.css';
 
-interface MessageCardProps {
+type MessageCardProps = {
   variant: 'success' | 'error';
   title: string;
   children: ComponentChildren;

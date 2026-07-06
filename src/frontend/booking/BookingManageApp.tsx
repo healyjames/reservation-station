@@ -1,4 +1,4 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import type { Signal } from '@preact/signals';
 import type { Reservation, TenantConfig, CalendarDate } from '@shared/types';
 import type { EditData } from '@shared/types';
@@ -14,7 +14,7 @@ import {
   SuccessCancel,
 } from '@shared/components/BookingManage';
 
-interface BookingManageAppProps {
+type BookingManageAppProps = {
   reservationId: string | null;
   bookingEmail: string | null;
   bookingToken: string | null;

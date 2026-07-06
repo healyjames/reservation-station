@@ -1,4 +1,4 @@
-import { useRef } from 'preact/hooks';
+﻿import { useRef } from 'preact/hooks';
 import type { FunctionComponent } from 'preact';
 import type { TenantConfig } from '@shared/types';
 import { Input, Textarea, FormField, Button, MessageCard } from '@shared/components';
@@ -6,7 +6,7 @@ import type { BookingFormData } from '@shared/types';
 import { isStandaloneMode } from '@shared/utils';
 import styles from './Step2Form.module.css';
 
-interface Step2FormProps {
+type Step2FormProps = {
   tenantConfig: TenantConfig;
   formData: BookingFormData;
   submitError: string;

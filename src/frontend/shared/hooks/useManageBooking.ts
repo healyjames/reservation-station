@@ -1,13 +1,23 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { Signal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
 import type { Reservation, TenantConfig, CalendarDate } from '@shared/types';
-import type { ManageView, EditData } from '@shared/types';
+import type { EditData } from '@shared/types';
 import { formatDateForAPI, getAvailableSlots } from '@shared/utils';
+
+type ManageView =
+  | 'loading'
+  | 'error'
+  | 'overview'
+  | 'edit-details'
+  | 'change-datetime'
+  | 'cancel-confirm'
+  | 'success-edit'
+  | 'success-cancel';
 import { fetchBlockedDatesForMonth as sharedFetchBlockedDates } from '@shared/utils/fetchBlockedDatesForMonth';
 import { fetchBlockedTimes as sharedFetchBlockedTimes } from '@shared/utils/fetchBlockedTimes';
 
-export interface UseManageBookingReturn {
+export type UseManageBookingReturn = {
   view: Signal<ManageView>;
   reservation: Signal<Reservation | null>;
   tenantConfig: Signal<TenantConfig | null>;
@@ -57,10 +67,10 @@ export function useManageBooking(
   const isCancelling = useSignal(false);
 
   useEffect(() => {
-    init();
+    loadReservation();
   }, []);
 
-  async function init() {
+  async function loadReservation() {
     if (!reservationId || !bookingEmail) {
       errorMessage.value = 'No booking reference found. Please check your link.';
       view.value = 'error';

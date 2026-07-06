@@ -1,4 +1,4 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import type { TenantConfig } from '@shared/types';
 import type { UseAuthReturn } from '@shared/hooks/useAuth';
 import SettingsPanel from './SettingsPanel';
@@ -6,7 +6,7 @@ import AdminSidebar from './AdminSidebar';
 import AdminHeader from './AdminHeader';
 import styles from './Settings.module.css';
 
-interface SettingsProps {
+type SettingsProps = {
   auth: UseAuthReturn;
   onLogout: () => void;
   onGoDashboard: () => void;

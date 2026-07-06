@@ -1,8 +1,8 @@
-import { createPortal } from 'preact/compat';
+﻿import { createPortal } from 'preact/compat';
 import type { FunctionComponent } from 'preact';
 import styles from './Tooltip.module.css';
 
-interface TooltipProps {
+type TooltipProps = {
   visible: boolean;
   message: string;
   anchorRect: DOMRect | null;

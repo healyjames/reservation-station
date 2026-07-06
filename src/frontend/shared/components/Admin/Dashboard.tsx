@@ -1,4 +1,4 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import type { UseAuthReturn } from '@shared/hooks/useAuth';
@@ -14,7 +14,7 @@ import AdminHeader from './AdminHeader';
 import CalendarPickerModal from './CalendarPickerModal';
 import styles from './Dashboard.module.css';
 
-interface DashboardProps {
+type DashboardProps = {
   auth: UseAuthReturn;
   onLogout: () => void;
   onGoSettings: () => void;

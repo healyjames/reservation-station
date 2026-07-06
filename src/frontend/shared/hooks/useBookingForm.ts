@@ -1,10 +1,10 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { Signal } from '@preact/signals';
 import type { TenantConfig, CalendarDate } from '@shared/types';
 import { formatDateForAPI } from '@shared/utils';
 import type { BookingFormData, BookingRequest } from '@shared/types';
 
-interface UseBookingFormReturn {
+type UseBookingFormReturn = {
   formData: Signal<BookingFormData>;
   submitError: Signal<string>;
   isSubmitting: Signal<boolean>;

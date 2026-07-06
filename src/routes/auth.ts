@@ -24,7 +24,6 @@ auth.post('/login', async (c) => {
     return c.json({ success: false, error: 'Invalid credentials' }, 401);
   }
 
-  // Rate limiting: check lock
   if (user.locked_until) {
     const lockedUntil = new Date(user.locked_until).getTime();
     if (lockedUntil > Date.now()) {
@@ -47,7 +46,6 @@ auth.post('/login', async (c) => {
     return c.json({ success: false, error: 'Invalid credentials' }, 401);
   }
 
-  // Success - reset rate limit state
   await c.env.maximum_bookings_db
     .prepare('UPDATE AdminUsers SET failed_attempts = 0, locked_until = NULL, modified_date = ? WHERE id = ?')
     .bind(new Date().toISOString(), user.id)

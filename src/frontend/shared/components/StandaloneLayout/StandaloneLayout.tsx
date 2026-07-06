@@ -1,7 +1,7 @@
-import type { FunctionComponent, ComponentChildren } from 'preact';
+﻿import type { FunctionComponent, ComponentChildren } from 'preact';
 import styles from './StandaloneLayout.module.css';
 
-interface StandaloneLayoutProps {
+type StandaloneLayoutProps = {
   title?: string;
   children: ComponentChildren;
   class?: string;

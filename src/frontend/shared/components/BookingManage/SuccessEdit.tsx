@@ -1,10 +1,10 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import { StandaloneLayout, MessageCard, Button } from '@shared/components';
 import { formatDate, getFullName, getGuestsLabel } from '@shared/utils';
 import styles from './SuccessEdit.module.css';
 
-interface SuccessEditProps {
+type SuccessEditProps = {
   reservation: Reservation;
   onBack: () => void;
 }

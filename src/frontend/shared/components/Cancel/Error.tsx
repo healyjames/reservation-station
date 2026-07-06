@@ -1,7 +1,7 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import { StandaloneLayout, MessageCard } from '@shared/components';
 
-interface ErrorProps {
+type ErrorProps = {
   message: string;
 }
 

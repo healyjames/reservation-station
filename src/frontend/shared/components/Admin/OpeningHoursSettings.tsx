@@ -1,4 +1,4 @@
-import { useSignal } from '@preact/signals';
+﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import { useEffect } from 'preact/hooks';
 import type { OpeningHoursEntry } from '@shared/types';
@@ -6,7 +6,7 @@ import { ToggleSwitch, Button } from '@shared/components';
 import { adminFetch } from '@shared/utils/adminFetch';
 import styles from './OpeningHoursSettings.module.css';
 
-interface DayConfig {
+type DayConfig = {
   label: string;
   dow: number;
   isClosed: boolean;
@@ -24,7 +24,7 @@ const DAY_ORDER: Array<{ label: string; dow: number }> = [
   { label: 'Sunday', dow: 0 },
 ];
 
-interface OpeningHoursSettingsProps {
+type OpeningHoursSettingsProps = {
   token: string;
 }
 
@@ -122,7 +122,6 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
         </div>
       )}
 
-      {/* Desktop table view */}
       <table class={`${styles.admin_table} ${styles.oh_schedule}`}>
         <thead>
           <tr>
@@ -173,7 +172,6 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
         </tbody>
       </table>
 
-      {/* Mobile card view */}
       <div class={styles.oh_cards}>
         {days.value.map((d) => (
           <div key={d.dow} class={styles.oh_card} data-dow={String(d.dow)}>

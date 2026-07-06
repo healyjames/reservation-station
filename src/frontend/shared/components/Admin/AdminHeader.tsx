@@ -1,7 +1,7 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import styles from './AdminHeader.module.css';
 
-interface AdminHeaderProps {
+type AdminHeaderProps = {
   venueName: string;
   onLogout: () => void;
 }

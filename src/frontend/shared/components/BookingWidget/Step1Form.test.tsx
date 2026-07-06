@@ -128,4 +128,18 @@ describe('Step1Form', () => {
     expect(getByText(/for bookings of 10 or more guests, please call the venue directly/i)).toBeTruthy();
     expect((getByRole('button', { name: /next/i }) as HTMLButtonElement).disabled).toBe(true);
   });
+
+  it('hides the Time input when the large-party sentinel is selected', () => {
+    const { getByLabelText, queryByLabelText } = renderStep1Form({
+      tenantOverrides: { max_guests: 4, max_covers: 20 },
+      formData: makeFormData({ guests: 4, time: '18:00' }),
+    });
+
+    expect(getByLabelText(/time/i)).toBeTruthy();
+
+    const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
+    fireEvent.change(guestSelect, { target: { value: 'large' } });
+
+    expect(queryByLabelText(/time/i)).toBeNull();
+  });
 });

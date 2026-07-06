@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { sendEmail } from '../src/utils/email';
-import type { ResendEnv, SendEmailRequest } from '../src/utils/email';
+import type { ResendEnv, SendEmailRequest } from '../src/types';
 
 const mockEnv: ResendEnv = { RESEND_API_KEY: 're_test_abc123' };
 const mockMessage: SendEmailRequest = {

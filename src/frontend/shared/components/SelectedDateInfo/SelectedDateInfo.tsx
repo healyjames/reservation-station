@@ -1,9 +1,9 @@
-import type { FunctionComponent } from 'preact';
+﻿import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
 import { formatDateForDisplay } from '@shared/utils';
 import styles from './SelectedDateInfo.module.css';
 
-interface SelectedDateInfoProps {
+type SelectedDateInfoProps = {
   date: CalendarDate;
   onChangeDate?: () => void;
   hideLabel?: boolean;

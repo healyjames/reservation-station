@@ -1,8 +1,8 @@
-export interface BlockedDatesResponse {
+﻿export type BlockedDatesResponse = {
   blocked_dates: string[];
   closed_dates: string[];
 }
 
-export interface BlockedTimesResponse {
+export type BlockedTimesResponse = {
   blocked_times: string[];
 }
