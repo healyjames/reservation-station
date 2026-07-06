@@ -30,8 +30,8 @@ app.use(
 );
 
 app.route('/api/tenants', tenants);
-app.route('/api/reservations', reservations);
 app.route('/api/reservations', availability);
+app.route('/api/reservations', reservations);
 app.route('/api/auth', auth);
 app.route('/api/admin', admin);
 app.route('/api/admin/blocked-dates', blockedDates);
