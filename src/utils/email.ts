@@ -1,16 +1,5 @@
 import type { ResendEnv, SendEmailRequest } from '../types';
 
-// Re-export types so any existing `import { ... } from '../utils/email'` callers
-// that were importing types (not the function) continue to work without changes.
-export type {
-  ResendEnv,
-  EmailTemplate,
-  SendEmailRequest,
-  ReservationEmailContext,
-  CustomerReservationEmailData,
-  TenantReservationEmailData,
-} from '../types';
-
 export async function sendEmail(env: ResendEnv, message: SendEmailRequest): Promise<void> {
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',

@@ -1,10 +1,6 @@
 import type { SlotReservation } from '../types';
 import { DEFAULT_OPEN_TIME, DEFAULT_CLOSE_TIME, SLOT_INTERVAL_MINUTES } from '../constants';
 
-// Re-export so any existing `import { SlotReservation } from '../utils/slots'` callers
-// continue to work without changes.
-export type { SlotReservation } from '../types';
-
 export function toMinutes(time: string): number {
   const [h, m] = time.split(':').map(Number);
   return h * 60 + m;

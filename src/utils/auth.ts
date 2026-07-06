@@ -1,9 +1,5 @@
 import type { JwtPayload } from '../types';
 
-// Re-export so middleware and route files can import JwtPayload from here
-// if they prefer a shorter relative path.
-export type { JwtPayload } from '../types';
-
 function toBase64Url(bytes: Uint8Array): string {
   return btoa(String.fromCharCode(...bytes))
     .replace(/\+/g, '-')
