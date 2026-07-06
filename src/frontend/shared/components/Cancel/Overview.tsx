@@ -17,7 +17,7 @@ export const Overview: FunctionComponent<OverviewProps> = ({ reservation, inline
     { label: 'Time', value: reservation.reservation_time || 'Unknown time' },
     { label: 'Party size', value: getGuestsLabel(Number(reservation.guests) || 0) },
     ...(reservation.dietary_requirements?.trim()
-      ? [{ label: 'Dietary requirements', value: reservation.dietary_requirements.trim() }]
+      ? [{ label: 'Dietary requirements & special requests', value: reservation.dietary_requirements.trim() }]
       : []),
   ];
 

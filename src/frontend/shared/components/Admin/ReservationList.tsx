@@ -16,7 +16,7 @@ const ReservationList: FunctionComponent<ReservationListProps> = ({ reservations
         <th scope="col">Time</th>
         <th scope="col">Name</th>
         <th scope="col">Guests</th>
-        <th scope="col">Dietary requirements</th>
+        <th scope="col">Notes</th>
         <th scope="col">Actions</th>
       </tr>
     </thead>

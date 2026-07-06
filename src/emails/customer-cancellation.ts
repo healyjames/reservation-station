@@ -12,7 +12,7 @@ export function buildCustomerCancellationEmail(data: CustomerReservationEmailDat
       ['Date', formatEmailDate(data.reservationDate)],
       ['Time', data.reservationTime],
       ['Guests', String(data.guests)],
-      ['Dietary requirements', data.dietaryRequirements || 'None'],
+      ['Notes', data.dietaryRequirements || 'None'],
     ])}
     <p style="margin:16px 0 0;font-size:15px;color:#333333;">We hope to see you again soon.</p>`;
 

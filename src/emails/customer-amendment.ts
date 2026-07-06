@@ -27,7 +27,7 @@ export function buildCustomerAmendmentEmail(data: CustomerReservationEmailData):
       ['Date', formatEmailDate(data.reservationDate)],
       ['Time', data.reservationTime],
       ['Guests', String(data.guests)],
-      ['Dietary requirements', data.dietaryRequirements || 'None'],
+      ['Notes', data.dietaryRequirements || 'None'],
     ])}
     <p style="margin:16px 0 0;font-size:15px;color:#333333;">We look forward to seeing you!</p>
     ${manageLink}`;

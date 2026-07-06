@@ -77,7 +77,7 @@ const DeleteConfirmModal: FunctionComponent<DeleteConfirmModalProps> = ({ reserv
         </div>
         {reservation.dietary_requirements && (
           <div class={styles.detail_row}>
-            <dt>Dietary requirements</dt>
+            <dt>Dietary requirements & special requests</dt>
             <dd>{reservation.dietary_requirements}</dd>
           </div>
         )}
