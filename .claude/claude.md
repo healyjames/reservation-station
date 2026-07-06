@@ -16,6 +16,8 @@
 This is a general purpose Claude file, details about this repo itself are in ./README.md and ./BUSINESS_LOGIC.md
 Please make sure you read the package.json to understand what technology we are using for this app.
 
+Before commencing a session, always read `BUSINESS_LOGIC.md` file and retain the information as context. Any changes to business logic in the code must be reflected in that file.
+
 # Coding guidelines
 
 Code should be self-documenting. Please avoid leaving comments in code unless they are needed to understand the code. Examples of appriate comments are explaining regex that isn't instantly understandable, or explaining imports from a third party like the fonts loaded through an adobe stylesheet.
