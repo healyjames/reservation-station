@@ -6,6 +6,7 @@ import { defineConfig, defineProject } from 'vitest/config';
 const frontendAliases = {
   '@frontend': resolve(__dirname, 'src/frontend'),
   '@shared': resolve(__dirname, 'src/frontend/shared'),
+  '@constants': resolve(__dirname, 'src/constants'),
   react: 'preact/compat',
   'react-dom': 'preact/compat',
 };
