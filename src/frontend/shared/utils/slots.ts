@@ -7,7 +7,7 @@ export function toMinutes(time: string): number {
   return h * 60 + m;
 }
 
-export function generateSlots(openTime: string, closeTime: string): string[] {
+export function generateTimeSlots(openTime: string, closeTime: string): string[] {
   const slots: string[] = [];
   const open = toMinutes(openTime);
   const close = toMinutes(closeTime);
@@ -23,7 +23,7 @@ export function generateSlots(openTime: string, closeTime: string): string[] {
 
 export function getSlotsForDate(date: CalendarDate, tenantConfig: TenantConfig | null): string[] {
   const hours = tenantConfig?.opening_hours;
-  if (!hours || hours.length === 0) return generateSlots(DEFAULT_OPEN_TIME, DEFAULT_CLOSE_TIME);
+  if (!hours || hours.length === 0) return generateTimeSlots(DEFAULT_OPEN_TIME, DEFAULT_CLOSE_TIME);
 
   // Use UTC noon to avoid DST edge cases when computing day-of-week
   const dateStr = `${date.year}-${String(date.month + 1).padStart(2, '0')}-${String(date.day).padStart(2, '0')}T12:00:00Z`;
@@ -31,8 +31,8 @@ export function getSlotsForDate(date: CalendarDate, tenantConfig: TenantConfig |
 
   const entry = hours.find((h) => Number(h.day_of_week) === dow);
   if (!entry || entry.is_closed) return [];
-  if (!entry.open_time || !entry.close_time) return generateSlots(DEFAULT_OPEN_TIME, DEFAULT_CLOSE_TIME);
-  return generateSlots(entry.open_time, entry.close_time);
+  if (!entry.open_time || !entry.close_time) return generateTimeSlots(DEFAULT_OPEN_TIME, DEFAULT_CLOSE_TIME);
+  return generateTimeSlots(entry.open_time, entry.close_time);
 }
 
 /**
