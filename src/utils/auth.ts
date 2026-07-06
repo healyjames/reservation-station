@@ -1,5 +1,11 @@
 import type { JwtPayload } from '../types';
 
+export function bufToHex(buf: Uint8Array): string {
+  return Array.from(buf)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 function toBase64Url(bytes: Uint8Array): string {
   return btoa(String.fromCharCode(...bytes))
     .replace(/\+/g, '-')
@@ -26,12 +32,8 @@ export async function hashPassword(password: string): Promise<string> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
   const hashBuffer = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, hash: 'SHA-256', iterations: 100_000 }, keyMaterial, 256);
-  const saltHex = Array.from(salt)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-  const hashHex = Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+  const saltHex = bufToHex(salt);
+  const hashHex = bufToHex(new Uint8Array(hashBuffer));
   return `${saltHex}:${hashHex}`;
 }
 
@@ -42,9 +44,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
   const salt = new Uint8Array(saltHex.match(/.{2}/g)!.map((b) => parseInt(b, 16)));
   const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
   const hashBuffer = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, hash: 'SHA-256', iterations: 100_000 }, keyMaterial, 256);
-  const derivedHex = Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+  const derivedHex = bufToHex(new Uint8Array(hashBuffer));
 
   return timingSafeEqual(derivedHex, hashHex);
 }

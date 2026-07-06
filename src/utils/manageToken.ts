@@ -1,10 +1,4 @@
-import { timingSafeEqual } from './auth';
-
-function bufToHex(buf: Uint8Array): string {
-  return Array.from(buf)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
+import { timingSafeEqual, bufToHex } from './auth';
 
 /**
  * Generate a deterministic HMAC-SHA256 manage token bound to a specific reservation + email.
