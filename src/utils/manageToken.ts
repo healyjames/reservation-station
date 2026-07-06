@@ -1,9 +1,5 @@
 import { timingSafeEqual, bufToHex } from './auth';
 
-/**
- * Generate a deterministic HMAC-SHA256 manage token bound to a specific reservation + email.
- * Used in customer-facing manage/cancel email links.
- */
 export async function generateManageToken(secret: string, reservationId: string, email: string): Promise<string> {
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const message = new TextEncoder().encode(`manage:${reservationId}:${email.toLowerCase()}`);
@@ -11,16 +7,11 @@ export async function generateManageToken(secret: string, reservationId: string,
   return bufToHex(new Uint8Array(sig));
 }
 
-/** SHA-256 hash a token for safe storage in the database. */
 export async function hashManageToken(token: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
   return bufToHex(new Uint8Array(buf));
 }
 
-/**
- * Verify a presented manage token against the stored hash.
- * Re-derives the expected HMAC and compares both values before accepting.
- */
 export async function verifyManageToken(
   secret: string,
   reservationId: string,

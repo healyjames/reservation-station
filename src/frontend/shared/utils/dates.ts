@@ -4,14 +4,12 @@ export function padTwo(n: number): string {
   return String(n).padStart(2, '0');
 }
 
-/** Formats a CalendarDate as "YYYY-MM-DD" for API calls */
 export function formatDateForAPI(date: CalendarDate): string {
   const month = String(date.month + 1).padStart(2, '0');
   const day = String(date.day).padStart(2, '0');
   return `${date.year}-${month}-${day}`;
 }
 
-/** Formats a CalendarDate as a human-readable locale string (en-GB) */
 export function formatDateForDisplay(date: CalendarDate): string {
   return new Date(date.year, date.month, date.day).toLocaleDateString('en-GB', {
     weekday: 'long',
@@ -36,7 +34,6 @@ export function formatDate(dateString: string | null | undefined): string {
   });
 }
 
-/** Parses a "YYYY-MM-DD" string into a CalendarDate */
 export function parseYYYYMMDD(dateString: string): CalendarDate {
   const [year, month, day] = dateString.split('-').map(Number);
   return { year, month: month - 1, day }; // month is 0-indexed

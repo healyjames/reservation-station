@@ -188,3 +188,55 @@ Called when a date is selected in the booking widget. Fetches `GET /api/blocked-
 **`src/frontend/shared/components/Admin/GeneralSettings.tsx`**
 
 The **Max capacity** field sets `max_covers`. The **Max party size (per booking)** field sets `max_guests`. Both accept `0` to mean unlimited.
+
+---
+
+## CORS Security Strategy
+
+**`src/app.ts`**
+
+In development (`ENVIRONMENT === 'development'`), all origins are allowed. In production, any HTTPS origin is permitted so the booking widget can be embedded on any restaurant website. Security is enforced by route-level credentials (admin JWT / manage token), not by origin-checking.
+
+---
+
+## Tenant Endpoint: PII Protection
+
+**`src/routes/tenants.ts` — `GET /api/tenants/:id`**
+
+The public tenant endpoint returns an explicit column allowlist: `id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit`. Fields such as `contact_email`, `created_date`, and `modified_date` are intentionally excluded to avoid leaking PII to unauthenticated callers. Use `GET /api/admin/me` for admin access to the full tenant record.
+
+---
+
+## Admin Tenant PATCH: Server-Side `modified_date`
+
+**`src/routes/admin.ts` — `PATCH /api/admin/tenant`**
+
+`modified_date` is injected server-side and removed from the client-submitted payload. This means the client can never fake a modification timestamp. `tenant_code` is also stripped from PATCH requests to prevent it from being changed.
+
+---
+
+## Booking Creation: Validation Order
+
+**`src/routes/reservations.ts` — `POST /api/reservations`**
+
+Reservation creation validates in this order:
+1. Full-day block check — rejects if the date has a full-day `BlockedDates` entry.
+2. Partial-day time block check — rejects if the requested time falls within an admin-defined partial-day block.
+3. Opening hours check — rejects if the restaurant is closed that day, or if the time is outside configured hours (including midnight-crossing schedules).
+4. Capacity check — atomic INSERT with a WHERE clause that re-evaluates concurrent occupancy inside the same SQL statement, eliminating the SELECT-then-INSERT race condition.
+
+---
+
+## Manage Token: Regenerated on Email Change
+
+**`src/routes/reservations.ts` — `PATCH /api/reservations/:id`** (customer-facing)
+
+When a customer amends their email address, the manage token is regenerated and the new hash is stored. This keeps the amendment/cancellation email link valid for the new email address.
+
+---
+
+## `contact_email` Field Availability
+
+**`src/frontend/shared/types/tenant.ts` — `TenantConfig`**
+
+The `contact_email` field is only present when `TenantConfig` is loaded via admin-authenticated endpoints (e.g. `GET /api/admin/me`). It is intentionally absent from the public `GET /api/tenants/:id` widget endpoint to prevent PII exposure.

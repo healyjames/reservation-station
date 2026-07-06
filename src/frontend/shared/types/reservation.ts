@@ -5,9 +5,7 @@
   surname: string;
   telephone: string;
   email: string;
-  /** ISO date string: YYYY-MM-DD */
   reservation_date: string;
-  /** HH:MM */
   reservation_time: string;
   guests: number;
   dietary_requirements?: string;

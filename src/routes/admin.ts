@@ -42,7 +42,7 @@ admin.patch('/me', async (c) => {
   }
 
   const { tenant_code: _tc, ...rest } = parsed.data as typeof parsed.data & { tenant_code?: string };
-  const data = { ...rest, modified_date: new Date().toISOString() }; // inject modified_date so it can never be faked
+  const data = { ...rest, modified_date: new Date().toISOString() };
 
   const updatableKeys = Object.keys(data).filter((k) => k !== 'modified_date');
   if (updatableKeys.length === 0) return c.json({ error: 'No valid fields to update' }, 400);

@@ -35,11 +35,6 @@ export function getSlotsForDate(date: CalendarDate, tenantConfig: TenantConfig |
   return generateTimeSlots(entry.open_time, entry.close_time);
 }
 
-/**
- * Returns the earliest bookable slot for today:
- * current time + 30 min, rounded up to next 30-min boundary.
- * e.g. 18:30 → "19:00", 18:42 → "19:30"
- */
 export function getEarliestTodaySlot(): string {
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();

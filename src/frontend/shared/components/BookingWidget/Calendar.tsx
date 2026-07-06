@@ -18,7 +18,6 @@ type CalendarProps = {
   onDateSelect: (year: number, month: number, day: number) => Promise<void>;
   isStandalone?: boolean;
   tenantName?: string;
-  /** When true, past dates are selectable and the calendar can navigate to past months */
   allowPastDates?: boolean;
 }
 

@@ -122,7 +122,6 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
         </div>
       )}
 
-      {/* Desktop table view */}
       <table class={`${styles.admin_table} ${styles.oh_schedule}`}>
         <thead>
           <tr>
@@ -173,7 +172,6 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
         </tbody>
       </table>
 
-      {/* Mobile card view */}
       <div class={styles.oh_cards}>
         {days.value.map((d) => (
           <div key={d.dow} class={styles.oh_card} data-dow={String(d.dow)}>

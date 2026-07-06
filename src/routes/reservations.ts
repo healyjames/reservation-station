@@ -119,7 +119,6 @@ reservations.post('/', async (c) => {
     return c.json({ error: 'Bookings are not available for this date' }, 422);
   }
 
-  // Reject bookings that fall within an admin-defined partial-day time block
   const { results: partialBlocks } = await c.env.maximum_bookings_db
     .prepare('SELECT start_time, end_time FROM BlockedDates WHERE tenant_id = ? AND date = ? AND start_time IS NOT NULL AND end_time IS NOT NULL')
     .bind(data.tenant_id, data.reservation_date)
@@ -137,7 +136,6 @@ reservations.post('/', async (c) => {
     }
   }
 
-  // Reject bookings outside opening hours
   const dow = new Date(data.reservation_date + 'T12:00:00Z').getUTCDay();
   const openingHours = await c.env.maximum_bookings_db
     .prepare('SELECT is_closed, open_time, close_time FROM OpeningHours WHERE tenant_id = ? AND day_of_week = ?')
@@ -321,7 +319,6 @@ reservations.patch('/:id', async (c) => {
 
   const body = parsed.data;
 
-  // Re-validate capacity when guests, date, or time is being changed
   const needsCapacityCheck = body.guests !== undefined || body.reservation_date !== undefined || body.reservation_time !== undefined;
   const effectiveGuests = body.guests ?? existing.guests;
   const effectiveDate = body.reservation_date ?? existing.reservation_date;
@@ -390,7 +387,6 @@ reservations.patch('/:id', async (c) => {
     return c.json({ error: 'Failed to update reservation' }, 500);
   }
 
-  // If email changed, regenerate the manage token so the amendment link remains valid
   if (body.email && body.email.toLowerCase() !== existing.email.toLowerCase()) {
     const newToken = await generateManageToken(c.env.JWT_SECRET, id, body.email);
     const newHash = await hashManageToken(newToken);
