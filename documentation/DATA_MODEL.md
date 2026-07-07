@@ -101,6 +101,8 @@ A staff login scoped to one tenant. Powers the admin dashboard.
 
 **Keys & indexes:** `PRIMARY KEY (id)`, `UNIQUE idx_admin_users_email (email)`, `idx_admin_users_tenant (tenant_id)`.
 
+The first admin user is created atomically with tenant onboarding via `POST /api/tenants`, in the same transaction as the tenant row and the initial seven `OpeningHours` rows.
+
 ---
 
 ## BlockedDate

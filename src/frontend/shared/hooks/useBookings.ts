@@ -5,7 +5,7 @@ import type { Reservation } from '@shared/types';
 import { adminFetch } from '@shared/utils/adminFetch';
 import { padTwo } from '@shared/utils/dates';
 
-const REFRESH_COOLDOWN_MS = 1 * 60 * 1000;
+const REFRESH_COOLDOWN_MS = 3 * 60 * 1000;
 
 type AdminBlockedDateRow = {
   id: string;

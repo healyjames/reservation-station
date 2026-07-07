@@ -53,3 +53,9 @@ Lead on the Maximum Bookings project. Restaurant booking system built on Cloudfl
 - For unlimited-capacity tenants (`max_covers = 0`), blocked-times responses are guest-agnostic, so guest-specific cache keys and guest-specific URLs are unnecessary duplication.
 - The recommended first step is a shared blocked-times fetch/cache utility plus a date-level cache key for unlimited-capacity venues.
 - A broader availability-matrix redesign is valid only if guest-change latency or request volume becomes a measured problem; if pursued, keep occupancy math server-side and expose `availableCapacity`, not raw occupancy.
+
+### Tenant onboarding recommendation (2026-07-07)
+
+- Recommended protected backend onboarding over a first-client super-user dashboard.
+- Coordinator route-location decision: extend existing super-admin-gated `POST /api/tenants`; do not add `/api/admin/tenants` because `/api/admin/*` remains tenant-scoped JWT admin space.
+- Onboarding implementation should atomically create tenant + first admin with D1 `db.batch()` and retire production use of `scripts/seed-admin.ts` as a direct SQL writer.

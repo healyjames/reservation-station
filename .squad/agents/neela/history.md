@@ -39,6 +39,11 @@ Tester on the Maximum Bookings project. Owns Vitest coverage, black-box behaviou
 
 ## Learnings
 
+### Tenant onboarding test contract (2026-07-07)
+
+- `test/tenants.spec.ts` is the contract suite for onboarding: nested payload validation, auth, tenant/admin/opening-hours persistence, admin login, duplicate rollback, and invalid-payload no-write behaviour.
+- The accepted run is `npx vitest run test\tenants.spec.ts --reporter=dot` with 30 tests passing.
+
 ### API optimisation regression coverage (2026-07-03)
 
 - `fetchBlockedTimes` cache keys must stay guest-aware only for capacity-limited venues (`max_covers > 0`); unlimited venues share a date-level cache entry.
@@ -51,3 +56,8 @@ Tester on the Maximum Bookings project. Owns Vitest coverage, black-box behaviou
 - `fetchBlockedTimes.test.ts` created (8 tests, all pass): cache hit/miss, abort on new request, guest-agnostic key for `maxCovers === 0`, prefix-bust after mutation.
 - `useBookings.test.ts` created (10 tests, all pass): cold month load, warm same-month navigation, targeted day refresh, `deleteBooking` cache mutation, `toggleDayBlock` cache mutation.
 - `test/admin.spec.ts` extended with 3 tests: empty-result month, `?month` precedence over `?date`, tenant isolation on month filter.
+
+### Tenant onboarding contract coverage (2026-07-07)
+
+- `POST /api/tenants` now owns platform onboarding coverage: nested tenant/admin payloads, default closed opening hours, provided opening hours, admin login verification, duplicate uniqueness atomicity, and invalid-payload no-write assertions.
+- Targeted Cloudflare D1 Vitest runs may need the tenants spec to bootstrap its schema before clearing rows so isolated runs do not fail with missing tables.

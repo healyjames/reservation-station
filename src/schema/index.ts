@@ -136,6 +136,33 @@ export const UpsertOpeningHoursSchema = z
 
 export type OpeningHoursEntry = z.infer<typeof OpeningHoursEntrySchema>;
 
+const CreateAdminUserSchema = z.object({
+  email: z.email(),
+  password: z.string().min(12),
+});
+
+const OnboardingOpeningHoursSchema = UpsertOpeningHoursSchema.superRefine((rows, ctx) => {
+  rows.forEach((entry, index) => {
+    const isClosed = entry.is_closed === true || entry.is_closed === 1;
+    if (isClosed) return;
+    if (entry.open_time != null && entry.close_time != null) return;
+
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [index],
+      message: 'open_time and close_time are required when day is not closed',
+    });
+  });
+});
+
+export const CreateTenantWithAdminSchema = z.object({
+  tenant: CreateTenantSchema,
+  admin: CreateAdminUserSchema,
+  opening_hours: OnboardingOpeningHoursSchema.optional(),
+});
+
+export type CreateTenantWithAdmin = z.infer<typeof CreateTenantWithAdminSchema>;
+
 export const AdminUserSchema = z.object({
   id: z.uuid(),
   tenant_id: z.uuid(),

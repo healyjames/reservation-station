@@ -13,10 +13,13 @@ function toBase64Url(bytes: Uint8Array): string {
     .replace(/=+$/, '');
 }
 
-function fromBase64Url(str: string): Uint8Array {
+function fromBase64Url(str: string): Uint8Array<ArrayBuffer> {
   const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
   const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
-  return Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
+  const bytes = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
+  const buffer = new Uint8Array(bytes.length);
+  buffer.set(bytes);
+  return buffer;
 }
 
 export function timingSafeEqual(a: string, b: string): boolean {
@@ -49,11 +52,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
   return timingSafeEqual(derivedHex, hashHex);
 }
 
-export async function signJWT(
-  payload: JwtPayload,
-  secret: string,
-  expiresInSeconds = 8 * 60 * 60,
-): Promise<string> {
+export async function signJWT(payload: JwtPayload, secret: string, expiresInSeconds = 8 * 60 * 60): Promise<string> {
   const header = toBase64Url(new TextEncoder().encode(JSON.stringify({ alg: 'HS256', typ: 'JWT' })));
   const now = Math.floor(Date.now() / 1000);
   const body = toBase64Url(new TextEncoder().encode(JSON.stringify({ ...payload, iat: now, exp: now + expiresInSeconds })));

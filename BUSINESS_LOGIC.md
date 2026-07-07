@@ -217,6 +217,14 @@ The public tenant endpoint returns an explicit column allowlist: `id, name, tena
 
 ---
 
+## Tenant Onboarding
+
+**`src/routes/tenants.ts` — `POST /api/tenants`**
+
+Tenant onboarding is a super-admin operation gated by `X-Admin-Key` / `SUPER_ADMIN_KEY`. One request creates the tenant, first admin user, and all seven opening-hours rows atomically; omitted opening hours default to closed days until the owner configures them.
+
+---
+
 ## Booking Creation: Validation Order
 
 **`src/routes/reservations.ts` — `POST /api/reservations`**

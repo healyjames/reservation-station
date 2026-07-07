@@ -399,18 +399,19 @@ describe('useBookings', () => {
     await act(async () => {
       await result.current.refreshMonth();
     });
+    await flushHook();
 
-    expect(adminFetchMock).toHaveBeenCalledTimes(2);
-
-    adminFetchMock.mockClear();
+    const callsAfterFirstRefresh = adminFetchMock.mock.calls.length;
+    expect(callsAfterFirstRefresh).toBe(2);
 
     vi.advanceTimersByTime(3 * 60 * 1000 - 1);
 
     await act(async () => {
       await result.current.refreshMonth();
     });
+    await flushHook();
 
-    expect(adminFetchMock).not.toHaveBeenCalled();
+    expect(adminFetchMock.mock.calls.length).toBe(callsAfterFirstRefresh);
 
     adminFetchMock.mockResolvedValueOnce(makeResponse([makeReservation()])).mockResolvedValueOnce(makeResponse([]));
 
@@ -419,8 +420,9 @@ describe('useBookings', () => {
     await act(async () => {
       await result.current.refreshMonth();
     });
+    await flushHook();
 
-    expect(adminFetchMock).toHaveBeenCalledTimes(2);
+    expect(adminFetchMock.mock.calls.length).toBe(callsAfterFirstRefresh + 2);
   });
 
   it('no token: fetchBookings returns early without making network calls', async () => {

@@ -20,7 +20,7 @@ app.use(
       // Security is enforced by route-level credentials (admin JWT / manage token), not origin-checking.
       return origin.startsWith('https://') ? origin : null;
     },
-    allowHeaders: ['Content-Type', 'Authorization'],
+    allowHeaders: ['Content-Type', 'Authorization', 'X-Admin-Key'],
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     exposeHeaders: ['Content-Length'],
     maxAge: 600,

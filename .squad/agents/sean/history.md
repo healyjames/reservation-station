@@ -55,3 +55,23 @@ Backend Dev on the Maximum Bookings project. Owns the Hono API, D1 schema/migrat
 - Validation uses regex `/^\d{4}-\d{2}$/`; invalid format returns 400.
 - Filter uses a LIKE query on the date column; results are ORDER BY for consistent ordering.
 - 3 backend tests added to `test/admin.spec.ts`; Neela added a further 3 covering empty-result month, `?month` precedence over `?date`, and tenant isolation.
+
+### Tenant onboarding backend decision (2026-07-07)
+
+- Existing `superAdminAuth`, `SUPER_ADMIN_KEY`, and `POST /api/tenants` are the right primitives for tenant onboarding.
+- Coordinator route-location decision: extend `POST /api/tenants`, not `/api/admin/tenants`, because `/api/admin/*` is tenant-scoped JWT admin space.
+- Implementation should fill missing tenant fields, create first admin/opening-hours as needed, use prepared statements plus D1 `db.batch()`, and retire production use of `scripts/seed-admin.ts` as a direct SQL writer.
+
+## Learnings
+
+### Tenant onboarding validation handoff (2026-07-07)
+
+- Neela approved the final nested onboarding contract with 30 isolated `test/tenants.spec.ts` tests passing.
+- The implementation contract in `documentation/tenant-onboarding-runbook.md` is now the operator reference for secure onboarding.
+
+### Tenant onboarding implementation (2026-07-07)
+
+- Final onboarding contract is nested: `{ tenant: CreateTenantSchema fields, admin: { email, password }, opening_hours? }`; admin passwords require at least 12 characters.
+- `POST /api/tenants` is now the super-admin onboarding operation and replaces tenant-only creation.
+- New tenants are created with tenant row, first admin user, and seven opening-hours rows in one D1 `batch()` transaction; omitted opening hours default to closed.
+- `scripts/seed-admin.ts` has been removed in favour of the protected API plus `documentation/tenant-onboarding-runbook.md`.
