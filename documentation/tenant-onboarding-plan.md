@@ -90,7 +90,7 @@ A script is acceptable only as a thin local caller, not as the thing that writes
 
 - Add a Zod schema for the endpoint payload, e.g. `CreateTenantWithAdminSchema`:
   - `tenant`: reuse `CreateTenantSchema`.
-  - `admin`: `{ email: z.email(), password: z.string().min(12) }`.
+  - `admin`: `{ email: z.email(), password: z.string().min(8) }`.
 - Prefer a nested payload over flattening so tenant fields and admin fields cannot collide.
 - Do not log raw request bodies or passwords.
 - Return only safe output: tenant id/code/name and admin email. Never return `password_hash`.

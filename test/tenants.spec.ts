@@ -563,11 +563,11 @@ describe('POST /api/tenants', () => {
     await expectNoOnboardingRows();
   });
 
-  it('returns 400 and creates nothing when admin.password is shorter than 12 characters', async () => {
+  it('returns 400 and creates nothing when admin.password is shorter than 8 characters', async () => {
     const res = await exports.default.fetch('http://localhost/api/tenants', {
       method: 'POST',
       headers: onboardingHeaders(),
-      body: JSON.stringify(onboardingBody('short-admin-password', { admin: { password: 'short-pass' } })),
+      body: JSON.stringify(onboardingBody('short-admin-password', { admin: { password: 'short' } })),
     });
     const body = (await res.json()) as any;
 
