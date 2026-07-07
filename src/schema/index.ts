@@ -138,7 +138,7 @@ export type OpeningHoursEntry = z.infer<typeof OpeningHoursEntrySchema>;
 
 const CreateAdminUserSchema = z.object({
   email: z.email(),
-  password: z.string().min(12),
+  password: z.string().min(8),
 });
 
 const OnboardingOpeningHoursSchema = UpsertOpeningHoursSchema.superRefine((rows, ctx) => {
