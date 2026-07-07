@@ -1,5 +1,7 @@
 # Business Logic: Reservation Capacity
 
+> **Data first.** This project is data-focused — the capacity rules below only make sense in terms of the underlying objects. For the definition of every object (`Tenant`, `Reservation`, the embedded customer, `AdminUser`, `BlockedDate`, `OpeningHours`), their columns, keys, and relationships, read [`documentation/DATA_MODEL.md`](documentation/DATA_MODEL.md). Fields referenced throughout this file (`max_covers`, `max_guests`, `concurrent_guests_time_limit`, `reservation_date`, `reservation_time`, `guests`, etc.) are all defined there.
+
 ## Rolling Occupancy Model
 
 Maximum Bookings uses a **rolling occupancy model** to manage venue capacity. Capacity is a *concurrent* constraint, not a daily total.

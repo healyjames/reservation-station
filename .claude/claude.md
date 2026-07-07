@@ -18,6 +18,16 @@ Please make sure you read the package.json to understand what technology we are 
 
 Before commencing a session, always read `BUSINESS_LOGIC.md` file and retain the information as context. Any changes to business logic in the code must be reflected in that file.
 
+# Data First
+
+**This is a data-focused project. Nothing works if the data doesn't.** The data model is the foundation — every feature, endpoint, and UI is a projection of the underlying objects (`Tenant`, `Reservation` with its embedded customer, `AdminUser`, `BlockedDate`, `OpeningHours`).
+
+- The source of truth for the data model is `documentation/DATA_MODEL.md`. Read it at the start of any session and treat it as canonical for what we store and why.
+- **Preserving data structure and integrity is the top priority.** Foreign keys, unique constraints, cascade rules, and the tenant scoping must be respected in every change. Do not weaken or bypass them.
+- The physical schema (`db/schema.sql`), the migrations (`migrations/`), and the Zod validation schemas (`src/schema/index.ts`) must always agree. A change to any column, enum, or constraint must be reflected across all three **and** in `documentation/DATA_MODEL.md`, in the same change.
+- Never edit an already-applied migration — add a new one and update `db/schema.sql` to match the end-state.
+- When considering any feature, reason about the data first: what objects and columns does it touch, and does it keep the model consistent?
+
 # Coding guidelines
 
 Code should be self-documenting. Please avoid leaving comments in code unless they are needed to understand the code. Examples of appriate comments are explaining regex that isn't instantly understandable, or explaining imports from a third party like the fonts loaded through an adobe stylesheet.
