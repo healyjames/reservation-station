@@ -49,13 +49,6 @@ CREATE TABLE AdminUsers (
     FOREIGN KEY (tenant_id) REFERENCES Tenants(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_booking_tenant ON Reservations(tenant_id);
-CREATE INDEX idx_reservations_tenant_date ON Reservations(tenant_id, reservation_date);
-CREATE UNIQUE INDEX idx_reservations_unique_booking ON Reservations(tenant_id, email, reservation_date, reservation_time);
-CREATE UNIQUE INDEX idx_tenants_code ON Tenants(tenant_code);
-CREATE UNIQUE INDEX idx_admin_users_email ON AdminUsers(email);
-CREATE INDEX idx_admin_users_tenant ON AdminUsers(tenant_id);
-
 DROP TABLE IF EXISTS BlockedDates;
 
 CREATE TABLE BlockedDates (
@@ -68,8 +61,6 @@ CREATE TABLE BlockedDates (
     created_date TEXT DEFAULT (CURRENT_TIMESTAMP),
     FOREIGN KEY (tenant_id) REFERENCES Tenants(id) ON DELETE CASCADE
 );
-
-CREATE INDEX idx_blocked_dates_tenant_date ON BlockedDates(tenant_id, date);
 
 DROP TABLE IF EXISTS OpeningHours;
 
@@ -84,32 +75,11 @@ CREATE TABLE OpeningHours (
     FOREIGN KEY (tenant_id) REFERENCES Tenants(id) ON DELETE CASCADE
 );
 
-INSERT INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit, contact_email) VALUES
-('6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'The Red Cow',        'redcow',        6,  50,  'active', 120, 'info@redcownantwich.co.uk'),
-('59986b7d-a829-4315-9b49-f643ec83cf47', 'The Crown & Anchor', 'crownandanchor', 8,  80,  'active', 120, 'info@crownandanchor.co.uk'),
-('bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'The Oak Tavern',     'oaktavern',      10, 50, 'active', 120, 'info@theoaktavern.co.uk');
 
-INSERT INTO Reservations (id, tenant_id, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements, created_date, modified_date) VALUES
-('theredcow-1', '6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'John',     'Smith',   '7123456789', 'john.smith@email.com',      '2026-04-01', '18:00', 2, NULL,          '2026-04-01 18:45:39', '2026-04-01 18:45:39'),
-('theredcow-2', '6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'Emma',     'Brown',   '7234567890', 'emma.brown@email.com',      '2026-04-01', '19:00', 4, 'Vegetarian', '2026-04-01 18:45:39', '2026-04-01 18:45:39'),
-('theredcow-3', '6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'Liam',     'Jones',   '7345678901', 'liam.jones@email.com',      '2026-04-02', '20:00', 3, NULL,          '2026-04-01 18:45:39', '2026-04-01 18:45:39'),
-('theredcow-4', '6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'Olivia',   'Taylor',  '7456789012', 'olivia.taylor@email.com',   '2026-04-03', '17:30', 5, 'Gluten-free','2026-04-01 18:45:39', '2026-04-01 18:45:39'),
-('theredcow-5', '6a95f5ed-9f85-4675-97c8-3bcd4ce41a4d', 'Noah',     'Wilson',  '7567890123', 'noah.wilson@email.com',     '2026-04-04', '18:45', 2, NULL,          '2026-04-01 18:45:39', '2026-04-01 18:45:39'),
-('thecrownandanchor-1', '59986b7d-a829-4315-9b49-f643ec83cf47', 'Ava',      'Davies',  '7678901234', 'ava.davies@email.com',      '2026-04-01', '18:30', 6, NULL,          '2026-04-01 18:45:56', '2026-04-01 18:45:56'),
-('thecrownandanchor-2', '59986b7d-a829-4315-9b49-f643ec83cf47', 'Ethan',    'Evans',   '7789012345', 'ethan.evans@email.com',     '2026-04-01', '19:15', 2, 'Vegan',      '2026-04-01 18:45:56', '2026-04-01 18:45:56'),
-('thecrownandanchor-3', '59986b7d-a829-4315-9b49-f643ec83cf47', 'Sophia',   'Thomas',  '7890123456', 'sophia.thomas@email.com',   '2026-04-02', '20:30', 4, NULL,          '2026-04-01 18:45:56', '2026-04-01 18:45:56'),
-('thecrownandanchor-4', '59986b7d-a829-4315-9b49-f643ec83cf47', 'Mason',    'Roberts', '7901234567', 'mason.roberts@email.com',   '2026-04-03', '17:00', 3, NULL,          '2026-04-01 18:45:56', '2026-04-01 18:45:56'),
-('thecrownandanchor-5', '59986b7d-a829-4315-9b49-f643ec83cf47', 'Isabella', 'Walker',  '7012345678', 'isabella.walker@email.com', '2026-04-04', '21:00', 5, 'Nut allergy','2026-04-01 18:45:56', '2026-04-01 18:45:56'),
-('theoakandtavern-1',   'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'James',    'Hall',    '7111111111', 'james.hall@email.com',      '2026-04-01', '18:00', 7, NULL,          '2026-04-01 18:46:08', '2026-04-01 18:46:08'),
-('theoakandtavern-2',   'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Mia',      'Allen',   '7222222222', 'mia.allen@email.com',       '2026-04-01', '19:45', 2, 'Vegetarian', '2026-04-01 18:46:08', '2026-04-01 18:46:08'),
-('theoakandtavern-3',   'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Benjamin', 'Young',   '7333333333', 'ben.young@email.com',       '2026-04-02', '20:15', 6, NULL,          '2026-04-01 18:46:08', '2026-04-01 18:46:08'),
-('theoakandtavern-4',   'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Charlotte','King',    '7444444444', 'charlotte.king@email.com',  '2026-04-03', '18:30', 4, 'Dairy-free', '2026-04-01 18:46:08', '2026-04-01 18:46:08'),
-('theoakandtavern-5',   'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Lucas',    'Scott',   '7555555555', 'lucas.scott@email.com',     '2026-04-04', '19:00', 3, NULL,          '2026-04-01 18:46:08', '2026-04-01 18:46:08'),
--- Oak Tavern concurrent capacity test scenario (2027-06-15)
--- max_guests=10 concurrent within 120-min window
--- Lunch cluster: 13:00(4) + 13:30(4) = 8 concurrent - one more big group would tip it
--- Adding ≥3 guests to any slot within 120 min of 13:00-13:30 would exceed limit
-('theoaktavern-test-1', 'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Grace',  'Taylor', '7600000001', 'grace.taylor@test.com',  '2027-06-15', '13:00', 4, NULL, '2026-04-05 07:00:00', '2026-04-05 07:00:00'),
-('theoaktavern-test-2', 'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Henry',  'Evans',  '7600000002', 'henry.evans@test.com',   '2027-06-15', '13:30', 4, NULL, '2026-04-05 07:00:00', '2026-04-05 07:00:00'),
-('theoaktavern-test-3', 'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Isabel', 'Brown',  '7600000003', 'isabel.brown@test.com',  '2027-06-15', '19:00', 3, NULL, '2026-04-05 07:00:00', '2026-04-05 07:00:00'),
-('theoaktavern-test-4', 'bac4bf8d-f05a-47b8-aab9-f1dc3710fb72', 'Jack',   'Wilson', '7600000004', 'jack.wilson@test.com',   '2027-06-15', '20:00', 2, NULL, '2026-04-05 07:00:00', '2026-04-05 07:00:00');
+CREATE INDEX idx_booking_tenant ON Reservations(tenant_id);
+CREATE INDEX idx_reservations_tenant_date ON Reservations(tenant_id, reservation_date);
+CREATE INDEX idx_blocked_dates_tenant_date ON BlockedDates(tenant_id, date);
+CREATE INDEX idx_admin_users_tenant ON AdminUsers(tenant_id);
+CREATE UNIQUE INDEX idx_reservations_unique_booking ON Reservations(tenant_id, email, reservation_date, reservation_time);
+CREATE UNIQUE INDEX idx_tenants_code ON Tenants(tenant_code);
+CREATE UNIQUE INDEX idx_admin_users_email ON AdminUsers(email);
