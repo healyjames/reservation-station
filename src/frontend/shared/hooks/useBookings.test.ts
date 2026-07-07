@@ -388,6 +388,41 @@ describe('useBookings', () => {
     expect(result.current.isDayBlocked.value).toBe(true);
   });
 
+  it('refreshMonth is rate limited: a second call within the 3-minute cooldown fires no requests, then works again after it elapses', async () => {
+    const { result } = await renderLoadedHook({
+      reservations: [makeReservation()],
+      blockedRows: [],
+    });
+
+    adminFetchMock.mockResolvedValueOnce(makeResponse([makeReservation()])).mockResolvedValueOnce(makeResponse([]));
+
+    await act(async () => {
+      await result.current.refreshMonth();
+    });
+
+    expect(adminFetchMock).toHaveBeenCalledTimes(2);
+
+    adminFetchMock.mockClear();
+
+    vi.advanceTimersByTime(3 * 60 * 1000 - 1);
+
+    await act(async () => {
+      await result.current.refreshMonth();
+    });
+
+    expect(adminFetchMock).not.toHaveBeenCalled();
+
+    adminFetchMock.mockResolvedValueOnce(makeResponse([makeReservation()])).mockResolvedValueOnce(makeResponse([]));
+
+    vi.advanceTimersByTime(1);
+
+    await act(async () => {
+      await result.current.refreshMonth();
+    });
+
+    expect(adminFetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it('no token: fetchBookings returns early without making network calls', async () => {
     const { result } = renderHook(() => useBookings(() => null));
 

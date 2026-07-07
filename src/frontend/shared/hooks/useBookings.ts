@@ -5,6 +5,8 @@ import type { Reservation } from '@shared/types';
 import { adminFetch } from '@shared/utils/adminFetch';
 import { padTwo } from '@shared/utils/dates';
 
+const REFRESH_COOLDOWN_MS = 1 * 60 * 1000;
+
 type AdminBlockedDateRow = {
   id: string;
   date: string;
@@ -45,6 +47,7 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
   const isBlockLoading = useSignal(false);
   const monthCache = useSignal<Map<string, MonthCacheEntry>>(new Map());
   const inFlightMonthKey = useSignal<string | null>(null);
+  const lastRefreshAt = useSignal(0);
 
   function monthKeyFromDate(date: Date): string {
     return `${date.getFullYear()}-${padTwo(date.getMonth() + 1)}`;
@@ -292,6 +295,11 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
   }
 
   async function refreshMonth(): Promise<void> {
+    const now = Date.now();
+    if (now - lastRefreshAt.value < REFRESH_COOLDOWN_MS) {
+      return;
+    }
+    lastRefreshAt.value = now;
     monthCache.value = new Map();
     await loadMonth(currentDate.value, true);
   }
