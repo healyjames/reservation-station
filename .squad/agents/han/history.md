@@ -59,3 +59,14 @@ Lead on the Maximum Bookings project. Restaurant booking system built on Cloudfl
 - Recommended protected backend onboarding over a first-client super-user dashboard.
 - Coordinator route-location decision: extend existing super-admin-gated `POST /api/tenants`; do not add `/api/admin/tenants` because `/api/admin/*` remains tenant-scoped JWT admin space.
 - Onboarding implementation should atomically create tenant + first admin with D1 `db.batch()` and retire production use of `scripts/seed-admin.ts` as a direct SQL writer.
+
+### Date-specific opening hours analysis (2026-07-08)
+
+- Key files: `src/routes/availability.ts` (blocked-times/blocked-dates resolution), `src/routes/reservations.ts` (POST creation guards), `src/schema/index.ts` (BlockedDateSchema, UpsertOpeningHoursSchema), `db/schema.sql`, `migrations/0005_opening_hours.sql`.
+- **Critical finding:** There is NO recurrence concept in `BlockedDates`. "Closed every Monday" = a single `OpeningHours(day_of_week=1, is_closed=1)` row. There are no per-date rows for recurring closures. Unblocking one Monday must be additive — a new override row — and must never touch `OpeningHours`.
+- **Chosen approach:** New `DateOverrides` table keyed `UNIQUE(tenant_id, date)` with `is_closed, open_time, close_time, reason`. A single COALESCE LEFT JOIN query resolves `DateOverrides` → `OpeningHours(DOW)` → default. One unifying concept handles special hours, full-closure overrides, and DOW unblocks.
+- **Precedence rule:** `BlockedDates(full-day admin)` > `DateOverrides` > `OpeningHours(DOW)` > default.
+- **SQL pattern:** `LEFT JOIN DateOverrides do ON do.tenant_id=? AND do.date=? LEFT JOIN OpeningHours oh ON oh.tenant_id=? AND oh.day_of_week=?` with `COALESCE(do.is_closed, oh.is_closed, 0)` etc.
+- **blocked-dates month loop** (in `availability.ts`): needs one extra D1 query per call to fetch `DateOverrides` for the month; JS loop applies override map before falling back to DOW set.
+- **Migration:** `migrations/0011_date_overrides.sql`.
+- **Plan:** `documentation/date-specific-opening-hours-plan.md`.

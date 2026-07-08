@@ -61,3 +61,8 @@ Frontend Dev on the Maximum Bookings project. Owns the public widget, manage-boo
 
 - `BlockedDatesSettings.tsx` now treats the first clicked day as the range intent: starting on a blocked day previews and performs range unblocking, starting on an open day previews and performs range blocking.
 - The admin calendar preview uses red range styling for unblock mode so range intent stays visible before the second click.
+
+### DateOverrides — pending widget check (2026-07-08)
+
+- Han produced `documentation/date-specific-opening-hours-plan.md` introducing a `DateOverrides` table that can mark a date as closed OR re-open a normally-closed weekday.
+- Twinkie's pending item: verify that the `closed_dates` signal in `useAvailability` and `useManageBooking` correctly reflects DateOverrides-driven closures and re-openings once Sean ships the backend. A DateOverrides re-opening should remove a date from the `closed_dates` set even if its `OpeningHours(DOW)` row marks it closed.

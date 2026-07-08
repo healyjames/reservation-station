@@ -226,6 +226,38 @@ Coverage added in `test/tenants.spec.ts` for the repurposed `POST /api/tenants` 
 
 Validation: `npx vitest run test\tenants.spec.ts --reporter=dot` passes with 30 tests passing in 1 file.
 
+### 2026-07-08T08:53:35Z: DateOverrides table for date-specific opening hours
+**By:** Han (Technical Lead)
+**Source:** `.squad/decisions/inbox/han-date-specific-opening-hours.md`
+
+New table: **`DateOverrides`** — one row per `(tenant_id, date)` with `UNIQUE(tenant_id, date)`.
+
+```sql
+CREATE TABLE DateOverrides (
+    id           TEXT    PRIMARY KEY NOT NULL,
+    tenant_id    TEXT    NOT NULL,
+    date         TEXT    NOT NULL,
+    is_closed    INTEGER NOT NULL DEFAULT 0 CHECK (is_closed IN (0, 1)),
+    open_time    TEXT,
+    close_time   TEXT,
+    reason       TEXT,
+    created_date TEXT    DEFAULT (CURRENT_TIMESTAMP),
+    UNIQUE (tenant_id, date),
+    FOREIGN KEY (tenant_id) REFERENCES Tenants(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_date_overrides_tenant_date ON DateOverrides(tenant_id, date);
+```
+
+Handles all four scenarios (special hours, full closure, DOW unblock, re-close normally-open day) with one concept. Resolution precedence:
+
+```
+BlockedDates(start_time IS NULL)  →  DateOverrides(exact date)  →  OpeningHours(day_of_week)  →  default
+```
+
+COALESCE LEFT JOIN pattern replaces the existing two-step `OpeningHours` lookup in `availability.ts` and `reservations.ts`. There is no recurrence concept in `BlockedDates` — "closed every Monday" is an `OpeningHours(day_of_week=1, is_closed=1)` row. Unblocking one Monday must be purely additive via a `DateOverride` row and must never mutate `OpeningHours`.
+
+Migration: `0011_date_overrides.sql`. Owners: Sean (backend), Twinkie (widget check), Neela (15 test cases).
+
 ## Directives
 ### 2026-05-23T07-31-02: User directive
 **By:** James Healy (via Copilot)

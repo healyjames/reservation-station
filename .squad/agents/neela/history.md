@@ -61,3 +61,9 @@ Tester on the Maximum Bookings project. Owns Vitest coverage, black-box behaviou
 
 - `POST /api/tenants` now owns platform onboarding coverage: nested tenant/admin payloads, default closed opening hours, provided opening hours, admin login verification, duplicate uniqueness atomicity, and invalid-payload no-write assertions.
 - Targeted Cloudflare D1 Vitest runs may need the tenants spec to bootstrap its schema before clearing rows so isolated runs do not fail with missing tables.
+
+### DateOverrides — 15 test cases pending (2026-07-08)
+
+- Han produced `documentation/date-specific-opening-hours-plan.md` specifying 15 test cases for the new `DateOverrides` feature.
+- Neela's pending items: write test coverage for the four override scenarios (special hours, full-closure override, DOW unblock, re-close normally-open day), COALESCE precedence ordering (DateOverrides wins over DOW, BlockedDates wins over DateOverrides), and edge cases (no override row falls back to DOW, override with is_closed=1 on normally-open day, partial-hours override where only open_time is set).
+- Tests live in the existing suite alongside `availability.ts` and `reservations.ts` contract coverage.

@@ -69,6 +69,12 @@ Backend Dev on the Maximum Bookings project. Owns the Hono API, D1 schema/migrat
 - Neela approved the final nested onboarding contract with 30 isolated `test/tenants.spec.ts` tests passing.
 - The implementation contract in `documentation/tenant-onboarding-runbook.md` is now the operator reference for secure onboarding.
 
+### DateOverrides — pending work (2026-07-08)
+
+- Han produced `documentation/date-specific-opening-hours-plan.md` and the decision record for a new `DateOverrides` table.
+- Sean's pending items: write migration `0011_date_overrides.sql`, add schema types, rewrite the two-step `OpeningHours` lookup in `availability.ts` and `reservations.ts` to the COALESCE LEFT JOIN pattern, and add admin CRUD endpoints for DateOverrides rows.
+- Key rule: `BlockedDates` admin blocks always win; `DateOverrides` beats `OpeningHours(DOW)`; unblocking a normally-closed weekday is purely additive via a DateOverride row — never mutate `OpeningHours`.
+
 ### Tenant onboarding implementation (2026-07-07)
 
 - Final onboarding contract is nested: `{ tenant: CreateTenantSchema fields, admin: { email, password }, opening_hours? }`; admin passwords require at least 12 characters.
