@@ -13,6 +13,7 @@ export async function sendEmail(env: ResendEnv, message: SendEmailRequest): Prom
       ...(message.reply_to ? { reply_to: message.reply_to } : {}),
       subject: message.subject,
       html: message.html,
+      ...(message.attachments?.length ? { attachments: message.attachments } : {}),
     }),
   });
 

@@ -1,28 +1,14 @@
-/**
- * CSV-driven migration notifier (no production DB reads).
- *
- * Ground-truth inputs:
- *   - export.csv   : the 14 prod rows (id, first_name, surname, email, reservation_date,
- *                    reservation_time, guests, token_status) exported from production.
- *   - Red Cow.csv  : original Dojo export, used only to recover dietary/notes (Comments Consumer)
- *                    matched by email.
- *
- * Tokens are deterministic: token = HMAC-SHA256(JWT_SECRET, "manage:{id}:{email}"),
- * hash = SHA-256(token). Same as src/utils/manageToken.ts.
- *
- * MODES
- *   (default)            Generate db/prod-migration-backfill.sql (14 UPDATEs) and print the
- *                        14 manage URLs. No emails, no DB access.
- *   --parity <id>        Print ONE row's UPDATE statement + live URL to click (parity check).
- *   --send               Send migration emails via Resend to the real customers.
- *   --dry-run            With --send: list who would be emailed; send nothing.
- *
- * FLAGS
- *   --base-url <url>     Link base (default: PUBLIC_URL from .env).
- *   --only <email>       Restrict --send to a single recipient (extra safety).
- *
- * Config from .env: JWT_SECRET, RESEND_API_KEY, PUBLIC_URL.
- */
+// CSV-driven migration notifier (no production DB reads).
+// See BUSINESS_LOGIC.md › "CSV Booking Migration" and
+// documentation/csv-booking-migration-runbook.md for the full process and rationale.
+//
+// Inputs (repo root): export.csv (ground-truth prod rows) + Red Cow.csv (dietary notes by email).
+// Modes:
+//   (default)                            write db/prod-migration-backfill.sql + print manage URLs
+//   --parity <id>                        print one row's UPDATE + live URL (JWT_SECRET parity check)
+//   --send [--dry-run] [--only <email>]  email the migration notice via Resend
+//   --base-url <url>                     link base (default: PUBLIC_URL from .env)
+// Config from .env: JWT_SECRET, RESEND_API_KEY, PUBLIC_URL.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash, createHmac } from 'node:crypto';
 import { fileURLToPath } from 'node:url';

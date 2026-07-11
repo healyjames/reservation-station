@@ -14,12 +14,18 @@ export type EmailTemplate = {
   html: string;
 }
 
+export type EmailAttachment = {
+  filename: string;
+  content: string; // Base64-encoded file content
+}
+
 export type SendEmailRequest = {
   to: string;
   from: string;
   reply_to?: string;
   subject: string;
   html: string;
+  attachments?: EmailAttachment[];
 }
 
 export type ReservationEmailContext = {
