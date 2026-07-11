@@ -250,3 +250,55 @@ When a customer amends their email address, the manage token is regenerated and 
 **`src/frontend/shared/types/tenant.ts` — `TenantConfig`**
 
 The `contact_email` field is only present when `TenantConfig` is loaded via admin-authenticated endpoints (e.g. `GET /api/admin/me`). It is intentionally absent from the public `GET /api/tenants/:id` widget endpoint to prevent PII exposure.
+
+---
+
+## Monthly Database Export (Cron)
+
+**`src/cron/monthly-export.ts`** — `runMonthlyExport`, invoked by the `scheduled` handler in **`src/index.ts`**.
+
+A [Cron Trigger](https://developers.cloudflare.com/workers/configuration/cron-triggers/) runs the Worker on a schedule (configured in `wrangler.jsonc` under `triggers.crons`; **times are UTC**). The default `"0 8 1 * *"` fires at 08:00 UTC on the 1st of every month.
+
+On each run it:
+1. Discovers every user table dynamically from `sqlite_master` (excludes `sqlite_%`, `_cf_%`, `d1_%`), so new tables are included automatically.
+2. Dumps each table to its own CSV (one attachment per table) and emails them via Resend to `REPORT_RECIPIENT`.
+3. Redacts sensitive columns (`password_hash`) — the value is replaced with `[redacted]` while the column is still listed.
+
+Because the Worker also serves HTTP, `src/index.ts` exports an object with **both** `fetch` (delegating to the Hono app) and `scheduled`. The export runs inside `ctx.waitUntil(...)` so the Worker stays alive until the email is sent.
+
+**Configuration** (set in `.env` for local dev, or the Cloudflare dashboard for production):
+
+| Var | Meaning |
+|---|---|
+| `REPORT_RECIPIENT` | Where the export is emailed. |
+| `REPORT_SENDER` | `from` address — **must** be on a Resend-verified domain. |
+| `RESEND_API_KEY` | Resend API key (secret). |
+
+If `REPORT_RECIPIENT` / `REPORT_SENDER` / `RESEND_API_KEY` are unset, the run logs a warning and skips — it never throws. Test locally with `npx wrangler dev --test-scheduled`.
+
+---
+
+## CSV Booking Migration
+
+**`scripts/prepare-migration-from-csv.ts`** — CSV-driven migration notifier (no production DB reads).
+
+Used to import a third-party booking export (e.g. Dojo) and notify those customers that their booking has moved. The full end-to-end process — column mapping, transforms, timezone handling, capacity notes, and safety gates — is documented in [`documentation/csv-booking-migration-runbook.md`](documentation/csv-booking-migration-runbook.md).
+
+Manage links are backed by a deterministic token so re-runs are idempotent:
+
+```
+token = HMAC-SHA256(JWT_SECRET, "manage:{reservationId}:{lowercased-email}")   // hex
+hash  = SHA-256(token)                                                          // stored in Reservations.manage_token_hash
+```
+
+This matches `src/utils/manageToken.ts` exactly. The link carries the plaintext token; the DB stores only the hash. Imported rows start with `manage_token_hash = NULL` (dead links) until backfilled.
+
+**Modes:**
+- *(default)* — generate `db/prod-migration-backfill.sql` (one `UPDATE` per row) and print the manage URLs. No DB access, no email.
+- `--parity <id>` — print one row's `UPDATE` + live URL to click. Confirms production `JWT_SECRET` parity **before** anything irreversible; if the link doesn't validate, all links would be dead.
+- `--send [--dry-run] [--only <email>]` — email the migration notice via Resend (`--dry-run` lists recipients without sending).
+
+Inputs are `export.csv` (ground-truth prod rows) and the original CSV (for dietary notes). Config from `.env`: `JWT_SECRET`, `RESEND_API_KEY`, `PUBLIC_URL`. The migration email template is `src/emails/customer-migration.ts`.
+
+> **Note:** `scripts/send-migration-emails.ts` is an alternative D1-driven runner (local preview/test/backfill/send). Prefer the CSV-driven script for production — it performs no prod reads.
+

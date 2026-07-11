@@ -55,6 +55,19 @@
     // Must be set in the Cloudflare dashboard for production deployments.
     // Set PUBLIC_URL=https://yourdomain.com in the Cloudflare dashboard, or in .env for local dev.
     "PUBLIC_URL": "",
+    // Monthly database export (cron). Set these in the dashboard for prod, or .env for local dev.
+    // REPORT_SENDER MUST be an address on a Resend-verified domain.
+    "REPORT_RECIPIENT": "",
+    "REPORT_SENDER": "",
+  },
+  /**
+   * Cron Triggers
+   * https://developers.cloudflare.com/workers/configuration/cron-triggers/
+   * Managed exclusively here (not the dashboard). Times are UTC.
+   * "0 8 1 * *" = 08:00 UTC on the 1st of every month.
+   */
+  "triggers": {
+    "crons": ["0 8 1 * *"],
   },
   /**
    * D1 Databases (see binding above)

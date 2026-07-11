@@ -8,4 +8,6 @@ interface Env {
   SUPER_ADMIN_KEY: string;
   ENVIRONMENT?: string;
   PUBLIC_URL?: string;
+  REPORT_RECIPIENT?: string;
+  REPORT_SENDER?: string;
 }
