@@ -5,7 +5,7 @@
 Lead on the Maximum Bookings project. Restaurant booking system built on Cloudflare Workers + Pages, D1, Hono, vanilla JS widget.
 
 **User:** James Healy
-**Team:** Han (Lead), Sean (Backend), Twinkie (Frontend), Neela (Tester), Scribe, Ralph
+**Team:** Han (Lead), Sean (Backend), Twinkie (Frontend), Neela (Tester), Scribe
 
 ## Learnings
 

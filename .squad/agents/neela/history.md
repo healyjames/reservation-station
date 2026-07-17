@@ -5,7 +5,7 @@
 Tester on the Maximum Bookings project. Owns Vitest coverage, black-box behavioural assertions, and implementation reviews from a quality perspective.
 
 **User:** James Healy
-**Team:** Han (Lead), Sean (Backend), Twinkie (Frontend), Neela (Tester), Scribe, Ralph
+**Team:** Han (Lead), Sean (Backend), Twinkie (Frontend), Neela (Tester), Scribe
 
 ## Key File Paths
 

@@ -5,7 +5,7 @@
 Frontend Dev on the Maximum Bookings project. Owns the public widget, manage-booking flow, admin UI surface work, and shared Preact runtime boundaries.
 
 **User:** James Healy
-**Team:** Han (Lead), Sean (Backend), Twinkie (Frontend), Neela (Tester), Scribe, Ralph
+**Team:** Han (Lead), Sean (Backend), Twinkie (Frontend), Neela (Tester), Scribe
 
 ### Stable Conventions
 

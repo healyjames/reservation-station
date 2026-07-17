@@ -21,7 +21,6 @@ How to decide who handles what.
 | Code review | Han | Review PRs, check quality, suggest improvements |
 | Testing | Neela | Write tests, find edge cases, verify fixes |
 | Scope & priorities | Han | What to build next, trade-offs, decisions |
-| Work queue, backlog, session continuity | Ralph | What to pick up next, what's blocked |
 
 ## Issue Routing
 

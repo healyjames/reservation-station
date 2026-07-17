@@ -5,7 +5,7 @@
 Backend Dev on the Maximum Bookings project. Owns the Hono API, D1 schema/migrations, and Cloudflare Workers runtime configuration.
 
 **User:** James Healy
-**Team:** Han (Lead), Sean (Backend), Twinkie (Frontend), Neela (Tester), Scribe, Ralph
+**Team:** Han (Lead), Sean (Backend), Twinkie (Frontend), Neela (Tester), Scribe
 
 ## Key File Paths
 
