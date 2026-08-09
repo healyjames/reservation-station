@@ -12,6 +12,7 @@ function makeTenant(overrides: Partial<TenantConfig> = {}): TenantConfig {
     max_covers: 40,
     status: 'active',
     concurrent_guests_time_limit: 120,
+    booking_delay_minutes: 0,
     opening_hours: null,
     ...overrides,
   };
@@ -92,10 +93,17 @@ describe('getEarliestTodaySlot', () => {
     vi.setSystemTime(new Date('2024-01-08T18:20:00'));
     expect(getEarliestTodaySlot()).toBe('19:00');
   });
+
+  it('applies a custom lead time (90 min from 18:00 → 19:30)', () => {
+    vi.setSystemTime(new Date('2024-01-08T18:00:00'));
+    expect(getEarliestTodaySlot(90)).toBe('19:30');
+  });
 });
 
 describe('getAvailableSlots', () => {
   const monday: CalendarDate = { year: 2024, month: 0, day: 8 };
+
+  afterEach(() => vi.useRealTimers());
 
   it('excludes blocked times', () => {
     const tenant = makeTenant({
@@ -103,5 +111,27 @@ describe('getAvailableSlots', () => {
     });
     const slots = getAvailableSlots(monday, tenant, ['18:00']);
     expect(slots).toEqual(['18:30']);
+  });
+
+  it('filters out today slots within the booking delay window', () => {
+    // "Today" is 2024-01-08 at 18:00; delay of 90 min blocks anything before 19:30.
+    vi.setSystemTime(new Date('2024-01-08T18:00:00'));
+    const tenant = makeTenant({
+      booking_delay_minutes: 90,
+      opening_hours: [{ id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed: false, open_time: '18:00', close_time: '21:00' }],
+    });
+    const slots = getAvailableSlots(monday, tenant, []);
+    expect(slots).toEqual(['19:30', '20:00', '20:30']);
+  });
+
+  it('does not apply the booking delay to future dates', () => {
+    vi.setSystemTime(new Date('2024-01-08T18:00:00'));
+    const tuesday: CalendarDate = { year: 2024, month: 0, day: 9 };
+    const tenant = makeTenant({
+      booking_delay_minutes: 180,
+      opening_hours: [{ id: '1', tenant_id: 'test-id', day_of_week: 2, is_closed: false, open_time: '18:00', close_time: '19:00' }],
+    });
+    const slots = getAvailableSlots(tuesday, tenant, []);
+    expect(slots).toEqual(['18:00', '18:30']);
   });
 });

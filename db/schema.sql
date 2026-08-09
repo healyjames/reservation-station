@@ -8,6 +8,7 @@ CREATE TABLE Tenants (
     max_covers INTEGER NOT NULL DEFAULT 0,
     status TEXT NOT NULL CHECK (status IN ('active', 'cancelled')) DEFAULT 'active',
     concurrent_guests_time_limit INTEGER NOT NULL DEFAULT 120,
+    booking_delay_minutes INTEGER NOT NULL DEFAULT 0,
     contact_email TEXT NOT NULL DEFAULT '',
     created_date TEXT DEFAULT NULL,
     modified_date TEXT DEFAULT NULL

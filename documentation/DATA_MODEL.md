@@ -38,6 +38,7 @@ A restaurant/venue. The root object. Identified publicly by `tenant_code` (used 
 | `max_covers` | INTEGER | Max **concurrent** guests in the venue. `0` = unlimited. |
 | `status` | TEXT | `active` or `cancelled`. |
 | `concurrent_guests_time_limit` | INTEGER | Minutes each booking occupies capacity (default `120`). Defines the concurrency window. |
+| `booking_delay_minutes` | INTEGER | Lead-time delay in minutes (default `0`). Customers cannot book a time within this many minutes from now. `0` = no delay. Frontend-only constraint on the widget's time selector. |
 | `contact_email` | TEXT | Venue email for notifications. **PII** — never exposed on the public tenant endpoint. |
 | `created_date` | TEXT | Nullable timestamp. |
 | `modified_date` | TEXT | Nullable timestamp. Injected server-side on update. |

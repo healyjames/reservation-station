@@ -22,6 +22,8 @@ export type TenantConfig = {
   max_covers: number;
   status: TenantStatus;
   concurrent_guests_time_limit: number;
+  /** Minutes of lead time before which a customer cannot book (booking delay). `0` = no delay. */
+  booking_delay_minutes: number;
   contact_email?: string;
   created_date?: string;
   modified_date?: string;

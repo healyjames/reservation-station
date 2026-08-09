@@ -46,11 +46,11 @@ tenants.get('/:id', async (c) => {
 
   // Explicit column list — contact_email, created_date, modified_date are intentionally excluded
   // to avoid leaking PII to unauthenticated callers. Use GET /api/admin/me for admin access.
-  const publicColumns = 'id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit';
+  const publicColumns = 'id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit, booking_delay_minutes';
   const tenant = await c.env.maximum_bookings_db
     .prepare(isUuid ? `SELECT ${publicColumns} FROM Tenants WHERE id = ?` : `SELECT ${publicColumns} FROM Tenants WHERE tenant_code = ?`)
     .bind(id)
-    .first<Pick<Tenant, 'id' | 'name' | 'tenant_code' | 'max_guests' | 'max_covers' | 'status' | 'concurrent_guests_time_limit'>>();
+    .first<Pick<Tenant, 'id' | 'name' | 'tenant_code' | 'max_guests' | 'max_covers' | 'status' | 'concurrent_guests_time_limit' | 'booking_delay_minutes'>>();
 
   if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
 
@@ -85,8 +85,8 @@ tenants.post('/', superAdminAuth, async (c) => {
     await db.batch([
       db
         .prepare(
-          `INSERT INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit, contact_email, created_date, modified_date)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO Tenants (id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit, booking_delay_minutes, contact_email, created_date, modified_date)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           tenantId,
@@ -96,6 +96,7 @@ tenants.post('/', superAdminAuth, async (c) => {
           body.tenant.max_covers,
           body.tenant.status,
           body.tenant.concurrent_guests_time_limit,
+          body.tenant.booking_delay_minutes,
           body.tenant.contact_email,
           now,
           now,

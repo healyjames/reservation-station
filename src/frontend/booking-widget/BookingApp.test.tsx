@@ -25,6 +25,7 @@ function makeTenant(overrides: Partial<TenantConfig> = {}): TenantConfig {
     max_covers: 40,
     status: 'active',
     concurrent_guests_time_limit: 120,
+    booking_delay_minutes: 0,
     opening_hours: [
       { id: '1', tenant_id: 'tenant-debounce', day_of_week: 1, is_closed: false, open_time: '12:00', close_time: '22:00' },
       { id: '2', tenant_id: 'tenant-debounce', day_of_week: 2, is_closed: false, open_time: '12:00', close_time: '22:00' },

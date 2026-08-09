@@ -35,10 +35,10 @@ export function getSlotsForDate(date: CalendarDate, tenantConfig: TenantConfig |
   return generateTimeSlots(entry.open_time, entry.close_time);
 }
 
-export function getEarliestTodaySlot(): string {
+export function getEarliestTodaySlot(leadMinutes = 30): string {
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const thresholdMinutes = Math.ceil((currentMinutes + 30) / 30) * 30;
+  const thresholdMinutes = Math.ceil((currentMinutes + leadMinutes) / 30) * 30;
   const h = Math.floor(thresholdMinutes / 60);
   const m = thresholdMinutes % 60;
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
@@ -47,7 +47,10 @@ export function getEarliestTodaySlot(): string {
 export function getAvailableSlots(date: CalendarDate, tenantConfig: TenantConfig | null, blockedTimes: string[]): string[] {
   let slots = getSlotsForDate(date, tenantConfig).filter((s) => !blockedTimes.includes(s));
   if (isToday(date)) {
-    const earliest = getEarliestTodaySlot();
+    // Honour the tenant's booking delay (lead time). The value rides along on the already-cached
+    // tenant config, so this needs no extra API request. A 30-min minimum is always enforced.
+    const delay = tenantConfig?.booking_delay_minutes ?? 0;
+    const earliest = getEarliestTodaySlot(Math.max(30, delay));
     slots = slots.filter((s) => s >= earliest);
   }
   return slots;

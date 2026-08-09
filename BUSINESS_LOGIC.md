@@ -28,6 +28,26 @@ A booking occupies capacity for a fixed duration defined by `concurrent_guests_t
 
 ---
 
+## Booking Delay (Lead Time)
+
+A tenant can set a **booking delay** (`booking_delay_minutes`) to prevent last-minute bookings. Customers cannot select a time that falls within `booking_delay_minutes` of the current moment.
+
+| Field | Meaning | Where set |
+|---|---|---|
+| `booking_delay_minutes` | Minutes of lead time before the earliest bookable slot. `0` = no delay. Stored in minutes; the admin UI exposes it in hours (e.g. `1.5` hours → `90` minutes). | Admin › Settings › Booking delay (hours) |
+
+**Example:** with `booking_delay_minutes = 90`, at 18:00 the earliest selectable slot is 19:30 (next 30-minute boundary at/after now + 90 min).
+
+### Design & optimisation
+
+- **Frontend-only.** The delay only affects the **Time** selector in the booking widget. It is not enforced server-side because it is a soft UX constraint, not a capacity/integrity rule.
+- **No extra requests.** `booking_delay_minutes` is part of the public tenant config (`GET /api/tenants/:id`), which the widget already fetches once and caches (`Cache-Control: public, max-age=3600`). Since this value rarely changes, no additional API call is made when a date/time is chosen.
+- **Applies to "today" only.** The delay window is measured from *now*, so it can only remove slots on the current day. Future dates are unaffected.
+
+**Code reference:** `src/frontend/shared/utils/slots.ts` — `getAvailableSlots` calls `getEarliestTodaySlot(Math.max(30, booking_delay_minutes))` for today, keeping the existing 30-minute minimum lead as a floor.
+
+---
+
 ## Examples
 
 ### Example 1 — Full capacity blocks the window only
@@ -189,7 +209,7 @@ Called when a date is selected in the booking widget. Fetches `GET /api/blocked-
 
 **`src/frontend/shared/components/Admin/GeneralSettings.tsx`**
 
-The **Max capacity** field sets `max_covers`. The **Max party size (per booking)** field sets `max_guests`. Both accept `0` to mean unlimited.
+The **Max capacity** field sets `max_covers`. The **Max party size (per booking)** field sets `max_guests`. Both accept `0` to mean unlimited. The **Booking delay (hours)** field sets `booking_delay_minutes` (entered in hours, stored as minutes); `0` disables the delay.
 
 ---
 
@@ -205,7 +225,7 @@ In development (`ENVIRONMENT === 'development'`), all origins are allowed. In pr
 
 **`src/routes/tenants.ts` — `GET /api/tenants/:id`**
 
-The public tenant endpoint returns an explicit column allowlist: `id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit`. Fields such as `contact_email`, `created_date`, and `modified_date` are intentionally excluded to avoid leaking PII to unauthenticated callers. Use `GET /api/admin/me` for admin access to the full tenant record.
+The public tenant endpoint returns an explicit column allowlist: `id, name, tenant_code, max_guests, max_covers, status, concurrent_guests_time_limit, booking_delay_minutes`. Fields such as `contact_email`, `created_date`, and `modified_date` are intentionally excluded to avoid leaking PII to unauthenticated callers. Use `GET /api/admin/me` for admin access to the full tenant record.
 
 ---
 
