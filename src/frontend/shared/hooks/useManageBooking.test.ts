@@ -30,6 +30,7 @@ function makeTenant(overrides: Partial<TenantConfig> = {}): TenantConfig {
     max_covers: 40,
     status: 'active',
     concurrent_guests_time_limit: 120,
+    booking_delay_minutes: 0,
     opening_hours: null,
     ...overrides,
   };

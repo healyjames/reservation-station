@@ -18,6 +18,7 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
   const maxGuests = useSignal(0);
   const maxCovers = useSignal(0);
   const timeWindow = useSignal(0);
+  const bookingDelayMinutes = useSignal(0);
   const contactEmail = useSignal('');
   const isLoading = useSignal(true);
   const isSaving = useSignal(false);
@@ -39,6 +40,7 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
       maxGuests.value = tenant.max_guests ?? 0;
       maxCovers.value = tenant.max_covers ?? 0;
       timeWindow.value = tenant.concurrent_guests_time_limit ?? 0;
+      bookingDelayMinutes.value = tenant.booking_delay_minutes ?? 0;
       contactEmail.value = tenant.contact_email ?? '';
     } catch {
       errorMessage.value = 'Failed to load settings. Please refresh.';
@@ -57,6 +59,7 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
       max_guests: maxGuests.value,
       max_covers: maxCovers.value,
       concurrent_guests_time_limit: timeWindow.value,
+      booking_delay_minutes: bookingDelayMinutes.value,
       contact_email: contactEmail.value.trim(),
     };
     try {
@@ -148,6 +151,24 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             value={timeWindow.value}
             onInput={(e) => {
               timeWindow.value = parseInt((e.target as HTMLInputElement).value, 10) || 0;
+            }}
+          />
+        </FormField>
+        <FormField
+          label="Booking delay (hours)"
+          htmlFor="sf-booking-delay"
+          tooltip="Prevents last-minute bookings. Customers cannot book a time within this many hours from now. For example, 1.5 means the earliest bookable time is 90 minutes ahead. Set to 0 to disable."
+        >
+          <Input
+            type="number"
+            id="sf-booking-delay"
+            name="booking_delay_minutes"
+            min="0"
+            step="0.5"
+            value={bookingDelayMinutes.value / 60}
+            onInput={(e) => {
+              const hours = parseFloat((e.target as HTMLInputElement).value) || 0;
+              bookingDelayMinutes.value = Math.max(0, Math.round(hours * 60));
             }}
           />
         </FormField>

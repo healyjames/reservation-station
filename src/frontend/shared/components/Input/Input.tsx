@@ -12,6 +12,7 @@ type InputProps = {
   maxLength?: number;
   minLength?: number;
   min?: string | number;
+  step?: string | number;
   pattern?: string;
   title?: string;
   autocomplete?: string;
@@ -34,6 +35,7 @@ const Input: FunctionComponent<InputProps> = ({
   maxLength,
   minLength,
   min,
+  step,
   pattern,
   title,
   autocomplete,
@@ -56,6 +58,7 @@ const Input: FunctionComponent<InputProps> = ({
       maxLength={maxLength}
       minLength={minLength}
       min={min}
+      step={step}
       pattern={pattern}
       title={title}
       autocomplete={autocomplete}
