@@ -1,6 +1,6 @@
 import type { EmailTemplate, TenantReservationEmailData } from '../types';
 import { formatEmailDate } from '../utils/formatEmailDate';
-import { detailsTable, emailWrapper } from './helpers';
+import { detailsTable, emailWrapper, htmlToText } from './helpers';
 
 export function buildTenantConfirmationEmail(data: TenantReservationEmailData): EmailTemplate {
   const subject = `New booking: ${data.firstName} ${data.surname} — ${formatEmailDate(data.reservationDate)} at ${data.reservationTime}`;
@@ -18,5 +18,6 @@ export function buildTenantConfirmationEmail(data: TenantReservationEmailData): 
       ['Booking ID', data.reservationId],
     ], 180)}`;
 
-  return { subject, html: emailWrapper(data.tenantName, 'New Booking Received', body) };
+  const html = emailWrapper(data.tenantName, 'New Booking Received', body);
+  return { subject, html, text: htmlToText(html) };
 }

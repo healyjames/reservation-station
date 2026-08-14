@@ -5,13 +5,15 @@ export type ReservationWithTenant = Reservation & {
   contact_email: string;
 };
 
-export type ResendEnv = {
-  RESEND_API_KEY: string;
+export type EmailEnv = {
+  EMAIL: SendEmail;
+  EMAIL_FROM_ADDRESS: string;
 }
 
 export type EmailTemplate = {
   subject: string;
   html: string;
+  text?: string;
 }
 
 export type SendEmailRequest = {
@@ -20,6 +22,7 @@ export type SendEmailRequest = {
   reply_to?: string;
   subject: string;
   html: string;
+  text?: string;
 }
 
 export type ReservationEmailContext = {

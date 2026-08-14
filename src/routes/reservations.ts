@@ -228,7 +228,7 @@ reservations.post('/', async (c) => {
 
   c.executionCtx.waitUntil(
     (async () => {
-      const from = `"${tenant.name} via Maximum Bookings" <${tenant.contact_email}>`;
+      const from = `"${tenant.name} via Maximum Bookings" <${c.env.EMAIL_FROM_ADDRESS}>`;
       const replyTo = tenant.contact_email;
       const results = await Promise.allSettled([
         sendEmail(c.env, {
@@ -402,7 +402,7 @@ reservations.patch('/:id', async (c) => {
     const amendManageToken = await generateManageToken(c.env.JWT_SECRET, id, updated.email);
     c.executionCtx.waitUntil(
       (async () => {
-        const from = `"${updated.tenant_name} via Maximum Bookings" <${updated.contact_email}>`;
+        const from = `"${updated.tenant_name} via Maximum Bookings" <${c.env.EMAIL_FROM_ADDRESS}>`;
         const replyTo = updated.contact_email;
         const baseUrl = c.env.PUBLIC_URL ?? `${c.req.raw.headers.get('x-forwarded-proto') ?? 'https'}://${c.req.header('host')}`;
         const results = await Promise.allSettled([
@@ -484,7 +484,7 @@ reservations.delete('/:id', async (c) => {
 
   c.executionCtx.waitUntil(
     (async () => {
-      const from = `"${reservation.tenant_name} via Maximum Bookings" <${reservation.contact_email}>`;
+      const from = `"${reservation.tenant_name} via Maximum Bookings" <${c.env.EMAIL_FROM_ADDRESS}>`;
       const replyTo = reservation.contact_email;
       const results = await Promise.allSettled([
         sendEmail(c.env, {

@@ -1,6 +1,6 @@
 import type { CustomerReservationEmailData, EmailTemplate } from '../types';
 import { formatEmailDate } from '../utils/formatEmailDate';
-import { detailsTable, emailWrapper } from './helpers';
+import { detailsTable, emailWrapper, htmlToText } from './helpers';
 
 export function buildCustomerConfirmationEmail(data: CustomerReservationEmailData): EmailTemplate {
   const subject = `Your booking at ${data.tenantName} is confirmed`;
@@ -41,5 +41,6 @@ export function buildCustomerConfirmationEmail(data: CustomerReservationEmailDat
     ${links}
 		<p style="margin:16px 0 0;font-size:11px;color:#333333;">Note: We cannot guarantee requests for specific tables but will endeavor to accommodate them where possible.</p>`;
 
-  return { subject, html: emailWrapper(data.tenantName, 'Booking Confirmed', body) };
+  const html = emailWrapper(data.tenantName, 'Booking Confirmed', body);
+  return { subject, html, text: htmlToText(html) };
 }

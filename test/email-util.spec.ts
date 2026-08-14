@@ -1,66 +1,66 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { sendEmail } from '../src/utils/email';
-import type { ResendEnv, SendEmailRequest } from '../src/types';
+import type { EmailEnv, SendEmailRequest } from '../src/types';
 
-const mockEnv: ResendEnv = { RESEND_API_KEY: 're_test_abc123' };
 const mockMessage: SendEmailRequest = {
   to: 'customer@example.com',
-  from: '"Test Restaurant" <noreply@test.com>',
+  from: '"Test Restaurant" <bookings@mail.test>',
+  reply_to: 'owner@restaurant.com',
   subject: 'Your booking is confirmed',
   html: '<p>Hello</p>',
 };
 
-let mockFetch: ReturnType<typeof vi.fn>;
+let send: ReturnType<typeof vi.fn>;
+let mockEnv: EmailEnv;
 
 beforeEach(() => {
-  mockFetch = vi.fn();
-  vi.stubGlobal('fetch', mockFetch);
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
+  send = vi.fn().mockResolvedValue({ messageId: 'abc123' });
+  mockEnv = { EMAIL: { send }, EMAIL_FROM_ADDRESS: 'bookings@mail.test' } as unknown as EmailEnv;
 });
 
 describe('sendEmail', () => {
-  it('sends POST request to Resend API with correct URL', async () => {
-    mockFetch.mockResolvedValue(new Response(null, { status: 200 }));
+  it('calls the EMAIL binding send() with the mapped message', async () => {
     await sendEmail(mockEnv, mockMessage);
-    expect(mockFetch).toHaveBeenCalledWith('https://api.resend.com/emails', expect.any(Object));
-  });
-
-  it('sends correct Authorization header', async () => {
-    mockFetch.mockResolvedValue(new Response(null, { status: 200 }));
-    await sendEmail(mockEnv, mockMessage);
-    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
-    const headers = new Headers(init.headers as HeadersInit);
-    expect(headers.get('Authorization')).toBe('Bearer re_test_abc123');
-  });
-
-  it('sends correct payload', async () => {
-    mockFetch.mockResolvedValue(new Response(null, { status: 200 }));
-    await sendEmail(mockEnv, mockMessage);
-    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
-    const body = JSON.parse(init.body as string);
-    expect(body).toMatchObject({
+    expect(send).toHaveBeenCalledWith({
       to: mockMessage.to,
       from: mockMessage.from,
       subject: mockMessage.subject,
       html: mockMessage.html,
+      replyTo: mockMessage.reply_to,
     });
   });
 
-  it('throws when Resend returns 400', async () => {
-    mockFetch.mockResolvedValue(new Response(null, { status: 400 }));
-    await expect(sendEmail(mockEnv, mockMessage)).rejects.toThrow();
+  it('maps reply_to to replyTo', async () => {
+    await sendEmail(mockEnv, mockMessage);
+    const [arg] = send.mock.calls[0] as [Record<string, unknown>];
+    expect(arg.replyTo).toBe('owner@restaurant.com');
+    expect('reply_to' in arg).toBe(false);
   });
 
-  it('throws when Resend returns 422', async () => {
-    mockFetch.mockResolvedValue(new Response(null, { status: 422 }));
-    await expect(sendEmail(mockEnv, mockMessage)).rejects.toThrow();
+  it('omits replyTo when reply_to is not provided', async () => {
+    await sendEmail(mockEnv, { ...mockMessage, reply_to: undefined });
+    const [arg] = send.mock.calls[0] as [Record<string, unknown>];
+    expect('replyTo' in arg).toBe(false);
   });
 
-  it('resolves successfully when Resend returns 200', async () => {
-    mockFetch.mockResolvedValue(new Response(null, { status: 200 }));
+  it('throws when send() rejects, surfacing code and message', async () => {
+    send.mockRejectedValue(Object.assign(new Error('bad recipient'), { code: 'E_SEND' }));
+    await expect(sendEmail(mockEnv, mockMessage)).rejects.toThrow(/E_SEND/);
+    await expect(sendEmail(mockEnv, mockMessage)).rejects.toThrow(/bad recipient/);
+  });
+
+  it('forwards text when provided and omits it when absent', async () => {
+    await sendEmail(mockEnv, { ...mockMessage, text: 'Hello (plain)' });
+    const [withText] = send.mock.calls[0] as [Record<string, unknown>];
+    expect(withText.text).toBe('Hello (plain)');
+
+    send.mockClear();
+    await sendEmail(mockEnv, mockMessage);
+    const [withoutText] = send.mock.calls[0] as [Record<string, unknown>];
+    expect('text' in withoutText).toBe(false);
+  });
+
+  it('resolves successfully when send() resolves', async () => {
     await expect(sendEmail(mockEnv, mockMessage)).resolves.toBeUndefined();
   });
 });
