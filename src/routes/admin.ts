@@ -202,7 +202,7 @@ admin.post('/reservations', async (c) => {
   }
 
   const baseUrl = c.env.PUBLIC_URL || `${c.req.raw.headers.get('x-forwarded-proto') ?? 'https'}://${c.req.header('host')}`;
-  const from = `"${tenant.name} via Maximum Bookings" <${tenant.contact_email}>`;
+  const from = `"${tenant.name} via Maximum Bookings" <${c.env.EMAIL_FROM_ADDRESS}>`;
   const replyTo = tenant.contact_email;
 
   c.executionCtx.waitUntil(
@@ -307,7 +307,7 @@ admin.patch('/reservations/:id', async (c) => {
   if (updated) {
     c.executionCtx.waitUntil(
       (async () => {
-        const from = `"${updated.tenant_name} via Maximum Bookings" <${updated.contact_email}>`;
+        const from = `"${updated.tenant_name} via Maximum Bookings" <${c.env.EMAIL_FROM_ADDRESS}>`;
         const replyTo = updated.contact_email;
         const baseUrl = c.env.PUBLIC_URL ?? `${c.req.raw.headers.get('x-forwarded-proto') ?? 'https'}://${c.req.header('host')}`;
         const emailsToSend = [
@@ -384,7 +384,7 @@ admin.delete('/reservations/:id', async (c) => {
 
   c.executionCtx.waitUntil(
     (async () => {
-      const from = `"${reservation.tenant_name} via Maximum Bookings" <${reservation.contact_email}>`;
+      const from = `"${reservation.tenant_name} via Maximum Bookings" <${c.env.EMAIL_FROM_ADDRESS}>`;
       const replyTo = reservation.contact_email;
       const emailsToSend = [
         sendEmail(c.env, {
