@@ -1,6 +1,6 @@
 import type { CustomerReservationEmailData, EmailTemplate } from '../types';
 import { formatEmailDate } from '../utils/formatEmailDate';
-import { detailsTable, emailWrapper } from './helpers';
+import { detailsTable, emailWrapper, htmlToText } from './helpers';
 
 export function buildCustomerAmendmentEmail(data: CustomerReservationEmailData): EmailTemplate {
   const subject = `Your booking at ${data.tenantName} has been updated`;
@@ -32,5 +32,6 @@ export function buildCustomerAmendmentEmail(data: CustomerReservationEmailData):
     <p style="margin:16px 0 0;font-size:15px;color:#333333;">We look forward to seeing you!</p>
     ${manageLink}`;
 
-  return { subject, html: emailWrapper(data.tenantName, 'Booking Updated', body) };
+  const html = emailWrapper(data.tenantName, 'Booking Updated', body);
+  return { subject, html, text: htmlToText(html) };
 }

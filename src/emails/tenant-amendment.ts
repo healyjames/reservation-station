@@ -1,6 +1,6 @@
 import type { EmailTemplate, TenantReservationEmailData } from '../types';
 import { formatEmailDate } from '../utils/formatEmailDate';
-import { detailsTable, emailWrapper } from './helpers';
+import { detailsTable, emailWrapper, htmlToText } from './helpers';
 
 export function buildTenantAmendmentEmail(data: TenantReservationEmailData): EmailTemplate {
   const subject = `Booking amended: ${data.firstName} ${data.surname} — ${formatEmailDate(data.reservationDate)} at ${data.reservationTime}`;
@@ -18,5 +18,6 @@ export function buildTenantAmendmentEmail(data: TenantReservationEmailData): Ema
       ['Booking ID', data.reservationId],
     ], 180)}`;
 
-  return { subject, html: emailWrapper(data.tenantName, 'Booking Amended', body) };
+  const html = emailWrapper(data.tenantName, 'Booking Amended', body);
+  return { subject, html, text: htmlToText(html) };
 }

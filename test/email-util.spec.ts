@@ -49,6 +49,17 @@ describe('sendEmail', () => {
     await expect(sendEmail(mockEnv, mockMessage)).rejects.toThrow(/bad recipient/);
   });
 
+  it('forwards text when provided and omits it when absent', async () => {
+    await sendEmail(mockEnv, { ...mockMessage, text: 'Hello (plain)' });
+    const [withText] = send.mock.calls[0] as [Record<string, unknown>];
+    expect(withText.text).toBe('Hello (plain)');
+
+    send.mockClear();
+    await sendEmail(mockEnv, mockMessage);
+    const [withoutText] = send.mock.calls[0] as [Record<string, unknown>];
+    expect('text' in withoutText).toBe(false);
+  });
+
   it('resolves successfully when send() resolves', async () => {
     await expect(sendEmail(mockEnv, mockMessage)).resolves.toBeUndefined();
   });

@@ -13,6 +13,7 @@ export type EmailEnv = {
 export type EmailTemplate = {
   subject: string;
   html: string;
+  text?: string;
 }
 
 export type SendEmailRequest = {
@@ -21,6 +22,7 @@ export type SendEmailRequest = {
   reply_to?: string;
   subject: string;
   html: string;
+  text?: string;
 }
 
 export type ReservationEmailContext = {

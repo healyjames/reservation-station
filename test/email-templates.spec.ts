@@ -58,6 +58,14 @@ describe('buildCustomerConfirmationEmail', () => {
     expect(result.html).not.toContain('>null<');
     expect(result.html).not.toContain('null');
   });
+
+  it('returns a plain-text part with no HTML tags containing key details', () => {
+    const result = buildCustomerConfirmationEmail(customerData);
+    expect(result.text).toBeTruthy();
+    expect(result.text).not.toMatch(/<[^>]+>/);
+    expect(result.text).toContain('Jane');
+    expect(result.text).toContain('19:00');
+  });
 });
 
 describe('buildCustomerAmendmentEmail', () => {
