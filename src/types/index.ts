@@ -5,8 +5,9 @@ export type ReservationWithTenant = Reservation & {
   contact_email: string;
 };
 
-export type ResendEnv = {
-  RESEND_API_KEY: string;
+export type EmailEnv = {
+  EMAIL: SendEmail;
+  EMAIL_FROM_ADDRESS: string;
 }
 
 export type EmailTemplate = {
