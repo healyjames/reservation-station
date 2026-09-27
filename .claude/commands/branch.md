@@ -1,27 +1,19 @@
 ---
-description: Create a feature branch from a Jira ticket
-argument-hint: <ticket-id> (e.g., NG20-1234)
+description: Create a feature branch from a short description
+argument-hint: <type> <description> (e.g., feat add waitlist support)
 ---
 
-# Create Feature Branch from Jira Ticket
+# Create Feature Branch
 
-Create a feature branch named after a Jira ticket, ensuring a clean state on latest main.
+Create a feature branch off latest main.
 
 ## Arguments
 
-$ARGUMENTS — Required: Jira ticket ID (e.g., `NG20-1234`)
+$ARGUMENTS — a type (`feat`, `fix`, `chore`, `refactor`, `spike`) and a short description.
 
-If no ticket ID is provided, ask the user for one and stop.
+If no description is provided, ask the user for one and stop.
 
-## Step 1: Validate Ticket ID
-
-Check that `$ARGUMENTS` matches a Jira ticket pattern (e.g., `NG20-1234`, `BOARD-123`). If not, ask the user:
-
-```
-Please provide a valid Jira ticket ID (e.g., NG20-1234)
-```
-
-## Step 2: Check for Uncommitted Changes
+## Step 1: Check for Uncommitted Changes
 
 ```bash
 git status --porcelain
@@ -35,7 +27,7 @@ You have uncommitted changes. Please commit, stash, or discard them before creat
 
 **STOP and wait for user to resolve.**
 
-## Step 3: Ensure We're on Main
+## Step 2: Ensure We're on Main
 
 ```bash
 git branch --show-current
@@ -56,7 +48,7 @@ If confirmed:
 git checkout main
 ```
 
-## Step 4: Get Latest Main
+## Step 3: Get Latest Main
 
 ```bash
 git pull origin main
@@ -64,37 +56,12 @@ git pull origin main
 
 If pull fails, inform the user and stop.
 
-## Step 5: Fetch Jira Ticket
+## Step 4: Generate Branch Name
 
-Fetch the ticket to get its title. Use the same credential setup as `/jira`:
-
-1. Read credentials from `~/AI/config/jira.env`
-2. If credentials don't exist, tell the user to run `/jira` first to set up credentials, then stop
-
-```bash
-source ~/AI/config/jira.env && curl -s \
-  -H "Authorization: Basic $(echo -n "$JIRA_EMAIL:$JIRA_API_TOKEN" | base64)" \
-  -H "Content-Type: application/json" \
-  "$JIRA_BASE_URL/rest/api/3/issue/<TICKET-ID>?fields=summary"
-```
-
-Extract the ticket summary from the response.
-
-If the API call fails (401, 404, etc.), fall back to asking the user for a branch name:
-
-```
-Couldn't fetch ticket details. What should the branch be called?
-(I'll prefix it with <TICKET-ID>-)
-```
-
-## Step 6: Generate Branch Name
-
-Build the branch name from the ticket:
-
-1. Take the ticket ID (uppercase as-is, e.g., `NG20-1234`)
-2. Take the ticket summary and convert to kebab-case: lowercase, replace spaces/special chars with hyphens, remove consecutive hyphens
-3. Combine: `<TICKET-ID>-<kebab-summary>`
-4. Truncate to 60 characters max (don't cut mid-word)
+1. Take the type from $ARGUMENTS (default to `feat` if not given, or infer from the description).
+2. Convert the description to kebab-case: lowercase, replace spaces/special chars with hyphens, remove consecutive hyphens.
+3. Combine: `<type>/<kebab-description>` (matching this repo's existing convention, e.g. `feat/lead-delay`).
+4. Truncate to 60 characters max (don't cut mid-word).
 
 Present to user:
 
@@ -105,13 +72,13 @@ Create this branch? (y, or type a different name)
 
 **STOP and wait for confirmation or alternative.**
 
-## Step 7: Create and Checkout Branch
+## Step 5: Create and Checkout Branch
 
 ```bash
 git checkout -b <branch-name>
 ```
 
-## Step 8: Confirm
+## Step 6: Confirm
 
 ```
 Branch '<branch-name>' created from latest main.

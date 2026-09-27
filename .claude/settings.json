@@ -13,6 +13,14 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/commit-guard.sh" }
+        ]
+      }
     ]
   },
   "permissions": {

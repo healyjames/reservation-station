@@ -65,31 +65,13 @@ Or: "None - clean review"
 
 ### Verification
 
-If live verification was performed during dev (via `live-tester` agent or `/live-test`):
-
-| What     | Detail                                        |
-| -------- | --------------------------------------------- |
-| Sent     | [entity type] `[id]-local-test` to [service]  |
-| Observed | [key log lines]                               |
-| Result   | ✓ Working as expected / ✗ Issue found         |
-| Check in | [link to Algolia index / Builder.io content]  |
-| Cleanup  | Search for `-local-test` and delete when done |
-
-Downstream links by service:
-
-- **Search → Algolia:** `https://dashboard.algolia.com/apps/{APP_ID}/explorer/browse/{index}` (read App ID from service `.env`)
-  - Indexes: `persimmon_developments`, `persimmon_plots`, `charles_church_developments`, `charles_church_plots`
-- **Content → Builder.io:** `https://builder.io/content` → filter by model (`development`/`plot`/`scheme`) → search for the `-local-test` productId
-- **Portal:** local only (Wiremock on 8080), no external cleanup needed
-
-If live verification was NOT performed but would be useful, include:
+If manual verification is relevant, include steps:
 
 #### How to Verify Manually
 
-1. Ensure emulators running: `cd azure-emulators && docker compose up`
-2. Start [service]: `npx nx serve [service]`
-3. [How to trigger — URL to visit, or suggest running `/live-test`]
-4. Expected: [what should appear in logs or UI]
+1. [Prerequisites — any services or dependencies to start]
+2. [How to trigger — URL to visit, command to run, or action to take]
+3. [Expected result — what should appear in logs, UI, or output]
 
 ---
 

@@ -22,13 +22,7 @@ Before launching the review, gather context about _why_ the changes were made. T
 
 ### Steps:
 
-1. **Jira ticket** — If the branch name starts with a ticket ID pattern (e.g., `NG20-1234-...`, `BOARD-123-...`), fetch the Jira ticket using the same approach as `/jira`:
-
-   - Read credentials from `~/AI/config/jira.env`
-   - If credentials exist, fetch the ticket via the Jira API and extract: title, description, and acceptance criteria
-   - If credentials don't exist or the API call fails, skip silently
-
-2. **PR description** — Always check for an open PR regardless of whether a ticket was found:
+1. **PR description** — check for an open PR:
 
    ```bash
    gh pr view "$BRANCH_NAME" --json title,body --jq '.title + "\n\n" + .body' 2>/dev/null
@@ -36,10 +30,9 @@ Before launching the review, gather context about _why_ the changes were made. T
 
    - If a PR exists and has a non-empty body, include the title + body
 
-3. **Combine context** — Build `REVIEW_CONTEXT` from all available sources:
-   - If both ticket and PR description exist, include both (ticket first, then PR description)
-   - If only one exists, use that
-   - If neither is available, infer from branch name: `"No ticket or PR description available. Branch name: $BRANCH_NAME — likely a bugfix or improvement based on the branch name. Review should focus on whether the changes are sensible given this context."`
+2. **Combine context** — Build `REVIEW_CONTEXT`:
+   - If a PR description exists, use it
+   - Otherwise, infer from branch name: `"No PR description available. Branch name: $BRANCH_NAME — likely a bugfix or improvement based on the branch name. Review should focus on whether the changes are sensible given this context."`
 
 Include the gathered `REVIEW_CONTEXT` in the agent prompt so it can validate the implementation against the stated goals.
 
@@ -76,12 +69,11 @@ If not found, try matching partially (the user may have omitted a prefix). If st
    - Check out the target branch in the worktree
    - Run `git diff main...HEAD --name-only` to identify changed files
    - **Use the provided `REVIEW_CONTEXT`** to understand the intent behind the changes and validate that the implementation matches
-   - Perform a full code review covering: implementation quality, design, tests, bugs, security concerns
-   - If acceptance criteria were provided from a Jira ticket, explicitly check whether each criterion is met
+   - Apply the `code-review` skill: implementation quality, design, tests, bugs, and security concerns
    - Classify issues by severity (Critical / High / Medium / Low)
-   - If any service-level code was changed, check for security concerns (input validation, auth, secrets, injection)
+   - If any route/handler code was changed, check for security concerns (input validation, tenant scoping, auth, secrets, injection)
    - Produce a structured report
-   - **⛔ READ-ONLY: The agent MUST NOT edit, create, or modify any files. This is a review of a remote branch — the purpose is to produce a report, not to make fixes. Do not use the Edit, Write, or NotebookEdit tools. Do not run `npm run format` or any command that modifies files. Only read files, run searches, and run read-only commands (e.g. tests, git diff).**
+   - **⛔ READ-ONLY: The agent MUST NOT edit, create, or modify any files. This is a review of a remote branch — the purpose is to produce a report, not to make fixes. Do not use the Edit, Write, or NotebookEdit tools. Do not run `npx prettier --write` or any command that modifies files. Only read files, run searches, and run read-only commands (e.g. tests, git diff).**
    - **Clean up**: when finished, remove the worktree by running `git worktree remove <worktree-path> --force`
 
 5. **Inform the user** that the review is running in the background and they'll be notified when it completes. Include the branch name being reviewed.
@@ -117,10 +109,6 @@ If not found, try matching partially (the user may have omitted a prefix). If st
 
 [Any security-relevant observations, or "No security concerns identified"]
 
-## Acceptance Criteria Check
-
-[If a Jira ticket with acceptance criteria was available, list each criterion with PASS/FAIL/PARTIAL. Otherwise omit this section.]
-
 ## Summary
 
 [2-3 sentence overview of the changes and overall quality]
@@ -136,14 +124,14 @@ If not found, try matching partially (the user may have omitted a prefix). If st
    Example output:
 
    ```
-   Code Review: feature/my-branch — NEEDS ATTENTION
+   Code Review: feat/lead-delay — NEEDS ATTENTION
    Critical: 0 | High: 2 | Medium: 3 | Low: 1
 
-   Summary: The implementation correctly handles the new media types but
-   is missing input validation on the Service Bus handler. Test coverage
-   is good but two edge cases are untested.
+   Summary: The implementation correctly handles the new lead-delay field but
+   is missing validation on the tenant update route. Test coverage is good
+   but two edge cases are untested.
 
-   Full review: /absolute/path/.claude/temp/cr/feature-my-branch.md
+   Full review: /absolute/path/.claude/temp/cr/feat-lead-delay.md
    ```
 
 ## Mode 2: Review current branch (no branch name provided)
@@ -159,7 +147,6 @@ When no branch name is provided, run the review on the current branch directly (
    - **Include the gathered `REVIEW_CONTEXT`** in the agent prompt
    - Review all changes compared to main: `git diff main...HEAD`
    - Include any uncommitted/unstaged changes
-   - If acceptance criteria were provided, check each one
    - Full code review + security check
    - Classify issues by severity
 
@@ -172,5 +159,6 @@ When no branch name is provided, run the review on the current branch directly (
 - Background agents in worktrees are fully isolated — no risk to current work
 - The review should consider the full changeset against main, not individual commits
 - Only flag issues in changed code, not pre-existing problems
-- If the branch has service-level changes (anything in `apps/services/`), include security observations
+- If the branch has changes in security-sensitive directories (auth, tenant scoping), include security observations
 - Keep the report actionable — specific files, line numbers, and fix suggestions
+- For a second opinion from a *different* model, run `/double-check` (the `double-check` skill)

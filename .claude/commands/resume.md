@@ -1,17 +1,16 @@
 ---
 description: Resume an existing plan
+argument-hint: <slug> (optional)
 ---
 
 # Resume Existing Plan
 
 ## Step 1: Scan for Plans
 
-First, try to match by ticket ID from the current branch name (e.g., branch `NG20-4945-some-feature` → look for `.claude/temp/NG20-4945-*/plan.md`). If no branch match, use the provided slug argument.
+If a slug argument was given, use it directly. Otherwise scan all plans:
 
 ```bash
-# Try ticket ID from branch first
 git branch --show-current
-# Then search for matching plan directories
 ls -d .claude/temp/*/ 2>/dev/null
 find .claude/temp/ -name "plan.md" 2>/dev/null
 ```
@@ -25,9 +24,7 @@ For each plan.md found, extract:
 
 Also read `status.md` from the same directory (if it exists) to get:
 
-- Ticket ID and ticket status
-- Work status
-- Fix version
+- Task type and work status
 
 ## Step 2: Display Options
 
@@ -45,15 +42,15 @@ Found <N> plan(s):
 
 1. <plan-name> (IN_PROGRESS - Subtask 2/4)
    Task: <task description from metadata>
-   Ticket: <ticket-id> | Ticket Status: <status> | Work: <work_status>
+   Branch: <branch> | Work: <work_status>
 
 2. <plan-name> (READY - not started)
    Task: <task description from metadata>
-   Ticket: — | Work: research
+   Branch: <branch> | Work: research
 
 3. <plan-name> (COMPLETE)
    Task: <task description from metadata>
-   Ticket: <ticket-id> | Ticket Status: Done | Work: merged | Fix: v2.45
+   Branch: <branch> | Work: merged
 
 Enter number to resume (or 'q' to cancel):
 ```
@@ -83,7 +80,7 @@ Determine current position:
 
 ## Step 5: Switch Branch (if needed)
 
-Check if we are on a branch with an appropriate name. It will normally start with our Jira ticket number, and a sensible name for the task at hand. Prompt the user to switch the branch if not. You may find the branch and swap to that branch if it exists already.
+Check if we are on a branch matching the one recorded in status.md. Prompt the user to switch the branch if not. You may find the branch and swap to that branch if it exists already.
 
 ## Step 6: Show Status
 
@@ -104,7 +101,6 @@ Check if we are on a branch with an appropriate name. It will normally start wit
 - [x] Dev (if complete)
 - [ ] Review (if pending)
 - [ ] Present
-- [ ] Sign Off
 
 ### Key Context
 
