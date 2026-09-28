@@ -1,7 +1,5 @@
 # build output
 dist/
-# generated types
-.astro/
 
 # generated config
 tsconfig.json
