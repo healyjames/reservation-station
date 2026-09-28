@@ -1,5 +1,5 @@
 ---
-description: Explain the development workflow and available commands
+description: Show the development workflow and available commands
 ---
 
 # Development Workflow
@@ -9,53 +9,81 @@ Present the following workflow guide to the user:
 ```markdown
 ## Workflow Overview
 
+### Setup
+
+| Command    | Description                                                                      |
+| ---------- | --------------------------------------------------------------------------------- |
+| `/install` | Configure forge-workflow for your project (scan codebase, update files)          |
+| `/customize` | Add or update a workflow piece (skill/command/agent) to fit your team |
+| `/attribution` | Record what shaped the workflow (attribution vs resources) in ATTRIBUTION.md |
+| `/clarify` | Interview me to pin down missing info/decisions (or build a guideline doc) |
+| `/recalibrate` | Turn this session's corrections into proposed workflow-file updates |
+
 ### Starting work
 
-1. **Create a branch** — either manually or run `/branch <TICKET-ID>` to create one from a Jira ticket
-2. Run `/begin <task description>` or `/begin <JIRA-ID>`
-   - This runs research → plan → signoff automatically
-   - If you're on main with a Jira ticket, it will offer to create a branch for you
-   - If you're on a branch with a ticket ID, it will fetch Jira context
-   - Plan files are saved to `.claude/temp/<ticket-id>-<slug>/`
+| Command              | Description                                            |
+| -------------------- | ------------------------------------------------------ |
+| `/begin <task>`      | Start new work — runs research, plan, and signoff automatically |
+| `/branch <type> <description>` | Create a feature branch from a short description |
+| `/research <topic>`  | Run the research phase only                            |
+| `/plan`              | Run the planning phase only                            |
+| `/signoff`           | Present research and plan for approval                 |
 
 ### Executing work
 
-3. Run `/next` to execute the next subtask in the plan
-   - This runs dev → review → present for each subtask
-   - You'll be prompted to approve and commit after each subtask
-4. Repeat `/next` until all subtasks are complete
-
-### Finishing work
-
-5. Run `/review` for a final review of all changes on the branch
-6. Run `/security` for a security audit (recommended for service changes)
-7. Run `/pr` to generate a PR description and open the pull request
+| Command    | Description                                                    |
+| ---------- | -------------------------------------------------------------- |
+| `/next`    | Execute the next subtask cycle (dev, review, present)          |
+| `/dev`     | Implement the current subtask                                  |
+| `/review`  | Run code review for current changes                            |
+| `/present` | Present changes for user approval                              |
+| `/run`     | Run the app locally (Claude-bg vs your terminal)               |
 
 ### Resuming work
 
-If you get disconnected or start a new session:
+| Command   | Description                                                     |
+| --------- | ----------------------------------------------------------------- |
+| `/resume` | Resume an existing plan — picks up where you left off           |
+| `/status` | Show the progress dashboard without executing anything          |
 
-- `/resume` — finds your plan by ticket ID from the branch name and picks up where you left off
+### Finishing work
+
+| Command     | Description                                              |
+| ----------- | -------------------------------------------------------- |
+| `/cr`           | Code review (local or worktree-isolated)             |
+| `/double-check` | Independent second opinion from a different AI CLI   |
+| `/security`     | Run a security audit                                 |
+| `/pr`           | Prepare and create a pull request                   |
+| `/slice`        | Decide whether/where to split into mergeable PRs     |
+| `/performance`  | Deep performance audit                               |
 
 ### Standalone commands
 
-| Command                | Use when...                                                    |
-| ---------------------- | -------------------------------------------------------------- |
-| `/research <topic>`    | You just want to explore the codebase without a full plan      |
-| `/jira`                | You want to fetch Jira ticket details for the current branch   |
-| `/cr <branch-name>`    | You want to code review another dev's branch without switching |
-| `/cr`                  | You want to run a pre-PR sanity check on your current branch   |
-| `/logs <service>`      | You want to parse Azure Application Insights log exports       |
-| `/changelog <version>` | You need to generate a release changelog                       |
-| `/branch <TICKET-ID>`  | You want to create a feature branch from a Jira ticket         |
-| `/ticket`              | You want to create a Jira ticket from an investigation         |
-| `/status`              | You want to see plan progress without executing anything       |
+| Command              | Description                                            |
+| -------------------- | ------------------------------------------------------ |
+| `/ticket`            | Turn investigation findings into a /begin prompt        |
+| `/explain <target>`  | Explain how existing code works (not a review)         |
+| `/deck`              | Build a self-contained HTML slide deck                 |
+| `/workflow`          | Show this command reference                            |
+
+### Optional modules
+
+Only the modules you set up appear. Run `/install` (or `/install <module>`) to add a skipped one later.
+
+| Command      | Module | Description                                         |
+| ------------ | ------ | ---------------------------------------------------- |
+| `/audit`     | audit  | Deep multi-dimension audit → actionable issue files  |
+| `/audit-fix` | audit  | Implement fixes from one audit dimension file        |
+
+Not currently set up for this project: observability (`/logs`, `/fix-logs`, `/dashboard`), release (`/changelog`, `/release`), secrets (`/secret`). Re-run `/install` if you want to add any of these later.
 
 ### Tips
 
 - You don't need to call `/dev`, `/present`, or `/signoff` directly — `/next` and `/begin` orchestrate these for you. `/signoff` runs automatically after planning and presents clickable file links for you to review.
 - All plan and research files live in `.claude/temp/` — clean up after your PR is merged
-- Claude has full access to `.claude/temp/` and can read any project file without prompting
+- Optional modules are opt-in. Re-running `/install` re-offers any module you skipped, so you can grow the workflow as the project needs it.
+- Skills (`.claude/skills/`) hold the review/security/testing/verification rubrics; commands call them for you — you don't invoke skills directly. `/dev` self-verifies (build/lint/test + acceptance criteria) before the approval gate.
+- The workflow evolves with you: run `/customize` to add/update a skill/command/agent — and Claude will suggest it when it notices you repeating the same request.
 ```
 
 ## Rules

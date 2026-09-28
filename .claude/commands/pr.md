@@ -4,7 +4,7 @@ description: Final checks and prepare pull request for current plan
 
 # Check Pull Request
 
-Check that all everything has been commited and is ready for a pull request
+Check that everything has been committed and is ready for a pull request
 
 ## Step 1: Check Security Audit Status
 
@@ -15,11 +15,16 @@ Check if `/security` has been run for this plan:
 
 ```
 Security audit not run. Consider running /security first.
-Note this is not neccisary for every PR, so use discretion
+Note this is not necessary for every PR, so use discretion
 Continue with PR anyway? (y/n)
 ```
 
 If user declines, stop and let them run `/security`.
+
+For **large or high-stakes** change sets, also consider `/double-check` — an independent second
+opinion from a different AI CLI (the `double-check` skill) — before opening the PR. If the change is
+large or mixes concerns, consider `/slice` first (the `slicing` skill) — it may want to be a stack of
+smaller PRs.
 
 ## Step 2: Verify Plan Complete
 
@@ -60,18 +65,13 @@ Warning: Uncommitted changes detected.
 Commit or stash before opening PR? (y/n)
 ```
 
-## Step 5: Generate PR Description
+## Step 4: Generate PR Description
 
-Build the PR description using this structure. The description must start with the ticket context (what problem we're solving) before listing the changes.
+Use the `pr-description` agent to generate the description, following this structure.
 
 **Template:**
 
 ```markdown
-## Ticket
-
-<TICKET-ID>: <ticket title or one-line problem statement>
-<Jira URL if available, otherwise omit>
-
 ## Problem
 
 <1-3 sentences explaining what was wrong or what needed to change and why>
@@ -87,17 +87,16 @@ Build the PR description using this structure. The description must start with t
 
 **Where to get the information:**
 
-- **Ticket ID**: from plan metadata or branch name
 - **Problem**: from research.md or task description — what was the user trying to solve?
 - **Changes**: from git diff and plan subtasks
 - **Test plan**: from test cases written and manual verification steps
 
-## Step 6: Present for Approval
+## Step 5: Present for Approval
 
 ```markdown
 ## Pull Request Preview
 
-**Title:** <TICKET-ID>: <short description>
+**Title:** <short description>
 
 **Description:**
 <generated description using template above>
@@ -114,7 +113,7 @@ If user provides feedback:
 - Adjust title/description
 - Present again
 
-## Step 7: Create PR
+## Step 6: Create PR
 
 After approval, open the PR in the browser so the user can make final edits before submitting:
 
@@ -122,9 +121,9 @@ After approval, open the PR in the browser so the user can make final edits befo
 gh pr create --base main --title "<title>" --body "<description>" --web
 ```
 
-**IMPORTANT:** Always use the `--web` flag. This opens the PR creation page in the browser rather than submitting it directly. The user will review and make final edits before clicking "Create pull request" in GitHub. Do NOT create the PR without `--web`.
+**IMPORTANT:** Always open the PR in the browser (`--web`) rather than submitting it directly. The user reviews and makes final edits before clicking "Create" on GitHub. Do NOT create the PR without opening it for review.
 
-## Step 8: Update Plan and Status
+## Step 7: Update Plan and Status
 
 Update plan.md:
 
@@ -137,7 +136,7 @@ Update `status.md` in the same task directory:
 - Set `merged_date` to today's date
 - Add the PR URL as a new line: `- pr_url: <url>`
 
-## Step 9: Report
+## Step 8: Report
 
 ```
 PR created: <url>

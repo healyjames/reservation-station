@@ -212,3 +212,4 @@ ai/
 .claude/temp/
 .claude/worktrees/
 .claude/settings.local.json
+.claude/.forge/

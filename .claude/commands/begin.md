@@ -27,29 +27,22 @@ Wait for user to resolve before proceeding.
 
 **If on main with no local commits ahead of origin/main:**
 
-Check if the task description contains a Jira ticket ID (e.g., `NG20-1234`):
+```
+You're on main. What type of work is this?
+1. feat
+2. fix
+3. chore
+4. refactor
+5. spike
 
-- **Jira ticket found:** Offer to create a feature branch automatically:
+I'll create a branch <type>/<kebab-summary> before we start.
+```
 
-  ```
-  You're on main. Want me to create a feature branch from this ticket? (y/n)
-  ```
+**STOP and wait for user response**, then create the branch (see Step 1 for the slug) with:
 
-  If yes, run `/branch <TICKET-ID>` to pull latest main and create the branch, then continue with Step 1.
-  If no, remind them they'll need to create a branch before committing:
-
-  ```
-  Reminder: You'll need to create a feature branch before any commits.
-  I'll start the research and planning — you can create the branch when ready.
-  ```
-
-- **No Jira ticket:** Remind the user to create a branch:
-
-  ```
-  You're on main with no feature branch. I'll start research and planning,
-  but you'll need to create a feature branch before any commits.
-  (Tip: use /branch <TICKET-ID> if you have a Jira ticket)
-  ```
+```bash
+git checkout -b <type>/<slug>
+```
 
 **If not on main or a feature branch:**
 
@@ -62,32 +55,9 @@ Switch to main before starting new work? (y/n)
 
 Generate a folder name for this task:
 
-1. **Check for a Jira ticket ID** — look at the current branch name (`git branch --show-current`) or the task description for a pattern like `BOARD-123` (e.g., `NG20-4945`).
-
-2. **If ticket ID found:**
-
-   - Generate a kebab-case slug from the task description
-   - Combine: `<TICKET-ID>-<slug>` (e.g., `NG20-4945-update-media-rules`)
-
-3. **If NO ticket ID found** — prompt the user:
-
-   ```
-   No Jira ticket found. What type of task is this?
-   1. bugfix
-   2. housekeeping
-   3. spike
-   4. refactor
-
-   Or type a ticket ID (e.g., NG20-1234) to use instead.
-   (Tip: type 'ticket' to create a Jira ticket first via /ticket)
-   ```
-
-   **STOP and wait for user response.**
-
-   - If they provide a ticket ID → use `<TICKET-ID>-<slug>` format
-   - If they type `ticket` → run `/ticket`, then resume with the created ticket ID
-   - If they pick a task type → use `<task-type>-<slug>` format (e.g., `bugfix-search-ranking-issue`)
-
+1. Pick a `<type>` from: `feat`, `fix`, `chore`, `refactor`, `spike` (infer from the task description, or ask if genuinely ambiguous).
+2. Generate a kebab-case slug from the task description.
+3. Combine: `<type>-<slug>` (e.g., `feat-add-waitlist`). This mirrors the branch name (`<type>/<slug>`) but uses a hyphen instead of a slash, since the folder lives on disk.
 4. **Validate:** only lowercase alphanumeric and hyphens, max 60 chars. **Reject:** any path separators (/, \, ..)
 
 Present to user:
@@ -129,31 +99,24 @@ mkdir -p .claude/temp/<slug>
 After creating the directory, create `.claude/temp/<slug>/status.md` using the template defined in `/status` ("Creating status.md" section).
 
 - Set `work_status` to `research` (about to start research phase)
-- Set `task_type` based on Step 1 result (ticket → `feature`, or the chosen type)
-- Set `ticket` and `ticket_url` if a Jira ticket ID is available
+- Set `task_type` from Step 1
 - Set `branch` from `git branch --show-current`
 - Set `created` to today's date
-- If Jira is configured, fetch ticket status for `ticket_status`. If not configured, set to `—`
-- Set `fix_version` to `null`
 - Set `name` to a human-readable version of the task description
 - Set `summary` to a one-line summary of the task
 
 ## Step 3: Research Phase
-
-**Jira Integration (optional):**
-If the task references a Jira ticket or the branch name contains a ticket ID, attempt to fetch ticket details using /jira. If Jira credentials are not configured, skip this step and continue.
 
 Use the `researcher` agent to explore the codebase.
 
 Provide the agent with:
 
 - The task description
-- Any Jira context (if available)
 - Output path: `.claude/temp/<slug>/research.md`
 
 The researcher will:
 
-- Read docs, ADRs, plans, vision files
+- Read docs (`BUSINESS_LOGIC.md`, `documentation/DATA_MODEL.md`, `AGENTS.md`), ADRs, plans, vision files
 - Find relevant code
 - Identify patterns to follow
 - Document findings in research.md
@@ -172,7 +135,10 @@ The planner will:
 
 - Break work into subtasks (small, committable steps)
 - Define goals and files for each subtask
+- Capture acceptance criteria, drafting them and confirming with you
 - Create trackable checklists
+
+Then the plan is verified (the `verify-plan` skill) before signoff.
 
 ## Step 5: Signoff
 
@@ -185,7 +151,7 @@ Do NOT proceed without signoff.
 - NEVER skip research or planning phases
 - NEVER proceed past signoff without explicit approval
 - If research or planning raises questions, ask them before signoff
-- Jira is an optional enhancement - proceed without it if unavailable
+- If the task touches `Tenant`, `Reservation`, `AdminUser`, `BlockedDate`, or `OpeningHours`, the researcher and planner must reason about `documentation/DATA_MODEL.md` and `BUSINESS_LOGIC.md` first (per CLAUDE.md's Data First rule)
 
 ## Tracking
 

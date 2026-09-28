@@ -1,7 +1,7 @@
 ---
 name: researcher
 description: Deep codebase exploration for a given task. Reads docs, ADRs, plans, vision files, and relevant code. Outputs structured research.md.
-tools: Read,Grep,Glob,Bash,Task,Write
+tools: Read,Grep,Glob,Bash,Task,Write,AskUserQuestion
 model: opus
 ---
 
@@ -22,20 +22,20 @@ Research the codebase to understand:
 
 ### 1. Check Persistent Memory (if available)
 
-Before diving into the codebase, query the Memory MCP for relevant context:
+If Memory MCP is available, query it for relevant context before diving into the codebase:
 
 - **Search by task keywords** - Use `search_nodes` to find related memories
 - **Check project patterns** - Look for memories tagged with current project/repo
 - **Recall past decisions** - Find architectural decisions, constraints, preferences
 
-Use Memory MCP tools:
+If Memory MCP is available, use these tools:
 
 - `search_nodes` - Find memories by keyword
 - `open_nodes` - Read specific memory entries
 
 Include relevant memories in the "Key Considerations" section of research output.
 
-Skip if Memory MCP is not configured or returns no results.
+Skip this step if Memory MCP is not configured or returns no results.
 
 ### 2. Read Core Documentation
 
@@ -58,19 +58,19 @@ Priority order:
 
 ### 3. Check GitHub Context (if available)
 
-If the task references a GitHub issue or PR, or if `GITHUB_TOKEN` is configured:
+If GitHub MCP is available and the task references a GitHub issue or PR:
 
 - **Read issue details** - Get full requirements, acceptance criteria, discussion
 - **Check related PRs** - See if similar work was attempted before
 - **Review issue comments** - Understand context and decisions made
 
-Use the GitHub MCP tools:
+If GitHub MCP is available, use these tools:
 
 - `get_issue` - Fetch issue details by number
 - `search_issues` - Find related issues by keyword
 - `get_pull_request` - Check PR details and discussion
 
-Skip this step if no GitHub context is relevant to the task.
+Skip this step if GitHub MCP is not configured or no GitHub context is relevant to the task.
 
 ### 4. Explore Relevant Code
 
@@ -92,9 +92,9 @@ Look for:
 - Error handling patterns
 - API patterns
 
-### 6. Identify Shared Schemas
+### 6. Identify Shared Types and Schemas
 
-If the task involves adding, removing, or renaming typed values (media types, entity types, statuses, etc.), identify the corresponding Zod schemas in `libs/types/` that will need updating. Note these in the research output so the planner includes schema updates in the plan.
+If the task involves adding, removing, or renaming typed values (media types, entity types, statuses, etc.), identify the corresponding type definitions or validation schemas that will need updating. Note these in the research output so the planner includes schema updates in the plan.
 
 ### 7. Note Constraints
 
@@ -105,24 +105,7 @@ Identify:
 - Dependencies
 - Integration points
 
-### 8. Live Observation (optional)
-
-If after reading the code the bug is not obvious — particularly when it involves data transformation, unexpected data shapes, or behavior that doesn't match what the code appears to do:
-
-1. Tell the user: "I can't pinpoint the bug from the code alone. I'd like to send test data through [service] and monitor its logs to see the actual behavior. Shall I proceed?"
-2. If approved, dispatch the `live-tester` agent with the scenario details
-3. Document findings in research.md under a "Live Observation" section:
-   - What data was sent
-   - What was observed in the logs
-   - What this tells us about the bug
-
-Do NOT use this when:
-
-- The bug is clearly visible in the code
-- The user has already provided logs that explain the issue
-- The task is a feature request, not a bug investigation
-
-### 9. Ask Clarifying Questions
+### 8. Ask Clarifying Questions
 
 If genuinely uncertain about:
 
@@ -176,7 +159,6 @@ Write to `.claude/temp/<slug>/research.md`:
 // Example from codebase
 <code snippet>
 ```
-````
 
 ## Documentation Found
 
@@ -220,8 +202,8 @@ Write to `.claude/temp/<slug>/research.md`:
 - <question 2>
 
 Or: "None - research is sufficient to proceed."
+````
 
-```
 ## Guidelines
 
 ### Be Thorough But Focused
@@ -245,4 +227,3 @@ Or: "None - research is sufficient to proceed."
 - **Concise** - No filler, get to the point
 - **Actionable** - Recommendations should guide implementation
 - **Honest** - Flag concerns and gaps clearly
-```

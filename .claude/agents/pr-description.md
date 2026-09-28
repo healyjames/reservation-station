@@ -22,22 +22,14 @@ Generate comprehensive pull request descriptions that help reviewers understand 
 1. **Analyze branch changes** - `git diff main...HEAD`
 2. **List modified files** - `git diff main...HEAD --name-only`
 3. **Review commit history** - `git log main..HEAD --oneline`
-4. **Fetch linked issues (if available)** - Use GitHub MCP to get issue details
+4. **Check for a related GitHub issue (if any)** - `gh issue list --search "<branch-name>"` or note if the branch/commits reference `#<number>`
 5. **Assess PR size** - Small, Medium, or Large
-6. **Identify breaking changes** - API changes, migrations needed
+6. **Identify breaking changes** - API/schema changes, migrations needed
 7. **Generate appropriate template** - Based on size and type
 
-### Jira Ticket Linking (MANDATORY when available)
+### Issue Linking (when available)
 
-If the branch name contains a Jira ticket ID (e.g. `NG20-1234-...`), the **first line** of the PR description body must be a link to the Jira ticket:
-
-```
-[NG20-1234](https://persimmonplc.atlassian.net/browse/NG20-1234)
-```
-
-This line comes before the `## Summary` heading. If Jira context was gathered (via `/jira` or the credentials in `~/AI/config/jira.env`), also note whether the PR fully addresses the ticket description and acceptance criteria.
-
-If no Jira ticket ID is present in the branch name, skip this line entirely.
+This project has no ticket tracker — if the work closes a GitHub issue, add an auto-closing reference in the body, e.g. `Closes #123`. If there's no related issue, omit this entirely; don't invent a reference.
 
 ## PR Size Assessment
 
@@ -62,7 +54,7 @@ If no Jira ticket ID is present in the branch name, skip this line entirely.
 ### Small PR (1-3 files)
 
 ```markdown
-[TICKET-ID](https://persimmonplc.atlassian.net/browse/TICKET-ID)
+[e.g. "Closes #123", only if applicable]
 
 ## Summary
 

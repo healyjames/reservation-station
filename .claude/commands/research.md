@@ -19,8 +19,7 @@ Output to the existing plan directory's research.md.
 
 Generate a slug using the same naming rules as `/begin` Step 1:
 
-- If ticket ID found (from branch or task description) → `<TICKET-ID>-<slug>`
-- If no ticket ID → prompt user for task type (bugfix/housekeeping/spike/refactor) or ticket ID, then use `<task-type>-<slug>`
+- Pick a `<type>` (`feat`, `fix`, `chore`, `refactor`, `spike`), then `<type>-<slug>`
 
 Ask user to confirm, then create:
 
@@ -34,7 +33,7 @@ Output to `.claude/temp/<slug>/research.md`.
 
 ## What the Researcher Does
 
-1. Reads docs, READMEs, ADRs, plans, vision files
+1. Reads docs (`BUSINESS_LOGIC.md`, `documentation/DATA_MODEL.md`, `AGENTS.md`), READMEs, ADRs, plans, vision files
 2. Finds relevant code for the task
 3. Identifies patterns to follow
 4. Documents constraints and considerations
@@ -42,10 +41,6 @@ Output to `.claude/temp/<slug>/research.md`.
 6. If an approach is given by users, assesses approach and gives relevant feedback and alternatives
 
 ## Optional Integrations
-
-### Jira (if configured)
-
-If the task references a Jira ticket or the branch name contains a ticket ID, attempt to fetch ticket details. If Jira credentials are not configured, skip this step.
 
 ### GitHub (if referenced)
 
@@ -63,4 +58,4 @@ Run /plan to create implementation plan, or /begin to run full workflow.
 
 - Use the researcher agent - don't do manual research
 - Output must go to a plan directory
-- Ask clarifying questions if scope is genuinely unclear
+- If scope is genuinely unclear or there are decisions to make, apply the `clarify` skill (structured rounds) rather than guessing

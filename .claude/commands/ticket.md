@@ -1,10 +1,11 @@
 ---
-description: Define Ticket and Prompt from Investigation
+description: Turn investigation findings into a /begin prompt
 ---
 
-# Create Ticket and Prompt from Investigation
+# Create Prompt from Investigation
 
-Summarize investigation findings into a prompt for `/begin` and a Jira ticket description.
+This project has no ticket tracker configured, so this command skips ticket creation and just
+produces a ready-to-use `/begin` prompt from whatever was discovered in the conversation so far.
 
 ## Instructions
 
@@ -17,6 +18,8 @@ Review the conversation to identify:
 - **Proposed solution**: What approach was discussed?
 - **Affected files**: Which files need changes?
 - **Scope**: What needs to be done?
+
+If key facts are missing (repro steps, environment, the affected component, expected vs actual), apply the `clarify` skill before writing the prompt rather than guessing.
 
 ### 2. Write the Begin Prompt
 
@@ -48,63 +51,22 @@ Create a file at `.claude/temp/<topic>/prompt.md` with:
 ## Testing
 
 <How to verify the fix works>
-
-## Note: we will need to rename this folder when we have a Jira ticket create with the ticket ID to follow our naming conventions. Please do this now
 ```
 
-### 3. Write the Jira Ticket
+### 3. Present to User
 
-Save a Jira ticket to ticket.md and present it to the user with:
+Show a summary of the prompt and how to start work later:
 
-```markdown
-**Title:** <Imperative, concise title>
+- **Summary:** `<summary of prompt content>`
+- **File created:** `.claude/temp/<topic>/prompt.md`
 
-**Description:**
+To start work later, run:
 
-<1-2 sentences on the problem>
-
-**Root cause:** <Why it happens>
-
-**Example:** <Concrete example if available>
-
-**Solution:** <Brief approach>
-
-**Scope:**
-<Numbered list of high-level changes>
-
-**Acceptance Criteria:**
-
-- [ ] <Testable criteria>
-- [ ] <Testable criteria>
-```
-
-### 4. Present to User
-
-```markdown
-## Jira Ticket
-
-<summary of ticket content>
-
-## Files Created
-
-- `.claude/temp/<topic>/ticket.md` - Ticket text for Jira
-- `.claude/temp/<topic>/prompt.md` - Prompt for `/begin`
-
----
-
-**To start work later:**
-```
-
-/begin @.claude/temp/<topic>/prompt.md
-
-```
-
-```
+    /begin @.claude/temp/<topic>/prompt.md
 
 ## Rules
 
 - Keep prompts focused - one problem per prompt
 - Include concrete examples where possible
 - List specific files, not vague references
-- Acceptance criteria must be testable
 - Do not start the work - only prepare for future work
