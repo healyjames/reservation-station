@@ -1,22 +1,18 @@
-import type { ResendEnv, SendEmailRequest } from '../types';
+import type { EmailEnv, SendEmailRequest } from '../types';
 
-export async function sendEmail(env: ResendEnv, message: SendEmailRequest): Promise<void> {
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: message.from,
+export async function sendEmail(env: EmailEnv, message: SendEmailRequest): Promise<void> {
+  try {
+    const result = await env.EMAIL.send({
       to: message.to,
-      ...(message.reply_to ? { reply_to: message.reply_to } : {}),
+      from: message.from,
       subject: message.subject,
       html: message.html,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Resend API error: ${response.status} ${response.statusText}`);
+      ...(message.text ? { text: message.text } : {}),
+      ...(message.reply_to ? { replyTo: message.reply_to } : {}),
+    });
+    console.log(`[email] sent to ${message.to} (messageId: ${result?.messageId ?? 'unknown'})`);
+  } catch (error) {
+    const e = error as { code?: string; message?: string };
+    throw new Error(`Cloudflare Email send failed: ${e.code ?? ''} ${e.message ?? String(error)}`.trim());
   }
 }

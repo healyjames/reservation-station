@@ -1,6 +1,6 @@
 import type { CustomerReservationEmailData, EmailTemplate } from '../types';
 import { formatEmailDate } from '../utils/formatEmailDate';
-import { detailsTable, emailWrapper } from './helpers';
+import { detailsTable, emailWrapper, htmlToText } from './helpers';
 
 export function buildCustomerCancellationEmail(data: CustomerReservationEmailData): EmailTemplate {
   const subject = `Your booking at ${data.tenantName} has been cancelled`;
@@ -16,5 +16,6 @@ export function buildCustomerCancellationEmail(data: CustomerReservationEmailDat
     ])}
     <p style="margin:16px 0 0;font-size:15px;color:#333333;">We hope to see you again soon.</p>`;
 
-  return { subject, html: emailWrapper(data.tenantName, 'Booking Cancelled', body) };
+  const html = emailWrapper(data.tenantName, 'Booking Cancelled', body);
+  return { subject, html, text: htmlToText(html) };
 }

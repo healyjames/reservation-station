@@ -1,8 +1,17 @@
 import { env, exports } from 'cloudflare:workers';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 const TENANT_ID = '00000000-0000-4000-8000-000000000001';
 const RES_ID = '00000000-0000-4000-8000-000000000099';
+
+// Build a test env whose EMAIL binding is a mock, so sends never hit the real
+// service and failures can be simulated deterministically.
+function envWith(send: ReturnType<typeof vi.fn>) {
+  return { ...env, EMAIL: { send } } as unknown as typeof env;
+}
+
+const failingSend = () => vi.fn().mockRejectedValue(Object.assign(new Error('email down'), { code: 'E_SEND' }));
+const okSend = () => vi.fn().mockResolvedValue({ messageId: 'test' });
 
 async function seedTenantWithEmail(contactEmail: string | null = 'owner@restaurant.com') {
   await env.maximum_bookings_db
@@ -36,13 +45,8 @@ describe('Email notifications — fire-and-forget resilience', () => {
     await clearDb();
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('POST /api/reservations returns 201 even when Resend API call fails', async () => {
+  it('POST /api/reservations returns 201 even when the email send fails', async () => {
     await seedTenantWithEmail('owner@restaurant.com');
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Resend network error')));
 
     const res = await exports.fetch(
       new Request('http://localhost/api/reservations', {
@@ -59,10 +63,43 @@ describe('Email notifications — fire-and-forget resilience', () => {
           guests: 2,
         }),
       }),
-      env,
+      envWith(failingSend()),
     );
 
     expect(res.status).toBe(201);
+  });
+
+  it('POST /api/reservations sends from EMAIL_FROM_ADDRESS with tenant contact_email as replyTo', async () => {
+    await seedTenantWithEmail('owner@restaurant.com');
+    const send = okSend();
+
+    const res = await exports.fetch(
+      new Request('http://localhost/api/reservations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenant_id: TENANT_ID,
+          first_name: 'Jane',
+          surname: 'Doe',
+          telephone: '07700900000',
+          email: 'jane@example.com',
+          reservation_date: '2099-07-15',
+          reservation_time: '19:00',
+          guests: 2,
+        }),
+      }),
+      envWith(send),
+    );
+
+    expect(res.status).toBe(201);
+    // customer + tenant emails
+    expect(send).toHaveBeenCalledTimes(2);
+    for (const call of send.mock.calls) {
+      const msg = call[0] as { from: string; replyTo?: string };
+      expect(msg.from).toContain(`<${env.EMAIL_FROM_ADDRESS}>`);
+      expect(msg.from).not.toContain('owner@restaurant.com');
+      expect(msg.replyTo).toBe('owner@restaurant.com');
+    }
   });
 
   it('POST /api/reservations returns 201 when tenant has no contact_email', async () => {
@@ -83,16 +120,15 @@ describe('Email notifications — fire-and-forget resilience', () => {
           guests: 2,
         }),
       }),
-      env,
+      envWith(okSend()),
     );
 
     expect(res.status).toBe(201);
   });
 
-  it('PATCH /api/reservations/:id returns 200 even when Resend API call fails', async () => {
+  it('PATCH /api/reservations/:id returns 200 even when the email send fails', async () => {
     await seedTenantWithEmail('owner@restaurant.com');
     await seedReservation();
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Resend network error')));
 
     const res = await exports.fetch(
       new Request(`http://localhost/api/reservations/${RES_ID}`, {
@@ -100,7 +136,7 @@ describe('Email notifications — fire-and-forget resilience', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ guests: 3 }),
       }),
-      env,
+      envWith(failingSend()),
     );
 
     expect(res.status).toBe(200);
@@ -108,16 +144,15 @@ describe('Email notifications — fire-and-forget resilience', () => {
     expect(body.success).toBe(true);
   });
 
-  it('DELETE /api/reservations/:id returns 200 even when Resend API call fails', async () => {
+  it('DELETE /api/reservations/:id returns 200 even when the email send fails', async () => {
     await seedTenantWithEmail('owner@restaurant.com');
     await seedReservation();
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Resend network error')));
 
     const res = await exports.fetch(
       new Request(`http://localhost/api/reservations/${RES_ID}`, {
         method: 'DELETE',
       }),
-      env,
+      envWith(failingSend()),
     );
 
     expect(res.status).toBe(200);
@@ -132,7 +167,7 @@ describe('Email notifications — fire-and-forget resilience', () => {
       new Request(`http://localhost/api/reservations/${RES_ID}`, {
         method: 'DELETE',
       }),
-      env,
+      envWith(okSend()),
     );
 
     expect(res.status).toBe(404);

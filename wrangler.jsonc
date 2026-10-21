@@ -41,11 +41,10 @@
    * For local dev, add JWT_SECRET=<value> to .env
    * After running `wrangler secret put`, run `npx wrangler types` to regenerate
    * worker-configuration.d.ts - until then, src/types/env.d.ts provides the type.
-   * Set via: npx wrangler secret put RESEND_API_KEY
-   * For local dev, add RESEND_API_KEY=re_test_... to .env
    * Set via: npx wrangler secret put SUPER_ADMIN_KEY
    * For local dev, add SUPER_ADMIN_KEY=<value> to .env
-   * All email from/to addresses come from Tenants.contact_email in the database
+   * Emails are sent via the EMAIL binding (Cloudflare Email Service); the `from`
+   * address is EMAIL_FROM_ADDRESS and replies go to the tenant's Tenants.contact_email.
    */
   // "vars": { "MY_VARIABLE": "production_value" }
   "vars": {
@@ -55,7 +54,25 @@
     // Must be set in the Cloudflare dashboard for production deployments.
     // Set PUBLIC_URL=https://yourdomain.com in the Cloudflare dashboard, or in .env for local dev.
     "PUBLIC_URL": "",
+    // Verified sender address for outgoing emails. Must be on the domain onboarded
+    // to Cloudflare Email Service. Tenant name is the display name; replies go to
+    // the tenant via Reply-To. See .env.example for local dev.
+    "EMAIL_FROM_ADDRESS": "bookings@mail.maximumbookings.com",
   },
+  /**
+   * Email Sending (Cloudflare Email Service)
+   * Provides env.EMAIL.send({ to, from, subject, html, replyTo }) — no API key required.
+   * Local dev / tests simulate sends via Miniflare; real sends happen on deploy.
+   * After editing this binding, run `npx wrangler types` to regenerate worker-configuration.d.ts.
+   * https://developers.cloudflare.com/email-service/api/send-emails/workers-api/
+   */
+  "send_email": [
+    {
+      "name": "EMAIL",
+      // Defence in depth: restrict the binding to our verified sender address.
+      "allowed_sender_addresses": ["bookings@mail.maximumbookings.com"],
+    },
+  ],
   /**
    * D1 Databases (see binding above)
    */

@@ -4,7 +4,6 @@
 // `npx wrangler types` to regenerate worker-configuration.d.ts and remove this file.
 interface Env {
   JWT_SECRET: string;
-  RESEND_API_KEY: string;
   SUPER_ADMIN_KEY: string;
   ENVIRONMENT?: string;
   PUBLIC_URL?: string;
