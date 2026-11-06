@@ -1,8 +1,17 @@
 // @vitest-environment jsdom
-import { render, within, fireEvent } from '@testing-library/preact';
+import { render, within, act } from '@testing-library/preact';
 import { describe, it, expect, vi } from 'vitest';
 import { Step1Form } from './Step1Form';
 import type { BookingFormData, CalendarDate, TenantConfig } from '@shared/types';
+
+// @testing-library/preact renames fireEvent.change to 'input' once preact/compat is loaded (Modal/Tooltip via the barrel). Compat only maps
+// onChange->onInput for input/textarea, so a <select> onChange never fires. Dispatch a real 'change' event instead.
+function selectOption(select: HTMLSelectElement, value: string) {
+  act(() => {
+    select.value = value;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}
 
 const testDate: CalendarDate = { year: 2024, month: 0, day: 8 };
 
@@ -111,7 +120,7 @@ describe('Step1Form', () => {
     });
 
     const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
-    fireEvent.change(guestSelect, { target: { value: 'large' } });
+    selectOption(guestSelect, 'large');
 
     expect(getByText(/for bookings of 5 or more guests, please call the venue directly/i)).toBeTruthy();
     expect((getByRole('button', { name: /next/i }) as HTMLButtonElement).disabled).toBe(true);
@@ -124,7 +133,7 @@ describe('Step1Form', () => {
     });
 
     const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
-    fireEvent.change(guestSelect, { target: { value: 'large' } });
+    selectOption(guestSelect, 'large');
 
     expect(getByText(/for bookings of 10 or more guests, please call the venue directly/i)).toBeTruthy();
     expect((getByRole('button', { name: /next/i }) as HTMLButtonElement).disabled).toBe(true);
@@ -139,7 +148,7 @@ describe('Step1Form', () => {
     expect(getByLabelText(/time/i)).toBeTruthy();
 
     const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
-    fireEvent.change(guestSelect, { target: { value: 'large' } });
+    selectOption(guestSelect, 'large');
 
     expect(queryByLabelText(/time/i)).toBeNull();
   });

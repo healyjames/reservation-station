@@ -76,7 +76,7 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
         </button>
       </div>
 
-      <SelectedDateInfo date={date} onChangeDate={onChangeDate} />
+      <SelectedDateInfo date={date} />
 
       <form id="booking-form-step1" class={styles.form}>
         <FormField label="Number of Guests" htmlFor="guests" required>

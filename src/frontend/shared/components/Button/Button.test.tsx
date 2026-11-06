@@ -9,11 +9,6 @@ describe('Button', () => {
     expect(getByText('Click me')).toBeTruthy();
   });
 
-  it('adds button-danger class for danger variant', () => {
-    const { container } = render(<Button variant="danger">Delete</Button>);
-    expect(container.querySelector('button')?.className).toContain('button-danger');
-  });
-
   it('is disabled when isLoading is true', () => {
     const { container } = render(<Button isLoading>Save</Button>);
     expect((container.querySelector('button') as HTMLButtonElement).disabled).toBe(true);

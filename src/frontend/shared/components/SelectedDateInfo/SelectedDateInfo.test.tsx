@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { render, fireEvent } from '@testing-library/preact';
-import { describe, it, expect, vi } from 'vitest';
+import { render } from '@testing-library/preact';
+import { describe, it, expect } from 'vitest';
 import SelectedDateInfo from './SelectedDateInfo';
 import type { CalendarDate } from '@shared/types';
 
@@ -18,20 +18,10 @@ describe('SelectedDateInfo', () => {
     expect(getByText(/15 January 2024/)).toBeTruthy();
   });
 
-  it('does NOT render "Change date" button when onChangeDate is absent', () => {
-    const { queryByText } = render(<SelectedDateInfo date={testDate} />);
-    expect(queryByText('Change date')).toBeNull();
-  });
-
-  it('renders "Change date" button when onChangeDate is provided', () => {
-    const { getByText } = render(<SelectedDateInfo date={testDate} onChangeDate={() => {}} />);
-    expect(getByText('Change date')).toBeTruthy();
-  });
-
-  it('calls onChangeDate when "Change date" is clicked', () => {
-    const onChangeDate = vi.fn();
-    const { getByText } = render(<SelectedDateInfo date={testDate} onChangeDate={onChangeDate} />);
-    fireEvent.click(getByText('Change date'));
-    expect(onChangeDate).toHaveBeenCalledOnce();
+  it('shows the "Selected Date" label by default and hides it with hideLabel', () => {
+    const { queryByText, rerender } = render(<SelectedDateInfo date={testDate} />);
+    expect(queryByText('Selected Date')).toBeTruthy();
+    rerender(<SelectedDateInfo date={testDate} hideLabel />);
+    expect(queryByText('Selected Date')).toBeNull();
   });
 });
