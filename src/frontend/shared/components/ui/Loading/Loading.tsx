@@ -1,7 +1,6 @@
 import type { FunctionComponent, JSX } from 'preact';
 import { cx } from '@shared/utils/cx';
 
-export type LoadingVariant = 'spinner' | 'dots' | 'ring' | 'ball' | 'bars' | 'infinity';
 export type LoadingSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 type OwnedAttributes =
@@ -18,19 +17,9 @@ type OwnedAttributes =
 
 export type LoadingProps = Omit<JSX.HTMLAttributes<HTMLSpanElement>, OwnedAttributes> & {
   class?: string;
-  variant?: LoadingVariant;
   size?: LoadingSize;
   /** Announced to assistive tech. `null` or `''` = decorative, for when visible text or a busy parent already says it. */
   label?: string | null;
-};
-
-const VARIANT_CLASSES: Record<LoadingVariant, string> = {
-  spinner: '',
-  dots: 'loading-dots',
-  ring: 'loading-ring',
-  ball: 'loading-ball',
-  bars: 'loading-bars',
-  infinity: 'loading-infinity',
 };
 
 const SIZE_CLASSES: Record<LoadingSize, string> = {
@@ -41,8 +30,8 @@ const SIZE_CLASSES: Record<LoadingSize, string> = {
   xl: 'loading-xl',
 };
 
-const Loading: FunctionComponent<LoadingProps> = ({ variant = 'spinner', size = 'md', label = 'Loading', class: className, ...rest }) => {
-  const indicatorClass = cx('loading', VARIANT_CLASSES[variant], SIZE_CLASSES[size]);
+const Loading: FunctionComponent<LoadingProps> = ({ size = 'md', label = 'Loading', class: className, ...rest }) => {
+  const indicatorClass = cx('loading', SIZE_CLASSES[size]);
 
   if (!label) {
     return <span {...rest} aria-hidden="true" class={cx(indicatorClass, className)} />;

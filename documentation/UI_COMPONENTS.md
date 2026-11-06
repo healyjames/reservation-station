@@ -6,4 +6,5 @@ Conventions: see "UI components" in `.claude/docs/architecture.md` (added in sub
 
 | Component | daisyUI category | Props | Consumers |
 | --- | --- | --- | --- |
-| Loading | Feedback ([loading](https://daisyui.com/components/loading/)) | `variant`, `size`, `label` (`null` = decorative), `<span>` attributes | none yet (replaces `Spinner`) |
+| Loading | Feedback ([loading](https://daisyui.com/components/loading/)) | `size`, `label` (`null` or `''` = decorative), `<span>` attributes | ui/Button (replaces `Spinner`) |
+| Button | Actions ([button](https://daisyui.com/components/button/)) | `variant` (primary, secondary = neutral outline, error, ghost), `size` (sm, md), `shape` (square, circle), `block`, `isLoading`, `type` (default `button`), `<button>` attributes | none yet (replaces `Button`) |

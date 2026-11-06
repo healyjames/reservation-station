@@ -14,8 +14,8 @@ describe('Loading', () => {
     expect(getByRole('status').textContent).toBe('Loading available times');
   });
 
-  it('still announces its label with a non-default size and variant', () => {
-    const { getByRole } = render(<Loading size="xl" variant="dots" label="Saving" />);
+  it('still announces its label with a non-default size', () => {
+    const { getByRole } = render(<Loading size="xl" label="Saving" />);
     expect(getByRole('status').textContent).toBe('Saving');
   });
 
