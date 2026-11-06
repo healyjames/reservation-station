@@ -1,10 +1,11 @@
 @import 'tailwindcss' source(none);
 @source '../../**/*.{ts,tsx,html}';
 
-/* daisyUI components only; the themes are our own and arrive in themes.css (subtask 2). */
+/* daisyUI components only; the built-in themes are not shipped. Our themes live in themes.css. */
 @plugin 'daisyui' {
   themes: false;
 }
+@import './themes.css';
 
 @theme {
   --font-sans: 'Google Sans', sans-serif;
