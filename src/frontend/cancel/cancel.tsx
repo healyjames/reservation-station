@@ -1,3 +1,4 @@
+import '@shared/styles/app.css';
 import { render } from 'preact';
 import { CancelApp } from './CancelApp';
 

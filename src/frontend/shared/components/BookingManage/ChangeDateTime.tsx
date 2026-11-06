@@ -197,7 +197,7 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
         </div>
       )}
 
-      <div class={`${styles.action_group} mt-2`}>
+      <div class={styles.action_group}>
         <Button type="button" variant="secondary" onClick={goToOverview}>
           ← Back
         </Button>
