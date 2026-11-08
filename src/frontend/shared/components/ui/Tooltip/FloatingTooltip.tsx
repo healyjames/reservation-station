@@ -1,9 +1,10 @@
 import { createPortal } from 'preact/compat';
 import type { ComponentChildren, FunctionComponent, JSX } from 'preact';
-import { useEffect, useId, useRef } from 'preact/hooks';
+import { useContext, useEffect, useId, useRef } from 'preact/hooks';
 import { cx } from '@shared/utils/cx';
 import Button from '../Button';
 import { X } from '../icons';
+import { ModalPortalContext } from '../Modal/portalTarget';
 
 type OwnedAttributes = 'class' | 'className' | 'children' | 'id' | 'role' | 'style' | 'open';
 
@@ -22,9 +23,9 @@ export type FloatingTooltipProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, Owne
 const GAP_PX = 8;
 
 /**
- * A tooltip opened from code, e.g. on tapping a blocked calendar date. It is rendered in a portal on `document.body` and
- * positioned above the anchor once per render (computed position is the one allowed inline style; no scroll/resize
- * tracking or viewport clamping). Not for use inside a modal `<dialog>`: the top layer would cover it.
+ * A tooltip opened from code, e.g. on tapping a blocked calendar date. It is rendered in a portal (on `document.body`,
+ * or inside the open ui/Modal's dialog so it is not covered) and positioned above the anchor once per render (computed
+ * position is the one allowed inline style; no scroll/resize tracking or viewport clamping).
  *
  * Screen readers do not announce a description added to an already-focused element, so the caller also writes the same
  * message into a persistent `role="status"` region. Re-opening on the same anchor does not restart `timeout`.
@@ -39,6 +40,7 @@ const FloatingTooltip: FunctionComponent<FloatingTooltipProps> = ({
   ...rest
 }) => {
   const id = useId();
+  const portalTarget = useContext(ModalPortalContext) ?? document.body;
   const visible = open && anchor !== null;
 
   useEffect(() => {
@@ -106,7 +108,7 @@ const FloatingTooltip: FunctionComponent<FloatingTooltipProps> = ({
       </div>
       <span aria-hidden="true" class="absolute left-1/2 top-full size-2 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-neutral" />
     </div>,
-    document.body,
+    portalTarget,
   );
 };
 

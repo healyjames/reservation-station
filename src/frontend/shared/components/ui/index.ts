@@ -10,4 +10,7 @@ export type { AlertHeadingLevel, AlertLive, AlertProps, AlertVariant } from './A
 export { default as Tooltip, FloatingTooltip } from './Tooltip';
 export type { FloatingTooltipProps, TooltipProps } from './Tooltip';
 
+export { default as Modal } from './Modal';
+export type { ModalProps } from './Modal';
+
 // Icons are imported from '@shared/components/ui/icons', not re-exported here: names like Menu and X would clash with components.
