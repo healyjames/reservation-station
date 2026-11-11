@@ -37,4 +37,7 @@ export type { ToggleProps } from './Toggle';
 export { default as Badge } from './Badge';
 export type { BadgeProps, BadgeVariant } from './Badge';
 
+export { default as Card } from './Card';
+export type { CardElement, CardProps, CardTitleTag } from './Card';
+
 // Icons are imported from '@shared/components/ui/icons', not re-exported here: names like Menu and X would clash with components.
