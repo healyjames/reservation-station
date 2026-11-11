@@ -31,4 +31,7 @@ export type { SelectOption, SelectProps } from './Select';
 export { default as Textarea } from './Textarea';
 export type { TextareaProps } from './Textarea';
 
+export { default as Toggle } from './Toggle';
+export type { ToggleProps } from './Toggle';
+
 // Icons are imported from '@shared/components/ui/icons', not re-exported here: names like Menu and X would clash with components.
