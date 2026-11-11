@@ -58,7 +58,7 @@ Owned daisyUI 5 components: the code lives in `src/frontend/shared/components/ui
 - **State:** exposed through role, `aria-*` or `data-*`, never only through a class. Tests query by role, label, text or `data-*`, never by class name.
 - **Live regions:** components with a live role have an announcing mode and a decorative mode (e.g. `label={null}`). Announcing puts the label in visually hidden text content, not `aria-label`. A live region mounted together with its content is best-effort for NVDA/JAWS; when an announcement must be heard, the page keeps a persistent region and changes its text.
 - **Busy and disabled:** disabling a focused control drops focus to `<body>`. The consumer moves focus to the result or status message when the request finishes.
-- **Themes:** `shared/styles/themes.css`; `public/js/theme.js` sets `<html data-theme>` from `?theme=`/`?mode=` before first paint (admin: `admin-<mode>`, ignoring `?theme=`).
+- **Themes:** `shared/styles/themes.css` (names typed as `ThemeName` in `shared/styles/themes.ts`); `public/js/theme.js` sets `<html data-theme>` from `?theme=`/`?mode=` before first paint (admin: `admin-<mode>`, ignoring `?theme=`).
 
 ## Anti-patterns (reject in review)
 
