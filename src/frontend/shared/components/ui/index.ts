@@ -58,4 +58,7 @@ export type { MenuItemProps, MenuProps } from './Menu';
 export { default as Navbar } from './Navbar';
 export type { NavbarElement, NavbarProps } from './Navbar';
 
+export { default as Join } from './Join';
+export type { JoinProps } from './Join';
+
 // Icons are imported from '@shared/components/ui/icons', not re-exported here: names like Menu and X would clash with components.
