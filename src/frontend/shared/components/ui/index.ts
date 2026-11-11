@@ -49,4 +49,7 @@ export type { StatProps } from './Stat';
 export { default as Status } from './Status';
 export type { StatusColor, StatusProps, StatusSize } from './Status';
 
+export { default as Table } from './Table';
+export type { TableProps } from './Table';
+
 // Icons are imported from '@shared/components/ui/icons', not re-exported here: names like Menu and X would clash with components.
