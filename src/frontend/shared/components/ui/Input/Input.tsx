@@ -1,5 +1,6 @@
 import type { FunctionComponent, JSX } from 'preact';
 import { cx } from '@shared/utils/cx';
+import { isAriaInvalid } from '@shared/utils/isAriaInvalid';
 
 type OwnedAttributes = 'class' | 'className' | 'type';
 
@@ -15,12 +16,6 @@ export type InputProps = Omit<JSX.InputHTMLAttributes<HTMLInputElement>, OwnedAt
   validator?: boolean;
 };
 
-// Same rule as daisyUI's validator: any aria-invalid value except false ('grammar', 'spelling', true) is an error.
-const isInvalid = (value: InputProps['aria-invalid']) => {
-  const raw = value !== null && typeof value === 'object' && 'value' in value ? value.value : value;
-  return raw !== undefined && raw !== null && raw !== false && raw !== 'false';
-};
-
 /**
  * daisyUI input, full width. Every other attribute (including `aria-describedby` and `aria-invalid` from ui/Fieldset)
  * goes on the native `<input>`. It has no label, hint or error text: wrap it in ui/Fieldset. `aria-invalid` also shows
@@ -33,7 +28,7 @@ const Input: FunctionComponent<InputProps> = ({ type = 'text', validator = false
   <input
     {...rest}
     type={type}
-    class={cx('input w-full', validator && 'validator', isInvalid(rest['aria-invalid']) && 'input-error', className)}
+    class={cx('input w-full', validator && 'validator', isAriaInvalid(rest['aria-invalid']) && 'input-error', className)}
   />
 );
 
