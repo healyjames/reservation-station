@@ -34,4 +34,7 @@ export type { TextareaProps } from './Textarea';
 export { default as Toggle } from './Toggle';
 export type { ToggleProps } from './Toggle';
 
+export { default as Badge } from './Badge';
+export type { BadgeProps, BadgeVariant } from './Badge';
+
 // Icons are imported from '@shared/components/ui/icons', not re-exported here: names like Menu and X would clash with components.
