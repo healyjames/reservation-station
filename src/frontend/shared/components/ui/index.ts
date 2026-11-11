@@ -55,4 +55,7 @@ export type { TableProps } from './Table';
 export { default as Menu, MenuItem } from './Menu';
 export type { MenuItemProps, MenuProps } from './Menu';
 
+export { default as Navbar } from './Navbar';
+export type { NavbarElement, NavbarProps } from './Navbar';
+
 // Icons are imported from '@shared/components/ui/icons', not re-exported here: names like Menu and X would clash with components.
