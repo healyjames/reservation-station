@@ -19,4 +19,7 @@ export type { SwapCheckboxProps, SwapProps, SwapState } from './Swap';
 export { default as ThemeController } from './ThemeController';
 export type { ThemeControllerProps } from './ThemeController';
 
+export { default as Fieldset } from './Fieldset';
+export type { FieldsetProps } from './Fieldset';
+
 // Icons are imported from '@shared/components/ui/icons', not re-exported here: names like Menu and X would clash with components.
