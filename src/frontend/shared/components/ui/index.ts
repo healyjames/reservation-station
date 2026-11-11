@@ -28,4 +28,7 @@ export type { InputProps, InputType } from './Input';
 export { default as Select } from './Select';
 export type { SelectOption, SelectProps } from './Select';
 
+export { default as Textarea } from './Textarea';
+export type { TextareaProps } from './Textarea';
+
 // Icons are imported from '@shared/components/ui/icons', not re-exported here: names like Menu and X would clash with components.
