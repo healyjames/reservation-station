@@ -46,4 +46,7 @@ export type { ListItem, ListLayout, ListProps } from './List';
 export { default as Stat } from './Stat';
 export type { StatProps } from './Stat';
 
+export { default as Status } from './Status';
+export type { StatusColor, StatusProps, StatusSize } from './Status';
+
 // Icons are imported from '@shared/components/ui/icons', not re-exported here: names like Menu and X would clash with components.
