@@ -22,4 +22,7 @@ export type { ThemeControllerProps } from './ThemeController';
 export { default as Fieldset } from './Fieldset';
 export type { FieldsetProps } from './Fieldset';
 
+export { default as Input } from './Input';
+export type { InputProps, InputType } from './Input';
+
 // Icons are imported from '@shared/components/ui/icons', not re-exported here: names like Menu and X would clash with components.
