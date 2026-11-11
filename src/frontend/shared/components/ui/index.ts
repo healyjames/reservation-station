@@ -43,4 +43,7 @@ export type { CardElement, CardProps, CardTitleTag } from './Card';
 export { default as List } from './List';
 export type { ListItem, ListLayout, ListProps } from './List';
 
+export { default as Stat } from './Stat';
+export type { StatProps } from './Stat';
+
 // Icons are imported from '@shared/components/ui/icons', not re-exported here: names like Menu and X would clash with components.
