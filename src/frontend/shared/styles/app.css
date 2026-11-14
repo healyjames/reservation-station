@@ -1,0 +1,96 @@
+@import 'tailwindcss' source(none);
+@source '../../**/*.{ts,tsx,html}';
+
+/* daisyUI components only; the built-in themes are not shipped. Our themes live in themes.css. */
+@plugin 'daisyui' {
+  themes: false;
+}
+@import './themes.css';
+
+@theme {
+  --font-sans: 'Google Sans', sans-serif;
+}
+
+@font-face {
+  font-family: 'Google Sans';
+  src: url('/fonts/GoogleSans-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Google Sans';
+  src: url('/fonts/GoogleSans-Italic-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Tailwind's preflight resets these; restore the browser defaults the current UI relies on. */
+@layer base {
+  html,
+  :host {
+    line-height: normal;
+    -webkit-tap-highlight-color: revert;
+  }
+  dialog {
+    margin: auto;
+  }
+  h1 {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0.67em 0;
+  }
+  h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 0.83em 0;
+  }
+  h3 {
+    font-size: 1.17em;
+    font-weight: bold;
+    margin: 1em 0;
+  }
+  h4 {
+    font-size: 1em;
+    font-weight: bold;
+    margin: 1.33em 0;
+  }
+  h5 {
+    font-size: 0.83em;
+    font-weight: bold;
+    margin: 1.67em 0;
+  }
+  h6 {
+    font-size: 0.67em;
+    font-weight: bold;
+    margin: 2.33em 0;
+  }
+  p {
+    margin: 1em 0;
+  }
+  ul,
+  ol {
+    list-style: revert;
+    margin: 1em 0;
+    padding-inline-start: 40px;
+  }
+  dl {
+    margin: 1em 0;
+  }
+  dd {
+    margin-left: 40px;
+  }
+  svg {
+    display: inline;
+    vertical-align: baseline;
+  }
+}
+
+/* daisyUI's base sets a tinted page scrollbar later in @layer base, so this reset needs a later layer to win. */
+@layer components {
+  :root {
+    scrollbar-color: auto;
+  }
+}

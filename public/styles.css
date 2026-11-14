@@ -99,23 +99,26 @@
 /* ============================================================
    SEMANTIC TOKENS
    ============================================================ */
+/* Tokens that public/js/theme.js used to set inline now come from the active daisyUI theme
+   (src/frontend/shared/styles/themes.css, chosen by <html data-theme>), so this file only resolves alongside the
+   shared/styles/app.css bundle that every entry imports. Removed in subtask 40. */
 :root {
   /* Primary */
   --primary-darkest: var(--clr-primary-a0);
-  --primary-darker: var(--clr-primary-a10);
+  --primary-darker: var(--legacy-primary-darker);
   --primary-dark: var(--clr-primary-a20);
-  --primary: var(--clr-primary-a30);
+  --primary: var(--color-primary);
   --primary-rgb: 155, 152, 201;
-  --primary-light: var(--clr-primary-a40);
-  --primary-lighter: var(--clr-primary-a50);
-  --primary-lightest: var(--clr-primary-a60);
+  --primary-light: var(--legacy-primary-light);
+  --primary-lighter: var(--legacy-primary-lighter);
+  --primary-lightest: var(--legacy-primary-lightest);
 
   /* Background */
   --background-darkest: var(--clr-surface-a0);
-  --background-darker: var(--clr-surface-tonal-a0);
+  --background-darker: var(--color-base-300);
   --background-dark: var(--clr-surface-tonal-a10);
-  --background: var(--clr-surface-tonal-a10);
-  --background-light: var(--clr-surface-tonal-a20);
+  --background: var(--color-base-100);
+  --background-light: var(--color-base-200);
   --background-lighter: var(--clr-surface-tonal-a30);
   --background-lightest: var(--clr-surface-tonal-a40);
 
@@ -123,7 +126,7 @@
   --foreground-darkest: var(--clr-surface-tonal-a40);
   --foreground-darker: var(--clr-surface-tonal-a50);
   --foreground-dark: var(--clr-surface-tonal-a60);
-  --foreground: var(--clr-surface-tonal-a70);
+  --foreground: var(--color-base-content);
   --foreground-light: var(--clr-primary-a70);
   --foreground-lighter: var(--clr-primary-a80);
   --foreground-lightest: var(--clr-light-a0);
@@ -149,7 +152,7 @@
   --info-light: var(--clr-info-a20);
 
   /* Legacy */
-  --grey-lightest: var(--clr-surface-a10);
+  --grey-lightest: var(--legacy-grey-lightest);
 }
 
 /* ============================================================
@@ -203,6 +206,12 @@
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   border: 0;
+}
+
+/* The daisyUI themes set color-scheme; keep native controls (date/time pickers, selects) looking as before
+   until the screens migrate. Remove in subtask 40. */
+html {
+  color-scheme: normal;
 }
 
 html,

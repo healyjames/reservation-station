@@ -1,8 +1,5 @@
 ﻿export type TenantStatus = 'active' | 'cancelled';
 
-export type ThemeName = string;
-export type ThemeMode = 'light' | 'dark';
-
 export type OpeningHoursEntry = {
   id: string;
   tenant_id: string;
@@ -12,7 +9,7 @@ export type OpeningHoursEntry = {
   is_closed: boolean | 0 | 1;
   open_time: string | null;
   close_time: string | null;
-}
+};
 
 export type TenantConfig = {
   id: string;
@@ -28,4 +25,4 @@ export type TenantConfig = {
   created_date?: string;
   modified_date?: string;
   opening_hours: OpeningHoursEntry[] | null;
-}
+};
