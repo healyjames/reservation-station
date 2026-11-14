@@ -318,6 +318,7 @@ reservations.patch('/:id', async (c) => {
   }
 
   const body = parsed.data;
+  if (Object.keys(body).length === 0) return c.json({ error: 'No valid fields to update' }, 400);
 
   const needsCapacityCheck = body.guests !== undefined || body.reservation_date !== undefined || body.reservation_time !== undefined;
   const effectiveGuests = body.guests ?? existing.guests;
@@ -329,8 +330,6 @@ reservations.patch('/:id', async (c) => {
   }
 
   const data = { ...body, modified_date: new Date().toISOString() };
-
-  if (!Object.keys(data).length) return c.json({ error: 'No valid fields to update' }, 400);
 
   const fields = Object.keys(data)
     .map((k) => `${k} = ?`)

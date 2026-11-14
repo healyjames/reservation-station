@@ -125,8 +125,8 @@ async function getAuthToken(email = TEST_EMAIL, password = TEST_PASSWORD): Promi
     body: JSON.stringify({ email, password }),
   });
   const body = (await res.json()) as any;
-  if (!body.token) throw new Error(`Login failed: ${JSON.stringify(body)}`);
-  return body.token;
+  if (!body.data?.token) throw new Error(`Login failed: ${JSON.stringify(body)}`);
+  return body.data.token;
 }
 
 // ─── Admin: /api/admin/blocked-dates ─────────────────────────────────────────
@@ -379,7 +379,7 @@ describe('Admin: /api/admin/blocked-dates', () => {
   // ─── DELETE /date/:date ───────────────────────────────────────────────────
 
   describe('DELETE /api/admin/blocked-dates/date/:date', () => {
-    it('removes all blocks for the given date', async () => {
+    it('removes the full-day block for the date and keeps time-range blocks', async () => {
       await seedBlockedDate({ id: BLOCK_ID_1, date: '2099-07-20' });
       await seedBlockedDate({ id: BLOCK_ID_2, date: '2099-07-20', start_time: '14:00', end_time: '16:00' });
       const token = await getAuthToken();
@@ -393,7 +393,7 @@ describe('Admin: /api/admin/blocked-dates', () => {
         .prepare('SELECT id FROM BlockedDates WHERE tenant_id = ? AND date = ?')
         .bind(TENANT_ID, '2099-07-20')
         .run<{ id: string }>();
-      expect(results).toHaveLength(0);
+      expect(results.map((r) => r.id)).toEqual([BLOCK_ID_2]);
     });
   });
 

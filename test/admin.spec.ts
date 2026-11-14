@@ -95,8 +95,8 @@ async function getAuthToken(email = TEST_EMAIL, password = TEST_PASSWORD): Promi
     body: JSON.stringify({ email, password }),
   });
   const body = (await res.json()) as any;
-  if (!body.token) throw new Error(`Login failed: ${JSON.stringify(body)}`);
-  return body.token;
+  if (!body.data?.token) throw new Error(`Login failed: ${JSON.stringify(body)}`);
+  return body.data.token;
 }
 
 // ─── Admin: GET /api/admin/me ─────────────────────────────────────────────────

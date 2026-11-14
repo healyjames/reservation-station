@@ -1,5 +1,7 @@
 import { env, exports } from 'cloudflare:workers';
 import { describe, it, expect, beforeEach } from 'vitest';
+import { signJWT } from '../src/utils/auth';
+import { generateManageToken, hashManageToken } from '../src/utils/manageToken';
 
 // ─── Seed helpers ────────────────────────────────────────────────────────────
 
@@ -25,31 +27,42 @@ async function seedTenant(overrides: Record<string, unknown> = {}) {
     .run();
 }
 
-async function seedReservation(overrides: Record<string, unknown> = {}) {
+/** Seeds a reservation and returns the customer manage query (`email=…&token=…`) for it. */
+async function seedReservation(overrides: Record<string, unknown> = {}): Promise<string> {
   const now = new Date().toISOString();
+  const id = (overrides.id as string) ?? RES_ID;
+  const email = (overrides.email as string) ?? 'jane@example.com';
+  const manageToken = await generateManageToken(env.JWT_SECRET, id, email);
   await env.maximum_bookings_db
     .prepare(
       `INSERT OR REPLACE INTO Reservations
       (id, tenant_id, first_name, surname, telephone, email,
        reservation_date, reservation_time, guests, dietary_requirements,
-       created_date, modified_date)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       created_date, modified_date, manage_token_hash)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
-      overrides.id ?? RES_ID,
+      id,
       overrides.tenant_id ?? TENANT_ID,
       overrides.first_name ?? 'Jane',
       overrides.surname ?? 'Doe',
       overrides.telephone ?? '07700900000',
-      overrides.email ?? 'jane@example.com',
+      email,
       overrides.reservation_date ?? '2099-06-01', // far future avoids same-day blocks
       overrides.reservation_time ?? '19:00',
       overrides.guests ?? 2,
       overrides.dietary_requirements ?? null,
       now,
       now,
+      await hashManageToken(manageToken),
     )
     .run();
+  return `email=${encodeURIComponent(email)}&token=${manageToken}`;
+}
+
+async function adminHeaders(tenantId: string = TENANT_ID): Promise<Record<string, string>> {
+  const token = await signJWT({ userId: '00000000-0000-4000-8000-0000000000a1', tenantId }, env.JWT_SECRET);
+  return { Authorization: `Bearer ${token}` };
 }
 
 async function clearDb() {
@@ -65,37 +78,36 @@ describe('Reservations', () => {
     await seedTenant();
   });
 
-  // GET /api/reservations
+  // GET /api/reservations (admin only, scoped to the token's tenant)
   describe('GET /api/reservations', () => {
-    it('returns empty array with no reservations', async () => {
+    it('returns 401 without an admin token', async () => {
       const res = await exports.default.fetch('http://localhost/api/reservations');
+      expect(res.status).toBe(401);
+    });
+
+    it('returns empty array with no reservations', async () => {
+      const res = await exports.default.fetch('http://localhost/api/reservations', { headers: await adminHeaders() });
       expect(res.status).toBe(200);
       expect(await res.json()).toEqual([]);
     });
 
-    it('returns all reservations', async () => {
-      await seedReservation();
-      const res = await exports.default.fetch('http://localhost/api/reservations');
-      const body = (await res.json()) as any[];
-      expect(body).toHaveLength(1);
-    });
-
-    it('filters by tenant_id', async () => {
-      await seedTenant({ id: TENANT_ID_2, name: 'Other Place' });
+    it('returns only reservations for the tenant in the token', async () => {
+      await seedTenant({ id: TENANT_ID_2, name: 'Other Place', tenant_code: 'other-place' });
       await seedReservation({ id: RES_ID, tenant_id: TENANT_ID });
       await seedReservation({ id: '00000000-0000-4000-8000-000000000011', tenant_id: TENANT_ID_2 });
 
-      const res = await exports.default.fetch(`http://localhost/api/reservations?tenant_id=${TENANT_ID}`);
+      const res = await exports.default.fetch(`http://localhost/api/reservations?tenant_id=${TENANT_ID_2}`, {
+        headers: await adminHeaders(TENANT_ID),
+      });
       const body = (await res.json()) as any[];
-      expect(body).toHaveLength(1);
-      expect(body[0].tenant_id).toBe(TENANT_ID);
+      expect(body.map((r) => r.id)).toEqual([RES_ID]);
     });
 
     it('filters by date', async () => {
       await seedReservation({ id: RES_ID, reservation_date: '2099-06-01' });
       await seedReservation({ id: '00000000-0000-4000-8000-000000000011', reservation_date: '2099-07-01' });
 
-      const res = await exports.default.fetch(`http://localhost/api/reservations?date=2099-06-01`);
+      const res = await exports.default.fetch(`http://localhost/api/reservations?date=2099-06-01`, { headers: await adminHeaders() });
       const body = (await res.json()) as any[];
       expect(body).toHaveLength(1);
       expect(body[0].reservation_date).toBe('2099-06-01');
@@ -104,12 +116,21 @@ describe('Reservations', () => {
 
   // GET /api/reservations/:id
   describe('GET /api/reservations/:id', () => {
-    it('returns a reservation', async () => {
+    it('returns a reservation to the matching email without exposing the manage token hash', async () => {
       await seedReservation();
-      const res = await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}`);
+      const res = await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}?email=jane@example.com`);
       const body = (await res.json()) as any;
       expect(res.status).toBe(200);
       expect(body.id).toBe(RES_ID);
+      expect(body).not.toHaveProperty('manage_token_hash');
+    });
+
+    it('returns 404 when the email is missing or does not match', async () => {
+      await seedReservation();
+      const missing = await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}`);
+      const wrong = await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}?email=someone@example.com`);
+      expect(missing.status).toBe(404);
+      expect(wrong.status).toBe(404);
     });
 
     it('returns 404 for unknown id', async () => {
@@ -283,6 +304,7 @@ describe('Reservations', () => {
         id: TENANT_ID_2,
         name: 'Unlimited Venue',
         tenant_code: 'unlimited-venue',
+        max_guests: 0,
         max_covers: 0,
         concurrent_guests_time_limit: 120,
       });
@@ -345,8 +367,8 @@ describe('Reservations', () => {
   // PATCH /api/reservations/:id
   describe('PATCH /api/reservations/:id', () => {
     it('updates allowed fields', async () => {
-      await seedReservation();
-      const res = await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}`, {
+      const manageQuery = await seedReservation();
+      const res = await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}?${manageQuery}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ first_name: 'Updated', guests: 3 }),
@@ -362,8 +384,8 @@ describe('Reservations', () => {
     });
 
     it('bumps modified_date on update', async () => {
-      await seedReservation();
-      await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}`, {
+      const manageQuery = await seedReservation();
+      await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}?${manageQuery}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ first_name: 'Changed' }),
@@ -375,9 +397,19 @@ describe('Reservations', () => {
       expect(row?.modified_date).toBeDefined();
     });
 
-    it('returns 400 for empty body', async () => {
+    it('returns 404 without a valid manage token', async () => {
       await seedReservation();
-      const res = await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}`, {
+      const res = await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}?email=jane@example.com&token=bad`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ first_name: 'Hacked' }),
+      });
+      expect(res.status).toBe(404);
+    });
+
+    it('returns 400 for empty body', async () => {
+      const manageQuery = await seedReservation();
+      const res = await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}?${manageQuery}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
@@ -389,17 +421,30 @@ describe('Reservations', () => {
   // DELETE /api/reservations/:id
   describe('DELETE /api/reservations/:id', () => {
     it('deletes a reservation', async () => {
-      await seedReservation();
-      const res = await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}`, { method: 'DELETE' });
+      const manageQuery = await seedReservation();
+      const res = await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}?${manageQuery}`, { method: 'DELETE' });
       expect(res.status).toBe(200);
       const row = await env.maximum_bookings_db.prepare('SELECT id FROM Reservations WHERE id = ?').bind(RES_ID).first();
       expect(row).toBeNull();
     });
 
-    it('returns 404 for unknown reservation', async () => {
-      const res = await exports.default.fetch(`http://localhost/api/reservations/00000000-0000-4000-8000-999999999999`, {
+    it('returns 404 and keeps the reservation without a valid manage token', async () => {
+      await seedReservation();
+      const res = await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}?email=jane@example.com&token=bad`, {
         method: 'DELETE',
       });
+      expect(res.status).toBe(404);
+      const row = await env.maximum_bookings_db.prepare('SELECT id FROM Reservations WHERE id = ?').bind(RES_ID).first();
+      expect(row).not.toBeNull();
+    });
+
+    it('returns 404 for unknown reservation', async () => {
+      const res = await exports.default.fetch(
+        `http://localhost/api/reservations/00000000-0000-4000-8000-999999999999?email=jane@example.com&token=x`,
+        {
+          method: 'DELETE',
+        },
+      );
       expect(res.status).toBe(404);
     });
   });
@@ -411,8 +456,8 @@ describe('Reservations', () => {
       const res = await exports.default.fetch(`http://localhost/api/reservations/availability?tenant_id=${TENANT_ID}&date=2099-06-01`);
       const body = (await res.json()) as any;
       expect(res.status).toBe(200);
-      expect(body.booked).toBe(5);
-      expect(body.remaining).toBe(15); // max_covers=20 - 5
+      const slot = body.slots.find((s: any) => s.time === '19:00');
+      expect(slot).toEqual({ time: '19:00', concurrent_guests: 5, available_capacity: 15 }); // max_covers=20 - 5
     });
 
     it('returns 400 when params are missing', async () => {
@@ -423,8 +468,9 @@ describe('Reservations', () => {
     it('returns full availability for a date with no bookings', async () => {
       const res = await exports.default.fetch(`http://localhost/api/reservations/availability?tenant_id=${TENANT_ID}&date=2099-12-25`);
       const body = (await res.json()) as any;
-      expect(body.booked).toBe(0);
-      expect(body.remaining).toBe(20);
+      expect(body.slots.length).toBeGreaterThan(0);
+      expect(new Set(body.slots.map((s: any) => s.concurrent_guests))).toEqual(new Set([0]));
+      expect(new Set(body.slots.map((s: any) => s.available_capacity))).toEqual(new Set([20]));
     });
   });
 
