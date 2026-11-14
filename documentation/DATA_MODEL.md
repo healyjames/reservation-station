@@ -122,7 +122,10 @@ An admin-defined closure. A row either blocks a **whole day** (times NULL) or a 
 
 **Keys & indexes:** `PRIMARY KEY (id)`, `idx_blocked_dates_tenant_date (tenant_id, date)`.
 
-**Rule:** `start_time` and `end_time` are all-or-nothing — both present (partial block) or both absent (full-day block).
+**Rules:**
+- `start_time` and `end_time` are all-or-nothing — both present (partial block) or both absent (full-day block).
+- The window is `[start_time, end_time)` — the end time itself is bookable.
+- New rows (`BlockDateBodySchema`) must use strict 24h `HH:MM` (`00:00`–`23:59`) with `end_time > start_time`. This is enforced in Zod only; the column has no CHECK constraint. Legacy rows where `end_time <= start_time` are still honoured as wrapping past midnight.
 
 ---
 

@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+// Strict 24h HH:MM (00:00–23:59).
+const TIME_HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+
 export const TenantSchema = z.object({
   id: z.uuid(),
   name: z.string(),
@@ -45,7 +48,7 @@ export const ReservationSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)')
     .refine((v) => !isNaN(new Date(v).getTime()), 'Invalid date (e.g. month or day out of range)'),
-  reservation_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Invalid time format (HH:MM)'),
+  reservation_time: z.string().regex(TIME_HHMM, 'Invalid time format (HH:MM)'),
   guests: z.number().int().positive(),
   dietary_requirements: z.string().max(500).optional(),
   created_date: z.string().optional(),
@@ -186,18 +189,17 @@ export type LoginPayload = z.infer<typeof LoginSchema>;
 export const BlockDateBodySchema = z
   .object({
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
-    start_time: z
-      .string()
-      .regex(/^\d{2}:\d{2}$/, 'Invalid time format (HH:MM)')
-      .optional(),
-    end_time: z
-      .string()
-      .regex(/^\d{2}:\d{2}$/, 'Invalid time format (HH:MM)')
-      .optional(),
+    start_time: z.string().regex(TIME_HHMM, 'Invalid time format (HH:MM)').optional(),
+    end_time: z.string().regex(TIME_HHMM, 'Invalid time format (HH:MM)').optional(),
     reason: z.string().optional(),
   })
   .refine((d) => (d.start_time == null) === (d.end_time == null), {
     message: 'start_time and end_time must both be provided or both be omitted',
+  })
+  // Zero-padded HH:MM compares correctly as strings. New blocks may not wrap past midnight.
+  .refine((d) => d.start_time == null || d.end_time == null || d.end_time > d.start_time, {
+    message: 'end_time must be after start_time',
+    path: ['end_time'],
   });
 
 export const CreateAdminReservationSchema = z.object({
@@ -209,7 +211,7 @@ export const CreateAdminReservationSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .refine((v) => !isNaN(new Date(v).getTime()), 'Invalid date (e.g. month or day out of range)'),
-  reservation_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  reservation_time: z.string().regex(TIME_HHMM),
   guests: z.number().int().positive(),
   dietary_requirements: z.string().max(500).optional().default(''),
 });

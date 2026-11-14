@@ -173,6 +173,42 @@ describe('Admin: /api/admin/blocked-dates', () => {
       expect(body.reason).toBe('Private event');
     });
 
+    it.each([
+      ['an hour above 23', { start_time: '22:00', end_time: '24:00' }],
+      ['an out-of-range time', { start_time: '14:00', end_time: '99:99' }],
+      ['a single-digit hour', { start_time: '9:00', end_time: '12:00' }],
+      ['minutes above 59', { start_time: '14:60', end_time: '16:00' }],
+      ['equal start and end times', { start_time: '14:00', end_time: '14:00' }],
+      ['an end time before the start time', { start_time: '16:00', end_time: '14:00' }],
+      ['only a start time', { start_time: '14:00' }],
+    ])('returns 400 for %s and stores nothing', async (_label, times) => {
+      const token = await getAuthToken();
+      const res = await exports.default.fetch('http://localhost/api/admin/blocked-dates', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: '2099-07-03', ...times }),
+      });
+      expect(res.status).toBe(400);
+
+      const rows = await env.maximum_bookings_db
+        .prepare('SELECT id FROM BlockedDates WHERE tenant_id = ? AND date = ?')
+        .bind(TENANT_ID, '2099-07-03')
+        .all();
+      expect(rows.results).toHaveLength(0);
+    });
+
+    it('accepts a block ending at 23:59', async () => {
+      const token = await getAuthToken();
+      const res = await exports.default.fetch('http://localhost/api/admin/blocked-dates', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: '2099-07-04', start_time: '18:00', end_time: '23:59' }),
+      });
+      expect(res.status).toBe(201);
+      const body = (await res.json()) as any;
+      expect(body.end_time).toBe('23:59');
+    });
+
     it('returns 400 when date format is not YYYY-MM-DD', async () => {
       const token = await getAuthToken();
       const res = await exports.default.fetch('http://localhost/api/admin/blocked-dates', {
