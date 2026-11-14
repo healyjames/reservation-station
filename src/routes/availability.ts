@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { generateTimeSlots, calculateConcurrentGuests, toMinutes } from '../utils/slots';
+import { generateTimeSlots, calculateConcurrentGuests, peakConcurrentGuests, toMinutes } from '../utils/slots';
 import type { SlotReservation } from '../types';
 
 const availability = new Hono<{ Bindings: Env }>();
@@ -143,8 +143,9 @@ availability.get('/blocked-times', async (c) => {
       blockedTimes.push(slot);
       continue;
     }
-    const concurrent = calculateConcurrentGuests(slot, slotReservations, tenant.concurrent_guests_time_limit);
-    if (concurrent + requestedGuests > tenant.max_covers) {
+    // A booking here occupies the whole sitting, so block it if the peak during the sitting would overflow.
+    const peak = peakConcurrentGuests(slot, slotReservations, tenant.concurrent_guests_time_limit);
+    if (peak + requestedGuests > tenant.max_covers) {
       blockedTimes.push(slot);
     }
   }

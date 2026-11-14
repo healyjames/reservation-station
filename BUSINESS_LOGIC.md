@@ -8,9 +8,13 @@ Maximum Bookings uses a **rolling occupancy model** to manage venue capacity. Ca
 
 ### Core Principle
 
-> At any point in time, the sum of all active bookings (those whose sitting window overlaps with a given time slot) must not exceed `max_covers`.
+> At no moment may the guests seated in the venue exceed `max_covers`.
 
-A booking occupies capacity for a fixed duration defined by `concurrent_guests_time_limit`. Two bookings are **concurrent** if the absolute difference between their start times is less than `concurrent_guests_time_limit` minutes.
+A booking starting at `T` occupies capacity for its whole **sitting**, `[T, T + concurrent_guests_time_limit)`. The end is exclusive, so a sitting that ends at 15:00 does not overlap one that starts at 15:00.
+
+**Occupancy at a moment `P`** is the sum of guests of every booking with `start <= P < start + limit`.
+
+**A new or moved booking fits** when, for every moment of its sitting, occupancy + its guests ≤ `max_covers`. Occupancy only rises when a booking starts, so it is enough to check the new booking's start and every existing booking start that falls inside its sitting. This means a booking is rejected if it would overlap a *later* booking and overflow, not just an earlier one.
 
 ---
 
@@ -50,7 +54,9 @@ A tenant can set a **booking delay** (`booking_delay_minutes`) to prevent last-m
 
 ## Examples
 
-### Example 1 — Full capacity blocks the window only
+"Largest new party" is the biggest party that can book a sitting starting at that time.
+
+### Example 1 — A full booking blocks every overlapping sitting
 
 **Configuration:** `max_covers = 8`, `concurrent_guests_time_limit = 120 min`
 
@@ -62,21 +68,21 @@ A tenant can set a **booking delay** (`booking_delay_minutes`) to prevent last-m
 
 | Time window | Active covers |
 |---|---|
-| 20:00–22:00 | 8 |
+| 20:00–21:59 | 8 |
 
 **Availability:**
 
-| Time | Remaining capacity |
+| New booking at | Largest new party |
 |---|---|
-| Before 20:00 | 8 (full capacity available) |
-| 20:00–21:59 | 0 (fully booked) |
-| 22:00+ | 8 (fully available again) |
+| 18:00 or earlier | 8 (sitting ends as A arrives) |
+| 18:30–21:30 | 0 (sitting overlaps A) |
+| 22:00+ | 8 |
 
-A booking at 18:00 is allowed. A booking at 20:30 is not. A booking at 22:00 is allowed again.
+A booking at 18:00 is allowed. A booking at 19:00 is not, because its sitting runs until 21:00 and A is seated from 20:00. A booking at 22:00 is allowed again.
 
 ---
 
-### Example 2 — Partial capacity reduces availability in the window
+### Example 2 — Partial capacity reduces availability for overlapping sittings
 
 **Configuration:** `max_covers = 8`, `concurrent_guests_time_limit = 120 min`
 
@@ -88,13 +94,14 @@ A booking at 18:00 is allowed. A booking at 20:30 is not. A booking at 22:00 is 
 
 | Time window | Active covers |
 |---|---|
-| 20:00–22:00 | 6 |
+| 20:00–21:59 | 6 |
 
 **Availability:**
 
-| Time | Remaining capacity |
+| New booking at | Largest new party |
 |---|---|
-| 20:00–21:59 | 2 (only parties of 1–2 can book) |
+| 18:00 or earlier | 8 |
+| 18:30–21:30 | 2 (only parties of 1–2 can book) |
 | 22:00+ | 8 |
 
 ---
@@ -108,7 +115,7 @@ A booking at 18:00 is allowed. A booking at 20:30 is not. A booking at 22:00 is 
 | A | 20:00 | 6 |
 | B | 21:00 | 2 |
 
-Booking B at 21:00 is concurrent with Booking A (|21:00 - 20:00| = 60 min < 120 min).
+B's sitting (21:00–22:59) overlaps A's (20:00–21:59).
 
 **Resulting occupancy:**
 
@@ -121,12 +128,13 @@ Booking B at 21:00 is concurrent with Booking A (|21:00 - 20:00| = 60 min < 120 
 
 **Availability:**
 
-| Time | Remaining capacity |
-|---|---|
-| 20:00–20:59 | 2 |
-| 21:00–21:59 | 0 (fully booked) |
-| 22:00–22:59 | 6 |
-| 23:00+ | 8 |
+| New booking at | Largest new party | Why |
+|---|---|---|
+| 18:00 or earlier | 8 | Sitting ends by 20:00 |
+| 18:30–19:00 | 2 | Overlaps A only |
+| 19:30–21:30 | 0 | Overlaps 21:00–21:59, when A + B are seated |
+| 22:00–22:30 | 6 | Overlaps B only |
+| 23:00+ | 8 | |
 
 ---
 
@@ -134,41 +142,32 @@ Booking B at 21:00 is concurrent with Booking A (|21:00 - 20:00| = 60 min < 120 
 
 ### Core concurrent calculation
 
-**`src/utils/slots.ts` — `calculateConcurrentGuests`**
+**`src/utils/slots.ts`**
 
-```ts
-export function calculateConcurrentGuests(
-  slotTime: string,           // "HH:MM"
-  reservations: SlotReservation[],
-  timeLimitMinutes: number
-): number
-```
-
-Returns the total guests from all reservations whose start time is within `timeLimitMinutes` of `slotTime`. Two bookings are concurrent when `|slot - booking| < timeLimitMinutes`.
+- `calculateConcurrentGuests(slotTime, reservations, timeLimitMinutes)` — occupancy at one moment: guests of bookings with `start <= slot < start + limit`.
+- `peakConcurrentGuests(startTime, reservations, timeLimitMinutes)` — highest occupancy during a sitting starting at `startTime` (checks the start and each booking start inside the sitting).
 
 Also see `generateTimeSlots` in the same file for how available time slots are produced.
+
+**`src/db/capacity.ts` — `capacityGuard`** builds the same whole-sitting rule as a SQL `WHERE` condition, so the capacity check and the write happen in one statement.
 
 ---
 
 ### API: booking creation guard
 
-**`src/routes/reservations.ts` — `POST /api/reservations`**
+**`src/routes/reservations.ts` — `POST /api/reservations`** (also `POST /api/admin/reservations` and the customer `PATCH /api/reservations/:id`)
 
-When a reservation is submitted, the API:
-1. Fetches all existing reservations for `(tenant_id, reservation_date)`.
-2. Calls `calculateConcurrentGuests(reservation_time, dayReservations, concurrent_guests_time_limit)`.
-3. Rejects with **422** if `concurrent + new_guests > max_covers`.
-4. `max_covers = 0` skips the check entirely (unlimited).
+The `INSERT … SELECT … WHERE` (or `UPDATE … WHERE`) embeds `capacityGuard`, so occupancy is re-checked inside the same SQLite statement as the write. No row is written if the sitting would exceed `max_covers` at any moment, and the API returns **422**. `max_covers = 0` skips the check (unlimited). On PATCH the booking being amended is excluded from the count.
 
 ---
 
 ### API: blocked time slots
 
-**`src/routes/reservations.ts` — `GET /api/blocked-times`**
+**`src/routes/availability.ts` — `GET /api/reservations/blocked-times`**
 
 Returns the list of time strings that are unavailable for a given `(tenant_id, date, guests)` combination.
 
-For each candidate time slot, calls `calculateConcurrentGuests` and marks the slot as blocked if `concurrent + requested_guests > max_covers`.
+For each candidate time slot, marks it blocked if `peakConcurrentGuests(slot) + requested_guests > max_covers` — the same rule the booking guard enforces, so the widget never offers a time the server will reject for capacity.
 
 Uses `max_covers` (concurrent capacity) — not `max_guests` (party size limit).
 
@@ -253,7 +252,7 @@ Reservation creation validates in this order:
 1. Full-day block check — rejects if the date has a full-day `BlockedDates` entry.
 2. Partial-day time block check — rejects if the requested time falls within an admin-defined partial-day block.
 3. Opening hours check — rejects if the restaurant is closed that day, or if the time is outside configured hours (including midnight-crossing schedules).
-4. Capacity check — atomic INSERT with a WHERE clause that re-evaluates concurrent occupancy inside the same SQL statement, eliminating the SELECT-then-INSERT race condition.
+4. Capacity check — atomic INSERT with a WHERE clause (`capacityGuard`) that checks occupancy across the booking's whole sitting inside the same SQL statement, eliminating the SELECT-then-INSERT race condition.
 
 ---
 

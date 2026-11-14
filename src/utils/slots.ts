@@ -29,3 +29,15 @@ export function calculateConcurrentGuests(slotTime: string, reservations: SlotRe
     return rMin <= slotMinutes && slotMinutes < rMin + timeLimitMinutes ? sum + r.guests : sum;
   }, 0);
 }
+
+/**
+ * Highest occupancy at any moment during a sitting that starts at `startTime` and lasts
+ * `timeLimitMinutes`. Occupancy only rises when a booking starts, so the peak is at the sitting's
+ * start or at an existing booking's start inside it. Same rule as `capacityGuard` in src/db/capacity.ts.
+ */
+export function peakConcurrentGuests(startTime: string, reservations: SlotReservation[], timeLimitMinutes: number): number {
+  const start = toMinutes(startTime);
+  const end = start + timeLimitMinutes;
+  const points = [startTime, ...reservations.map((r) => r.reservation_time).filter((t) => toMinutes(t) > start && toMinutes(t) < end)];
+  return Math.max(...points.map((p) => calculateConcurrentGuests(p, reservations, timeLimitMinutes)));
+}

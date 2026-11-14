@@ -279,6 +279,36 @@ describe('GET /api/admin/reservations', () => {
 
 // ─── Admin: PATCH /api/admin/reservations/:id ────────────────────────────────
 
+describe('POST /api/admin/reservations - capacity', () => {
+  const body = { first_name: 'Walk', surname: 'In', reservation_date: '2099-06-15', reservation_time: '13:00', guests: 8 };
+
+  beforeEach(async () => {
+    await clearDb();
+    await seedTenant({ id: TENANT_ID, max_covers: 8, concurrent_guests_time_limit: 120 });
+    await seedAdminUser({ tenant_id: TENANT_ID });
+  });
+
+  it('returns 422 when the sitting would overlap a later booking and exceed max_covers', async () => {
+    await seedReservation({ reservation_date: '2099-06-15', reservation_time: '14:50', guests: 8 });
+    const res = await exports.default.fetch('http://localhost/api/admin/reservations', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${await getAuthToken()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    expect(res.status).toBe(422);
+  });
+
+  it('returns 201 when the sitting ends exactly as the later booking starts', async () => {
+    await seedReservation({ reservation_date: '2099-06-15', reservation_time: '15:00', guests: 8 });
+    const res = await exports.default.fetch('http://localhost/api/admin/reservations', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${await getAuthToken()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    expect(res.status).toBe(201);
+  });
+});
+
 describe('PATCH /api/admin/reservations/:id', () => {
   beforeEach(async () => {
     await clearDb();

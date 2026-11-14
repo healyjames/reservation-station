@@ -337,9 +337,9 @@ describe('Reservations', () => {
       expect(res.status).toBe(201);
     });
 
-    it('does not count a future booking as concurrent (directional window)', async () => {
-      // H-1 regression: a booking at 14:50 is within 120 min of 13:00 by ABS,
-      // but 13:00 falls BEFORE the 14:50 window — it must not be blocked.
+    it('rejects a booking whose sitting would overlap a later booking and exceed max_covers', async () => {
+      // Whole-sitting rule: 13:00 occupies [13:00, 15:00), which includes the 14:50 booking's start.
+      // 8 + 8 = 16 > 8 at 14:50, so it must be rejected even though 13:00 itself is empty.
       await seedTenant({
         id: TENANT_ID_2,
         name: 'Small Venue',
@@ -354,7 +354,83 @@ describe('Reservations', () => {
         reservation_date: '2099-06-15',
         reservation_time: '14:50',
       });
-      // 13:00 is 110 min before 14:50 — the old ABS check would block it; directional must allow it
+      const res = await exports.default.fetch('http://localhost/api/reservations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...validPayload, tenant_id: TENANT_ID_2, guests: 8, reservation_time: '13:00' }),
+      });
+      expect(res.status).toBe(422);
+    });
+
+    it("ignores another tenant's bookings when checking the sitting", async () => {
+      await seedTenant({ max_covers: 8, concurrent_guests_time_limit: 120 });
+      await seedTenant({ id: TENANT_ID_2, name: 'Other Place', tenant_code: 'other-place', max_covers: 8 });
+      await seedReservation({
+        id: '00000000-0000-4000-8000-000000000017',
+        tenant_id: TENANT_ID_2,
+        guests: 8,
+        reservation_date: '2099-06-15',
+        reservation_time: '14:50',
+      });
+      const res = await exports.default.fetch('http://localhost/api/reservations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...validPayload, guests: 8, reservation_time: '13:00' }),
+      });
+      expect(res.status).toBe(201);
+    });
+
+    it('checks the peak occupancy during the sitting, not the sum of every overlapping booking', async () => {
+      // 12:00 x4 leaves at 14:00; 13:30 x3 and 14:30 x5 overlap from 14:30 → peak 8 within [13:00, 15:00).
+      await seedTenant({ max_covers: 10, concurrent_guests_time_limit: 120 });
+      const day = { reservation_date: '2099-06-15' };
+      await seedReservation({
+        ...day,
+        id: '00000000-0000-4000-8000-000000000040',
+        email: 'a@example.com',
+        reservation_time: '12:00',
+        guests: 4,
+      });
+      await seedReservation({
+        ...day,
+        id: '00000000-0000-4000-8000-000000000041',
+        email: 'b@example.com',
+        reservation_time: '13:30',
+        guests: 3,
+      });
+      await seedReservation({
+        ...day,
+        id: '00000000-0000-4000-8000-000000000042',
+        email: 'c@example.com',
+        reservation_time: '14:30',
+        guests: 5,
+      });
+      const book = (guests: number, email: string) =>
+        exports.default.fetch('http://localhost/api/reservations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...validPayload, email, guests, reservation_time: '13:00' }),
+        });
+      expect((await book(3, 'too-many@example.com')).status).toBe(422); // 8 + 3 = 11 > 10
+      expect((await book(2, 'fits@example.com')).status).toBe(201); // 8 + 2 = 10
+    });
+
+    it('allows a booking whose sitting ends exactly when a later booking starts', async () => {
+      await seedTenant({
+        id: TENANT_ID_2,
+        name: 'Small Venue',
+        tenant_code: 'small-venue',
+        max_covers: 8,
+        concurrent_guests_time_limit: 120,
+      });
+      await seedReservation({
+        id: '00000000-0000-4000-8000-000000000017',
+        tenant_id: TENANT_ID_2,
+        guests: 8,
+        reservation_date: '2099-06-15',
+        reservation_time: '15:00',
+      });
+      // [13:00, 15:00) does not include 15:00.
       const res = await exports.default.fetch('http://localhost/api/reservations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -395,6 +471,42 @@ describe('Reservations', () => {
         .bind(RES_ID)
         .first<{ modified_date: string }>();
       expect(row?.modified_date).toBeDefined();
+    });
+
+    it('returns 422 when the new time would overlap a later booking and exceed max_covers', async () => {
+      await seedTenant({ max_covers: 10, concurrent_guests_time_limit: 120 });
+      const manageQuery = await seedReservation({ reservation_date: '2099-06-15', reservation_time: '19:00', guests: 4 });
+      await seedReservation({
+        id: '00000000-0000-4000-8000-000000000030',
+        email: 'other@example.com',
+        reservation_date: '2099-06-15',
+        reservation_time: '15:00',
+        guests: 8,
+      });
+      // Moving 4 guests to 14:00 → sitting [14:00, 16:00) includes 15:00 where 8 are seated: 12 > 10.
+      const res = await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}?${manageQuery}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reservation_time: '14:00' }),
+      });
+      expect(res.status).toBe(422);
+      const row = await env.maximum_bookings_db
+        .prepare('SELECT reservation_time FROM Reservations WHERE id = ?')
+        .bind(RES_ID)
+        .first<{ reservation_time: string }>();
+      expect(row?.reservation_time).toBe('19:00');
+    });
+
+    it('does not count the booking being amended against itself', async () => {
+      await seedTenant({ max_covers: 10, concurrent_guests_time_limit: 120 });
+      const manageQuery = await seedReservation({ reservation_date: '2099-06-15', reservation_time: '19:00', guests: 8 });
+      // 8 → 10 guests at a slightly later time overlaps its own old sitting; only the new 10 should count.
+      const res = await exports.default.fetch(`http://localhost/api/reservations/${RES_ID}?${manageQuery}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reservation_time: '19:30', guests: 10 }),
+      });
+      expect(res.status).toBe(200);
     });
 
     it('returns 404 without a valid manage token', async () => {

@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { adminAuth } from '../middleware/adminAuth';
+import { capacityGuard } from '../db/capacity';
 import { Tenant, Reservation, UpdateTenantSchema, UpdateReservationSchema, CreateAdminReservationSchema } from '../schema';
 import { sendEmail } from '../utils/email';
 import { buildTenantConfirmationEmail } from '../emails/tenant-confirmation';
@@ -148,8 +149,14 @@ admin.post('/reservations', async (c) => {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  const [rH, rM] = reservation_time.split(':');
-  const slotMinutes = parseInt(rH, 10) * 60 + parseInt(rM, 10);
+  const guard = capacityGuard({
+    tenantId,
+    date: reservation_date,
+    time: reservation_time,
+    guests,
+    maxCovers: tenant.max_covers,
+    timeLimitMinutes: tenant.concurrent_guests_time_limit,
+  });
 
   const manageToken = email ? await generateManageToken(c.env.JWT_SECRET, id, email) : null;
   const manageTokenHash = manageToken ? await hashManageToken(manageToken) : null;
@@ -160,14 +167,7 @@ admin.post('/reservations', async (c) => {
       .prepare(
         `INSERT INTO Reservations (id, tenant_id, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements, created_date, modified_date, manage_token_hash)
 				 SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-				 WHERE (? = 0) OR (
-				   SELECT COALESCE(SUM(guests), 0)
-				   FROM Reservations
-				   WHERE tenant_id = ?
-				     AND reservation_date = ?
-				     AND (? - (CAST(SUBSTR(reservation_time, 1, 2) AS INTEGER) * 60 +
-				        CAST(SUBSTR(reservation_time, 4, 2) AS INTEGER))) BETWEEN 0 AND ? - 1
-				 ) + ? <= ?`,
+				 WHERE ${guard.sql}`,
       )
       .bind(
         id,
@@ -183,13 +183,7 @@ admin.post('/reservations', async (c) => {
         now,
         now,
         manageTokenHash,
-        tenant.max_covers,
-        tenantId,
-        reservation_date,
-        slotMinutes,
-        tenant.concurrent_guests_time_limit,
-        guests,
-        tenant.max_covers,
+        ...guard.binds,
       )
       .run();
   } catch (err) {
