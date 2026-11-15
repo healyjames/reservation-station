@@ -9,7 +9,7 @@ type UseTenantReturn = {
   tenantConfig: Signal<TenantConfig | null>;
   tenantState: Signal<TenantState>;
   tenantError: Signal<string>;
-}
+};
 
 export function useTenant(): UseTenantReturn {
   const tenantConfig = useSignal<TenantConfig | null>(null);

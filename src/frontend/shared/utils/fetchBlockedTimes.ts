@@ -45,10 +45,9 @@ export async function fetchBlockedTimes({
   abortController = new AbortController();
 
   try {
-    const res = await fetch(
-      `/api/reservations/blocked-times?tenant_id=${encodeURIComponent(tenantId)}&date=${dateStr}&guests=${guests}`,
-      { signal: abortController.signal },
-    );
+    const res = await fetch(`/api/reservations/blocked-times?tenant_id=${encodeURIComponent(tenantId)}&date=${dateStr}&guests=${guests}`, {
+      signal: abortController.signal,
+    });
     if (!res.ok) return { blockedTimes: [], aborted: false, error: true };
 
     const data = (await res.json()) as BlockedTimesResponse;

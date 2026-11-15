@@ -11,7 +11,7 @@ type CancelConfirmProps = {
   errorMessage: Signal<string>;
   goToOverview: () => void;
   confirmCancel: () => Promise<void>;
-}
+};
 
 export const CancelConfirm: FunctionComponent<CancelConfirmProps> = ({ reservation, errorMessage, goToOverview, confirmCancel }) => {
   const isCancelling = useSignal(false);

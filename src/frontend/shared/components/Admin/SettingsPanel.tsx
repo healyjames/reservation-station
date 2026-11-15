@@ -13,7 +13,7 @@ type SettingsProps = {
   tenantConfig: Signal<TenantConfig | null>;
   token: string;
   onSave: (updated: Partial<TenantConfig>) => void;
-}
+};
 
 const SettingsPanel: FunctionComponent<SettingsProps> = ({ tenantConfig, token, onSave }) => {
   const activeTab = useSignal<SettingsTab>('general');

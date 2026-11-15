@@ -21,7 +21,7 @@ type CalendarGridProps = {
   onHoverDate?: (year: number, month: number, day: number) => void;
   onLeaveGrid?: () => void;
   class?: string;
-}
+};
 
 const CalendarGrid: FunctionComponent<CalendarGridProps> = ({
   year,

@@ -12,7 +12,7 @@ type DayConfig = {
   isClosed: boolean;
   openTime: string;
   closeTime: string;
-}
+};
 
 const DAY_ORDER: Array<{ label: string; dow: number }> = [
   { label: 'Monday', dow: 1 },
@@ -26,7 +26,7 @@ const DAY_ORDER: Array<{ label: string; dow: number }> = [
 
 type OpeningHoursSettingsProps = {
   token: string;
-}
+};
 
 const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ token }) => {
   const days = useSignal<DayConfig[]>(

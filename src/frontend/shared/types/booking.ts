@@ -8,7 +8,7 @@ export type BookingFormData = {
   email: string;
   telephone: string;
   dietary: string;
-}
+};
 
 export type BookingRequest = {
   tenant_id: string;
@@ -20,4 +20,4 @@ export type BookingRequest = {
   reservation_time: string;
   guests: number;
   dietary_requirements?: string;
-}
+};

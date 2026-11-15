@@ -133,7 +133,9 @@
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .btn_secondary:hover:not(:disabled) {

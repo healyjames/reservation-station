@@ -21,7 +21,7 @@ type DateNavProps = {
   onPrev: () => void;
   onNext: () => void;
   onOpenCalendar?: () => void;
-}
+};
 
 const DateNav: FunctionComponent<DateNavProps> = ({ currentDate, guestCount, onPrev, onNext, onOpenCalendar }) => {
   const d = currentDate.value;

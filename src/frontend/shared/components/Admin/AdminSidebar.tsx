@@ -6,7 +6,7 @@ type AdminSidebarProps = {
   activePage: 'bookings' | 'settings';
   onGoBookings: () => void;
   onGoSettings: () => void;
-}
+};
 
 const AdminSidebar: FunctionComponent<AdminSidebarProps> = ({ activePage, onGoBookings, onGoSettings }) => {
   const isOpen = useSignal(false);

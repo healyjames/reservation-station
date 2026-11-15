@@ -19,7 +19,7 @@ type CalendarProps = {
   isStandalone?: boolean;
   tenantName?: string;
   allowPastDates?: boolean;
-}
+};
 
 export const Calendar: FunctionComponent<CalendarProps> = ({
   year,
@@ -165,7 +165,9 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
           year={year}
           month={month}
           selectedDate={selectedDate}
-          isDisabled={(y, m, d) => (isFetchingDates ?? false) || (!allowPastDates && isBeforeToday(y, m, d)) || isDateBlocked(y, m, d) || isDateClosed(y, m, d)}
+          isDisabled={(y, m, d) =>
+            (isFetchingDates ?? false) || (!allowPastDates && isBeforeToday(y, m, d)) || isDateBlocked(y, m, d) || isDateClosed(y, m, d)
+          }
           isBlocked={(y, m, d) => isDateBlocked(y, m, d) || isDateClosed(y, m, d)}
           allowPastDates={allowPastDates}
           onSelect={onDateSelect}

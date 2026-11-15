@@ -10,7 +10,7 @@ type SettingsProps = {
   auth: UseAuthReturn;
   onLogout: () => void;
   onGoDashboard: () => void;
-}
+};
 
 const Settings: FunctionComponent<SettingsProps> = ({ auth, onLogout, onGoDashboard }) => {
   const venueName = auth.tenantConfig.value?.name ?? 'Settings';

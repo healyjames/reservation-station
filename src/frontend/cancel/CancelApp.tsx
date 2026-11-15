@@ -6,7 +6,7 @@ type CancelAppProps = {
   reservationId: string | null;
   bookingEmail: string | null;
   bookingToken: string | null;
-}
+};
 
 export const CancelApp: FunctionComponent<CancelAppProps> = ({ reservationId, bookingEmail, bookingToken }) => {
   const { view, reservation, errorMessage, inlineError, isCancelling, handleCancel } = useCancelBooking(

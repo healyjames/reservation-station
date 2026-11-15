@@ -11,7 +11,7 @@ export type UseAuthReturn = {
   token: Signal<string | null>;
   login: (email: string, password: string) => Promise<{ error?: string }>;
   logout: () => void;
-}
+};
 
 export function useAuth(): UseAuthReturn {
   const isAuthed = useSignal(false);

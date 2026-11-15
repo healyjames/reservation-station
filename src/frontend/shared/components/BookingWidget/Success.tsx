@@ -10,7 +10,7 @@ type SuccessProps = {
   selectedDate: CalendarDate;
   onNewBooking: () => void;
   bookingRef?: string;
-}
+};
 
 export const Success: FunctionComponent<SuccessProps> = ({ formData, selectedDate, onNewBooking, bookingRef }) => {
   const dateDisplay = formatDateForDisplay(selectedDate);

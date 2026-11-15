@@ -4,7 +4,7 @@ import styles from './AdminHeader.module.css';
 type AdminHeaderProps = {
   venueName: string;
   onLogout: () => void;
-}
+};
 
 const AdminHeader: FunctionComponent<AdminHeaderProps> = ({ venueName, onLogout }) => (
   <header class={styles.main_header}>

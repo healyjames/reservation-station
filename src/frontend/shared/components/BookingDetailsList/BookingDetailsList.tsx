@@ -4,11 +4,11 @@ import styles from './BookingDetailsList.module.css';
 type BookingDetail = {
   label: string;
   value: string | number;
-}
+};
 
 type BookingDetailsListProps = {
   details: BookingDetail[];
-}
+};
 
 const BookingDetailsList: FunctionComponent<BookingDetailsListProps> = ({ details }) => (
   <dl class={styles.list}>

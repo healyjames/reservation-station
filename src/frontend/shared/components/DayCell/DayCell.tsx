@@ -20,7 +20,7 @@ type DayCellProps = {
   onBlockedSelect?: (el: HTMLDivElement) => void;
   onMouseEnter?: () => void;
   styles: Record<string, string>;
-}
+};
 
 const DayCell: FunctionComponent<DayCellProps> = ({
   day,
@@ -82,7 +82,8 @@ const DayCell: FunctionComponent<DayCellProps> = ({
     );
   }
 
-  return (    <div
+  return (
+    <div
       class={classNames}
       role="button"
       aria-pressed={isSelected}

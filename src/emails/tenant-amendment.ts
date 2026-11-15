@@ -7,16 +7,19 @@ export function buildTenantAmendmentEmail(data: TenantReservationEmailData): Ema
 
   const body = `
     <p style="margin:0 0 16px;font-size:15px;color:#333333;">A booking has been amended. Here are the updated details:</p>
-    ${detailsTable([
-      ['Customer Name', `${data.firstName} ${data.surname}`],
-      ['Email', data.customerEmail],
-      ['Phone', data.telephone],
-      ['Date', formatEmailDate(data.reservationDate)],
-      ['Time', data.reservationTime],
-      ['Guests', String(data.guests)],
-      ['Dietary Requirements & Special Requests', data.dietaryRequirements || 'None'],
-      ['Booking ID', data.reservationId],
-    ], 180)}`;
+    ${detailsTable(
+      [
+        ['Customer Name', `${data.firstName} ${data.surname}`],
+        ['Email', data.customerEmail],
+        ['Phone', data.telephone],
+        ['Date', formatEmailDate(data.reservationDate)],
+        ['Time', data.reservationTime],
+        ['Guests', String(data.guests)],
+        ['Dietary Requirements & Special Requests', data.dietaryRequirements || 'None'],
+        ['Booking ID', data.reservationId],
+      ],
+      180,
+    )}`;
 
   return { subject, html: emailWrapper(data.tenantName, 'Booking Amended', body) };
 }

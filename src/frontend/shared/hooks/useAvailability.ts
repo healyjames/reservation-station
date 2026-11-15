@@ -54,5 +54,14 @@ export function useAvailability(): UseAvailabilityReturn {
     }
   }
 
-  return { blockedDates, closedDates, blockedDatesError, isFetchingDates, blockedTimes, isFetchingTimes, fetchBlockedDates, fetchBlockedTimes };
+  return {
+    blockedDates,
+    closedDates,
+    blockedDatesError,
+    isFetchingDates,
+    blockedTimes,
+    isFetchingTimes,
+    fetchBlockedDates,
+    fetchBlockedTimes,
+  };
 }

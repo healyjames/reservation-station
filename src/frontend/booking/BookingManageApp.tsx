@@ -18,7 +18,7 @@ type BookingManageAppProps = {
   reservationId: string | null;
   bookingEmail: string | null;
   bookingToken: string | null;
-}
+};
 
 export const BookingManageApp: FunctionComponent<BookingManageAppProps> = ({ reservationId, bookingEmail, bookingToken }) => {
   const hook = useManageBooking(reservationId, bookingEmail, bookingToken);

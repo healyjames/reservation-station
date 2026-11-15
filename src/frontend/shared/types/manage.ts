@@ -5,4 +5,4 @@ export type EditData = {
   email: string;
   dietary_requirements: string;
   guests: number;
-}
+};

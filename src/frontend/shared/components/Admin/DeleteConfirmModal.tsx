@@ -10,7 +10,7 @@ type DeleteConfirmModalProps = {
   token: string;
   onSuccess: () => void;
   onClose: () => void;
-}
+};
 
 const DeleteConfirmModal: FunctionComponent<DeleteConfirmModalProps> = ({ reservation, token, onSuccess, onClose }) => {
   const isDeleting = useSignal(false);

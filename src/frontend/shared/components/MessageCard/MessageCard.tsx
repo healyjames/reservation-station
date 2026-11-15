@@ -5,7 +5,7 @@ type MessageCardProps = {
   variant: 'success' | 'error';
   title: string;
   children: ComponentChildren;
-}
+};
 
 const SuccessIcon = () => (
   <svg

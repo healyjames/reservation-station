@@ -21,8 +21,16 @@ export const BookingApp: FunctionComponent = () => {
   const bookingRef = useSignal<string | undefined>(undefined);
 
   const { tenantConfig, tenantState, tenantError } = useTenant();
-  const { blockedDates, closedDates, blockedDatesError, isFetchingDates, blockedTimes, isFetchingTimes, fetchBlockedDates, fetchBlockedTimes } =
-    useAvailability();
+  const {
+    blockedDates,
+    closedDates,
+    blockedDatesError,
+    isFetchingDates,
+    blockedTimes,
+    isFetchingTimes,
+    fetchBlockedDates,
+    fetchBlockedTimes,
+  } = useAvailability();
   const { formData, submitError, isSubmitting, updateField, submitBooking, resetForm } = useBookingForm();
   const guestsDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 

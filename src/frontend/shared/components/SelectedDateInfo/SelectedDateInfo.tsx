@@ -6,7 +6,7 @@ import styles from './SelectedDateInfo.module.css';
 type SelectedDateInfoProps = {
   date: CalendarDate;
   hideLabel?: boolean;
-}
+};
 
 const SelectedDateInfo: FunctionComponent<SelectedDateInfoProps> = ({ date, hideLabel = false }) => {
   const formattedDate = formatDateForDisplay(date);

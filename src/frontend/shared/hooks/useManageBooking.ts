@@ -43,7 +43,7 @@ export type UseManageBookingReturn = {
   fetchBlockedDatesForMonth: (year: number, month: number) => Promise<void>;
   fetchBlockedTimesForDate: (date: CalendarDate) => Promise<void>;
   selectDate: (year: number, month: number, day: number) => Promise<void>;
-}
+};
 
 export function useManageBooking(
   reservationId: string | null,

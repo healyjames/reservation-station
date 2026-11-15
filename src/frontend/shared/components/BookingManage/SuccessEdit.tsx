@@ -7,7 +7,7 @@ import styles from './SuccessEdit.module.css';
 type SuccessEditProps = {
   reservation: Reservation;
   onBack: () => void;
-}
+};
 
 export const SuccessEdit: FunctionComponent<SuccessEditProps> = ({ reservation, onBack }) => (
   <StandaloneLayout title="Manage your booking">

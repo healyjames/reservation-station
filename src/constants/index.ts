@@ -21,4 +21,3 @@ export const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as co
 export const DEFAULT_OPEN_TIME = '12:00';
 export const DEFAULT_CLOSE_TIME = '22:00';
 export const SLOT_INTERVAL_MINUTES = 30;
-

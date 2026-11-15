@@ -12,7 +12,7 @@ type BookingModalProps = {
   token: string;
   onSuccess: () => void;
   onClose: () => void;
-}
+};
 
 const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation, defaultDate, token, onSuccess, onClose }) => {
   const firstName = useSignal(reservation?.first_name ?? '');

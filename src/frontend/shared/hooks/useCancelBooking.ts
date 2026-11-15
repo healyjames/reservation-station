@@ -12,7 +12,7 @@ type UseCancelBookingReturn = {
   inlineError: Signal<string>;
   isCancelling: Signal<boolean>;
   handleCancel: () => Promise<void>;
-}
+};
 
 export function useCancelBooking(
   reservationId: string | null,

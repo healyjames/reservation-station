@@ -7,12 +7,12 @@ export type ReservationWithTenant = Reservation & {
 
 export type ResendEnv = {
   RESEND_API_KEY: string;
-}
+};
 
 export type EmailTemplate = {
   subject: string;
   html: string;
-}
+};
 
 export type SendEmailRequest = {
   to: string;
@@ -20,7 +20,7 @@ export type SendEmailRequest = {
   reply_to?: string;
   subject: string;
   html: string;
-}
+};
 
 export type ReservationEmailContext = {
   reservationId: string;
@@ -35,7 +35,7 @@ export type ReservationEmailContext = {
   reservationTime: string;
   guests: number;
   dietaryRequirements: string | null;
-}
+};
 
 export type CustomerReservationEmailData = {
   tenantName: string;
@@ -48,7 +48,7 @@ export type CustomerReservationEmailData = {
   customerEmail?: string;
   baseUrl?: string;
   manageToken?: string;
-}
+};
 
 export type TenantReservationEmailData = {
   tenantName: string;
@@ -61,7 +61,7 @@ export type TenantReservationEmailData = {
   reservationTime: string;
   guests: number;
   dietaryRequirements: string | null;
-}
+};
 
 export type SlotReservation = { reservation_time: string; guests: number };
 
