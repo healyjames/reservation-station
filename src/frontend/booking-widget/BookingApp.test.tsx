@@ -53,12 +53,12 @@ function makeFormData(overrides: Partial<BookingFormData> = {}): BookingFormData
 }
 
 describe('BookingApp', () => {
-  let fetchBlockedTimesMock: ReturnType<typeof vi.fn>;
-  let fetchBlockedDatesMock: ReturnType<typeof vi.fn>;
+  let fetchBlockedTimesMock: ReturnType<typeof vi.fn<ReturnType<typeof useAvailability>['fetchBlockedTimes']>>;
+  let fetchBlockedDatesMock: ReturnType<typeof vi.fn<ReturnType<typeof useAvailability>['fetchBlockedDates']>>;
 
   beforeEach(() => {
-    fetchBlockedTimesMock = vi.fn().mockResolvedValue(undefined);
-    fetchBlockedDatesMock = vi.fn().mockResolvedValue(undefined);
+    fetchBlockedTimesMock = vi.fn<ReturnType<typeof useAvailability>['fetchBlockedTimes']>().mockResolvedValue(undefined);
+    fetchBlockedDatesMock = vi.fn<ReturnType<typeof useAvailability>['fetchBlockedDates']>().mockResolvedValue(undefined);
 
     vi.mocked(useTenant).mockReturnValue({
       tenantConfig: signal<TenantConfig | null>(makeTenant()),

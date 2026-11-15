@@ -9,6 +9,7 @@
     "start": "concurrently \"wrangler dev\" \"vite\"",
     "test": "vitest",
     "test:frontend": "vitest --project frontend",
+    "typecheck:frontend": "tsc --noEmit -p tsconfig.frontend.json",
     "cf-typegen": "wrangler types"
   },
   "devDependencies": {

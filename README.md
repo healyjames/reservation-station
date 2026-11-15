@@ -466,7 +466,7 @@ Deletes a reservation.
 npm install
 
 # Create the local D1 database
-npx wrangler d1 execute maximum_bookings_db --local --file=./src/db/schema.sql
+npx wrangler d1 execute maximum_bookings_db --local --file=./db/schema.sql
 
 # Start local dev server (Worker + static assets on http://localhost:8787)
 npx wrangler dev

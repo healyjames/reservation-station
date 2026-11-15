@@ -1,6 +1,6 @@
 -- Seed today's bookings for all three tenants
--- Run locally:  npx wrangler d1 execute maximum_bookings_db --local --file src/db/seed-today.sql
--- Run remote:   npx wrangler d1 execute maximum_bookings_db --file src/db/seed-today.sql
+-- Run locally:  npx wrangler d1 execute maximum_bookings_db --local --file db/seed-today.sql
+-- Run remote:   npx wrangler d1 execute maximum_bookings_db --file db/seed-today.sql
 
 -- The Red Cow (max_guests=6 per 120-min window)
 -- Lunch: 12:00(2) + 13:00(3) = 5 concurrent ✓

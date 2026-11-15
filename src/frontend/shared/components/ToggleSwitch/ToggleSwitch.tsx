@@ -8,11 +8,13 @@ type ToggleSwitchProps = {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label?: string;
+  /** Accessible name for a switch that has no visible `label` of its own. */
+  ariaLabel?: string;
   disabled?: boolean;
   id?: string;
-}
+};
 
-const ToggleSwitch: FunctionComponent<ToggleSwitchProps> = ({ checked, onChange, label, disabled, id }) => {
+const ToggleSwitch: FunctionComponent<ToggleSwitchProps> = ({ checked, onChange, label, ariaLabel, disabled, id }) => {
   const inputId = id ?? `toggle-${Math.random().toString(36).slice(2)}`;
 
   return (
@@ -23,6 +25,7 @@ const ToggleSwitch: FunctionComponent<ToggleSwitchProps> = ({ checked, onChange,
         class={styles.input}
         checked={checked}
         disabled={disabled}
+        aria-label={ariaLabel}
         onChange={(e) => {
           if (!disabled) onChange((e.target as HTMLInputElement).checked);
         }}
