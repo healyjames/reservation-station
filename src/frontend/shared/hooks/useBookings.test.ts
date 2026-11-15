@@ -440,4 +440,177 @@ describe('useBookings', () => {
     expect(result.current.reservations.value).toEqual([]);
     expect(result.current.isDayBlocked.value).toBe(false);
   });
+
+  describe('time-range blocks', () => {
+    const fullDay = makeBlockedRow({ id: 'full-day', start_time: null, end_time: null });
+    const evening = makeBlockedRow({ id: 'evening', start_time: '18:00', end_time: '20:00', reason: 'Private party' });
+    const lunch = makeBlockedRow({ id: 'lunch', start_time: '12:00', end_time: '13:00', reason: null });
+    const otherDay = makeBlockedRow({ id: 'other-day', date: '2099-06-02', start_time: '14:00', end_time: '15:00' });
+
+    it("dayBlocks lists only the visible day's time-range blocks, earliest first", async () => {
+      const { result } = await renderLoadedHook({ blockedRows: [fullDay, evening, lunch, otherDay] });
+
+      expect(result.current.dayBlocks.value).toEqual([lunch, evening]);
+
+      await act(async () => {
+        await result.current.fetchBookings(JUNE_2);
+      });
+
+      expect(result.current.dayBlocks.value).toEqual([otherDay]);
+    });
+
+    it('addTimeBlock posts the range for the visible day and adds it to dayBlocks without a refetch', async () => {
+      const { result } = await renderLoadedHook({ blockedRows: [evening] });
+      adminFetchMock.mockResolvedValueOnce(makeResponse(lunch, 201));
+
+      let added = false;
+      await act(async () => {
+        added = await result.current.addTimeBlock({ start_time: '12:00', end_time: '13:00', reason: '  ' });
+      });
+
+      expect(added).toBe(true);
+      expect(adminFetchMock).toHaveBeenCalledTimes(1);
+      expect(adminFetchMock.mock.calls[0]?.[0]).toBe('/api/admin/blocked-dates');
+      expect(adminFetchMock.mock.calls[0]?.[2]).toEqual({
+        method: 'POST',
+        body: JSON.stringify({ date: '2099-06-01', start_time: '12:00', end_time: '13:00' }),
+      });
+      expect(result.current.dayBlocks.value).toEqual([lunch, evening]);
+      expect(result.current.blockErrorMessage.value).toBe('');
+    });
+
+    it('addTimeBlock sends a trimmed reason when one is given', async () => {
+      const { result } = await renderLoadedHook({ blockedRows: [] });
+      adminFetchMock.mockResolvedValueOnce(makeResponse(evening, 201));
+
+      await act(async () => {
+        await result.current.addTimeBlock({ start_time: '18:00', end_time: '20:00', reason: ' Private party ' });
+      });
+
+      expect(adminFetchMock.mock.calls[0]?.[2]).toEqual({
+        method: 'POST',
+        body: JSON.stringify({ date: '2099-06-01', start_time: '18:00', end_time: '20:00', reason: 'Private party' }),
+      });
+    });
+
+    it('addTimeBlock failure leaves dayBlocks unchanged and sets an error', async () => {
+      const { result } = await renderLoadedHook({ blockedRows: [evening] });
+      adminFetchMock.mockResolvedValueOnce(makeResponse({ error: 'bad' }, 400));
+
+      let added = true;
+      await act(async () => {
+        added = await result.current.addTimeBlock({ start_time: '12:00', end_time: '13:00' });
+      });
+
+      expect(added).toBe(false);
+      expect(result.current.dayBlocks.value).toEqual([evening]);
+      expect(result.current.blockErrorMessage.value).not.toBe('');
+      expect(result.current.isBlockLoading.value).toBe(false);
+    });
+
+    it('addTimeBlock sets an error when the request cannot be sent', async () => {
+      const { result } = await renderLoadedHook({ blockedRows: [] });
+      adminFetchMock.mockRejectedValueOnce(new Error('offline'));
+
+      await act(async () => {
+        await result.current.addTimeBlock({ start_time: '12:00', end_time: '13:00' });
+      });
+
+      expect(result.current.dayBlocks.value).toEqual([]);
+      expect(result.current.blockErrorMessage.value).not.toBe('');
+    });
+
+    it('removeTimeBlock deletes the block by id and drops only that row', async () => {
+      const { result } = await renderLoadedHook({ blockedRows: [fullDay, evening, lunch] });
+      adminFetchMock.mockResolvedValueOnce(makeResponse({ success: true }));
+
+      await act(async () => {
+        await result.current.removeTimeBlock('evening');
+      });
+
+      expect(adminFetchMock).toHaveBeenCalledTimes(1);
+      expect(adminFetchMock.mock.calls[0]?.[0]).toBe('/api/admin/blocked-dates/evening');
+      expect(adminFetchMock.mock.calls[0]?.[2]).toEqual({ method: 'DELETE' });
+      expect(result.current.dayBlocks.value).toEqual([lunch]);
+      expect(result.current.isDayBlocked.value).toBe(true);
+    });
+
+    it('removeTimeBlock failure leaves dayBlocks unchanged and sets an error', async () => {
+      const { result } = await renderLoadedHook({ blockedRows: [evening] });
+      adminFetchMock.mockResolvedValueOnce(makeResponse({ error: 'boom' }, 500));
+
+      await act(async () => {
+        await result.current.removeTimeBlock('evening');
+      });
+
+      expect(result.current.dayBlocks.value).toEqual([evening]);
+      expect(result.current.blockErrorMessage.value).not.toBe('');
+    });
+
+    it('removeTimeBlock drops a block the server no longer has (404)', async () => {
+      const { result } = await renderLoadedHook({ blockedRows: [evening] });
+      adminFetchMock.mockResolvedValueOnce(makeResponse({ error: 'Blocked date not found' }, 404));
+
+      await act(async () => {
+        await result.current.removeTimeBlock('evening');
+      });
+
+      expect(result.current.dayBlocks.value).toEqual([]);
+      expect(result.current.blockErrorMessage.value).toBe('');
+    });
+
+    it('keeps added and removed blocks when navigating away and back, without refetching', async () => {
+      const { result } = await renderLoadedHook({ blockedRows: [evening] });
+      adminFetchMock.mockResolvedValueOnce(makeResponse(lunch, 201)).mockResolvedValueOnce(makeResponse({ success: true }));
+
+      await act(async () => {
+        await result.current.addTimeBlock({ start_time: '12:00', end_time: '13:00' });
+        await result.current.removeTimeBlock('evening');
+      });
+      adminFetchMock.mockClear();
+
+      await act(async () => {
+        result.current.nextDay();
+      });
+      expect(result.current.dayBlocks.value).toEqual([]);
+
+      await act(async () => {
+        result.current.prevDay();
+      });
+      expect(result.current.dayBlocks.value).toEqual([lunch]);
+      expect(adminFetchMock).not.toHaveBeenCalled();
+    });
+
+    it('toggling the full-day block keeps the time-range blocks, and adding a range leaves the toggle alone', async () => {
+      const { result } = await renderLoadedHook({ blockedRows: [fullDay, evening] });
+      adminFetchMock.mockResolvedValueOnce(makeResponse({ success: true })).mockResolvedValueOnce(makeResponse(lunch, 201));
+
+      await act(async () => {
+        await result.current.toggleDayBlock();
+      });
+      expect(result.current.isDayBlocked.value).toBe(false);
+      expect(result.current.dayBlocks.value).toEqual([evening]);
+
+      await act(async () => {
+        await result.current.addTimeBlock({ start_time: '12:00', end_time: '13:00' });
+      });
+      expect(result.current.isDayBlocked.value).toBe(false);
+    });
+
+    it('toggleDayBlock failure keeps the toggle state and sets an error, which clears on leaving the day', async () => {
+      const { result } = await renderLoadedHook({ blockedRows: [] });
+      adminFetchMock.mockResolvedValueOnce(makeResponse({ error: 'boom' }, 500));
+
+      await act(async () => {
+        await result.current.toggleDayBlock();
+      });
+      expect(result.current.isDayBlocked.value).toBe(false);
+      expect(result.current.blockErrorMessage.value).not.toBe('');
+
+      await act(async () => {
+        result.current.nextDay();
+      });
+      expect(result.current.blockErrorMessage.value).toBe('');
+    });
+  });
 });

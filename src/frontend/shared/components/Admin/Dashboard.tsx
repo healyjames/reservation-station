@@ -3,6 +3,7 @@ import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import type { UseAuthReturn } from '@shared/hooks/useAuth';
 import { useBookings } from '@shared/hooks/useBookings';
+import { useOpeningHours } from '@shared/hooks/useOpeningHours';
 import { ToggleSwitch } from '@shared/components';
 import DateNav from './DateNav';
 import ReservationList from './ReservationList';
@@ -12,16 +13,18 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import AdminSidebar from './AdminSidebar';
 import AdminHeader from './AdminHeader';
 import CalendarPickerModal from './CalendarPickerModal';
+import DayTimeBlocks from './DayTimeBlocks';
 import styles from './Dashboard.module.css';
 
 type DashboardProps = {
   auth: UseAuthReturn;
   onLogout: () => void;
   onGoSettings: () => void;
-}
+};
 
 const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSettings }) => {
   const bookings = useBookings(() => auth.token.value);
+  const { openingHours, reloadOpeningHours } = useOpeningHours(() => auth.token.value);
   const modalOpen = useSignal(false);
   const modalMode = useSignal<'create' | 'edit'>('create');
   const modalReservation = useSignal<Reservation | undefined>(undefined);
@@ -53,6 +56,7 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
   }
 
   const reservations = bookings.reservations.value;
+  const currentDate = bookings.currentDate.value;
 
   return (
     <div class={styles.dashboard_layout}>
@@ -67,7 +71,9 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
             guestCount={bookings.guestCount.value}
             onPrev={bookings.prevDay}
             onNext={bookings.nextDay}
-            onOpenCalendar={() => { calendarPickerOpen.value = true; }}
+            onOpenCalendar={() => {
+              calendarPickerOpen.value = true;
+            }}
           />
 
           <div class={styles.day_actions_row}>
@@ -84,6 +90,7 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
                 <div class={styles.toggle_list_item_switch}>
                   <div class={styles.form_group_check}>
                     <ToggleSwitch
+                      ariaLabel="Block this day"
                       checked={bookings.isDayBlocked.value}
                       disabled={bookings.isBlockLoading.value}
                       onChange={() => bookings.toggleDayBlock()}
@@ -106,15 +113,29 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
                 </button>
               </div>
             </div>
-						<button
-							type="button"
-							class={styles.btn_secondary}
-							onClick={() => void bookings.refreshMonth()}
-							disabled={bookings.isLoading.value || bookings.isBlockLoading.value}
-						>
-							Refresh
-						</button>
+            <button
+              type="button"
+              class={styles.btn_secondary}
+              onClick={() => {
+                void bookings.refreshMonth();
+                void reloadOpeningHours();
+              }}
+              disabled={bookings.isLoading.value || bookings.isBlockLoading.value}
+            >
+              Refresh
+            </button>
           </div>
+
+          <DayTimeBlocks
+            key={formatDate(currentDate)}
+            date={{ year: currentDate.getFullYear(), month: currentDate.getMonth(), day: currentDate.getDate() }}
+            openingHours={openingHours.value}
+            blocks={bookings.dayBlocks.value}
+            isLoading={bookings.isBlockLoading.value}
+            errorMessage={bookings.blockErrorMessage.value}
+            onAdd={bookings.addTimeBlock}
+            onRemove={(id) => void bookings.removeTimeBlock(id)}
+          />
 
           <div id="bookings-list" aria-busy={bookings.isLoading.value}>
             {bookings.isLoading.value && <p class={styles.loading_text}>Loading…</p>}
@@ -158,7 +179,9 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
       {calendarPickerOpen.value && auth.tenantConfig.value && (
         <CalendarPickerModal
           open={calendarPickerOpen.value}
-          onClose={() => { calendarPickerOpen.value = false; }}
+          onClose={() => {
+            calendarPickerOpen.value = false;
+          }}
           currentDate={bookings.currentDate.value}
           tenantId={auth.tenantConfig.value.id}
           onDateSelect={(date) => {

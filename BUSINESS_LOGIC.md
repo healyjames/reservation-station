@@ -288,6 +288,15 @@ The admin rows are an **intended override**: staff can place a booking inside a 
 
 The widget caches `blocked-times` for 60 seconds, so a customer may briefly still see a newly blocked slot. Submitting it is rejected with 422.
 
+### Admin UI
+
+- **Dashboard day view** (`Dashboard.tsx`): "Block this day" toggles a full-day block. "Block a time range" (`DayTimeBlocks.tsx`) adds a time range for the visible day and lists that day's ranges, each with Remove (`DELETE /api/admin/blocked-dates/:id`).
+- The From/Until choices are 30-minute steps bounded by that weekday's opening hours. Until only offers times after From, and its last option is closing time. The form enters blocked ranges only; there is no "bookable window" mode.
+- Opening hours are fetched from `GET /api/admin/opening-hours` when the Dashboard loads and again on Refresh (`useOpeningHours.ts`). The admin login response does not carry them.
+- On a closed day, or a day whose hours run past midnight, the form is replaced by an explanation. Existing ranges on that day can still be removed. Ranges that wrap past midnight can no longer be created anywhere.
+- With no opening hours configured, the default `12:00`–`22:00` is used.
+- **Settings › Blocked Dates** manages full-day blocks only and does not show time ranges.
+
 ---
 
 ## Manage Token: Regenerated on Email Change

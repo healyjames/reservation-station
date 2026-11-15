@@ -1,5 +1,5 @@
 import type { CalendarDate } from '../types/calendar';
-import type { TenantConfig } from '../types/tenant';
+import type { OpeningHoursEntry, TenantConfig } from '../types/tenant';
 import { DEFAULT_OPEN_TIME, DEFAULT_CLOSE_TIME, SLOT_INTERVAL_MINUTES } from '@constants';
 
 export function toMinutes(time: string): number {
@@ -7,22 +7,58 @@ export function toMinutes(time: string): number {
   return h * 60 + m;
 }
 
+function toTime(minutes: number): string {
+  const h = Math.floor(minutes / 60)
+    .toString()
+    .padStart(2, '0');
+  const m = (minutes % 60).toString().padStart(2, '0');
+  return `${h}:${m}`;
+}
+
 export function generateTimeSlots(openTime: string, closeTime: string): string[] {
   const slots: string[] = [];
   const open = toMinutes(openTime);
   const close = toMinutes(closeTime);
   for (let mins = open; mins < close; mins += SLOT_INTERVAL_MINUTES) {
-    const h = Math.floor(mins / 60)
-      .toString()
-      .padStart(2, '0');
-    const m = (mins % 60).toString().padStart(2, '0');
-    slots.push(`${h}:${m}`);
+    slots.push(toTime(mins));
   }
   return slots;
 }
 
+const MINUTES_IN_DAY = 24 * 60;
+// The API has no "24:00", so a range that runs to the end of the day ends at 23:59.
+const LATEST_BLOCK_END = '23:59';
+
+type BlockTimeOptionsInput = {
+  date: CalendarDate;
+  openingHours: OpeningHoursEntry[] | null;
+  /** When set, only end times after this start are returned. */
+  startTime?: string;
+};
+
+/**
+ * Start and end choices for blocking a time range on `date`, bounded by that day's opening hours.
+ * A block's end is exclusive, so each end option is a slot's finish (slot + one interval) and the
+ * last one is closing time. Both lists are empty when the day is closed or its hours cross midnight.
+ */
+export function getBlockTimeOptions({ date, openingHours, startTime }: BlockTimeOptionsInput): {
+  startTimes: string[];
+  endTimes: string[];
+} {
+  const startTimes = getSlotsForOpeningHours(date, openingHours);
+  const endTimes = startTimes
+    .map((slot) => toMinutes(slot) + SLOT_INTERVAL_MINUTES)
+    .map((end) => (end >= MINUTES_IN_DAY ? LATEST_BLOCK_END : toTime(end)))
+    .filter((end) => !startTime || end > startTime);
+  return { startTimes, endTimes };
+}
+
 export function getSlotsForDate(date: CalendarDate, tenantConfig: TenantConfig | null): string[] {
-  const hours = tenantConfig?.opening_hours;
+  return getSlotsForOpeningHours(date, tenantConfig?.opening_hours ?? null);
+}
+
+/** Bookable slots on `date` for a weekly schedule. Falls back to the default hours when none are configured. */
+export function getSlotsForOpeningHours(date: CalendarDate, hours: OpeningHoursEntry[] | null): string[] {
   if (!hours || hours.length === 0) return generateTimeSlots(DEFAULT_OPEN_TIME, DEFAULT_CLOSE_TIME);
 
   // Use UTC noon to avoid DST edge cases when computing day-of-week

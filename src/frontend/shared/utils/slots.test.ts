@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { generateTimeSlots, getSlotsForDate, getEarliestTodaySlot, getAvailableSlots } from './slots';
+import { generateTimeSlots, getSlotsForDate, getEarliestTodaySlot, getAvailableSlots, getBlockTimeOptions } from './slots';
 import type { CalendarDate } from '../types/calendar';
 import type { TenantConfig } from '../types/tenant';
 
@@ -78,6 +78,46 @@ describe('getSlotsForDate', () => {
     });
     const slots = getSlotsForDate(monday, tenant);
     expect(slots[0]).toBe('12:00');
+  });
+});
+
+describe('getBlockTimeOptions', () => {
+  // 2024-01-08 is a Monday (day_of_week 1)
+  const monday: CalendarDate = { year: 2024, month: 0, day: 8 };
+  const mondayHours = (open_time: string | null, close_time: string | null, is_closed = false) => [
+    { id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed, open_time, close_time },
+  ];
+
+  it('offers every opening slot as a start and every slot finish, including closing time, as an end', () => {
+    const options = getBlockTimeOptions({ date: monday, openingHours: mondayHours('18:00', '20:00') });
+    expect(options.startTimes).toEqual(['18:00', '18:30', '19:00', '19:30']);
+    expect(options.endTimes).toEqual(['18:30', '19:00', '19:30', '20:00']);
+  });
+
+  it('only offers end times after the chosen start', () => {
+    const options = getBlockTimeOptions({ date: monday, openingHours: mondayHours('18:00', '20:00'), startTime: '19:00' });
+    expect(options.endTimes).toEqual(['19:30', '20:00']);
+    expect(options.startTimes).toEqual(['18:00', '18:30', '19:00', '19:30']);
+  });
+
+  it('ends at 23:59 when the last slot runs to midnight', () => {
+    const options = getBlockTimeOptions({ date: monday, openingHours: mondayHours('22:30', '23:59') });
+    expect(options.startTimes).toEqual(['22:30', '23:00', '23:30']);
+    expect(options.endTimes).toEqual(['23:00', '23:30', '23:59']);
+  });
+
+  it('returns no options when the day is closed', () => {
+    expect(getBlockTimeOptions({ date: monday, openingHours: mondayHours(null, null, true) })).toEqual({ startTimes: [], endTimes: [] });
+  });
+
+  it('returns no options when the opening hours cross midnight', () => {
+    expect(getBlockTimeOptions({ date: monday, openingHours: mondayHours('22:00', '02:00') })).toEqual({ startTimes: [], endTimes: [] });
+  });
+
+  it('falls back to the default hours when the tenant has none configured', () => {
+    const options = getBlockTimeOptions({ date: monday, openingHours: null });
+    expect(options.startTimes[0]).toBe('12:00');
+    expect(options.endTimes[options.endTimes.length - 1]).toBe('22:00');
   });
 });
 

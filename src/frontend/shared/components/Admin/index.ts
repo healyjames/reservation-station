@@ -6,6 +6,7 @@ export { default as BookingCards } from './BookingCards';
 export { default as BookingModal } from './BookingModal';
 export { default as Dashboard } from './Dashboard';
 export { default as DateNav } from './DateNav';
+export { default as DayTimeBlocks } from './DayTimeBlocks';
 export { default as DeleteConfirmModal } from './DeleteConfirmModal';
 export { default as GeneralSettings } from './GeneralSettings';
 export { default as Login } from './Login';
