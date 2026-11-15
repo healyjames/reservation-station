@@ -4,6 +4,8 @@ import { useEffect } from 'preact/hooks';
 import type { OpeningHoursEntry } from '@shared/types';
 import { ToggleSwitch, Button } from '@shared/components';
 import { adminFetch } from '@shared/utils/adminFetch';
+import { useMonthTimeBlocks } from '@shared/hooks/useMonthTimeBlocks';
+import ChangedHoursList from './ChangedHoursList';
 import SpecificDayHours from './SpecificDayHours';
 import styles from './OpeningHoursSettings.module.css';
 
@@ -48,8 +50,16 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
   const bannerMessage = useSignal('');
   const bannerType = useSignal<'success' | 'error'>('success');
 
+  const changedHours = useMonthTimeBlocks(token);
+
+  function loadChangedHours() {
+    const now = new Date();
+    void changedHours.loadMonth(now.getFullYear(), now.getMonth());
+  }
+
   useEffect(() => {
     loadHours();
+    loadChangedHours();
   }, []);
 
   async function loadHours() {
@@ -116,6 +126,8 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
         token={token}
         onBack={() => {
           view.value = 'weekly';
+          // Ranges may have been added or removed in the specific-day view.
+          loadChangedHours();
         }}
       />
     );
@@ -250,6 +262,17 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
           Change hours for a specific day
         </Button>
       </section>
+
+      <div class={styles.oh_changed_hours}>
+        <ChangedHoursList
+          year={changedHours.viewYear.value}
+          month={changedHours.viewMonth.value}
+          blocks={changedHours.monthBlocks.value}
+          isSaving={changedHours.isSaving.value}
+          errorMessage={changedHours.saveError.value || changedHours.loadError.value}
+          onRemove={(id) => void changedHours.removeBlock(id)}
+        />
+      </div>
     </div>
   );
 };

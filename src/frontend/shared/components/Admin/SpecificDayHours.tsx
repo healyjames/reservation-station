@@ -1,16 +1,14 @@
 import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
-import type { AdminBlockedDate, CalendarDate, TimeBlockInput } from '@shared/types';
+import type { CalendarDate } from '@shared/types';
 import { Button } from '@shared/components';
 import { Calendar } from '@shared/components/BookingWidget/Calendar';
+import { useMonthTimeBlocks } from '@shared/hooks/useMonthTimeBlocks';
 import { useOpeningHours } from '@shared/hooks/useOpeningHours';
-import { adminFetch } from '@shared/utils/adminFetch';
-import { formatDate, formatDateForAPI, formatDateForDisplay, getBlockTimeOptions, padTwo } from '@shared/utils';
-import { MONTH_NAMES } from '@constants';
+import { formatDateForAPI, formatDateForDisplay, getBlockTimeOptions } from '@shared/utils';
+import ChangedHoursList from './ChangedHoursList';
 import DayTimeBlocks from './DayTimeBlocks';
 import styles from './SpecificDayHours.module.css';
-
-const SAVE_ERROR = 'Could not update the hours for this day. Please try again.';
 
 type SpecificDayHoursProps = {
   token: string;
@@ -19,80 +17,10 @@ type SpecificDayHoursProps = {
 
 /** Settings view for changing the bookable hours of one specific date by blocking time ranges on it. */
 const SpecificDayHours: FunctionComponent<SpecificDayHoursProps> = ({ token, onBack }) => {
-  const today = new Date();
-  const viewYear = useSignal(today.getFullYear());
-  const viewMonth = useSignal(today.getMonth());
   const selectedDate = useSignal<CalendarDate | null>(null);
-  const monthRows = useSignal<AdminBlockedDate[]>([]);
-  const isFetching = useSignal(false);
-  const isSaving = useSignal(false);
-  const loadError = useSignal('');
-  const saveError = useSignal('');
+  const { viewYear, viewMonth, monthBlocks, isFetching, isSaving, loadError, saveError, loadMonth, addBlock, removeBlock } =
+    useMonthTimeBlocks(token);
   const { openingHours } = useOpeningHours(() => token);
-
-  async function loadMonth(year: number, month: number): Promise<void> {
-    viewYear.value = year;
-    viewMonth.value = month;
-    selectedDate.value = null;
-    saveError.value = '';
-    loadError.value = '';
-    isFetching.value = true;
-    try {
-      const res = await adminFetch(`/api/admin/blocked-dates?month=${year}-${padTwo(month + 1)}`, token);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const rows = (await res.json()) as AdminBlockedDate[];
-      // A slower response for a month the admin has already left must not replace the visible one.
-      if (viewYear.value === year && viewMonth.value === month) monthRows.value = rows;
-    } catch {
-      loadError.value = 'Could not load this month. Please try again.';
-    } finally {
-      isFetching.value = false;
-    }
-  }
-
-  async function save(request: () => Promise<boolean>): Promise<boolean> {
-    isSaving.value = true;
-    saveError.value = '';
-    try {
-      const saved = await request();
-      if (!saved) saveError.value = SAVE_ERROR;
-      return saved;
-    } catch {
-      saveError.value = SAVE_ERROR;
-      return false;
-    } finally {
-      isSaving.value = false;
-    }
-  }
-
-  async function addBlock({ start_time, end_time, reason }: TimeBlockInput): Promise<boolean> {
-    const date = selectedDate.value;
-    if (!date) return false;
-
-    const trimmedReason = reason?.trim();
-    return save(async () => {
-      const res = await adminFetch('/api/admin/blocked-dates', token, {
-        method: 'POST',
-        body: JSON.stringify({ date: formatDateForAPI(date), start_time, end_time, ...(trimmedReason ? { reason: trimmedReason } : {}) }),
-      });
-      if (!res.ok) return false;
-
-      const created = (await res.json()) as AdminBlockedDate;
-      monthRows.value = [...monthRows.value, created];
-      return true;
-    });
-  }
-
-  async function removeBlock(id: string): Promise<void> {
-    await save(async () => {
-      const res = await adminFetch(`/api/admin/blocked-dates/${id}`, token, { method: 'DELETE' });
-      // 404 means the block is already gone (removed elsewhere), which is the outcome the admin wanted.
-      if (!res.ok && res.status !== 404) return false;
-
-      monthRows.value = monthRows.value.filter((row) => row.id !== id);
-      return true;
-    });
-  }
 
   const hours = openingHours.value;
   const daysInMonth = new Date(viewYear.value, viewMonth.value + 1, 0).getDate();
@@ -105,12 +33,9 @@ const SpecificDayHours: FunctionComponent<SpecificDayHoursProps> = ({ token, onB
           .map(formatDateForAPI),
   );
 
-  const monthBlocks = monthRows.value
-    .filter((row) => row.start_time !== null)
-    .sort((a, b) => a.date.localeCompare(b.date) || (a.start_time ?? '').localeCompare(b.start_time ?? ''));
-  const selectedKey = selectedDate.value ? formatDateForAPI(selectedDate.value) : null;
-  const selectedDayBlocks = monthBlocks.filter((row) => row.date === selectedKey);
-  const monthLabel = `${MONTH_NAMES[viewMonth.value]} ${viewYear.value}`;
+  const selected = selectedDate.value;
+  const selectedKey = selected ? formatDateForAPI(selected) : null;
+  const selectedDayBlocks = monthBlocks.value.filter((row) => row.date === selectedKey);
 
   return (
     <div class={styles.view}>
@@ -131,12 +56,15 @@ const SpecificDayHours: FunctionComponent<SpecificDayHoursProps> = ({ token, onB
         <Calendar
           year={viewYear.value}
           month={viewMonth.value}
-          selectedDate={selectedDate.value}
+          selectedDate={selected}
           blockedDates={new Set()}
           closedDates={closedDates}
           blockedDatesError={loadError.value}
           isFetchingDates={isFetching.value}
-          onMonthChange={loadMonth}
+          onMonthChange={async (year, month) => {
+            selectedDate.value = null;
+            await loadMonth(year, month);
+          }}
           onDateSelect={async (year, month, day) => {
             selectedDate.value = { year, month, day };
             saveError.value = '';
@@ -144,17 +72,17 @@ const SpecificDayHours: FunctionComponent<SpecificDayHoursProps> = ({ token, onB
         />
       </div>
 
-      {selectedDate.value ? (
+      {selected ? (
         <div class={styles.day}>
-          <h4 class={styles.day_title}>{formatDateForDisplay(selectedDate.value)}</h4>
+          <h4 class={styles.day_title}>{formatDateForDisplay(selected)}</h4>
           <DayTimeBlocks
             key={selectedKey ?? ''}
-            date={selectedDate.value}
+            date={selected}
             openingHours={hours}
             blocks={selectedDayBlocks}
             isLoading={isSaving.value}
             errorMessage={saveError.value}
-            onAdd={addBlock}
+            onAdd={(input) => addBlock(selected, input)}
             onRemove={(id) => void removeBlock(id)}
           />
         </div>
@@ -162,40 +90,14 @@ const SpecificDayHours: FunctionComponent<SpecificDayHoursProps> = ({ token, onB
         <p class={styles.hint}>Select a day on the calendar to change its hours.</p>
       )}
 
-      <section aria-labelledby="month-changes-heading">
-        <h4 class={styles.day_title} id="month-changes-heading">
-          Changed hours in {monthLabel}
-        </h4>
-        {!selectedDate.value && saveError.value && (
-          <p class={styles.error} role="alert">
-            {saveError.value}
-          </p>
-        )}
-        {monthBlocks.length === 0 ? (
-          <p class={styles.hint}>No days have changed hours this month.</p>
-        ) : (
-          <ul class={styles.list} aria-label={`Changed hours in ${monthLabel}`}>
-            {monthBlocks.map((block) => (
-              <li key={block.id} class={styles.list_item}>
-                <span class={styles.list_date}>{formatDate(block.date)}</span>
-                <span class={styles.list_range}>
-                  {block.start_time} – {block.end_time}
-                </span>
-                {block.reason && <span class={styles.list_reason}>{block.reason}</span>}
-                <Button
-                  variant="action-delete"
-                  size="sm"
-                  disabled={isSaving.value}
-                  aria-label={`Remove ${block.start_time} to ${block.end_time} on ${formatDate(block.date)}`}
-                  onClick={() => void removeBlock(block.id)}
-                >
-                  Remove
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <ChangedHoursList
+        year={viewYear.value}
+        month={viewMonth.value}
+        blocks={monthBlocks.value}
+        isSaving={isSaving.value}
+        errorMessage={selected ? '' : saveError.value}
+        onRemove={(id) => void removeBlock(id)}
+      />
     </div>
   );
 };

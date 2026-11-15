@@ -5,6 +5,7 @@ export { default as BookingCard } from './BookingCard';
 export { default as BookingCards } from './BookingCards';
 export { default as BookingModal } from './BookingModal';
 export { default as Dashboard } from './Dashboard';
+export { default as ChangedHoursList } from './ChangedHoursList';
 export { default as DateNav } from './DateNav';
 export { default as DayHoursBanner } from './DayHoursBanner';
 export { default as DayTimeBlocks } from './DayTimeBlocks';

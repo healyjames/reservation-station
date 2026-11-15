@@ -202,3 +202,7 @@
     align-items: flex-start;
   }
 }
+
+.oh_changed_hours {
+  margin-top: var(--space-5);
+}
