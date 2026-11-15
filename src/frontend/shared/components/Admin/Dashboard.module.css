@@ -171,3 +171,13 @@
   padding: var(--space-8) 0;
   font-style: italic;
 }
+
+.block_error {
+  margin: 0;
+  border-radius: var(--radius-xs);
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  background: var(--error-light);
+  color: var(--error-dark);
+}

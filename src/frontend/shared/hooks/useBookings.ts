@@ -1,13 +1,13 @@
 import { useSignal } from '@preact/signals';
 import type { Signal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
-import type { AdminBlockedDate, Reservation, TimeBlockInput } from '@shared/types';
+import type { AdminBlockedDate, Reservation } from '@shared/types';
 import { adminFetch } from '@shared/utils/adminFetch';
 import { padTwo } from '@shared/utils/dates';
 
 const REFRESH_COOLDOWN_MS = 3 * 60 * 1000;
 
-const BLOCK_SAVE_ERROR = 'Could not update blocked times. Please try again.';
+const BLOCK_SAVE_ERROR = 'Could not update the block on this day. Please try again.';
 
 type MonthCacheEntry = {
   reservationsByDate: Map<string, Reservation[]>;
@@ -31,9 +31,6 @@ export type UseBookingsReturn = {
   nextDay: () => void;
   deleteBooking: (id: string) => Promise<void>;
   toggleDayBlock: () => Promise<void>;
-  /** Resolves true when the block was created. */
-  addTimeBlock: (input: TimeBlockInput) => Promise<boolean>;
-  removeTimeBlock: (id: string) => Promise<void>;
   refreshMonth: () => Promise<void>;
 };
 
@@ -291,47 +288,23 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
     }
   }
 
-  async function createBlock(token: string, date: Date, times: Partial<TimeBlockInput>): Promise<boolean> {
-    const res = await adminFetch('/api/admin/blocked-dates', token, {
-      method: 'POST',
-      body: JSON.stringify({ date: dateKeyFromDate(date), ...times }),
-    });
-    if (!res.ok) return false;
-
-    const created = (await res.json()) as AdminBlockedDate;
-    updateBlockedRows(date, (rows) => [...rows, created]);
-    return true;
-  }
-
   async function toggleDayBlock(): Promise<void> {
-    if (!isDayBlocked.value) {
-      await saveBlockChange((tok, date) => createBlock(tok, date, {}));
-      return;
-    }
-
     await saveBlockChange(async (tok, date) => {
-      const res = await adminFetch(`/api/admin/blocked-dates/date/${dateKeyFromDate(date)}`, tok, { method: 'DELETE' });
+      const dateKey = dateKeyFromDate(date);
+
+      if (isDayBlocked.value) {
+        const res = await adminFetch(`/api/admin/blocked-dates/date/${dateKey}`, tok, { method: 'DELETE' });
+        if (!res.ok) return false;
+
+        updateBlockedRows(date, (rows) => rows.filter((row) => row.start_time !== null));
+        return true;
+      }
+
+      const res = await adminFetch('/api/admin/blocked-dates', tok, { method: 'POST', body: JSON.stringify({ date: dateKey }) });
       if (!res.ok) return false;
 
-      updateBlockedRows(date, (rows) => rows.filter((row) => row.start_time !== null));
-      return true;
-    });
-  }
-
-  async function addTimeBlock({ start_time, end_time, reason }: TimeBlockInput): Promise<boolean> {
-    const trimmedReason = reason?.trim();
-    return saveBlockChange((tok, date) =>
-      createBlock(tok, date, { start_time, end_time, ...(trimmedReason ? { reason: trimmedReason } : {}) }),
-    );
-  }
-
-  async function removeTimeBlock(id: string): Promise<void> {
-    await saveBlockChange(async (tok, date) => {
-      const res = await adminFetch(`/api/admin/blocked-dates/${id}`, tok, { method: 'DELETE' });
-      // 404 means the block is already gone (removed elsewhere), which is the outcome the admin wanted.
-      if (!res.ok && res.status !== 404) return false;
-
-      updateBlockedRows(date, (rows) => rows.filter((row) => row.id !== id));
+      const created = (await res.json()) as AdminBlockedDate;
+      updateBlockedRows(date, (rows) => [...rows, created]);
       return true;
     });
   }
@@ -365,8 +338,6 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
     nextDay,
     deleteBooking,
     toggleDayBlock,
-    addTimeBlock,
-    removeTimeBlock,
     refreshMonth,
   };
 }

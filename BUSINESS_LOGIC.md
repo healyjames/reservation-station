@@ -290,9 +290,10 @@ The widget caches `blocked-times` for 60 seconds, so a customer may briefly stil
 
 ### Admin UI
 
-- **Dashboard day view** (`Dashboard.tsx`): "Block this day" toggles a full-day block. "Block a time range" (`DayTimeBlocks.tsx`) adds a time range for the visible day and lists that day's ranges, each with Remove (`DELETE /api/admin/blocked-dates/:id`).
+- **Dashboard day view** (`Dashboard.tsx`): "Block this day" toggles a full-day block. When the visible day has time ranges, a read-only "Changed hours on this day" banner (`DayHoursBanner.tsx`) lists them and links to Settings.
+- **Settings › Opening Hours**: a "Change hours for a specific day" button swaps the weekly schedule for `SpecificDayHours.tsx`. The admin picks a day on the shared calendar, then adds a time range with the `DayTimeBlocks.tsx` form. The view lists the month's ranges, each with Remove (`DELETE /api/admin/blocked-dates/:id`). Closed days cannot be picked.
 - The From/Until choices are 30-minute steps bounded by that weekday's opening hours. Until only offers times after From, and its last option is closing time. The form enters blocked ranges only; there is no "bookable window" mode.
-- Opening hours are fetched from `GET /api/admin/opening-hours` when the Dashboard loads and again on Refresh (`useOpeningHours.ts`). The admin login response does not carry them.
+- Opening hours are fetched from `GET /api/admin/opening-hours` when the specific-day view opens (`useOpeningHours.ts`). The admin login response does not carry them.
 - On a closed day, or a day whose hours run past midnight, the form is replaced by an explanation. Existing ranges on that day can still be removed. Ranges that wrap past midnight can no longer be created anywhere.
 - With no opening hours configured, the default `12:00`–`22:00` is used.
 - **Settings › Blocked Dates** manages full-day blocks only and does not show time ranges.

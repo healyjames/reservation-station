@@ -4,6 +4,7 @@ import { useEffect } from 'preact/hooks';
 import type { OpeningHoursEntry } from '@shared/types';
 import { ToggleSwitch, Button } from '@shared/components';
 import { adminFetch } from '@shared/utils/adminFetch';
+import SpecificDayHours from './SpecificDayHours';
 import styles from './OpeningHoursSettings.module.css';
 
 type DayConfig = {
@@ -38,6 +39,7 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
       closeTime: '22:00',
     })),
   );
+  const view = useSignal<'weekly' | 'specific-day'>('weekly');
   const isLoading = useSignal(true);
   const isSaving = useSignal(false);
   const bannerMessage = useSignal('');
@@ -103,6 +105,17 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
     } finally {
       isSaving.value = false;
     }
+  }
+
+  if (view.value === 'specific-day') {
+    return (
+      <SpecificDayHours
+        token={token}
+        onBack={() => {
+          view.value = 'weekly';
+        }}
+      />
+    );
   }
 
   if (isLoading.value) {
@@ -215,6 +228,25 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
       <Button variant="primary" isLoading={isSaving.value} onClick={handleSave}>
         Save Changes
       </Button>
+
+      <section class={styles.oh_specific_day} aria-labelledby="oh-specific-day-heading">
+        <div>
+          <p class={styles.oh_specific_day_heading} id="oh-specific-day-heading">
+            <strong>Need different hours on a specific day?</strong>
+          </p>
+          <p class={styles.oh_specific_day_text}>
+            Close early on Christmas Eve or open for lunch only on a bank holiday, without changing your weekly opening hours.
+          </p>
+        </div>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            view.value = 'specific-day';
+          }}
+        >
+          Change hours for a specific day
+        </Button>
+      </section>
     </div>
   );
 };

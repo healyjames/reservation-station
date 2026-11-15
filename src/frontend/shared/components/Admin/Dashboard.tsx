@@ -3,7 +3,6 @@ import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import type { UseAuthReturn } from '@shared/hooks/useAuth';
 import { useBookings } from '@shared/hooks/useBookings';
-import { useOpeningHours } from '@shared/hooks/useOpeningHours';
 import { ToggleSwitch } from '@shared/components';
 import DateNav from './DateNav';
 import ReservationList from './ReservationList';
@@ -13,7 +12,7 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import AdminSidebar from './AdminSidebar';
 import AdminHeader from './AdminHeader';
 import CalendarPickerModal from './CalendarPickerModal';
-import DayTimeBlocks from './DayTimeBlocks';
+import DayHoursBanner from './DayHoursBanner';
 import styles from './Dashboard.module.css';
 
 type DashboardProps = {
@@ -24,7 +23,6 @@ type DashboardProps = {
 
 const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSettings }) => {
   const bookings = useBookings(() => auth.token.value);
-  const { openingHours, reloadOpeningHours } = useOpeningHours(() => auth.token.value);
   const modalOpen = useSignal(false);
   const modalMode = useSignal<'create' | 'edit'>('create');
   const modalReservation = useSignal<Reservation | undefined>(undefined);
@@ -56,7 +54,6 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
   }
 
   const reservations = bookings.reservations.value;
-  const currentDate = bookings.currentDate.value;
 
   return (
     <div class={styles.dashboard_layout}>
@@ -116,26 +113,20 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
             <button
               type="button"
               class={styles.btn_secondary}
-              onClick={() => {
-                void bookings.refreshMonth();
-                void reloadOpeningHours();
-              }}
+              onClick={() => void bookings.refreshMonth()}
               disabled={bookings.isLoading.value || bookings.isBlockLoading.value}
             >
               Refresh
             </button>
           </div>
 
-          <DayTimeBlocks
-            key={formatDate(currentDate)}
-            date={{ year: currentDate.getFullYear(), month: currentDate.getMonth(), day: currentDate.getDate() }}
-            openingHours={openingHours.value}
-            blocks={bookings.dayBlocks.value}
-            isLoading={bookings.isBlockLoading.value}
-            errorMessage={bookings.blockErrorMessage.value}
-            onAdd={bookings.addTimeBlock}
-            onRemove={(id) => void bookings.removeTimeBlock(id)}
-          />
+          {bookings.blockErrorMessage.value && (
+            <p class={styles.block_error} role="alert">
+              {bookings.blockErrorMessage.value}
+            </p>
+          )}
+
+          <DayHoursBanner blocks={bookings.dayBlocks.value} onGoSettings={onGoSettings} />
 
           <div id="bookings-list" aria-busy={bookings.isLoading.value}>
             {bookings.isLoading.value && <p class={styles.loading_text}>Loading…</p>}
