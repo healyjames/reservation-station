@@ -77,6 +77,22 @@ CREATE TABLE OpeningHours (
 );
 
 
+DROP TABLE IF EXISTS DateOverrides;
+
+CREATE TABLE DateOverrides (
+    id TEXT PRIMARY KEY NOT NULL,
+    tenant_id TEXT NOT NULL,
+    date TEXT NOT NULL,
+    is_closed INTEGER NOT NULL DEFAULT 0 CHECK (is_closed IN (0, 1)),
+    open_time TEXT,
+    close_time TEXT,
+    reason TEXT,
+    created_date TEXT DEFAULT (CURRENT_TIMESTAMP),
+    UNIQUE (tenant_id, date),
+    FOREIGN KEY (tenant_id) REFERENCES Tenants(id) ON DELETE CASCADE
+);
+
+
 CREATE INDEX idx_booking_tenant ON Reservations(tenant_id);
 CREATE INDEX idx_reservations_tenant_date ON Reservations(tenant_id, reservation_date);
 CREATE INDEX idx_blocked_dates_tenant_date ON BlockedDates(tenant_id, date);

@@ -30,6 +30,8 @@ export type UseManageBookingReturn = {
   blockedDates: Signal<Set<string>>;
   closedDates: Signal<Set<string>>;
   blockedTimes: Signal<string[]>;
+  /** The selected date's bookable start times from the server, or null to fall back to the weekly hours. */
+  daySlots: Signal<string[] | null>;
   isFetchingTimes: Signal<boolean>;
   isSaving: Signal<boolean>;
   isCancelling: Signal<boolean>;
@@ -62,6 +64,7 @@ export function useManageBooking(
   const blockedDates = useSignal<Set<string>>(new Set());
   const closedDates = useSignal<Set<string>>(new Set());
   const blockedTimes = useSignal<string[]>([]);
+  const daySlots = useSignal<string[] | null>(null);
   const isFetchingTimes = useSignal(false);
   const isSaving = useSignal(false);
   const isCancelling = useSignal(false);
@@ -179,9 +182,10 @@ export function useManageBooking(
 
     isFetchingTimes.value = true;
     try {
-      const { blockedTimes: result, aborted } = await sharedFetchBlockedTimes({ tenantId, date, guests, maxCovers });
-      if (aborted) return;
-      blockedTimes.value = result;
+      const result = await sharedFetchBlockedTimes({ tenantId, date, guests, maxCovers });
+      if (result.aborted) return;
+      blockedTimes.value = result.blockedTimes;
+      daySlots.value = result.daySlots;
     } finally {
       isFetchingTimes.value = false;
     }
@@ -191,10 +195,11 @@ export function useManageBooking(
     selectedDate.value = { year, month, day };
     selectedTime.value = '';
     blockedTimes.value = [];
+    daySlots.value = null;
     await fetchBlockedTimesForDate({ year, month, day });
     const currentTime = reservation.value?.reservation_time;
     if (currentTime) {
-      const available = getAvailableSlots({ year, month, day }, tenantConfig.value, blockedTimes.value);
+      const available = getAvailableSlots({ year, month, day }, tenantConfig.value, blockedTimes.value, daySlots.value);
       if (available.includes(currentTime)) {
         selectedTime.value = currentTime;
       }
@@ -300,6 +305,7 @@ export function useManageBooking(
     blockedDates,
     closedDates,
     blockedTimes,
+    daySlots,
     isFetchingTimes,
     isSaving,
     isCancelling,

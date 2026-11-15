@@ -25,7 +25,10 @@ type ChangeDateTimeProps = {
   selectedDate: Signal<CalendarDate | null>;
   selectedTime: Signal<string>;
   blockedDates: Signal<Set<string>>;
+  /** Dates the venue is closed, as resolved by the server (weekly closures and special hours). */
+  closedDates: Signal<Set<string>>;
   blockedTimes: Signal<string[]>;
+  daySlots: Signal<string[] | null>;
   isFetchingTimes: Signal<boolean>;
   goToOverview: () => void;
   saveDatetime: () => Promise<void>;
@@ -41,7 +44,9 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
   selectedDate,
   selectedTime,
   blockedDates,
+  closedDates,
   blockedTimes,
+  daySlots,
   isFetchingTimes,
   goToOverview,
   saveDatetime,
@@ -66,14 +71,7 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
   function isDateUnavailable(y: number, m: number, d: number): boolean {
     if (isBeforeToday(y, m, d)) return true;
     const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    if (blockedDates.value.has(dateStr)) return true;
-    const hours = tenantConfig.value?.opening_hours;
-    if (hours && hours.length > 0) {
-      const dow = new Date(`${dateStr}T12:00:00Z`).getUTCDay();
-      const entry = hours.find((h) => Number(h.day_of_week) === dow);
-      if (!entry || !!entry.is_closed) return true;
-    }
-    return false;
+    return blockedDates.value.has(dateStr) || closedDates.value.has(dateStr);
   }
 
   function isDateBlocked(y: number, m: number, d: number): boolean {
@@ -114,7 +112,7 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
     await fetchBlockedDatesForMonth(newYear, newMonth);
   }
 
-  const available = selectedDate.value ? getAvailableSlots(selectedDate.value, tenantConfig.value, blockedTimes.value) : [];
+  const available = selectedDate.value ? getAvailableSlots(selectedDate.value, tenantConfig.value, blockedTimes.value, daySlots.value) : [];
 
   const timeOptions = available.map((s) => ({ value: s, label: s }));
   const canSave = !!(selectedDate.value && selectedTime.value);

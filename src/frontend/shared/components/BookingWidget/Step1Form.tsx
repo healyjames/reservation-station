@@ -12,6 +12,8 @@ type Step1FormProps = {
   tenantConfig: TenantConfig;
   formData: BookingFormData;
   blockedTimes: string[];
+  /** The date's bookable start times from the server; omit to use the weekly opening hours. */
+  daySlots?: string[] | null;
   isFetchingTimes: boolean;
   onGuestsChange: (guests: number) => void;
   onTimeChange: (time: string) => void;
@@ -24,6 +26,7 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
   tenantConfig,
   formData,
   blockedTimes,
+  daySlots = null,
   isFetchingTimes,
   onGuestsChange,
   onTimeChange,
@@ -63,7 +66,7 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
     }
   }
 
-  const availableSlots = getAvailableSlots(date, tenantConfig, blockedTimes);
+  const availableSlots = getAvailableSlots(date, tenantConfig, blockedTimes, daySlots);
   const timeOptions = availableSlots.map((slot) => ({ value: slot, label: slot }));
   const isValid = !isLargeParty && formData.guests >= 2 && formData.guests <= effectiveMaxGuests && formData.time !== '';
 

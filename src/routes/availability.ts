@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { generateTimeSlots, calculateConcurrentGuests, peakConcurrentGuests, isTimeInAnyBlock } from '../utils/slots';
+import { getEffectiveHours } from '../db/opening-hours';
 import type { SlotReservation } from '../types';
 
 const availability = new Hono<{ Bindings: Env }>();
@@ -34,19 +35,22 @@ availability.get('/blocked-dates', async (c) => {
 
   const adminBlockedSet = new Set(results.map((r) => r.date));
 
-  const closedDatesSet = new Set<string>();
-  if (closedDays.length > 0) {
-    const [year, monthNum] = month.split('-').map(Number);
-    const closedDowSet = new Set(closedDays.map((r) => r.day_of_week));
-    const daysInMonth = new Date(year, monthNum, 0).getDate();
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${month}-${day.toString().padStart(2, '0')}`;
-      const dow = new Date(dateStr + 'T12:00:00Z').getUTCDay();
-      if (closedDowSet.has(dow)) {
-        closedDatesSet.add(dateStr);
-      }
-    }
-  }
+  // A date override replaces the weekly schedule for its date: it can close a normally open day or
+  // open a normally closed one.
+  const { results: overrides } = await c.env.maximum_bookings_db
+    .prepare('SELECT date, is_closed FROM DateOverrides WHERE tenant_id = ? AND date LIKE ?')
+    .bind(tenantId, `${month}-%`)
+    .run<{ date: string; is_closed: number }>();
+
+  const overrideClosedByDate = new Map(overrides.map((r) => [r.date, r.is_closed === 1]));
+  const closedDowSet = new Set(closedDays.map((r) => r.day_of_week));
+  const [year, monthNum] = month.split('-').map(Number);
+  const daysInMonth = new Date(year, monthNum, 0).getDate();
+  const closedDatesSet = new Set(
+    Array.from({ length: daysInMonth }, (_, i) => `${month}-${(i + 1).toString().padStart(2, '0')}`).filter(
+      (dateStr) => overrideClosedByDate.get(dateStr) ?? closedDowSet.has(new Date(dateStr + 'T12:00:00Z').getUTCDay()),
+    ),
+  );
 
   return c.json(
     {
@@ -88,34 +92,25 @@ availability.get('/blocked-times', async (c) => {
     .bind(tenantId, date)
     .run<{ start_time: string | null; end_time: string | null }>();
 
-  if (blockedDateRows.some((r) => r.start_time === null)) {
-    return c.json({ blocked_times: generateTimeSlots(), time_limit_minutes: tenant.concurrent_guests_time_limit }, 200, {
+  // `slots` is every bookable start time on this date (empty when the day cannot be booked at all), so
+  // clients do not have to derive it from the weekly schedule, which a date override may replace.
+  const respond = (slots: string[], blockedTimes: string[]) =>
+    c.json({ slots, blocked_times: blockedTimes, time_limit_minutes: tenant.concurrent_guests_time_limit }, 200, {
       'Cache-Control': 'private, max-age=60',
     });
-  }
 
-  const dow = new Date(date + 'T12:00:00Z').getUTCDay();
-  const openingHoursRow = await c.env.maximum_bookings_db
-    .prepare('SELECT is_closed, open_time, close_time FROM OpeningHours WHERE tenant_id = ? AND day_of_week = ?')
-    .bind(tenantId, dow)
-    .first<{ is_closed: number; open_time: string | null; close_time: string | null }>();
+  if (blockedDateRows.some((r) => r.start_time === null)) return respond([], generateTimeSlots());
 
-  if (openingHoursRow?.is_closed === 1) {
-    return c.json({ blocked_times: generateTimeSlots(), time_limit_minutes: tenant.concurrent_guests_time_limit }, 200, {
-      'Cache-Control': 'private, max-age=60',
-    });
-  }
+  const hours = await getEffectiveHours({ db: c.env.maximum_bookings_db, tenantId, date });
+  if (hours.isClosed) return respond([], generateTimeSlots());
 
-  const slots =
-    openingHoursRow?.open_time && openingHoursRow?.close_time
-      ? generateTimeSlots(openingHoursRow.open_time, openingHoursRow.close_time)
-      : generateTimeSlots();
+  const slots = hours.openTime && hours.closeTime ? generateTimeSlots(hours.openTime, hours.closeTime) : generateTimeSlots();
 
   if (tenant.max_covers === 0) {
-    const blockedTimes = slots.filter((slot) => isTimeInAnyBlock(slot, blockedDateRows));
-    return c.json({ blocked_times: blockedTimes, time_limit_minutes: tenant.concurrent_guests_time_limit }, 200, {
-      'Cache-Control': 'private, max-age=60',
-    });
+    return respond(
+      slots,
+      slots.filter((slot) => isTimeInAnyBlock(slot, blockedDateRows)),
+    );
   }
 
   const { results: slotReservations } = await c.env.maximum_bookings_db
@@ -136,16 +131,7 @@ availability.get('/blocked-times', async (c) => {
     }
   }
 
-  return c.json(
-    {
-      blocked_times: blockedTimes,
-      time_limit_minutes: tenant.concurrent_guests_time_limit,
-    },
-    200,
-    {
-      'Cache-Control': 'private, max-age=60',
-    },
-  );
+  return respond(slots, blockedTimes);
 });
 
 availability.get('/availability', async (c) => {

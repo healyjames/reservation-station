@@ -202,6 +202,46 @@ export const BlockDateBodySchema = z
     path: ['end_time'],
   });
 
+export const DateOverrideSchema = z.object({
+  id: z.uuid(),
+  tenant_id: z.uuid(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
+  is_closed: z.union([z.literal(0), z.literal(1)]),
+  open_time: z.string().regex(TIME_HHMM).nullable(),
+  close_time: z.string().regex(TIME_HHMM).nullable(),
+  reason: z.string().nullable(),
+  created_date: z.string().optional(),
+});
+
+/** The `:date` path parameter of the date-override routes: a real calendar date. */
+export const OverrideDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)')
+  .refine((v) => {
+    // An impossible date either fails to parse or rolls over (2099-02-30 becomes 2 March).
+    const parsed = new Date(`${v}T12:00:00Z`);
+    return !isNaN(parsed.getTime()) && parsed.toISOString().startsWith(v);
+  }, 'Invalid date (e.g. month or day out of range)');
+
+export const UpsertDateOverrideSchema = z
+  .object({
+    is_closed: z.union([z.boolean(), z.literal(0), z.literal(1)]),
+    open_time: z.string().regex(TIME_HHMM, 'Invalid time format (HH:MM)').nullable().optional(),
+    close_time: z.string().regex(TIME_HHMM, 'Invalid time format (HH:MM)').nullable().optional(),
+    reason: z.string().trim().max(200).optional(),
+  })
+  .refine((d) => d.is_closed === true || d.is_closed === 1 || (d.open_time != null && d.close_time != null), {
+    message: 'open_time and close_time are required when is_closed is false',
+  })
+  // Zero-padded HH:MM compares correctly as strings. Special hours may not run past midnight.
+  .refine((d) => d.is_closed === true || d.is_closed === 1 || d.open_time == null || d.close_time == null || d.close_time > d.open_time, {
+    message: 'close_time must be after open_time',
+    path: ['close_time'],
+  });
+
+export type DateOverride = z.infer<typeof DateOverrideSchema>;
+export type UpsertDateOverride = z.infer<typeof UpsertDateOverrideSchema>;
+
 export const CreateAdminReservationSchema = z.object({
   first_name: z.string().min(1).max(50),
   surname: z.string().min(1).max(50),

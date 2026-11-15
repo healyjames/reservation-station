@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { Reservation, CreateReservationSchema, UpdateReservationSchema, CreateReservation } from '../schema';
 import { toMinutes } from '../utils/slots';
 import { findBlockError } from '../db/blocked-dates';
+import { getEffectiveHours } from '../db/opening-hours';
 import { generateManageToken, hashManageToken, verifyManageToken } from '../utils/manageToken';
 import { sendEmail } from '../utils/email';
 import { adminAuth } from '../middleware/adminAuth';
@@ -109,28 +110,22 @@ reservations.post('/', async (c) => {
   });
   if (blockError) return c.json({ error: blockError }, 422);
 
-  const dow = new Date(data.reservation_date + 'T12:00:00Z').getUTCDay();
-  const openingHours = await c.env.maximum_bookings_db
-    .prepare('SELECT is_closed, open_time, close_time FROM OpeningHours WHERE tenant_id = ? AND day_of_week = ?')
-    .bind(data.tenant_id, dow)
-    .first<{ is_closed: number; open_time: string | null; close_time: string | null }>();
-
-  if (openingHours) {
-    if (openingHours.is_closed === 1) {
-      return c.json({ error: 'Bookings are not available for this date' }, 422);
-    }
-    if (openingHours.open_time && openingHours.close_time) {
-      const reqMin = toMinutes(data.reservation_time);
-      const openMin = toMinutes(openingHours.open_time);
-      const closeMin = toMinutes(openingHours.close_time);
-      // Handle midnight-crossing hours (e.g. open 22:00, close 02:00)
-      const outsideHours =
-        closeMin <= openMin
-          ? reqMin < openMin && reqMin >= closeMin // midnight-crossing: reject the gap
-          : reqMin < openMin || reqMin >= closeMin; // normal hours
-      if (outsideHours) {
-        return c.json({ error: 'Bookings are not available for this time' }, 422);
-      }
+  // Special hours set for this date replace the weekly opening hours.
+  const hours = await getEffectiveHours({ db: c.env.maximum_bookings_db, tenantId: data.tenant_id, date: data.reservation_date });
+  if (hours.isClosed) {
+    return c.json({ error: 'Bookings are not available for this date' }, 422);
+  }
+  if (hours.openTime && hours.closeTime) {
+    const reqMin = toMinutes(data.reservation_time);
+    const openMin = toMinutes(hours.openTime);
+    const closeMin = toMinutes(hours.closeTime);
+    // Handle midnight-crossing hours (e.g. open 22:00, close 02:00)
+    const outsideHours =
+      closeMin <= openMin
+        ? reqMin < openMin && reqMin >= closeMin // midnight-crossing: reject the gap
+        : reqMin < openMin || reqMin >= closeMin; // normal hours
+    if (outsideHours) {
+      return c.json({ error: 'Bookings are not available for this time' }, 422);
     }
   }
 

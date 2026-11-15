@@ -2,7 +2,15 @@
 
 > **Prepared by:** Han (Technical Lead)  
 > **Date:** 2026-07-08  
-> **Status:** Ready for team sign-off
+> **Status:** Implemented 2026-11-15 on `feat/admin-partial-time-blocks`, with the deviations below. `BUSINESS_LOGIC.md` › Special Opening Hours and `DATA_MODEL.md` › DateOverride are now the source of truth.
+>
+> **Deviations from this plan:**
+> - Migration is `0012_date_overrides.sql` (`0011` was taken). No separate index: `UNIQUE (tenant_id, date)` already indexes the lookup.
+> - Resolution is done in `src/db/opening-hours.ts` (`getEffectiveHours`): an override row replaces the weekly row wholesale rather than column-by-column `COALESCE`.
+> - Override times use the strict `HH:MM` pattern and must have `close_time > open_time` (no midnight-crossing overrides), so N-13 does not apply.
+> - The widget **did** need changes (T-1 assumed none): it built time slots from the weekly hours in the tenant config, so `/blocked-times` now returns `slots` and the widget and manage-booking page use them.
+> - The admin UI was built (Settings › Opening Hours › specific day), setting special hours only; whole-day closures stay with "Block this day".
+> - Open questions: admin-created bookings do not check opening hours at all (unchanged, intended override); tooltip differentiation and surfacing the reason to customers were not done.
 
 ---
 

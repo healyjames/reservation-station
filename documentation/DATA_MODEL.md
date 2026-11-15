@@ -11,6 +11,7 @@ Tenant (1) ──< Reservation      (customer bookings)
 Tenant (1) ──< AdminUser         (staff logins)
 Tenant (1) ──< BlockedDate       (closures / partial blocks)
 Tenant (1) ──< OpeningHours      (weekly schedule, one row per weekday)
+Tenant (1) ──< DateOverride      (special opening hours for one date)
 ```
 
 There is **no separate Customer table**. A customer is not a persistent entity — their details (name, telephone, email, dietary requirements) are captured inline on each `Reservation`. The same person booking twice produces two independent reservation rows. See [Customer (embedded)](#customer-embedded).
@@ -146,14 +147,41 @@ The weekly schedule. Exactly **seven rows per tenant**, one per weekday. Determi
 
 **Keys & indexes:** `PRIMARY KEY (id)`, `UNIQUE (tenant_id, day_of_week)`.
 
+**Rule:** a `DateOverride` row for a date replaces that weekday's row for that date only (see below).
+
 **Rule:** upserts must cover all seven days exactly once (enforced by `UpsertOpeningHoursSchema`).
+
+---
+
+## DateOverride
+
+Special opening hours for **one specific date**. A row replaces the weekly `OpeningHours` row for that date entirely: it can give a normally open day different hours, open a normally closed day, or close a normally open day. At most one row per tenant per date.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | TEXT (UUID) | Primary key. |
+| `tenant_id` | TEXT (UUID) | FK → `Tenants(id)`, cascade delete. |
+| `date` | TEXT | `YYYY-MM-DD`. Unique per tenant. |
+| `is_closed` | INTEGER | `0` or `1` (CHECK). `1` = closed on this date. |
+| `open_time` | TEXT | `HH:MM`, or NULL when closed. |
+| `close_time` | TEXT | `HH:MM`, or NULL when closed. |
+| `reason` | TEXT | Optional note, ≤200 chars (Zod only). |
+| `created_date` | TEXT | Defaults to `CURRENT_TIMESTAMP`. |
+
+**Keys & indexes:** `PRIMARY KEY (id)`, `UNIQUE (tenant_id, date)` (also the lookup index).
+
+**Rules:**
+- When `is_closed = 0`, both times are required, strict 24h `HH:MM`, with `close_time > open_time` (special hours cannot run past midnight). When `is_closed = 1`, times are stored as NULL. Enforced in Zod (`UpsertDateOverrideSchema`) and the PUT handler; the column has only the `is_closed` CHECK.
+- Saving again for the same date replaces the hours and keeps the row (`ON CONFLICT (tenant_id, date) DO UPDATE`).
+- Deleting the row returns the date to its weekly hours.
+- A row never modifies or removes `Reservation` or `BlockedDate` rows. `BlockedDate` rows still apply on top of the special hours.
 
 ---
 
 ## Relationships & integrity
 
-- Every child object references its tenant with `FOREIGN KEY (tenant_id) REFERENCES Tenants(id) ON DELETE CASCADE`. Deleting a tenant removes all of its reservations, admin users, blocked dates, and opening hours.
-- Uniqueness is enforced at the database level, not just in code: `tenant_code`, admin `email`, the composite reservation dedupe key, and one opening-hours row per `(tenant_id, day_of_week)`.
+- Every child object references its tenant with `FOREIGN KEY (tenant_id) REFERENCES Tenants(id) ON DELETE CASCADE`. Deleting a tenant removes all of its reservations, admin users, blocked dates, opening hours, and date overrides.
+- Uniqueness is enforced at the database level, not just in code: `tenant_code`, admin `email`, the composite reservation dedupe key, one opening-hours row per `(tenant_id, day_of_week)`, and one date override per `(tenant_id, date)`.
 - Validation at trust boundaries is enforced by the Zod schemas in `src/schema/index.ts`. **Any change to a column, enum, or constraint must be reflected in both the SQL and the matching Zod schema in the same change.**
 
 ## When you change the data

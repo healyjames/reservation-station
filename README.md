@@ -114,7 +114,10 @@ The table below shows which frontend hooks call which API endpoints and why. Pub
 | `GET /api/admin/blocked-dates` | JWT | `useBookings.ts`, `BlockedDatesSettings.tsx` | Load a day's (`?date=`) or month's (`?month=`) blocks, full-day and partial |
 | `POST /api/admin/blocked-dates` | JWT | `useBookings.ts`, `BlockedDatesSettings.tsx` | Admin blocks a whole day (`{date}`) or a time range (`{date, start_time, end_time}`) |
 | `DELETE /api/admin/blocked-dates/date/:date` | JWT | `useBookings.ts`, `BlockedDatesSettings.tsx` | Admin unblocks a day (removes full-day blocks only) |
-| `DELETE /api/admin/blocked-dates/:id` | JWT | `useBookings.ts` | Admin removes a single block, e.g. one time range |
+| `DELETE /api/admin/blocked-dates/:id` | JWT | `useMonthTimeBlocks.ts` | Admin removes a single block, e.g. one time range |
+| `GET /api/admin/date-overrides` | JWT | `useMonthTimeBlocks.ts`, `useDateOverrides.ts` | Load a month's (`?month=`) special opening hours |
+| `PUT /api/admin/date-overrides/:date` | JWT | `useMonthTimeBlocks.ts` | Admin sets or replaces special opening hours for one date |
+| `DELETE /api/admin/date-overrides/:date` | JWT | `useMonthTimeBlocks.ts` | Admin removes special hours so the weekly hours apply again |
 | `GET /api/admin/me` | JWT | Admin settings | Load the authenticated tenant's config |
 | `PATCH /api/admin/me` | JWT | Admin settings | Save changes to tenant config |
 | `GET /api/admin/opening-hours` | JWT | Admin settings | Load the tenant's opening hours |
@@ -269,12 +272,13 @@ Returns the time slots that cannot accept a given party size on a given date, be
 **Response `200`**
 ```json
 {
+  "slots": ["12:00", "12:30", "13:00", "19:00"],
   "blocked_times": ["12:00", "12:30", "19:00"],
   "time_limit_minutes": 120
 }
 ```
 
-`blocked_times` lists every 30-minute slot within that weekday's opening hours (`12:00` to `21:30` when none are configured) that is either inside an admin time-range block, or where adding `guests` would exceed `max_covers` at any point of the sitting. Every slot is returned when the date has a full-day block or the venue is closed. With `max_covers = 0` (no limit) only admin blocks are returned. See `BUSINESS_LOGIC.md`.
+`slots` lists every bookable start time on the date from its effective opening hours (special hours for the date if set, otherwise that weekday's hours); it is empty when the date is closed or fully blocked. `blocked_times` lists every 30-minute slot within those hours (`12:00` to `21:30` when none are configured) that is either inside an admin time-range block, or where adding `guests` would exceed `max_covers` at any point of the sitting. Every slot is returned when the date has a full-day block or the venue is closed. With `max_covers = 0` (no limit) only admin blocks are returned. See `BUSINESS_LOGIC.md`.
 
 **Errors**
 
@@ -465,7 +469,7 @@ Deletes a reservation.
 # Install dependencies
 npm install
 
-# Create the local D1 database
+# Create the local D1 database (db/schema.sql is the full end-state schema; no migrations needed locally)
 npx wrangler d1 execute maximum_bookings_db --local --file=./db/schema.sql
 
 # Start local dev server (Worker + static assets on http://localhost:8787)

@@ -27,6 +27,7 @@ export const BookingApp: FunctionComponent = () => {
     blockedDatesError,
     isFetchingDates,
     blockedTimes,
+    daySlots,
     isFetchingTimes,
     fetchBlockedDates,
     fetchBlockedTimes,
@@ -120,6 +121,7 @@ export const BookingApp: FunctionComponent = () => {
         tenantConfig={tenant}
         formData={formData.value}
         blockedTimes={blockedTimes.value}
+        daySlots={daySlots.value}
         isFetchingTimes={isFetchingTimes.value}
         onGuestsChange={handleGuestsChange}
         onTimeChange={(time) => updateField('time', time)}

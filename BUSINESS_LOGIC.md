@@ -165,7 +165,7 @@ The `INSERT … SELECT … WHERE` (or `UPDATE … WHERE`) embeds `capacityGuard`
 
 **`src/routes/availability.ts` — `GET /api/reservations/blocked-times`**
 
-Returns the list of time strings that are unavailable for a given `(tenant_id, date, guests)` combination.
+Returns the list of time strings that are unavailable for a given `(tenant_id, date, guests)` combination, plus `slots`: every bookable start time on that date from the effective opening hours (special hours if set for the date, otherwise the weekly hours). `slots` is empty when the date is closed or fully blocked. The widget and the manage-booking page build their time pickers from `slots`, not from the weekly hours in the tenant config, so special hours show correctly.
 
 For each candidate time slot, marks it blocked if `peakConcurrentGuests(slot) + requested_guests > max_covers` — the same rule the booking guard enforces, so the widget never offers a time the server will reject for capacity.
 
@@ -253,7 +253,7 @@ Tenant onboarding is a super-admin operation gated by `X-Admin-Key` / `SUPER_ADM
 Reservation creation validates in this order:
 1. Full-day block check — rejects if the date has a full-day `BlockedDates` entry.
 2. Partial-day time block check — rejects if the requested time falls within an admin-defined partial-day block (see [Blocked Dates](#blocked-dates)).
-3. Opening hours check — rejects if the restaurant is closed that day, or if the time is outside configured hours (including midnight-crossing schedules).
+3. Opening hours check — uses the **effective hours** for the date (see [Special Opening Hours](#special-opening-hours)). Rejects if the venue is closed that day, or if the time is outside those hours (including midnight-crossing weekly schedules).
 4. Capacity check — atomic INSERT with a WHERE clause (`capacityGuard`) that checks occupancy across the booking's whole sitting inside the same SQL statement, eliminating the SELECT-then-INSERT race condition.
 
 ---
@@ -291,12 +291,54 @@ The widget caches `blocked-times` for 60 seconds, so a customer may briefly stil
 ### Admin UI
 
 - **Dashboard day view** (`Dashboard.tsx`): "Block this day" toggles a full-day block. When the visible day has time ranges, a read-only "Changed hours on this day" banner (`DayHoursBanner.tsx`) lists them, and its "Change these hours" link opens Settings directly on the specific-day view.
-- **Settings › Opening Hours**: a "Change hours for a specific day" button swaps the weekly schedule for `SpecificDayHours.tsx`. The admin picks a day on the shared calendar, then adds a time range with the `DayTimeBlocks.tsx` form. The view lists the viewed month's ranges, each with Remove (`DELETE /api/admin/blocked-dates/:id`). Closed days cannot be picked. The same list (`ChangedHoursList.tsx`, data from `useMonthTimeBlocks.ts`) also appears under the weekly schedule for the current month.
+- **Settings › Opening Hours**: a "Change hours for a specific day" button swaps the weekly schedule for `SpecificDayHours.tsx`. The admin picks a day on the shared calendar, then adds a time range with the `DayTimeBlocks.tsx` form. The view lists the viewed month's ranges, each with Remove (`DELETE /api/admin/blocked-dates/:id`). The same list (`ChangedHoursList.tsx`, data from `useMonthTimeBlocks.ts`) also appears under the weekly schedule for the current month.
 - The From/Until choices are 30-minute steps bounded by that weekday's opening hours. Until only offers times after From, and its last option is closing time. The form enters blocked ranges only; there is no "bookable window" mode.
 - Opening hours are fetched from `GET /api/admin/opening-hours` when the specific-day view opens (`useOpeningHours.ts`). The admin login response does not carry them.
-- On a closed day, or a day whose hours run past midnight, the form is replaced by an explanation. Existing ranges on that day can still be removed. Ranges that wrap past midnight can no longer be created anywhere.
+- On a closed day, or a day whose hours run past midnight, the block form is replaced by an explanation. Existing ranges on that day can still be removed. Ranges that wrap past midnight can no longer be created anywhere. Setting special opening hours for the day makes the block form available.
 - With no opening hours configured, the default `12:00`–`22:00` is used.
 - **Settings › Blocked Dates** manages full-day blocks only and does not show time ranges.
+
+---
+
+## Special Opening Hours
+
+A `DateOverride` row gives one specific date its own opening hours. It **replaces** the weekly hours for that date only, so it can do what a block cannot: open earlier or later than normal, or open on a normally closed day. It can also close a normally open day.
+
+### Effective hours for a date
+
+Resolved by `src/db/opening-hours.ts` — `getEffectiveHours`, in this order:
+
+1. A full-day `BlockedDate` on the date: not bookable, whatever the hours say.
+2. A `DateOverride` for the date: its hours (or closed) apply, and the weekly row is ignored.
+3. The weekly `OpeningHours` row for that weekday.
+4. Nothing configured: open on the default `12:00`–`22:00`.
+
+Time-range blocks are then applied inside whichever hours won.
+
+### Rules
+
+- Special hours must be strict `HH:MM` with close after open. They cannot run past midnight.
+- One per date. Saving again replaces it. Removing it returns the date to its weekly hours.
+- **Existing reservations are never changed**, including ones that now fall outside the special hours.
+- Blocks vs special hours: use special hours to say when the venue is open that day ("Boxing Day 12:00–16:00"). Use a block to take a gap out of the day ("closed 15:00–17:00 for a private party"). Both can be set on the same date.
+
+### Where special hours are applied
+
+| Action | Uses effective hours? |
+|---|---|
+| Customer creates a booking (`POST /api/reservations`) | Yes — outside the hours or closed → 422 |
+| Widget calendar (`GET /api/reservations/blocked-dates`, `closed_dates`) | Yes — a specially opened day is not listed, a specially closed day is |
+| Widget and manage-booking time pickers (`GET /api/reservations/blocked-times`, `slots`) | Yes |
+| Customer moves a booking (`PATCH /api/reservations/:id`) | **No** — this route has never checked opening hours; only blocks and capacity. The time picker only offers valid times. Known gap. |
+| Admin creates or edits a booking | **No** — intended override, as for weekly hours |
+
+### Admin UI and API
+
+- **Settings › Opening Hours › "Change hours for a specific day"**: after picking a day, "Opening hours on this day" (`SpecialHoursForm.tsx`) shows the normal hours and sets, updates or removes special hours. Any day can be picked, including normally closed ones. The block form below it is then bounded by the special hours.
+- "Changed hours in <month>" lists special hours alongside blocked ranges, each with Remove.
+- **Bookings day view**: the "Changed hours on this day" banner shows special hours for the visible day (`useDateOverrides.ts`).
+- The UI only sets special hours (open with times). Closing a whole day is done with "Block this day". The API also accepts `is_closed: true`.
+- API: `GET /api/admin/date-overrides?month=YYYY-MM`, `PUT /api/admin/date-overrides/:date`, `DELETE /api/admin/date-overrides/:date` (`src/routes/date-overrides.ts`).
 
 ---
 

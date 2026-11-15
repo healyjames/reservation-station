@@ -5,7 +5,7 @@
 **Data-first, feature-organized Cloudflare Worker.** There is no formal hexagonal/layered split —
 the architecture is driven by the data model (`documentation/DATA_MODEL.md`), not by a ports-and-
 adapters or layered convention. Every feature is a thin projection of the underlying objects
-(`Tenant`, `Reservation`, `AdminUser`, `BlockedDate`, `OpeningHours`).
+(`Tenant`, `Reservation`, `AdminUser`, `BlockedDate`, `OpeningHours`, `DateOverride`).
 
 - **Backend:** a single Cloudflare Worker (Hono) serving both the API and, via Vite, the frontend
   bundle. `src/app.ts` wires the Hono app; `src/index.ts` is the Worker entrypoint.
@@ -19,8 +19,8 @@ adapters or layered convention. Every feature is a thin projection of the underl
   `documentation/DATA_MODEL.md` together — never one without the others. This is the project's
   primary invariant (see CLAUDE.md's "Data First" section).
 - **Multi-tenancy is load-bearing.** Every table except `Tenants` carries a `tenant_id` FK with
-  `ON DELETE CASCADE`. Any query or handler touching `Reservation`, `AdminUser`, `BlockedDate`, or
-  `OpeningHours` must be scoped to the current tenant — an unscoped query is a cross-tenant data
+  `ON DELETE CASCADE`. Any query or handler touching `Reservation`, `AdminUser`, `BlockedDate`,
+  `OpeningHours`, or `DateOverride` must be scoped to the current tenant — an unscoped query is a cross-tenant data
   leak, not just a bug.
 - **Validation at trust boundaries.** Zod schemas in `src/schema/` are the runtime contract for
   anything crossing a trust boundary (API request bodies, the public booking widget). Internal
@@ -46,7 +46,7 @@ adapters or layered convention. Every feature is a thin projection of the underl
 
 ## Anti-patterns (reject in review)
 
-- A route handler that queries `Reservation`/`AdminUser`/`BlockedDate`/`OpeningHours` without a
+- A route handler that queries `Reservation`/`AdminUser`/`BlockedDate`/`OpeningHours`/`DateOverride` without a
   `tenant_id` filter.
 - A schema/enum value used in code that isn't reflected in `src/schema/index.ts` (or vice versa).
 - Editing an already-applied migration file instead of adding a new one.

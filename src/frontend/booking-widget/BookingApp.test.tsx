@@ -72,6 +72,7 @@ describe('BookingApp', () => {
       blockedDatesError: signal(''),
       isFetchingDates: signal(false),
       blockedTimes: signal<string[]>([]),
+      daySlots: signal<string[] | null>(null),
       isFetchingTimes: signal(false),
       fetchBlockedDates: fetchBlockedDatesMock,
       fetchBlockedTimes: fetchBlockedTimesMock,
