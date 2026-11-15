@@ -2,7 +2,9 @@
 import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import type { UseAuthReturn } from '@shared/hooks/useAuth';
+import { useEffect } from 'preact/hooks';
 import { useBookings } from '@shared/hooks/useBookings';
+import { useDateOverrides } from '@shared/hooks/useDateOverrides';
 import { ToggleSwitch } from '@shared/components';
 import DateNav from './DateNav';
 import ReservationList from './ReservationList';
@@ -25,6 +27,7 @@ type DashboardProps = {
 
 const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSettings, onGoSpecificDayHours }) => {
   const bookings = useBookings(() => auth.token.value);
+  const dateOverrides = useDateOverrides(() => auth.token.value);
   const modalOpen = useSignal(false);
   const modalMode = useSignal<'create' | 'edit'>('create');
   const modalReservation = useSignal<Reservation | undefined>(undefined);
@@ -56,6 +59,12 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
   }
 
   const reservations = bookings.reservations.value;
+  const visibleDateKey = formatDate(bookings.currentDate.value);
+  const visibleMonthKey = visibleDateKey.slice(0, 7);
+
+  useEffect(() => {
+    void dateOverrides.loadMonth(visibleMonthKey);
+  }, [visibleMonthKey]);
 
   return (
     <div class={styles.dashboard_layout}>
@@ -115,7 +124,10 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
             <button
               type="button"
               class={styles.btn_secondary}
-              onClick={() => void bookings.refreshMonth()}
+              onClick={() => {
+                void bookings.refreshMonth();
+                void dateOverrides.loadMonth(visibleMonthKey, true);
+              }}
               disabled={bookings.isLoading.value || bookings.isBlockLoading.value}
             >
               Refresh
@@ -128,7 +140,11 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
             </p>
           )}
 
-          <DayHoursBanner blocks={bookings.dayBlocks.value} onGoSettings={onGoSpecificDayHours} />
+          <DayHoursBanner
+            blocks={bookings.dayBlocks.value}
+            specialHours={dateOverrides.overridesByDate.value.get(visibleDateKey) ?? null}
+            onGoSettings={onGoSpecificDayHours}
+          />
 
           <div id="bookings-list" aria-busy={bookings.isLoading.value}>
             {bookings.isLoading.value && <p class={styles.loading_text}>Loading…</p>}

@@ -19,6 +19,11 @@
   font-size: 0.9rem;
 }
 
+.special {
+  margin: 0 0 var(--space-2);
+  font-size: 0.875rem;
+}
+
 .subtext {
   margin: 0 0 var(--space-2);
   font-size: 0.8rem;

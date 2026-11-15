@@ -42,6 +42,10 @@
   color: var(--foreground);
 }
 
+.list_kind {
+  color: var(--foreground-dark);
+}
+
 .list_range {
   font-weight: 600;
   white-space: nowrap;

@@ -250,7 +250,8 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
             <strong>Need different hours on a specific day?</strong>
           </p>
           <p class={styles.oh_specific_day_text}>
-            Close early on Christmas Eve or open for lunch only on a bank holiday, without changing your weekly opening hours.
+            Close early on Christmas Eve, open for lunch only on Boxing Day, or open on a day you are normally closed, without changing your
+            weekly opening hours.
           </p>
         </div>
         <Button
@@ -268,9 +269,11 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
           year={changedHours.viewYear.value}
           month={changedHours.viewMonth.value}
           blocks={changedHours.monthBlocks.value}
+          overrides={changedHours.monthOverrides.value}
           isSaving={changedHours.isSaving.value}
           errorMessage={changedHours.saveError.value || changedHours.loadError.value}
           onRemove={(id) => void changedHours.removeBlock(id)}
+          onRemoveOverride={(date) => void changedHours.removeSpecialHours(date)}
         />
       </div>
     </div>

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { render, within, fireEvent, waitFor } from '@testing-library/preact';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AdminBlockedDate, OpeningHoursEntry } from '@shared/types';
+import type { AdminBlockedDate, AdminDateOverride, OpeningHoursEntry } from '@shared/types';
 import { adminFetch } from '@shared/utils/adminFetch';
 import { changeSelect } from '@shared/mock/changeSelect';
 import SpecificDayHours from './SpecificDayHours';
@@ -30,22 +30,35 @@ const HOURS: OpeningHoursEntry[] = [0, 1, 2, 3, 4, 5, 6].map((dow) => ({
   close_time: dow === 1 ? null : '22:00',
 }));
 
+function makeOverride(overrides: Partial<AdminDateOverride> = {}): AdminDateOverride {
+  return { id: 'override-1', date: '2099-06-08', is_closed: 0, open_time: '12:00', close_time: '16:00', reason: null, ...overrides };
+}
+
 type Handlers = {
   month?: (month: string) => Response;
+  /** Special opening hours returned for a month. */
+  overrides?: (month: string) => AdminDateOverride[];
   post?: (body: Record<string, unknown>) => Response;
+  put?: (body: Record<string, unknown>) => Response;
   remove?: (id: string) => Response;
 };
 
 /** Routes the component's admin API calls and records the writes it makes. */
-function mockApi({ month = () => makeResponse([]), post, remove }: Handlers = {}) {
+function mockApi({ month = () => makeResponse([]), overrides = () => [], post, put, remove }: Handlers = {}) {
   const writes: Array<{ url: string; method: string; body?: Record<string, unknown> }> = [];
   adminFetchMock.mockImplementation(async (url, _token, options) => {
     const method = options?.method ?? 'GET';
     if (url === '/api/admin/opening-hours') return makeResponse({ success: true, data: HOURS });
+    if (method === 'GET' && url.includes('/date-overrides'))
+      return makeResponse({ success: true, data: overrides(url.split('month=')[1]) });
     if (method === 'GET') return month(url.split('month=')[1]);
 
     const body = options?.body ? (JSON.parse(options.body as string) as Record<string, unknown>) : undefined;
     writes.push({ url, method, body });
+    if (method === 'PUT') {
+      const date = url.split('/').pop() ?? '';
+      return put ? put(body ?? {}) : makeResponse({ success: true, data: makeOverride({ id: 'saved', date, ...body, is_closed: 0 }) });
+    }
     if (method === 'POST') return post ? post(body ?? {}) : makeResponse(makeBlock({ id: 'created', ...body }), 201);
     return remove ? remove(url.split('/').pop() ?? '') : makeResponse({ success: true });
   });
@@ -115,7 +128,7 @@ describe('SpecificDayHours', () => {
     ]);
     expect(within(monthList).getAllByRole('listitem')).toHaveLength(1);
     expect(monthList.textContent).toContain('18:00 – 22:00');
-    expect(adminFetchMock.mock.calls.filter(([url]) => url.includes('month=')).length).toBe(1);
+    expect(adminFetchMock.mock.calls.filter(([url]) => url.includes('blocked-dates?month=')).length).toBe(1);
   });
 
   it('lists the month’s time ranges in date order and leaves full-day blocks out', async () => {
@@ -172,16 +185,93 @@ describe('SpecificDayHours', () => {
     expect(getByText(/no days have changed hours this month/i)).toBeTruthy();
   });
 
-  it('does not open the form for a day the venue is closed', async () => {
-    const { getByRole, queryByLabelText, getByText } = await renderLoaded();
+  it('lets a normally closed day be opened with special hours, which then bound the block form', async () => {
+    const { getByRole, findByLabelText, getByLabelText, getByText, queryByLabelText, writes, findByRole } = await renderLoaded();
 
-    // A closed day is rendered as a disabled grid cell, not a selectable button.
-    const closedDay = await waitFor(() => getByRole('gridcell', { name: '8' }));
-    fireEvent.click(closedDay);
-
-    expect(closedDay.getAttribute('aria-disabled')).toBe('true');
+    // 2099-06-08 is a Monday, which this venue is closed on.
+    fireEvent.click(getByRole('button', { name: '8' }));
+    const opens = (await findByLabelText('Opens')) as HTMLSelectElement;
+    expect(getByText(/normal hours: closed/i)).toBeTruthy();
     expect(queryByLabelText('From')).toBeNull();
-    expect(getByText(/select a day on the calendar/i)).toBeTruthy();
+
+    changeSelect(opens, '12:00');
+    await waitFor(() => expect((getByLabelText('Closes') as HTMLSelectElement).disabled).toBe(false));
+    changeSelect(getByLabelText('Closes') as HTMLSelectElement, '16:00');
+    fireEvent.input(getByLabelText(/note/i), { target: { value: ' Bank holiday ' } });
+    await waitFor(() => expect((getByRole('button', { name: /set special hours/i }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(getByRole('button', { name: /set special hours/i }));
+
+    const start = (await findByLabelText('From')) as HTMLSelectElement;
+    expect(writes).toEqual([
+      {
+        url: '/api/admin/date-overrides/2099-06-08',
+        method: 'PUT',
+        body: { is_closed: false, open_time: '12:00', close_time: '16:00', reason: 'Bank holiday' },
+      },
+    ]);
+    const starts = within(start)
+      .getAllByRole('option')
+      .map((o) => (o as HTMLOptionElement).value)
+      .filter(Boolean);
+    expect(starts[0]).toBe('12:00');
+    expect(starts[starts.length - 1]).toBe('15:30');
+    const monthList = await findByRole('list', { name: /changed hours in june 2099/i });
+    expect(monthList.textContent).toContain('Special hours');
+    expect(monthList.textContent).toContain('12:00 – 16:00');
+  });
+
+  it('shows the special hours already set for a day and can return it to normal hours', async () => {
+    const { getByRole, findByLabelText, getByLabelText, findByRole, getByText, writes } = await renderLoaded({
+      overrides: () => [makeOverride({ date: '2099-06-10', open_time: '10:00', close_time: '15:00', reason: 'Private hire' })],
+    });
+
+    fireEvent.click(getByRole('button', { name: '10' }));
+
+    expect(((await findByLabelText('Opens')) as HTMLSelectElement).value).toBe('10:00');
+    expect((getByLabelText('Closes') as HTMLSelectElement).value).toBe('15:00');
+    expect(getByText(/special hours are set: 10:00 – 15:00/i)).toBeTruthy();
+    expect(getByRole('button', { name: /update special hours/i })).toBeTruthy();
+
+    fireEvent.click(await findByRole('button', { name: /use normal hours/i }));
+
+    await waitFor(() => expect(getByRole('button', { name: /set special hours/i })).toBeTruthy());
+    expect(writes).toEqual([{ url: '/api/admin/date-overrides/2099-06-10', method: 'DELETE', body: undefined }]);
+    expect(getByText(/no days have changed hours this month/i)).toBeTruthy();
+  });
+
+  it('lists special hours with blocked ranges for the month and removes them by date', async () => {
+    const { findByRole, writes } = await renderLoaded({
+      month: () => makeResponse([makeBlock({ id: 'evening', date: '2099-06-20' })]),
+      overrides: () => [makeOverride({ date: '2099-06-20', open_time: '12:00', close_time: '21:00' })],
+    });
+
+    const list = await findByRole('list', { name: /changed hours in june 2099/i });
+    const items = within(list).getAllByRole('listitem');
+    expect(items).toHaveLength(2);
+    expect(items[0].textContent).toContain('Special hours');
+    expect(items[0].textContent).toContain('12:00 – 21:00');
+    expect(items[1].textContent).toContain('Blocked');
+
+    fireEvent.click(within(list).getByRole('button', { name: /remove special hours on saturday, 20 june 2099/i }));
+
+    await waitFor(() => expect(within(list).getAllByRole('listitem')).toHaveLength(1));
+    expect(writes).toEqual([{ url: '/api/admin/date-overrides/2099-06-20', method: 'DELETE', body: undefined }]);
+  });
+
+  it('shows an error and keeps the day unchanged when special hours cannot be saved', async () => {
+    const { getByRole, findByLabelText, getByLabelText, getByText } = await renderLoaded({
+      put: () => makeResponse({ error: 'bad' }, 400),
+    });
+    fireEvent.click(getByRole('button', { name: '10' }));
+
+    changeSelect((await findByLabelText('Opens')) as HTMLSelectElement, '12:00');
+    await waitFor(() => expect((getByLabelText('Closes') as HTMLSelectElement).disabled).toBe(false));
+    changeSelect(getByLabelText('Closes') as HTMLSelectElement, '16:00');
+    await waitFor(() => expect((getByRole('button', { name: /set special hours/i }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(getByRole('button', { name: /set special hours/i }));
+
+    await waitFor(() => expect(getByRole('alert').textContent).toMatch(/could not update the hours/i));
+    expect(getByText(/no days have changed hours this month/i)).toBeTruthy();
   });
 
   it('loads the next month when the calendar moves on', async () => {

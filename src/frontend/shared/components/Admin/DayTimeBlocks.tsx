@@ -1,6 +1,6 @@
 import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
-import type { AdminBlockedDate, CalendarDate, OpeningHoursEntry, TimeBlockInput } from '@shared/types';
+import type { AdminBlockedDate, AdminDateOverride, CalendarDate, OpeningHoursEntry, TimeBlockInput } from '@shared/types';
 import { Button, FormField, Input, Select } from '@shared/components';
 import { getBlockTimeOptions } from '@shared/utils';
 import styles from './DayTimeBlocks.module.css';
@@ -11,6 +11,8 @@ type DayTimeBlocksProps = {
   date: CalendarDate;
   /** The venue's weekly schedule: `null` when none is configured, `undefined` while it has not been loaded. */
   openingHours: OpeningHoursEntry[] | null | undefined;
+  /** Special hours set for this date, which replace the weekly opening hours. */
+  specialHours?: AdminDateOverride | null;
   /** The day's time-range blocks, in display order. */
   blocks: AdminBlockedDate[];
   isLoading: boolean;
@@ -20,15 +22,24 @@ type DayTimeBlocksProps = {
   onRemove: (id: string) => void;
 };
 
-const DayTimeBlocks: FunctionComponent<DayTimeBlocksProps> = ({ date, openingHours, blocks, isLoading, errorMessage, onAdd, onRemove }) => {
+const DayTimeBlocks: FunctionComponent<DayTimeBlocksProps> = ({
+  date,
+  openingHours,
+  specialHours = null,
+  blocks,
+  isLoading,
+  errorMessage,
+  onAdd,
+  onRemove,
+}) => {
   const startTime = useSignal('');
   const endTime = useSignal('');
   const reason = useSignal('');
 
   const hoursLoaded = openingHours !== undefined;
   const hours = openingHours ?? null;
-  const { startTimes, endTimes: allEndTimes } = getBlockTimeOptions({ date, openingHours: hours });
-  const { endTimes } = getBlockTimeOptions({ date, openingHours: hours, startTime: startTime.value || undefined });
+  const { startTimes, endTimes: allEndTimes } = getBlockTimeOptions({ date, openingHours: hours, specialHours });
+  const { endTimes } = getBlockTimeOptions({ date, openingHours: hours, specialHours, startTime: startTime.value || undefined });
   const closingTime = allEndTimes[allEndTimes.length - 1];
   const canBlock = hoursLoaded && startTimes.length > 0;
   const isValid = startTime.value !== '' && endTime.value > startTime.value;
@@ -106,7 +117,7 @@ const DayTimeBlocks: FunctionComponent<DayTimeBlocksProps> = ({ date, openingHou
       ) : (
         <p class={styles.unavailable}>
           {hoursLoaded
-            ? 'Time ranges can only be blocked on days the venue is open, with opening hours that end before midnight. This day is closed or its hours run past midnight.'
+            ? 'Time ranges can only be blocked on days the venue is open, with opening hours that end before midnight. This day is closed or its hours run past midnight. Set special opening hours for this day to open it.'
             : 'Opening hours are not loaded yet. Use Refresh if this message does not go away.'}
         </p>
       )}

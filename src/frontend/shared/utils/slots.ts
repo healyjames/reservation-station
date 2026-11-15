@@ -1,4 +1,5 @@
 import type { CalendarDate } from '../types/calendar';
+import type { AdminDateOverride } from '../types/blockedDate';
 import type { OpeningHoursEntry, TenantConfig } from '../types/tenant';
 import { DEFAULT_OPEN_TIME, DEFAULT_CLOSE_TIME, SLOT_INTERVAL_MINUTES } from '@constants';
 
@@ -32,6 +33,8 @@ const LATEST_BLOCK_END = '23:59';
 type BlockTimeOptionsInput = {
   date: CalendarDate;
   openingHours: OpeningHoursEntry[] | null;
+  /** Special hours set for this date, which replace the weekly opening hours. */
+  specialHours?: AdminDateOverride | null;
   /** When set, only end times after this start are returned. */
   startTime?: string;
 };
@@ -41,16 +44,41 @@ type BlockTimeOptionsInput = {
  * A block's end is exclusive, so each end option is a slot's finish (slot + one interval) and the
  * last one is closing time. Both lists are empty when the day is closed or its hours cross midnight.
  */
-export function getBlockTimeOptions({ date, openingHours, startTime }: BlockTimeOptionsInput): {
+export function getBlockTimeOptions({ date, openingHours, specialHours, startTime }: BlockTimeOptionsInput): {
   startTimes: string[];
   endTimes: string[];
 } {
-  const startTimes = getSlotsForOpeningHours(date, openingHours);
+  const startTimes = specialHours ? getSlotsForSpecialHours(specialHours) : getSlotsForOpeningHours(date, openingHours);
   const endTimes = startTimes
     .map((slot) => toMinutes(slot) + SLOT_INTERVAL_MINUTES)
     .map((end) => (end >= MINUTES_IN_DAY ? LATEST_BLOCK_END : toTime(end)))
     .filter((end) => !startTime || end > startTime);
   return { startTimes, endTimes };
+}
+
+function getSlotsForSpecialHours(specialHours: AdminDateOverride): string[] {
+  if (specialHours.is_closed || !specialHours.open_time || !specialHours.close_time) return [];
+  return generateTimeSlots(specialHours.open_time, specialHours.close_time);
+}
+
+/**
+ * Choices for setting special opening hours on a date: any slot of the day to open at, and any later
+ * slot boundary (up to the end of the day) to close at.
+ */
+export function getSpecialHoursOptions(openTime?: string): { openTimes: string[]; closeTimes: string[] } {
+  const openTimes = generateTimeSlots('00:00', LATEST_BLOCK_END);
+  const closeTimes = openTimes
+    .map((slot) => toMinutes(slot) + SLOT_INTERVAL_MINUTES)
+    .map((end) => (end >= MINUTES_IN_DAY ? LATEST_BLOCK_END : toTime(end)))
+    .filter((end) => !openTime || end > openTime);
+  return { openTimes, closeTimes };
+}
+
+/** The weekly opening hours for the weekday `date` falls on, or null when none are configured for it. */
+export function getWeeklyHoursForDate(date: CalendarDate, hours: OpeningHoursEntry[] | null): OpeningHoursEntry | null {
+  const dateStr = `${date.year}-${String(date.month + 1).padStart(2, '0')}-${String(date.day).padStart(2, '0')}T12:00:00Z`;
+  const dow = new Date(dateStr).getUTCDay();
+  return hours?.find((h) => Number(h.day_of_week) === dow) ?? null;
 }
 
 export function getSlotsForDate(date: CalendarDate, tenantConfig: TenantConfig | null): string[] {
@@ -80,8 +108,17 @@ export function getEarliestTodaySlot(leadMinutes = 30): string {
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 }
 
-export function getAvailableSlots(date: CalendarDate, tenantConfig: TenantConfig | null, blockedTimes: string[]): string[] {
-  let slots = getSlotsForDate(date, tenantConfig).filter((s) => !blockedTimes.includes(s));
+/**
+ * `daySlots` is the date's bookable start times as resolved by the server, which knows about special
+ * hours set for that date. Without it the tenant's weekly opening hours are used.
+ */
+export function getAvailableSlots(
+  date: CalendarDate,
+  tenantConfig: TenantConfig | null,
+  blockedTimes: string[],
+  daySlots: string[] | null = null,
+): string[] {
+  let slots = (daySlots ?? getSlotsForDate(date, tenantConfig)).filter((s) => !blockedTimes.includes(s));
   if (isToday(date)) {
     // Honour the tenant's booking delay (lead time). The value rides along on the already-cached
     // tenant config, so this needs no extra API request. A 30-min minimum is always enforced.

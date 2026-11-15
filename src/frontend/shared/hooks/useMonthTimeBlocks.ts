@@ -1,6 +1,6 @@
 import { useSignal } from '@preact/signals';
 import type { Signal } from '@preact/signals';
-import type { AdminBlockedDate, CalendarDate, TimeBlockInput } from '@shared/types';
+import type { AdminBlockedDate, AdminDateOverride, CalendarDate, SpecialHoursInput, TimeBlockInput } from '@shared/types';
 import { adminFetch } from '@shared/utils/adminFetch';
 import { formatDateForAPI, padTwo } from '@shared/utils/dates';
 
@@ -13,6 +13,8 @@ export type UseMonthTimeBlocksReturn = {
   viewMonth: Signal<number>;
   /** The viewed month's time-range blocks (full-day blocks excluded), ordered by date then start time. */
   monthBlocks: Signal<AdminBlockedDate[]>;
+  /** The viewed month's special opening hours, ordered by date. */
+  monthOverrides: Signal<AdminDateOverride[]>;
   isFetching: Signal<boolean>;
   isSaving: Signal<boolean>;
   loadError: Signal<string>;
@@ -21,6 +23,10 @@ export type UseMonthTimeBlocksReturn = {
   /** Resolves true when the block was created. */
   addBlock: (date: CalendarDate, input: TimeBlockInput) => Promise<boolean>;
   removeBlock: (id: string) => Promise<void>;
+  /** Sets (or replaces) the special opening hours for a date. Resolves true when saved. */
+  setSpecialHours: (date: CalendarDate, input: SpecialHoursInput) => Promise<boolean>;
+  /** Removes a date's special hours so its normal weekly hours apply again. `date` is YYYY-MM-DD. */
+  removeSpecialHours: (date: string) => Promise<void>;
 };
 
 function sortBlocks(rows: AdminBlockedDate[]): AdminBlockedDate[] {
@@ -29,12 +35,16 @@ function sortBlocks(rows: AdminBlockedDate[]): AdminBlockedDate[] {
     .sort((a, b) => a.date.localeCompare(b.date) || (a.start_time ?? '').localeCompare(b.start_time ?? ''));
 }
 
-/** One month of the tenant's time-range blocks, with add and remove. Starts on the current month; nothing loads until `loadMonth` is called. */
+/**
+ * One month of the tenant's changed hours: time-range blocks and special opening hours, with add and
+ * remove. Starts on the current month; nothing loads until `loadMonth` is called.
+ */
 export function useMonthTimeBlocks(token: string): UseMonthTimeBlocksReturn {
   const today = new Date();
   const viewYear = useSignal(today.getFullYear());
   const viewMonth = useSignal(today.getMonth());
   const monthBlocks = useSignal<AdminBlockedDate[]>([]);
+  const monthOverrides = useSignal<AdminDateOverride[]>([]);
   const isFetching = useSignal(false);
   const isSaving = useSignal(false);
   const loadError = useSignal('');
@@ -47,11 +57,19 @@ export function useMonthTimeBlocks(token: string): UseMonthTimeBlocksReturn {
     loadError.value = '';
     isFetching.value = true;
     try {
-      const res = await adminFetch(`/api/admin/blocked-dates?month=${year}-${padTwo(month + 1)}`, token);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const rows = (await res.json()) as AdminBlockedDate[];
+      const monthKey = `${year}-${padTwo(month + 1)}`;
+      const [blocksRes, overridesRes] = await Promise.all([
+        adminFetch(`/api/admin/blocked-dates?month=${monthKey}`, token),
+        adminFetch(`/api/admin/date-overrides?month=${monthKey}`, token),
+      ]);
+      if (!blocksRes.ok || !overridesRes.ok) throw new Error('Failed to load month');
+      const rows = (await blocksRes.json()) as AdminBlockedDate[];
+      const overrides = ((await overridesRes.json()) as { data?: AdminDateOverride[] }).data ?? [];
       // A slower response for a month the admin has already left must not replace the visible one.
-      if (viewYear.value === year && viewMonth.value === month) monthBlocks.value = sortBlocks(rows);
+      if (viewYear.value === year && viewMonth.value === month) {
+        monthBlocks.value = sortBlocks(rows);
+        monthOverrides.value = overrides;
+      }
     } catch {
       loadError.value = LOAD_ERROR;
     } finally {
@@ -100,5 +118,48 @@ export function useMonthTimeBlocks(token: string): UseMonthTimeBlocksReturn {
     });
   }
 
-  return { viewYear, viewMonth, monthBlocks, isFetching, isSaving, loadError, saveError, loadMonth, addBlock, removeBlock };
+  async function setSpecialHours(date: CalendarDate, { open_time, close_time, reason }: SpecialHoursInput): Promise<boolean> {
+    const dateKey = formatDateForAPI(date);
+    const trimmedReason = reason?.trim();
+    return save(async () => {
+      const res = await adminFetch(`/api/admin/date-overrides/${dateKey}`, token, {
+        method: 'PUT',
+        body: JSON.stringify({ is_closed: false, open_time, close_time, ...(trimmedReason ? { reason: trimmedReason } : {}) }),
+      });
+      if (!res.ok) return false;
+
+      const saved = ((await res.json()) as { data: AdminDateOverride }).data;
+      monthOverrides.value = [...monthOverrides.value.filter((row) => row.date !== dateKey), saved].sort((a, b) =>
+        a.date.localeCompare(b.date),
+      );
+      return true;
+    });
+  }
+
+  async function removeSpecialHours(date: string): Promise<void> {
+    await save(async () => {
+      const res = await adminFetch(`/api/admin/date-overrides/${date}`, token, { method: 'DELETE' });
+      // 404 means the special hours are already gone, which is the outcome the admin wanted.
+      if (!res.ok && res.status !== 404) return false;
+
+      monthOverrides.value = monthOverrides.value.filter((row) => row.date !== date);
+      return true;
+    });
+  }
+
+  return {
+    viewYear,
+    viewMonth,
+    monthBlocks,
+    monthOverrides,
+    isFetching,
+    isSaving,
+    loadError,
+    saveError,
+    loadMonth,
+    addBlock,
+    removeBlock,
+    setSpecialHours,
+    removeSpecialHours,
+  };
 }

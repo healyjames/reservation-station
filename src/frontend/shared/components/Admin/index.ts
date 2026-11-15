@@ -9,6 +9,7 @@ export { default as ChangedHoursList } from './ChangedHoursList';
 export { default as DateNav } from './DateNav';
 export { default as DayHoursBanner } from './DayHoursBanner';
 export { default as DayTimeBlocks } from './DayTimeBlocks';
+export { default as SpecialHoursForm } from './SpecialHoursForm';
 export { default as SpecificDayHours } from './SpecificDayHours';
 export { default as DeleteConfirmModal } from './DeleteConfirmModal';
 export { default as GeneralSettings } from './GeneralSettings';
