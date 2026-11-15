@@ -8,7 +8,7 @@
     "deploy": "npm run build && wrangler deploy",
     "start": "concurrently \"wrangler dev\" \"vite\"",
     "test": "vitest",
-    "test:frontend": "vitest --config vitest.frontend.config.ts",
+    "test:frontend": "vitest --project frontend",
     "cf-typegen": "wrangler types"
   },
   "devDependencies": {

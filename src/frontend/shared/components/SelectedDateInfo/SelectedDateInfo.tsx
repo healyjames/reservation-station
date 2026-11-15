@@ -5,11 +5,10 @@ import styles from './SelectedDateInfo.module.css';
 
 type SelectedDateInfoProps = {
   date: CalendarDate;
-  onChangeDate?: () => void;
   hideLabel?: boolean;
 }
 
-const SelectedDateInfo: FunctionComponent<SelectedDateInfoProps> = ({ date, onChangeDate, hideLabel = false }) => {
+const SelectedDateInfo: FunctionComponent<SelectedDateInfoProps> = ({ date, hideLabel = false }) => {
   const formattedDate = formatDateForDisplay(date);
 
   return (
