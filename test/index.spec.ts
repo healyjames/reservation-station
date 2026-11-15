@@ -8,6 +8,8 @@ import { generateManageToken, hashManageToken } from '../src/utils/manageToken';
 const TENANT_ID = '00000000-0000-4000-8000-000000000001';
 const TENANT_ID_2 = '00000000-0000-4000-8000-000000000002';
 const RES_ID = '00000000-0000-4000-8000-000000000010';
+const BLOCK_ID = '00000000-0000-4000-8000-000000000020';
+const BLOCK_ID_2 = '00000000-0000-4000-8000-000000000021';
 
 async function seedTenant(overrides: Record<string, unknown> = {}) {
   await env.maximum_bookings_db
@@ -65,7 +67,22 @@ async function adminHeaders(tenantId: string = TENANT_ID): Promise<Record<string
   return { Authorization: `Bearer ${token}` };
 }
 
+async function seedBlockedDate(overrides: Record<string, unknown> = {}) {
+  await env.maximum_bookings_db
+    .prepare('INSERT INTO BlockedDates (id, tenant_id, date, start_time, end_time, created_date) VALUES (?, ?, ?, ?, ?, ?)')
+    .bind(
+      overrides.id ?? BLOCK_ID,
+      overrides.tenant_id ?? TENANT_ID,
+      overrides.date ?? '2099-06-20',
+      overrides.start_time ?? null,
+      overrides.end_time ?? null,
+      new Date().toISOString(),
+    )
+    .run();
+}
+
 async function clearDb() {
+  await env.maximum_bookings_db.prepare('DELETE FROM BlockedDates').run();
   await env.maximum_bookings_db.prepare('DELETE FROM Reservations').run();
   await env.maximum_bookings_db.prepare('DELETE FROM Tenants').run();
 }
@@ -507,6 +524,81 @@ describe('Reservations', () => {
         body: JSON.stringify({ reservation_time: '19:30', guests: 10 }),
       });
       expect(res.status).toBe(200);
+    });
+
+    describe('blocked dates', () => {
+      const BLOCK_DATE = '2099-06-20';
+
+      async function patch(manageQuery: string, body: Record<string, unknown>) {
+        return exports.default.fetch(`http://localhost/api/reservations/${RES_ID}?${manageQuery}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+      }
+
+      async function storedDateTime() {
+        return env.maximum_bookings_db
+          .prepare('SELECT reservation_date, reservation_time FROM Reservations WHERE id = ?')
+          .bind(RES_ID)
+          .first<{ reservation_date: string; reservation_time: string }>();
+      }
+
+      it('returns 422 and keeps the booking when the new date has a full-day block', async () => {
+        await seedBlockedDate({ date: BLOCK_DATE });
+        const manageQuery = await seedReservation({ reservation_date: '2099-06-15', reservation_time: '19:00' });
+
+        const res = await patch(manageQuery, { reservation_date: BLOCK_DATE });
+
+        expect(res.status).toBe(422);
+        expect(((await res.json()) as any).error).toBe('Bookings are not available for this date');
+        expect(await storedDateTime()).toEqual({ reservation_date: '2099-06-15', reservation_time: '19:00' });
+      });
+
+      it('returns 422 when the new time is inside a partial block, including exactly at its start', async () => {
+        await seedBlockedDate({ date: BLOCK_DATE, start_time: '14:00', end_time: '16:00' });
+        const manageQuery = await seedReservation({ reservation_date: BLOCK_DATE, reservation_time: '19:00' });
+
+        const atStart = await patch(manageQuery, { reservation_time: '14:00' });
+        expect(atStart.status).toBe(422);
+        expect(((await atStart.json()) as any).error).toBe('Bookings are not available for this time');
+        expect((await patch(manageQuery, { reservation_time: '15:30' })).status).toBe(422);
+        expect((await storedDateTime())?.reservation_time).toBe('19:00');
+      });
+
+      it('returns 422 when only the date changes and the existing time is inside a partial block on the new date', async () => {
+        await seedBlockedDate({ date: BLOCK_DATE, start_time: '18:00', end_time: '20:00' });
+        const manageQuery = await seedReservation({ reservation_date: '2099-06-15', reservation_time: '19:00' });
+
+        expect((await patch(manageQuery, { reservation_date: BLOCK_DATE })).status).toBe(422);
+      });
+
+      it('allows a move to a time outside the partial block, including exactly at its end', async () => {
+        await seedBlockedDate({ date: BLOCK_DATE, start_time: '14:00', end_time: '16:00' });
+        const manageQuery = await seedReservation({ reservation_date: BLOCK_DATE, reservation_time: '19:00' });
+
+        expect((await patch(manageQuery, { reservation_time: '16:00' })).status).toBe(200);
+        expect((await storedDateTime())?.reservation_time).toBe('16:00');
+      });
+
+      it('still allows guests and details to change on a booking that already sits inside a block', async () => {
+        await seedBlockedDate({ date: BLOCK_DATE });
+        await seedBlockedDate({ id: BLOCK_ID_2, date: BLOCK_DATE, start_time: '18:00', end_time: '20:00' });
+        const manageQuery = await seedReservation({ reservation_date: BLOCK_DATE, reservation_time: '19:00', guests: 2 });
+
+        expect((await patch(manageQuery, { guests: 4, first_name: 'Janet' })).status).toBe(200);
+        // Re-sending the unchanged date and time is not a move either.
+        expect((await patch(manageQuery, { reservation_date: BLOCK_DATE, reservation_time: '19:00', guests: 3 })).status).toBe(200);
+      });
+
+      it("ignores another tenant's blocks", async () => {
+        await seedTenant({ id: TENANT_ID_2, name: 'Other Place', tenant_code: 'other-place' });
+        await seedBlockedDate({ tenant_id: TENANT_ID_2, date: BLOCK_DATE });
+        await seedBlockedDate({ id: BLOCK_ID_2, tenant_id: TENANT_ID_2, date: BLOCK_DATE, start_time: '12:00', end_time: '22:00' });
+        const manageQuery = await seedReservation({ reservation_date: '2099-06-15', reservation_time: '19:00' });
+
+        expect((await patch(manageQuery, { reservation_date: BLOCK_DATE })).status).toBe(200);
+      });
     });
 
     it('returns 404 without a valid manage token', async () => {

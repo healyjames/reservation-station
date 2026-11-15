@@ -1,19 +1,9 @@
 import { z } from 'zod';
 import { Hono } from 'hono';
-import {
-	Reservation,
-	CreateReservationSchema,
-	UpdateReservationSchema,
-	CreateReservation
-} from '../schema';
-import {
-	toMinutes,
-} from '../utils/slots';
-import {
-	generateManageToken,
-	hashManageToken,
-	verifyManageToken
-} from '../utils/manageToken';
+import { Reservation, CreateReservationSchema, UpdateReservationSchema, CreateReservation } from '../schema';
+import { toMinutes } from '../utils/slots';
+import { findBlockError } from '../db/blocked-dates';
+import { generateManageToken, hashManageToken, verifyManageToken } from '../utils/manageToken';
 import { sendEmail } from '../utils/email';
 import { adminAuth } from '../middleware/adminAuth';
 import { capacityGuard } from '../db/capacity';
@@ -27,11 +17,11 @@ import { buildTenantAmendmentEmail } from '../emails/tenant-amendment';
 import { buildTenantCancellationEmail } from '../emails/tenant-cancellation';
 
 const reservations = new Hono<{
-	Bindings: Env;
-	Variables: {
-		userId: string;
-		tenantId: string
-	}
+  Bindings: Env;
+  Variables: {
+    userId: string;
+    tenantId: string;
+  };
 }>();
 
 reservations.get('/', adminAuth, async (c) => {
@@ -111,31 +101,13 @@ reservations.post('/', async (c) => {
     return c.json({ error: `Maximum party size is ${tenant.max_guests}` }, 422);
   }
 
-  const fullDayBlock = await c.env.maximum_bookings_db
-    .prepare('SELECT id FROM BlockedDates WHERE tenant_id = ? AND date = ? AND start_time IS NULL LIMIT 1')
-    .bind(data.tenant_id, data.reservation_date)
-    .first<{ id: string }>();
-
-  if (fullDayBlock) {
-    return c.json({ error: 'Bookings are not available for this date' }, 422);
-  }
-
-  const { results: partialBlocks } = await c.env.maximum_bookings_db
-    .prepare('SELECT start_time, end_time FROM BlockedDates WHERE tenant_id = ? AND date = ? AND start_time IS NOT NULL AND end_time IS NOT NULL')
-    .bind(data.tenant_id, data.reservation_date)
-    .run<{ start_time: string; end_time: string }>();
-
-  if (partialBlocks.length > 0) {
-    const reqMin = toMinutes(data.reservation_time);
-    const isBlocked = partialBlocks.some((r) => {
-      const a = toMinutes(r.start_time);
-      const b = toMinutes(r.end_time);
-      return b <= a ? reqMin >= a || reqMin < b : reqMin >= a && reqMin < b;
-    });
-    if (isBlocked) {
-      return c.json({ error: 'Bookings are not available for this time' }, 422);
-    }
-  }
+  const blockError = await findBlockError({
+    db: c.env.maximum_bookings_db,
+    tenantId: data.tenant_id,
+    date: data.reservation_date,
+    time: data.reservation_time,
+  });
+  if (blockError) return c.json({ error: blockError }, 422);
 
   const dow = new Date(data.reservation_date + 'T12:00:00Z').getUTCDay();
   const openingHours = await c.env.maximum_bookings_db
@@ -320,6 +292,19 @@ reservations.patch('/:id', async (c) => {
 
   if (needsCapacityCheck && existing.max_guests > 0 && effectiveGuests > existing.max_guests) {
     return c.json({ error: `Maximum party size is ${existing.max_guests}` }, 422);
+  }
+
+  // Blocks only apply when the booking is being moved, so a booking that already sits inside a block
+  // (made before the block, or by an admin) can still have its other details amended.
+  const isMoved = effectiveDate !== existing.reservation_date || effectiveTime !== existing.reservation_time;
+  if (isMoved) {
+    const blockError = await findBlockError({
+      db: c.env.maximum_bookings_db,
+      tenantId: existing.tenant_id,
+      date: effectiveDate,
+      time: effectiveTime,
+    });
+    if (blockError) return c.json({ error: blockError }, 422);
   }
 
   const data = { ...body, modified_date: new Date().toISOString() };

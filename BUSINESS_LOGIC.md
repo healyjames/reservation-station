@@ -173,11 +173,13 @@ Uses `max_covers` (concurrent capacity) — not `max_guests` (party size limit).
 
 ---
 
-### API: full availability grid
+### API: per-slot capacity for one day
 
-**`src/routes/reservations.ts` — `GET /api/availability`**
+**`src/routes/availability.ts` — `GET /api/reservations/availability`**
 
-Returns a full month's worth of dates and their available time slots. Each slot is evaluated using the same concurrent window logic. Dates where all time slots are blocked are marked as unavailable.
+Returns one day's default slots (`12:00`–`21:30`) with `concurrent_guests` and `available_capacity` at each slot's start time. It is a capacity read-out only.
+
+**Known gap:** it ignores blocked dates, opening hours and the whole-sitting rule, so a slot it reports as having capacity may still be rejected. No frontend calls it. Use `blocked-times` to decide what is bookable.
 
 ---
 
@@ -250,9 +252,41 @@ Tenant onboarding is a super-admin operation gated by `X-Admin-Key` / `SUPER_ADM
 
 Reservation creation validates in this order:
 1. Full-day block check — rejects if the date has a full-day `BlockedDates` entry.
-2. Partial-day time block check — rejects if the requested time falls within an admin-defined partial-day block.
+2. Partial-day time block check — rejects if the requested time falls within an admin-defined partial-day block (see [Blocked Dates](#blocked-dates)).
 3. Opening hours check — rejects if the restaurant is closed that day, or if the time is outside configured hours (including midnight-crossing schedules).
 4. Capacity check — atomic INSERT with a WHERE clause (`capacityGuard`) that checks occupancy across the booking's whole sitting inside the same SQL statement, eliminating the SELECT-then-INSERT race condition.
+
+---
+
+## Blocked Dates
+
+A `BlockedDate` row closes a tenant to new bookings for a **whole day** (no times) or for a **time range** on one date (`start_time` and `end_time`).
+
+### Rules
+
+- A time range is `[start_time, end_time)`. The start is blocked and the end is bookable, so "last booking 17:30" is a block from `18:00` to closing time.
+- New blocks must use strict 24-hour `HH:MM` with `end_time > start_time`. A range cannot wrap past midnight and the latest possible end is `23:59` (there is no `24:00`). `reason` is optional, up to 200 characters.
+- Rows created before this rule where `end_time <= start_time` are still honoured as wrapping past midnight.
+- Blocks are not merged or de-duplicated. Overlapping ranges are allowed and a time is blocked if any range covers it.
+- "Only bookable 12:00–16:00" is expressed as two ranges: opening→`12:00` and `16:00`→closing.
+- **Blocks never touch existing reservations.** They only stop new bookings and moves.
+
+### Where blocks are enforced
+
+| Action | Full-day block | Time-range block |
+|---|---|---|
+| Customer creates a booking (`POST /api/reservations`) | Rejected, 422 | Rejected, 422 |
+| Customer moves a booking to a new date or time (`PATCH /api/reservations/:id`) | Rejected, 422 | Rejected, 422 |
+| Customer changes guests or details only (date and time unchanged) | Allowed | Allowed |
+| Widget time picker (`GET /api/reservations/blocked-times`) | All slots blocked | Slots in the range blocked |
+| Admin creates a booking (`POST /api/admin/reservations`) | Rejected, 422 | **Allowed** |
+| Admin edits a booking (`PATCH /api/admin/reservations/:id`) | **Allowed** | **Allowed** |
+
+The admin rows are an **intended override**: staff can place a booking inside a blocked time range (for example a private party during a blocked evening). Admin edits also skip the capacity check.
+
+`src/db/blocked-dates.ts` — `findBlockError` is the single check used by the customer POST and PATCH. `src/utils/slots.ts` — `isTimeInBlock` / `isTimeInAnyBlock` hold the range rule, shared with `blocked-times`.
+
+The widget caches `blocked-times` for 60 seconds, so a customer may briefly still see a newly blocked slot. Submitting it is rejected with 422.
 
 ---
 

@@ -117,7 +117,7 @@ An admin-defined closure. A row either blocks a **whole day** (times NULL) or a 
 | `date` | TEXT | `YYYY-MM-DD`. |
 | `start_time` | TEXT | `HH:MM` or NULL. Must be set together with `end_time`. |
 | `end_time` | TEXT | `HH:MM` or NULL. |
-| `reason` | TEXT | Optional note. |
+| `reason` | TEXT | Optional note. New rows: ≤200 chars (Zod only). |
 | `created_date` | TEXT | Defaults to `CURRENT_TIMESTAMP`. |
 
 **Keys & indexes:** `PRIMARY KEY (id)`, `idx_blocked_dates_tenant_date (tenant_id, date)`.
@@ -125,6 +125,8 @@ An admin-defined closure. A row either blocks a **whole day** (times NULL) or a 
 **Rules:**
 - `start_time` and `end_time` are all-or-nothing — both present (partial block) or both absent (full-day block).
 - The window is `[start_time, end_time)` — the end time itself is bookable.
+- Rows are independent: overlapping or duplicate windows are allowed, and deleting one row never affects another.
+- A block never modifies or removes `Reservation` rows. Where blocks are enforced (and the admin override) is described in `BUSINESS_LOGIC.md` › Blocked Dates.
 - New rows (`BlockDateBodySchema`) must use strict 24h `HH:MM` (`00:00`–`23:59`) with `end_time > start_time`. This is enforced in Zod only; the column has no CHECK constraint. Legacy rows where `end_time <= start_time` are still honoured as wrapping past midnight.
 
 ---

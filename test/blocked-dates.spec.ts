@@ -219,6 +219,21 @@ describe('Admin: /api/admin/blocked-dates', () => {
       expect(res.status).toBe(400);
     });
 
+    it('stores a trimmed reason of up to 200 characters and returns 400 for a longer one', async () => {
+      const token = await getAuthToken();
+      const post = (reason: string) =>
+        exports.default.fetch('http://localhost/api/admin/blocked-dates', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date: '2099-07-04', start_time: '18:00', end_time: '20:00', reason }),
+        });
+
+      const ok = await post(`  ${'a'.repeat(200)}  `);
+      expect(ok.status).toBe(201);
+      expect(((await ok.json()) as any).reason).toBe('a'.repeat(200));
+      expect((await post('a'.repeat(201))).status).toBe(400);
+    });
+
     it('returns 400 when date is missing from the request body', async () => {
       const token = await getAuthToken();
       const res = await exports.default.fetch('http://localhost/api/admin/blocked-dates', {
@@ -536,6 +551,35 @@ describe('GET /api/reservations/blocked-times - blocked dates integration', () =
     expect(body.blocked_times).not.toContain('21:00');
   });
 
+  it('treats the end time as bookable (end exclusive)', async () => {
+    await seedBlockedDate({ id: BLOCK_ID_1, date: '2099-09-02', start_time: '18:00', end_time: '20:00' });
+    const res = await exports.default.fetch(
+      `http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-09-02&guests=2`,
+    );
+    const body = (await res.json()) as any;
+    expect(body.blocked_times).not.toContain('20:00');
+    expect(body.blocked_times).not.toContain('17:30');
+  });
+
+  it('blocks partial ranges when the venue has unlimited capacity (max_covers = 0)', async () => {
+    await seedTenant({ id: TENANT_ID, max_covers: 0 });
+    await seedBlockedDate({ id: BLOCK_ID_1, date: '2099-09-02', start_time: '18:00', end_time: '20:00' });
+    const res = await exports.default.fetch(
+      `http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-09-02&guests=2`,
+    );
+    const body = (await res.json()) as any;
+    expect(body.blocked_times).toEqual(['18:00', '18:30', '19:00', '19:30']);
+  });
+
+  it('honours a legacy wrap row (end before start) as blocking from start until close', async () => {
+    await seedBlockedDate({ id: BLOCK_ID_1, date: '2099-09-02', start_time: '21:00', end_time: '02:00' });
+    const res = await exports.default.fetch(
+      `http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-09-02&guests=2`,
+    );
+    const body = (await res.json()) as any;
+    expect(body.blocked_times).toEqual(['21:00', '21:30']);
+  });
+
   it('full-day block causes all slots to be blocked even when concurrent capacity is not exceeded', async () => {
     await seedBlockedDate({ id: BLOCK_ID_1, date: '2099-09-03' });
     const res = await exports.default.fetch(
@@ -601,5 +645,37 @@ describe('POST /api/reservations - blocked dates enforcement', () => {
 
     const stillExists = await env.maximum_bookings_db.prepare('SELECT id FROM Reservations WHERE id = ?').bind(RES_ID).first();
     expect(stillExists).not.toBeNull();
+  });
+
+  const postAt = (reservation_time: string) =>
+    exports.default.fetch('http://localhost/api/reservations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...basePayload, reservation_date: '2099-10-02', reservation_time }),
+    });
+
+  it('returns 422 for a time inside a partial block, including exactly at its start', async () => {
+    await seedBlockedDate({ id: BLOCK_ID_1, date: '2099-10-02', start_time: '14:00', end_time: '16:00' });
+
+    const atStart = await postAt('14:00');
+    expect(atStart.status).toBe(422);
+    expect(((await atStart.json()) as any).error).toBe('Bookings are not available for this time');
+    expect((await postAt('15:30')).status).toBe(422);
+  });
+
+  it('allows a booking exactly at the end time of a partial block', async () => {
+    await seedBlockedDate({ id: BLOCK_ID_1, date: '2099-10-02', start_time: '14:00', end_time: '16:00' });
+    expect((await postAt('16:00')).status).toBe(201);
+  });
+
+  it('returns 422 for a late slot covered by a legacy wrap row (end before start)', async () => {
+    await seedBlockedDate({ id: BLOCK_ID_1, date: '2099-10-02', start_time: '21:00', end_time: '02:00' });
+    expect((await postAt('21:30')).status).toBe(422);
+  });
+
+  it("ignores another tenant's partial block", async () => {
+    await seedTenant({ id: TENANT_ID_OTHER, name: 'Other Venue', tenant_code: 'othervenue' });
+    await seedBlockedDate({ id: BLOCK_ID_OTHER, tenant_id: TENANT_ID_OTHER, date: '2099-10-02', start_time: '18:00', end_time: '20:00' });
+    expect((await postAt('19:00')).status).toBe(201);
   });
 });

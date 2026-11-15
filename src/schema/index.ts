@@ -191,7 +191,7 @@ export const BlockDateBodySchema = z
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
     start_time: z.string().regex(TIME_HHMM, 'Invalid time format (HH:MM)').optional(),
     end_time: z.string().regex(TIME_HHMM, 'Invalid time format (HH:MM)').optional(),
-    reason: z.string().optional(),
+    reason: z.string().trim().max(200).optional(),
   })
   .refine((d) => (d.start_time == null) === (d.end_time == null), {
     message: 'start_time and end_time must both be provided or both be omitted',

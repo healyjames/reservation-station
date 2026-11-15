@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { generateTimeSlots, calculateConcurrentGuests, peakConcurrentGuests, toMinutes } from '../utils/slots';
+import { generateTimeSlots, calculateConcurrentGuests, peakConcurrentGuests, isTimeInAnyBlock } from '../utils/slots';
 import type { SlotReservation } from '../types';
 
 const availability = new Hono<{ Bindings: Env }>();
@@ -16,10 +16,7 @@ availability.get('/blocked-dates', async (c) => {
     return c.json({ error: 'month must be in YYYY-MM format' }, 400);
   }
 
-  const tenant = await c.env.maximum_bookings_db
-		.prepare('SELECT id FROM Tenants WHERE id = ?')
-		.bind(tenantId)
-		.first<{ id: string }>();
+  const tenant = await c.env.maximum_bookings_db.prepare('SELECT id FROM Tenants WHERE id = ?').bind(tenantId).first<{ id: string }>();
 
   if (!tenant) {
     return c.json({ error: 'Tenant not found' }, 404);
@@ -39,7 +36,7 @@ availability.get('/blocked-dates', async (c) => {
 
   const closedDatesSet = new Set<string>();
   if (closedDays.length > 0) {
-		const [year, monthNum] = month.split('-').map(Number);
+    const [year, monthNum] = month.split('-').map(Number);
     const closedDowSet = new Set(closedDays.map((r) => r.day_of_week));
     const daysInMonth = new Date(year, monthNum, 0).getDate();
     for (let day = 1; day <= daysInMonth; day++) {
@@ -51,12 +48,16 @@ availability.get('/blocked-dates', async (c) => {
     }
   }
 
-  return c.json({
-    blocked_dates: Array.from(adminBlockedSet),
-    closed_dates: Array.from(closedDatesSet),
-  }, 200, {
-    'Cache-Control': 'private, max-age=300',
-  });
+  return c.json(
+    {
+      blocked_dates: Array.from(adminBlockedSet),
+      closed_dates: Array.from(closedDatesSet),
+    },
+    200,
+    {
+      'Cache-Control': 'private, max-age=300',
+    },
+  );
 });
 
 availability.get('/blocked-times', async (c) => {
@@ -111,15 +112,7 @@ availability.get('/blocked-times', async (c) => {
       : generateTimeSlots();
 
   if (tenant.max_covers === 0) {
-    const blockedTimes = slots.filter((slot) =>
-      blockedDateRows.some((r) => {
-        if (r.start_time === null || r.end_time === null) return false;
-        const s = toMinutes(slot),
-          a = toMinutes(r.start_time),
-          b = toMinutes(r.end_time);
-        return b <= a ? s >= a || s < b : s >= a && s < b;
-      }),
-    );
+    const blockedTimes = slots.filter((slot) => isTimeInAnyBlock(slot, blockedDateRows));
     return c.json({ blocked_times: blockedTimes, time_limit_minutes: tenant.concurrent_guests_time_limit }, 200, {
       'Cache-Control': 'private, max-age=60',
     });
@@ -132,14 +125,7 @@ availability.get('/blocked-times', async (c) => {
 
   const blockedTimes: string[] = [];
   for (const slot of slots) {
-    const partiallyBlocked = blockedDateRows.some((r) => {
-      if (r.start_time === null || r.end_time === null) return false;
-      const s = toMinutes(slot),
-        a = toMinutes(r.start_time),
-        b = toMinutes(r.end_time);
-      return b <= a ? s >= a || s < b : s >= a && s < b;
-    });
-    if (partiallyBlocked) {
+    if (isTimeInAnyBlock(slot, blockedDateRows)) {
       blockedTimes.push(slot);
       continue;
     }
@@ -150,12 +136,16 @@ availability.get('/blocked-times', async (c) => {
     }
   }
 
-  return c.json({
-    blocked_times: blockedTimes,
-    time_limit_minutes: tenant.concurrent_guests_time_limit,
-  }, 200, {
-    'Cache-Control': 'private, max-age=60',
-  });
+  return c.json(
+    {
+      blocked_times: blockedTimes,
+      time_limit_minutes: tenant.concurrent_guests_time_limit,
+    },
+    200,
+    {
+      'Cache-Control': 'private, max-age=60',
+    },
+  );
 });
 
 availability.get('/availability', async (c) => {
