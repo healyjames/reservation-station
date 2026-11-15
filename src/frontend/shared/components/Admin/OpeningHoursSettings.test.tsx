@@ -30,6 +30,13 @@ describe('OpeningHoursSettings', () => {
     expect(getByText('Save Changes')).toBeTruthy();
   });
 
+  it('can open straight on the specific-day view', async () => {
+    const { findByRole, queryByText } = render(<OpeningHoursSettings token="token-123" initialView="specific-day" />);
+
+    expect(await findByRole('heading', { name: /change hours on a specific day/i })).toBeTruthy();
+    expect(queryByText('Save Changes')).toBeNull();
+  });
+
   it('swaps the weekly schedule for the specific-day view, and back again', async () => {
     const { findByRole, queryByText, getByRole } = render(<OpeningHoursSettings token="token-123" />);
 

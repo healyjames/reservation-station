@@ -31,7 +31,7 @@ const DayHoursBanner: FunctionComponent<DayHoursBannerProps> = ({ blocks, onGoSe
         </ul>
       </div>
       <button type="button" class={styles.link} onClick={onGoSettings}>
-        Change in Settings
+        Change these hours
       </button>
     </section>
   );

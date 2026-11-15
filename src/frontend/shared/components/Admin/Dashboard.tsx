@@ -19,9 +19,11 @@ type DashboardProps = {
   auth: UseAuthReturn;
   onLogout: () => void;
   onGoSettings: () => void;
+  /** Opens Settings directly on the view for changing a specific day's hours. */
+  onGoSpecificDayHours: () => void;
 };
 
-const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSettings }) => {
+const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSettings, onGoSpecificDayHours }) => {
   const bookings = useBookings(() => auth.token.value);
   const modalOpen = useSignal(false);
   const modalMode = useSignal<'create' | 'edit'>('create');
@@ -126,7 +128,7 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth, onLogout, onGoSett
             </p>
           )}
 
-          <DayHoursBanner blocks={bookings.dayBlocks.value} onGoSettings={onGoSettings} />
+          <DayHoursBanner blocks={bookings.dayBlocks.value} onGoSettings={onGoSpecificDayHours} />
 
           <div id="bookings-list" aria-busy={bookings.isLoading.value}>
             {bookings.isLoading.value && <p class={styles.loading_text}>Loading…</p>}

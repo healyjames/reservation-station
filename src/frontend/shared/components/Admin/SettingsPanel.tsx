@@ -13,10 +13,12 @@ type SettingsProps = {
   tenantConfig: Signal<TenantConfig | null>;
   token: string;
   onSave: (updated: Partial<TenantConfig>) => void;
+  /** Open on Opening Hours > specific-day view instead of the General tab. */
+  startOnSpecificDayHours?: boolean;
 };
 
-const SettingsPanel: FunctionComponent<SettingsProps> = ({ tenantConfig, token, onSave }) => {
-  const activeTab = useSignal<SettingsTab>('general');
+const SettingsPanel: FunctionComponent<SettingsProps> = ({ tenantConfig, token, onSave, startOnSpecificDayHours = false }) => {
+  const activeTab = useSignal<SettingsTab>(startOnSpecificDayHours ? 'opening-hours' : 'general');
 
   return (
     <div class={styles.settings_view}>
@@ -52,7 +54,9 @@ const SettingsPanel: FunctionComponent<SettingsProps> = ({ tenantConfig, token, 
 
       <div id="settings-view" class={styles.settings_panel}>
         {activeTab.value === 'general' && <GeneralSettings tenantConfig={tenantConfig} token={token} onSave={onSave} />}
-        {activeTab.value === 'opening-hours' && <OpeningHoursSettings token={token} />}
+        {activeTab.value === 'opening-hours' && (
+          <OpeningHoursSettings token={token} initialView={startOnSpecificDayHours ? 'specific-day' : 'weekly'} />
+        )}
         {activeTab.value === 'blocked-dates' && <BlockedDatesSettings token={token} />}
       </div>
     </div>

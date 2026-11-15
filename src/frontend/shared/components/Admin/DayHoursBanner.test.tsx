@@ -30,11 +30,11 @@ describe('DayHoursBanner', () => {
     expect(items[1].textContent).toContain('Closing early');
   });
 
-  it('takes the admin to Settings from the banner', () => {
+  it('takes the admin to the settings for these hours from the banner', () => {
     const onGoSettings = vi.fn();
     const { getByRole } = render(<DayHoursBanner blocks={[makeBlock()]} onGoSettings={onGoSettings} />);
 
-    fireEvent.click(getByRole('button', { name: /change in settings/i }));
+    fireEvent.click(getByRole('button', { name: /change these hours/i }));
 
     expect(onGoSettings).toHaveBeenCalledTimes(1);
   });

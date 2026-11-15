@@ -25,11 +25,14 @@ const DAY_ORDER: Array<{ label: string; dow: number }> = [
   { label: 'Sunday', dow: 0 },
 ];
 
+type OpeningHoursView = 'weekly' | 'specific-day';
+
 type OpeningHoursSettingsProps = {
   token: string;
+  initialView?: OpeningHoursView;
 };
 
-const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ token }) => {
+const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ token, initialView = 'weekly' }) => {
   const days = useSignal<DayConfig[]>(
     DAY_ORDER.map(({ label, dow }) => ({
       label,
@@ -39,7 +42,7 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
       closeTime: '22:00',
     })),
   );
-  const view = useSignal<'weekly' | 'specific-day'>('weekly');
+  const view = useSignal<OpeningHoursView>(initialView);
   const isLoading = useSignal(true);
   const isSaving = useSignal(false);
   const bannerMessage = useSignal('');

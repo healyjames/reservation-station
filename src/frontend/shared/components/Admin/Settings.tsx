@@ -10,9 +10,11 @@ type SettingsProps = {
   auth: UseAuthReturn;
   onLogout: () => void;
   onGoDashboard: () => void;
+  /** Open on Opening Hours > specific-day view instead of the General tab. */
+  startOnSpecificDayHours?: boolean;
 };
 
-const Settings: FunctionComponent<SettingsProps> = ({ auth, onLogout, onGoDashboard }) => {
+const Settings: FunctionComponent<SettingsProps> = ({ auth, onLogout, onGoDashboard, startOnSpecificDayHours = false }) => {
   const venueName = auth.tenantConfig.value?.name ?? 'Settings';
   const token = auth.token.value ?? '';
 
@@ -30,7 +32,12 @@ const Settings: FunctionComponent<SettingsProps> = ({ auth, onLogout, onGoDashbo
         <AdminHeader venueName={venueName} onLogout={onLogout} />
 
         <main id="main-content" class={styles.main_content}>
-          <SettingsPanel tenantConfig={auth.tenantConfig} token={token} onSave={handleSave} />
+          <SettingsPanel
+            tenantConfig={auth.tenantConfig}
+            token={token}
+            onSave={handleSave}
+            startOnSpecificDayHours={startOnSpecificDayHours}
+          />
         </main>
       </div>
     </div>
