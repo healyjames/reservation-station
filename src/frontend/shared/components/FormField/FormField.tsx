@@ -12,7 +12,7 @@ type FormFieldProps = {
   required?: boolean;
   class?: string;
   children: ComponentChildren;
-}
+};
 
 const FormField: FunctionComponent<FormFieldProps> = ({ label, htmlFor, error, hint, tooltip, required, class: className, children }) => {
   const tooltipVisible = useSignal(false);
@@ -22,24 +22,26 @@ const FormField: FunctionComponent<FormFieldProps> = ({ label, htmlFor, error, h
     <div class={`${styles.field} ${className ?? ''}`}>
       <label
         htmlFor={htmlFor}
-        onMouseEnter={tooltip ? (e) => {
-          tooltipAnchorRect.value = (e.currentTarget as HTMLElement).getBoundingClientRect();
-          tooltipVisible.value = true;
-        } : undefined}
-        onMouseLeave={tooltip ? () => {
-          tooltipVisible.value = false;
-        } : undefined}
+        onMouseEnter={
+          tooltip
+            ? (e) => {
+                tooltipAnchorRect.value = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                tooltipVisible.value = true;
+              }
+            : undefined
+        }
+        onMouseLeave={
+          tooltip
+            ? () => {
+                tooltipVisible.value = false;
+              }
+            : undefined
+        }
       >
         {label}
         {required && ' *'}
       </label>
-      {tooltip && (
-        <Tooltip
-          visible={tooltipVisible.value}
-          message={tooltip}
-          anchorRect={tooltipAnchorRect.value}
-        />
-      )}
+      {tooltip && <Tooltip visible={tooltipVisible.value} message={tooltip} anchorRect={tooltipAnchorRect.value} />}
       {children}
       {error && (
         <span class={styles.error} role="alert">

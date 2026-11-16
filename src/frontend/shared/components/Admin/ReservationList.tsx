@@ -7,7 +7,7 @@ type ReservationListProps = {
   reservations: Reservation[];
   onEdit: (reservation: Reservation) => void;
   onDelete: (reservation: Reservation) => void;
-}
+};
 
 const ReservationList: FunctionComponent<ReservationListProps> = ({ reservations, onEdit, onDelete }) => (
   <table class={`${styles.admin_table} ${styles.booking_table}`}>

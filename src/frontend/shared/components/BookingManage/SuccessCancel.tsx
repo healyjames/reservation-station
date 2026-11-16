@@ -6,7 +6,7 @@ import styles from './SuccessCancel.module.css';
 
 type SuccessCancelProps = {
   reservation: Reservation;
-}
+};
 
 export const SuccessCancel: FunctionComponent<SuccessCancelProps> = ({ reservation }) => (
   <StandaloneLayout title="Manage your booking">

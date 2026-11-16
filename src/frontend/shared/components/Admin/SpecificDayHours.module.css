@@ -1,0 +1,46 @@
+.view {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.title {
+  margin: 0 0 var(--space-2);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--foreground-lightest);
+}
+
+.intro,
+.hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--foreground-dark);
+  line-height: 1.4;
+}
+
+.day {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.day_title {
+  margin: 0 0 var(--space-2);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground-lightest);
+}
+
+/* The shared calendar is sized for the booking widget; keep it compact inside Settings. */
+.calendar {
+  max-width: 30rem;
+}
+
+.error {
+  margin: 0;
+  border-radius: var(--radius-xs);
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  background: var(--error-light);
+  color: var(--error-dark);
+}

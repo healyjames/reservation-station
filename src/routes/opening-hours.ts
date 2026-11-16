@@ -4,11 +4,11 @@ import { adminAuth } from '../middleware/adminAuth';
 import { OpeningHoursEntry, UpsertOpeningHoursSchema } from '../schema';
 
 const openingHours = new Hono<{
-	Bindings: Env;
-	Variables: {
-		userId: string;
-		tenantId: string
-	}
+  Bindings: Env;
+  Variables: {
+    userId: string;
+    tenantId: string;
+  };
 }>();
 
 openingHours.use('*', adminAuth);
@@ -51,11 +51,7 @@ openingHours.put('/', async (c) => {
     };
   });
 
-  const stmts: D1PreparedStatement[] = [
-		c.env.maximum_bookings_db
-			.prepare('DELETE FROM OpeningHours WHERE tenant_id = ?')
-			.bind(tenantId)
-	];
+  const stmts: D1PreparedStatement[] = [c.env.maximum_bookings_db.prepare('DELETE FROM OpeningHours WHERE tenant_id = ?').bind(tenantId)];
 
   for (const entry of normalised) {
     stmts.push(

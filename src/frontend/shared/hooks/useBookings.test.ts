@@ -440,4 +440,51 @@ describe('useBookings', () => {
     expect(result.current.reservations.value).toEqual([]);
     expect(result.current.isDayBlocked.value).toBe(false);
   });
+
+  describe('time-range blocks', () => {
+    const fullDay = makeBlockedRow({ id: 'full-day', start_time: null, end_time: null });
+    const evening = makeBlockedRow({ id: 'evening', start_time: '18:00', end_time: '20:00', reason: 'Private party' });
+    const lunch = makeBlockedRow({ id: 'lunch', start_time: '12:00', end_time: '13:00', reason: null });
+    const otherDay = makeBlockedRow({ id: 'other-day', date: '2099-06-02', start_time: '14:00', end_time: '15:00' });
+
+    it("dayBlocks lists only the visible day's time-range blocks, earliest first", async () => {
+      const { result } = await renderLoadedHook({ blockedRows: [fullDay, evening, lunch, otherDay] });
+
+      expect(result.current.dayBlocks.value).toEqual([lunch, evening]);
+
+      await act(async () => {
+        await result.current.fetchBookings(JUNE_2);
+      });
+
+      expect(result.current.dayBlocks.value).toEqual([otherDay]);
+    });
+
+    it('toggling the full-day block keeps the time-range blocks', async () => {
+      const { result } = await renderLoadedHook({ blockedRows: [fullDay, evening] });
+      adminFetchMock.mockResolvedValueOnce(makeResponse({ success: true }));
+
+      await act(async () => {
+        await result.current.toggleDayBlock();
+      });
+
+      expect(result.current.isDayBlocked.value).toBe(false);
+      expect(result.current.dayBlocks.value).toEqual([evening]);
+    });
+
+    it('toggleDayBlock failure keeps the toggle state and sets an error, which clears on leaving the day', async () => {
+      const { result } = await renderLoadedHook({ blockedRows: [] });
+      adminFetchMock.mockResolvedValueOnce(makeResponse({ error: 'boom' }, 500));
+
+      await act(async () => {
+        await result.current.toggleDayBlock();
+      });
+      expect(result.current.isDayBlocked.value).toBe(false);
+      expect(result.current.blockErrorMessage.value).not.toBe('');
+
+      await act(async () => {
+        result.current.nextDay();
+      });
+      expect(result.current.blockErrorMessage.value).toBe('');
+    });
+  });
 });

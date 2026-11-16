@@ -7,7 +7,7 @@ type BookingCardProps = {
   reservation: Reservation;
   onEdit: (reservation: Reservation) => void;
   onDelete: (reservation: Reservation) => void;
-}
+};
 
 const BookingCard: FunctionComponent<BookingCardProps> = ({ reservation: r, onEdit, onDelete }) => (
   <div class={styles.booking_card}>

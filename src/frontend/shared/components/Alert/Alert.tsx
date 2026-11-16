@@ -6,7 +6,7 @@ type AlertProps = {
   message: string;
   visible?: boolean;
   ariaLive?: 'polite' | 'assertive';
-}
+};
 
 const Alert: FunctionComponent<AlertProps> = ({ variant, message, visible = true, ariaLive = 'polite' }) => (
   <div

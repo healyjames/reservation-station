@@ -10,7 +10,7 @@ type ModalProps = {
   footer?: ComponentChildren;
   children: ComponentChildren;
   class?: string;
-}
+};
 
 const Modal: FunctionComponent<ModalProps> = ({ open, onClose, title, footer, children, class: className }) => {
   const dialogRef = useRef<HTMLDialogElement>(null);

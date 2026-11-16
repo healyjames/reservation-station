@@ -23,7 +23,7 @@ Before commencing a session, always read `BUSINESS_LOGIC.md` file and retain the
 
 # Data First
 
-**This is a data-focused project. Nothing works if the data doesn't.** The data model is the foundation — every feature, endpoint, and UI is a projection of the underlying objects (`Tenant`, `Reservation` with its embedded customer, `AdminUser`, `BlockedDate`, `OpeningHours`).
+**This is a data-focused project. Nothing works if the data doesn't.** The data model is the foundation — every feature, endpoint, and UI is a projection of the underlying objects (`Tenant`, `Reservation` with its embedded customer, `AdminUser`, `BlockedDate`, `OpeningHours`, `DateOverride`).
 
 - The source of truth for the data model is `documentation/DATA_MODEL.md`. Read it at the start of any session and treat it as canonical for what we store and why.
 - **Preserving data structure and integrity is the top priority.** Foreign keys, unique constraints, cascade rules, and the tenant scoping must be respected in every change. Do not weaken or bypass them.

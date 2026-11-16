@@ -11,7 +11,7 @@ type OverviewProps = {
   goToEditDetails: () => void;
   goToChangeDatetime: () => Promise<void>;
   goToCancelConfirm: () => void;
-}
+};
 
 export const Overview: FunctionComponent<OverviewProps> = ({
   reservation,

@@ -1,8 +1,10 @@
 import { env, exports } from 'cloudflare:workers';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { generateManageToken, hashManageToken } from '../src/utils/manageToken';
 
 const TENANT_ID = '00000000-0000-4000-8000-000000000001';
 const RES_ID = '00000000-0000-4000-8000-000000000099';
+const RES_EMAIL = 'jane@example.com';
 
 async function seedTenantWithEmail(contactEmail: string | null = 'owner@restaurant.com') {
   await env.maximum_bookings_db
@@ -14,16 +16,33 @@ async function seedTenantWithEmail(contactEmail: string | null = 'owner@restaura
     .run();
 }
 
-async function seedReservation() {
+/** Seeds a reservation and returns the customer manage URL query (email + token) for it. */
+async function seedReservation(): Promise<string> {
   const now = new Date().toISOString();
+  const token = await generateManageToken(env.JWT_SECRET, RES_ID, RES_EMAIL);
   await env.maximum_bookings_db
     .prepare(
       `INSERT OR REPLACE INTO Reservations
-      (id, tenant_id, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements, created_date, modified_date)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, tenant_id, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements, created_date, modified_date, manage_token_hash)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
-    .bind(RES_ID, TENANT_ID, 'Jane', 'Doe', '07700900000', 'jane@example.com', '2099-07-15', '19:00', 2, null, now, now)
+    .bind(
+      RES_ID,
+      TENANT_ID,
+      'Jane',
+      'Doe',
+      '07700900000',
+      RES_EMAIL,
+      '2099-07-15',
+      '19:00',
+      2,
+      null,
+      now,
+      now,
+      await hashManageToken(token),
+    )
     .run();
+  return `email=${encodeURIComponent(RES_EMAIL)}&token=${token}`;
 }
 
 async function clearDb() {
@@ -44,7 +63,7 @@ describe('Email notifications — fire-and-forget resilience', () => {
     await seedTenantWithEmail('owner@restaurant.com');
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Resend network error')));
 
-    const res = await exports.fetch(
+    const res = await exports.default.fetch(
       new Request('http://localhost/api/reservations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -59,7 +78,6 @@ describe('Email notifications — fire-and-forget resilience', () => {
           guests: 2,
         }),
       }),
-      env,
     );
 
     expect(res.status).toBe(201);
@@ -68,7 +86,7 @@ describe('Email notifications — fire-and-forget resilience', () => {
   it('POST /api/reservations returns 201 when tenant has no contact_email', async () => {
     await seedTenantWithEmail(null);
 
-    const res = await exports.fetch(
+    const res = await exports.default.fetch(
       new Request('http://localhost/api/reservations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -83,7 +101,6 @@ describe('Email notifications — fire-and-forget resilience', () => {
           guests: 2,
         }),
       }),
-      env,
     );
 
     expect(res.status).toBe(201);
@@ -91,16 +108,15 @@ describe('Email notifications — fire-and-forget resilience', () => {
 
   it('PATCH /api/reservations/:id returns 200 even when Resend API call fails', async () => {
     await seedTenantWithEmail('owner@restaurant.com');
-    await seedReservation();
+    const manageQuery = await seedReservation();
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Resend network error')));
 
-    const res = await exports.fetch(
-      new Request(`http://localhost/api/reservations/${RES_ID}`, {
+    const res = await exports.default.fetch(
+      new Request(`http://localhost/api/reservations/${RES_ID}?${manageQuery}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ guests: 3 }),
       }),
-      env,
     );
 
     expect(res.status).toBe(200);
@@ -110,14 +126,13 @@ describe('Email notifications — fire-and-forget resilience', () => {
 
   it('DELETE /api/reservations/:id returns 200 even when Resend API call fails', async () => {
     await seedTenantWithEmail('owner@restaurant.com');
-    await seedReservation();
+    const manageQuery = await seedReservation();
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Resend network error')));
 
-    const res = await exports.fetch(
-      new Request(`http://localhost/api/reservations/${RES_ID}`, {
+    const res = await exports.default.fetch(
+      new Request(`http://localhost/api/reservations/${RES_ID}?${manageQuery}`, {
         method: 'DELETE',
       }),
-      env,
     );
 
     expect(res.status).toBe(200);
@@ -128,11 +143,10 @@ describe('Email notifications — fire-and-forget resilience', () => {
   it('DELETE /api/reservations/:id returns 404 when reservation does not exist', async () => {
     await seedTenantWithEmail('owner@restaurant.com');
 
-    const res = await exports.fetch(
-      new Request(`http://localhost/api/reservations/${RES_ID}`, {
+    const res = await exports.default.fetch(
+      new Request(`http://localhost/api/reservations/${RES_ID}?email=${encodeURIComponent(RES_EMAIL)}&token=x`, {
         method: 'DELETE',
       }),
-      env,
     );
 
     expect(res.status).toBe(404);

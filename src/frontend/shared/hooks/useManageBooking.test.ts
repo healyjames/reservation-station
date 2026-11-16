@@ -64,9 +64,7 @@ describe('useManageBooking', () => {
 
   /** Renders the hook and flushes the async init() effect. */
   async function renderAndInit() {
-    const renderResult = renderHook(() =>
-      useManageBooking('res-123', 'john@example.com', null),
-    );
+    const renderResult = renderHook(() => useManageBooking('res-123', 'john@example.com', null));
     // Flush the useEffect and all microtasks from init()'s two fetch calls
     await act(async () => {
       await new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -95,11 +93,11 @@ describe('useManageBooking', () => {
 
       // Resolve the hanging patch so the test can clean up
       resolvePatch({ ok: true, json: async () => ({}) } as Response);
-      await act(async () => { await firstSave; });
+      await act(async () => {
+        await firstSave;
+      });
 
-      const patchCalls = mockFetch.mock.calls.filter(
-        ([, options]) => (options as RequestInit)?.method === 'PATCH',
-      );
+      const patchCalls = mockFetch.mock.calls.filter(([, options]) => (options as RequestInit)?.method === 'PATCH');
       expect(patchCalls).toHaveLength(1);
     });
 
@@ -149,11 +147,11 @@ describe('useManageBooking', () => {
       await result.current.saveDatetime();
 
       resolvePatch({ ok: true, json: async () => ({}) } as Response);
-      await act(async () => { await firstSave; });
+      await act(async () => {
+        await firstSave;
+      });
 
-      const patchCalls = mockFetch.mock.calls.filter(
-        ([, options]) => (options as RequestInit)?.method === 'PATCH',
-      );
+      const patchCalls = mockFetch.mock.calls.filter(([, options]) => (options as RequestInit)?.method === 'PATCH');
       expect(patchCalls).toHaveLength(1);
     });
 
@@ -190,11 +188,11 @@ describe('useManageBooking', () => {
       await result.current.confirmCancel();
 
       resolveDelete({ ok: true, json: async () => ({}) } as Response);
-      await act(async () => { await firstCancel; });
+      await act(async () => {
+        await firstCancel;
+      });
 
-      const deleteCalls = mockFetch.mock.calls.filter(
-        ([, options]) => (options as RequestInit)?.method === 'DELETE',
-      );
+      const deleteCalls = mockFetch.mock.calls.filter(([, options]) => (options as RequestInit)?.method === 'DELETE');
       expect(deleteCalls).toHaveLength(1);
     });
 

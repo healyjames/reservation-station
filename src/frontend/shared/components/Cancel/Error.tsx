@@ -3,7 +3,7 @@ import { StandaloneLayout, MessageCard } from '@shared/components';
 
 type ErrorProps = {
   message: string;
-}
+};
 
 export const Error: FunctionComponent<ErrorProps> = ({ message }) => (
   <StandaloneLayout title="Cancel your booking">

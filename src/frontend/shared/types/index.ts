@@ -4,3 +4,4 @@ export * from './reservation';
 export * from './booking';
 export type { BlockedDatesResponse, BlockedTimesResponse } from './availability';
 export * from './manage';
+export * from './blockedDate';

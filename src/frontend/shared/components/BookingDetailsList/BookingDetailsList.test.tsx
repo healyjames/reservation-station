@@ -17,7 +17,7 @@ describe('BookingDetailsList', () => {
 
   it('renders correct number of detail rows', () => {
     const { container } = render(<BookingDetailsList details={DETAILS} />);
-    expect(container.querySelectorAll('.detail-row').length).toBe(3);
+    expect(container.querySelectorAll('dt').length).toBe(3);
   });
 
   it('renders labels and values', () => {

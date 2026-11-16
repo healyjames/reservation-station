@@ -7,6 +7,7 @@ import auth from './routes/auth';
 import admin from './routes/admin';
 import blockedDates from './routes/blocked-dates';
 import openingHours from './routes/opening-hours';
+import dateOverrides from './routes/date-overrides';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -35,6 +36,7 @@ app.route('/api/auth', auth);
 app.route('/api/admin', admin);
 app.route('/api/admin/blocked-dates', blockedDates);
 app.route('/api/admin/opening-hours', openingHours);
+app.route('/api/admin/date-overrides', dateOverrides);
 
 app.notFound((c) => c.json({ error: 'Not found' }, 404));
 

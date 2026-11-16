@@ -33,12 +33,7 @@ export function bustMonth(tenantId: string, year: number, month: number): void {
   cache.delete(`${tenantId}:${year}-${String(month + 1).padStart(2, '0')}`);
 }
 
-export async function fetchBlockedDatesForMonth(
-  tenantId: string,
-  year: number,
-  month: number,
-  forceFresh = false,
-): Promise<FetchResult> {
+export async function fetchBlockedDatesForMonth(tenantId: string, year: number, month: number, forceFresh = false): Promise<FetchResult> {
   const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
   const key = `${tenantId}:${monthStr}`;
   const cached = cache.get(key);
@@ -53,10 +48,7 @@ export async function fetchBlockedDatesForMonth(
   if (forceFresh) fetchOptions.cache = 'no-store';
 
   try {
-    const res = await fetch(
-      `/api/reservations/blocked-dates?tenant_id=${encodeURIComponent(tenantId)}&month=${monthStr}`,
-      fetchOptions,
-    );
+    const res = await fetch(`/api/reservations/blocked-dates?tenant_id=${encodeURIComponent(tenantId)}&month=${monthStr}`, fetchOptions);
     if (!res.ok) return emptyResult({ error: true });
     const data = (await res.json()) as BlockedDatesResponse;
     const adminBlocked = new Set<string>(data.blocked_dates ?? []);

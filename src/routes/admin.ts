@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { adminAuth } from '../middleware/adminAuth';
+import { capacityGuard } from '../db/capacity';
 import { Tenant, Reservation, UpdateTenantSchema, UpdateReservationSchema, CreateAdminReservationSchema } from '../schema';
 import { sendEmail } from '../utils/email';
 import { buildTenantConfirmationEmail } from '../emails/tenant-confirmation';
@@ -13,21 +14,18 @@ import { generateManageToken, hashManageToken } from '../utils/manageToken';
 import type { ReservationWithTenant } from '../types';
 
 const admin = new Hono<{
-	Bindings: Env;
-	Variables: {
-		userId: string;
-		tenantId: string
-	}
+  Bindings: Env;
+  Variables: {
+    userId: string;
+    tenantId: string;
+  };
 }>();
 
 admin.use('*', adminAuth);
 
 admin.get('/me', async (c) => {
   const tenantId = c.get('tenantId');
-  const tenant = await c.env.maximum_bookings_db
-		.prepare('SELECT * FROM Tenants WHERE id = ?')
-		.bind(tenantId)
-		.first<Tenant>();
+  const tenant = await c.env.maximum_bookings_db.prepare('SELECT * FROM Tenants WHERE id = ?').bind(tenantId).first<Tenant>();
 
   if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
   return c.json(tenant);
@@ -70,7 +68,9 @@ admin.get('/reservations', async (c) => {
       return c.json({ error: 'Invalid month format. Expected YYYY-MM' }, 400);
     }
     const { results } = await c.env.maximum_bookings_db
-      .prepare('SELECT * FROM Reservations WHERE tenant_id = ? AND reservation_date LIKE ? ORDER BY reservation_date ASC, reservation_time ASC')
+      .prepare(
+        'SELECT * FROM Reservations WHERE tenant_id = ? AND reservation_date LIKE ? ORDER BY reservation_date ASC, reservation_time ASC',
+      )
       .bind(tenantId, `${month}-%`)
       .run<Reservation>();
     return c.json(results);
@@ -104,28 +104,19 @@ admin.post('/reservations', async (c) => {
     return c.json({ error: z.prettifyError(parsed.error) }, 400);
   }
 
-  const {
-		first_name,
-		surname,
-		telephone,
-		email,
-		reservation_date,
-		reservation_time,
-		guests,
-		dietary_requirements
-	} = parsed.data;
+  const { first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements } = parsed.data;
 
   const tenant = await c.env.maximum_bookings_db
     .prepare('SELECT name, status, max_guests, max_covers, concurrent_guests_time_limit, contact_email FROM Tenants WHERE id = ?')
     .bind(tenantId)
-    .first<({
+    .first<{
       name: string;
       status: string;
       max_guests: number;
       max_covers: number;
       concurrent_guests_time_limit: number;
       contact_email: string;
-    })>();
+    }>();
 
   if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
 
@@ -148,8 +139,14 @@ admin.post('/reservations', async (c) => {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  const [rH, rM] = reservation_time.split(':');
-  const slotMinutes = parseInt(rH, 10) * 60 + parseInt(rM, 10);
+  const guard = capacityGuard({
+    tenantId,
+    date: reservation_date,
+    time: reservation_time,
+    guests,
+    maxCovers: tenant.max_covers,
+    timeLimitMinutes: tenant.concurrent_guests_time_limit,
+  });
 
   const manageToken = email ? await generateManageToken(c.env.JWT_SECRET, id, email) : null;
   const manageTokenHash = manageToken ? await hashManageToken(manageToken) : null;
@@ -160,14 +157,7 @@ admin.post('/reservations', async (c) => {
       .prepare(
         `INSERT INTO Reservations (id, tenant_id, first_name, surname, telephone, email, reservation_date, reservation_time, guests, dietary_requirements, created_date, modified_date, manage_token_hash)
 				 SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-				 WHERE (? = 0) OR (
-				   SELECT COALESCE(SUM(guests), 0)
-				   FROM Reservations
-				   WHERE tenant_id = ?
-				     AND reservation_date = ?
-				     AND (? - (CAST(SUBSTR(reservation_time, 1, 2) AS INTEGER) * 60 +
-				        CAST(SUBSTR(reservation_time, 4, 2) AS INTEGER))) BETWEEN 0 AND ? - 1
-				 ) + ? <= ?`,
+				 WHERE ${guard.sql}`,
       )
       .bind(
         id,
@@ -183,13 +173,7 @@ admin.post('/reservations', async (c) => {
         now,
         now,
         manageTokenHash,
-        tenant.max_covers,
-        tenantId,
-        reservation_date,
-        slotMinutes,
-        tenant.concurrent_guests_time_limit,
-        guests,
-        tenant.max_covers,
+        ...guard.binds,
       )
       .run();
   } catch (err) {
@@ -263,10 +247,7 @@ admin.patch('/reservations/:id', async (c) => {
   const tenantId = c.get('tenantId');
   const id = c.req.param('id');
 
-  const existing = await c.env.maximum_bookings_db
-		.prepare('SELECT * FROM Reservations WHERE id = ?')
-		.bind(id)
-		.first<Reservation>();
+  const existing = await c.env.maximum_bookings_db.prepare('SELECT * FROM Reservations WHERE id = ?').bind(id).first<Reservation>();
 
   if (!existing || existing.tenant_id !== tenantId) {
     return c.json({ error: 'Reservation not found' }, 404);
@@ -369,7 +350,9 @@ admin.delete('/reservations/:id', async (c) => {
   const id = c.req.param('id');
 
   const reservation = await c.env.maximum_bookings_db
-    .prepare('SELECT r.*, t.name AS tenant_name, t.contact_email FROM Reservations r JOIN Tenants t ON t.id = r.tenant_id WHERE r.id = ? AND r.tenant_id = ?')
+    .prepare(
+      'SELECT r.*, t.name AS tenant_name, t.contact_email FROM Reservations r JOIN Tenants t ON t.id = r.tenant_id WHERE r.id = ? AND r.tenant_id = ?',
+    )
     .bind(id, tenantId)
     .first<ReservationWithTenant>();
 

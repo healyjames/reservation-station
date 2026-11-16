@@ -11,7 +11,7 @@ type UseBookingFormReturn = {
   updateField: <K extends keyof BookingFormData>(field: K, value: BookingFormData[K]) => void;
   submitBooking: (tenantConfig: TenantConfig, selectedDate: CalendarDate, onSuccess: (bookingRef?: string) => void) => Promise<void>;
   resetForm: () => void;
-}
+};
 
 const defaultFormData = (): BookingFormData => ({
   guests: 2,

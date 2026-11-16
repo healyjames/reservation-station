@@ -111,8 +111,8 @@ async function getAuthToken(): Promise<string> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: TEST_EMAIL, password: TEST_PASSWORD }),
   });
-  const data = (await res.json()) as { token: string };
-  return data.token;
+  const body = (await res.json()) as { data: { token: string } };
+  return body.data.token;
 }
 
 function makeAllOpenHours() {
@@ -314,7 +314,7 @@ describe('GET /api/reservations/blocked-dates with closed day_of_week', () => {
     expect(body.blocked_dates).toEqual([]);
   });
 
-  it('includes dates falling on closed day_of_week', async () => {
+  it('returns dates falling on a closed day_of_week in closed_dates', async () => {
     await seedOpeningHours({
       id: '00000000-0000-4000-8000-000000001200',
       day_of_week: 0,
@@ -325,14 +325,11 @@ describe('GET /api/reservations/blocked-dates with closed day_of_week', () => {
     const res = await exports.default.fetch(`http://localhost/api/reservations/blocked-dates?tenant_id=${TENANT_ID}&month=2099-01`);
     expect(res.status).toBe(200);
     const body = (await res.json()) as any;
-    expect(body.blocked_dates).toContain('2099-01-05');
-    expect(body.blocked_dates).toContain('2099-01-12');
-    expect(body.blocked_dates).toContain('2099-01-19');
-    expect(body.blocked_dates).toContain('2099-01-26');
-    expect(body.blocked_dates.length).toBe(4);
+    expect(body.closed_dates).toEqual(['2099-01-04', '2099-01-11', '2099-01-18', '2099-01-25']);
+    expect(body.blocked_dates).toEqual([]);
   });
 
-  it('unions closed-dow dates with specific blocked dates', async () => {
+  it('returns closed-dow dates and specific blocked dates separately', async () => {
     await seedOpeningHours({
       id: '00000000-0000-4000-8000-000000001200',
       day_of_week: 0,
@@ -348,12 +345,8 @@ describe('GET /api/reservations/blocked-dates with closed day_of_week', () => {
     const res = await exports.default.fetch(`http://localhost/api/reservations/blocked-dates?tenant_id=${TENANT_ID}&month=2099-01`);
     expect(res.status).toBe(200);
     const body = (await res.json()) as any;
-    expect(body.blocked_dates).toContain('2099-01-05');
-    expect(body.blocked_dates).toContain('2099-01-12');
-    expect(body.blocked_dates).toContain('2099-01-19');
-    expect(body.blocked_dates).toContain('2099-01-26');
-    expect(body.blocked_dates).toContain('2099-01-06');
-    expect(body.blocked_dates.length).toBe(5);
+    expect(body.closed_dates).toEqual(['2099-01-04', '2099-01-11', '2099-01-18', '2099-01-25']);
+    expect(body.blocked_dates).toEqual(['2099-01-06']);
   });
 
   it('does not include closed-dow dates for other tenant', async () => {
@@ -368,10 +361,7 @@ describe('GET /api/reservations/blocked-dates with closed day_of_week', () => {
     const res = await exports.default.fetch(`http://localhost/api/reservations/blocked-dates?tenant_id=${TENANT_ID_OTHER}&month=2099-01`);
     expect(res.status).toBe(200);
     const body = (await res.json()) as any;
-    expect(body.blocked_dates).not.toContain('2099-01-05');
-    expect(body.blocked_dates).not.toContain('2099-01-12');
-    expect(body.blocked_dates).not.toContain('2099-01-19');
-    expect(body.blocked_dates).not.toContain('2099-01-26');
+    expect(body.closed_dates).toEqual([]);
   });
 });
 
@@ -390,7 +380,7 @@ describe('GET /api/reservations/blocked-times with opening hours', () => {
       close_time: null,
     });
     const res = await exports.default.fetch(
-      `http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-01-05&guests=2`,
+      `http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-01-04&guests=2`,
     );
     expect(res.status).toBe(200);
     const body = (await res.json()) as any;
@@ -408,7 +398,7 @@ describe('GET /api/reservations/blocked-times with opening hours', () => {
       close_time: '22:00',
     });
     const res = await exports.default.fetch(
-      `http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-01-06&guests=2`,
+      `http://localhost/api/reservations/blocked-times?tenant_id=${TENANT_ID}&date=2099-01-05&guests=2`,
     );
     expect(res.status).toBe(200);
     const body = (await res.json()) as any;

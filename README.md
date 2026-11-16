@@ -111,9 +111,13 @@ The table below shows which frontend hooks call which API endpoints and why. Pub
 | `POST /api/auth/login` | None | `useAuth.ts` | Admin login — returns JWT on success |
 | `GET /api/admin/reservations` | JWT | `useBookings.ts` | Load the reservation list for the admin day view |
 | `DELETE /api/admin/reservations/:id` | JWT | `useBookings.ts` | Admin deletes a reservation |
-| `GET /api/admin/blocked-dates` | JWT | `useBookings.ts` | Check whether the current day is blocked |
-| `POST /api/admin/blocked-dates` | JWT | `useBookings.ts` | Admin blocks a day |
-| `DELETE /api/admin/blocked-dates/date/:date` | JWT | `useBookings.ts` | Admin unblocks a day |
+| `GET /api/admin/blocked-dates` | JWT | `useBookings.ts`, `BlockedDatesSettings.tsx` | Load a day's (`?date=`) or month's (`?month=`) blocks, full-day and partial |
+| `POST /api/admin/blocked-dates` | JWT | `useBookings.ts`, `BlockedDatesSettings.tsx` | Admin blocks a whole day (`{date}`) or a time range (`{date, start_time, end_time}`) |
+| `DELETE /api/admin/blocked-dates/date/:date` | JWT | `useBookings.ts`, `BlockedDatesSettings.tsx` | Admin unblocks a day (removes full-day blocks only) |
+| `DELETE /api/admin/blocked-dates/:id` | JWT | `useMonthTimeBlocks.ts` | Admin removes a single block, e.g. one time range |
+| `GET /api/admin/date-overrides` | JWT | `useMonthTimeBlocks.ts`, `useDateOverrides.ts` | Load a month's (`?month=`) special opening hours |
+| `PUT /api/admin/date-overrides/:date` | JWT | `useMonthTimeBlocks.ts` | Admin sets or replaces special opening hours for one date |
+| `DELETE /api/admin/date-overrides/:date` | JWT | `useMonthTimeBlocks.ts` | Admin removes special hours so the weekly hours apply again |
 | `GET /api/admin/me` | JWT | Admin settings | Load the authenticated tenant's config |
 | `PATCH /api/admin/me` | JWT | Admin settings | Save changes to tenant config |
 | `GET /api/admin/opening-hours` | JWT | Admin settings | Load the tenant's opening hours |
@@ -255,7 +259,7 @@ Deletes a tenant.
 
 #### `GET /api/reservations/blocked-times`
 
-Returns the time slots that cannot accept a given party size on a given date, based on the concurrent guest limit. Used by the booking widget to grey out unavailable times.
+Returns the time slots that cannot accept a given party size on a given date, because of venue capacity or an admin block. Used by the booking widget to grey out unavailable times.
 
 **Query parameters**
 
@@ -268,12 +272,13 @@ Returns the time slots that cannot accept a given party size on a given date, ba
 **Response `200`**
 ```json
 {
+  "slots": ["12:00", "12:30", "13:00", "19:00"],
   "blocked_times": ["12:00", "12:30", "19:00"],
   "time_limit_minutes": 120
 }
 ```
 
-`blocked_times` lists every 30-minute slot (from `12:00` to `21:30`) where adding `guests` would exceed `max_guests` within the `concurrent_guests_time_limit` window. Returns an empty array when `max_guests = 0` (no limit).
+`slots` lists every bookable start time on the date from its effective opening hours (special hours for the date if set, otherwise that weekday's hours); it is empty when the date is closed or fully blocked. `blocked_times` lists every 30-minute slot within those hours (`12:00` to `21:30` when none are configured) that is either inside an admin time-range block, or where adding `guests` would exceed `max_covers` at any point of the sitting. Every slot is returned when the date has a full-day block or the venue is closed. With `max_covers = 0` (no limit) only admin blocks are returned. See `BUSINESS_LOGIC.md`.
 
 **Errors**
 
@@ -400,14 +405,15 @@ Creates a new reservation. Enforces the `max_covers` daily limit and the `block_
 |------|---------|
 | `400` | Validation failed |
 | `404` | Tenant not found |
-| `422` | Same-day booking blocked (`block_current_day = true`) or adding this party would exceed `max_covers` for the date |
+| `409` | A reservation for this email, date and time already exists |
+| `422` | The date or time is blocked by the venue, outside opening hours, over the party size limit, or the sitting would exceed `max_covers` |
 | `500` | Database insert failed |
 
 ---
 
 #### `PATCH /api/reservations/:id`
 
-Partially updates a reservation. `tenant_id` cannot be changed.
+Partially updates a reservation. `tenant_id` cannot be changed. Requires the customer's `email` and manage `token` as query parameters.
 
 **Path parameter**
 
@@ -427,6 +433,8 @@ Partially updates a reservation. `tenant_id` cannot be changed.
 | Code | Meaning |
 |------|---------|
 | `400` | Validation failed or no valid fields supplied |
+| `404` | Reservation not found, or the email/token do not match |
+| `422` | The new date or time is blocked by the venue, or the sitting would exceed `max_covers` |
 | `500` | Database update failed |
 
 ---
@@ -461,8 +469,8 @@ Deletes a reservation.
 # Install dependencies
 npm install
 
-# Create the local D1 database
-npx wrangler d1 execute maximum_bookings_db --local --file=./src/db/schema.sql
+# Create the local D1 database (db/schema.sql is the full end-state schema; no migrations needed locally)
+npx wrangler d1 execute maximum_bookings_db --local --file=./db/schema.sql
 
 # Start local dev server (Worker + static assets on http://localhost:8787)
 npx wrangler dev

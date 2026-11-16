@@ -8,7 +8,7 @@ type TooltipProps = {
   anchorRect: DOMRect | null;
   onClose?: () => void;
   class?: string;
-}
+};
 
 const Tooltip: FunctionComponent<TooltipProps> = ({ visible, message, anchorRect, onClose, class: className }) => {
   if (!visible || !anchorRect) return null;

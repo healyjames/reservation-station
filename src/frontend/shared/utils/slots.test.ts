@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { generateTimeSlots, getSlotsForDate, getEarliestTodaySlot, getAvailableSlots } from './slots';
+import {
+  generateTimeSlots,
+  getSlotsForDate,
+  getEarliestTodaySlot,
+  getAvailableSlots,
+  getBlockTimeOptions,
+  getSpecialHoursOptions,
+  getWeeklyHoursForDate,
+} from './slots';
 import type { CalendarDate } from '../types/calendar';
 import type { TenantConfig } from '../types/tenant';
 
@@ -81,6 +89,91 @@ describe('getSlotsForDate', () => {
   });
 });
 
+describe('getBlockTimeOptions', () => {
+  // 2024-01-08 is a Monday (day_of_week 1)
+  const monday: CalendarDate = { year: 2024, month: 0, day: 8 };
+  const mondayHours = (open_time: string | null, close_time: string | null, is_closed = false) => [
+    { id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed, open_time, close_time },
+  ];
+
+  it('offers every opening slot as a start and every slot finish, including closing time, as an end', () => {
+    const options = getBlockTimeOptions({ date: monday, openingHours: mondayHours('18:00', '20:00') });
+    expect(options.startTimes).toEqual(['18:00', '18:30', '19:00', '19:30']);
+    expect(options.endTimes).toEqual(['18:30', '19:00', '19:30', '20:00']);
+  });
+
+  it('only offers end times after the chosen start', () => {
+    const options = getBlockTimeOptions({ date: monday, openingHours: mondayHours('18:00', '20:00'), startTime: '19:00' });
+    expect(options.endTimes).toEqual(['19:30', '20:00']);
+    expect(options.startTimes).toEqual(['18:00', '18:30', '19:00', '19:30']);
+  });
+
+  it('ends at 23:59 when the last slot runs to midnight', () => {
+    const options = getBlockTimeOptions({ date: monday, openingHours: mondayHours('22:30', '23:59') });
+    expect(options.startTimes).toEqual(['22:30', '23:00', '23:30']);
+    expect(options.endTimes).toEqual(['23:00', '23:30', '23:59']);
+  });
+
+  it('returns no options when the day is closed', () => {
+    expect(getBlockTimeOptions({ date: monday, openingHours: mondayHours(null, null, true) })).toEqual({ startTimes: [], endTimes: [] });
+  });
+
+  it('returns no options when the opening hours cross midnight', () => {
+    expect(getBlockTimeOptions({ date: monday, openingHours: mondayHours('22:00', '02:00') })).toEqual({ startTimes: [], endTimes: [] });
+  });
+
+  it('falls back to the default hours when the tenant has none configured', () => {
+    const options = getBlockTimeOptions({ date: monday, openingHours: null });
+    expect(options.startTimes[0]).toBe('12:00');
+    expect(options.endTimes[options.endTimes.length - 1]).toBe('22:00');
+  });
+});
+
+describe('getBlockTimeOptions with special hours', () => {
+  const monday: CalendarDate = { year: 2024, month: 0, day: 8 };
+  const closedMonday = [{ id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed: true, open_time: null, close_time: null }];
+  const special = { id: 'o1', date: '2024-01-08', is_closed: 0 as const, open_time: '12:00', close_time: '14:00' };
+
+  it('uses the special hours instead of the weekly hours, even on a normally closed day', () => {
+    const options = getBlockTimeOptions({ date: monday, openingHours: closedMonday, specialHours: special });
+    expect(options.startTimes).toEqual(['12:00', '12:30', '13:00', '13:30']);
+    expect(options.endTimes).toEqual(['12:30', '13:00', '13:30', '14:00']);
+  });
+
+  it('returns no options when the date is specially closed', () => {
+    const closed = { ...special, is_closed: 1 as const, open_time: null, close_time: null };
+    expect(getBlockTimeOptions({ date: monday, openingHours: null, specialHours: closed }).startTimes).toEqual([]);
+  });
+});
+
+describe('getSpecialHoursOptions', () => {
+  it('offers every half hour of the day to open at, and closing times up to the end of the day', () => {
+    const { openTimes, closeTimes } = getSpecialHoursOptions();
+    expect(openTimes[0]).toBe('00:00');
+    expect(openTimes[openTimes.length - 1]).toBe('23:30');
+    expect(closeTimes[0]).toBe('00:30');
+    expect(closeTimes[closeTimes.length - 1]).toBe('23:59');
+  });
+
+  it('only offers closing times after the chosen opening time', () => {
+    expect(getSpecialHoursOptions('22:30').closeTimes).toEqual(['23:00', '23:30', '23:59']);
+  });
+});
+
+describe('getWeeklyHoursForDate', () => {
+  const monday: CalendarDate = { year: 2024, month: 0, day: 8 };
+  const mondayHours = { id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed: false, open_time: '18:00', close_time: '21:00' };
+
+  it("returns the entry for the date's weekday", () => {
+    expect(getWeeklyHoursForDate(monday, [mondayHours])).toEqual(mondayHours);
+  });
+
+  it('returns null when the weekday has no entry or no hours are configured', () => {
+    expect(getWeeklyHoursForDate({ year: 2024, month: 0, day: 9 }, [mondayHours])).toBeNull();
+    expect(getWeeklyHoursForDate(monday, null)).toBeNull();
+  });
+});
+
 describe('getEarliestTodaySlot', () => {
   afterEach(() => vi.useRealTimers());
 
@@ -122,6 +215,14 @@ describe('getAvailableSlots', () => {
     });
     const slots = getAvailableSlots(monday, tenant, []);
     expect(slots).toEqual(['19:30', '20:00', '20:30']);
+  });
+
+  it("uses the server's slots for the date instead of the weekly hours when given", () => {
+    const tenant = makeTenant({
+      opening_hours: [{ id: '1', tenant_id: 'test-id', day_of_week: 1, is_closed: false, open_time: '18:00', close_time: '19:00' }],
+    });
+    expect(getAvailableSlots(monday, tenant, ['12:30'], ['12:00', '12:30', '13:00'])).toEqual(['12:00', '13:00']);
+    expect(getAvailableSlots(monday, tenant, [], [])).toEqual([]);
   });
 
   it('does not apply the booking delay to future dates', () => {

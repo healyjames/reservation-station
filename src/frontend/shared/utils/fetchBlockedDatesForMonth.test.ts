@@ -119,13 +119,13 @@ describe('fetchBlockedDatesForMonth', () => {
   });
 
   it('AbortError: second call before first completes aborts the first and returns { aborted: true }', async () => {
-    const mockFetch = vi.fn()
-      .mockImplementationOnce((_url: string, { signal }: { signal: AbortSignal }) =>
-        new Promise<never>((_, reject) => {
-          signal.addEventListener('abort', () =>
-            reject(new DOMException('Aborted', 'AbortError')),
-          );
-        }),
+    const mockFetch = vi
+      .fn()
+      .mockImplementationOnce(
+        (_url: string, { signal }: { signal: AbortSignal }) =>
+          new Promise<never>((_, reject) => {
+            signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+          }),
       )
       .mockResolvedValueOnce({
         ok: true,

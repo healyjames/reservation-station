@@ -14,7 +14,7 @@ type Step2FormProps = {
   onFieldChange: <K extends keyof BookingFormData>(field: K, value: BookingFormData[K]) => void;
   onSubmit: (form: HTMLFormElement) => void;
   onBack: () => void;
-}
+};
 
 export const Step2Form: FunctionComponent<Step2FormProps> = ({ formData, submitError, isSubmitting, onFieldChange, onSubmit, onBack }) => {
   const formRef = useRef<HTMLFormElement>(null);

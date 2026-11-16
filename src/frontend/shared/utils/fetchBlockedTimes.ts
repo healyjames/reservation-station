@@ -1,10 +1,18 @@
 import type { BlockedTimesResponse, CalendarDate } from '@shared/types';
 import { formatDateForAPI } from '@shared/utils';
 
+type DayAvailability = {
+  blockedTimes: string[];
+  /** The date's bookable start times as resolved by the server, or null when it did not say (use the weekly hours). */
+  daySlots: string[] | null;
+};
+
 type CacheEntry = {
-  data: string[];
+  data: DayAvailability;
   fetchedAt: number;
 };
+
+const NO_AVAILABILITY: DayAvailability = { blockedTimes: [], daySlots: null };
 
 const cache = new Map<string, CacheEntry>();
 const TTL_MS = 60 * 1000;
@@ -32,33 +40,32 @@ export async function fetchBlockedTimes({
   date,
   guests,
   maxCovers,
-}: FetchBlockedTimesOptions): Promise<{ blockedTimes: string[]; aborted: boolean; error: boolean }> {
+}: FetchBlockedTimesOptions): Promise<DayAvailability & { aborted: boolean; error: boolean }> {
   const dateStr = formatDateForAPI(date);
   const cacheKey = maxCovers === 0 ? `bt:${tenantId}:${dateStr}` : `bt:${tenantId}:${dateStr}:${guests}`;
 
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.fetchedAt < TTL_MS) {
-    return { blockedTimes: cached.data, aborted: false, error: false };
+    return { ...cached.data, aborted: false, error: false };
   }
 
   if (abortController) abortController.abort();
   abortController = new AbortController();
 
   try {
-    const res = await fetch(
-      `/api/reservations/blocked-times?tenant_id=${encodeURIComponent(tenantId)}&date=${dateStr}&guests=${guests}`,
-      { signal: abortController.signal },
-    );
-    if (!res.ok) return { blockedTimes: [], aborted: false, error: true };
+    const res = await fetch(`/api/reservations/blocked-times?tenant_id=${encodeURIComponent(tenantId)}&date=${dateStr}&guests=${guests}`, {
+      signal: abortController.signal,
+    });
+    if (!res.ok) return { ...NO_AVAILABILITY, aborted: false, error: true };
 
     const data = (await res.json()) as BlockedTimesResponse;
-    const result = data.blocked_times ?? [];
+    const result: DayAvailability = { blockedTimes: data.blocked_times ?? [], daySlots: data.slots ?? null };
     cache.set(cacheKey, { data: result, fetchedAt: Date.now() });
-    return { blockedTimes: result, aborted: false, error: false };
+    return { ...result, aborted: false, error: false };
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
-      return { blockedTimes: [], aborted: true, error: false };
+      return { ...NO_AVAILABILITY, aborted: true, error: false };
     }
-    return { blockedTimes: [], aborted: false, error: true };
+    return { ...NO_AVAILABILITY, aborted: false, error: true };
   }
 }

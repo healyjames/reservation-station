@@ -5,7 +5,7 @@ type StandaloneLayoutProps = {
   title?: string;
   children: ComponentChildren;
   class?: string;
-}
+};
 
 const StandaloneLayout: FunctionComponent<StandaloneLayoutProps> = ({ title, children, class: className }) => (
   <main class={styles.page}>

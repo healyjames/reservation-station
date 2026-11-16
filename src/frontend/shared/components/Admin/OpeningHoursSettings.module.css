@@ -171,3 +171,38 @@
   color: var(--foreground-dark);
   font-style: italic;
 }
+
+.oh_specific_day {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--background-light);
+}
+
+.oh_specific_day_heading {
+  margin: 0 0 var(--space-1);
+  font-size: 0.9rem;
+  color: var(--foreground-lightest);
+}
+
+.oh_specific_day_text {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--foreground-dark);
+  line-height: 1.4;
+}
+
+@media (max-width: 767px) {
+  .oh_specific_day {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.oh_changed_hours {
+  margin-top: var(--space-5);
+}

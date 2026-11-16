@@ -27,7 +27,7 @@
 }
 
 .date_picker_popup_inline {
-	max-width: 750px;
+  max-width: 750px;
   position: static;
 }
 
@@ -78,7 +78,7 @@
 }
 
 .bd_calendar_grid_wrapper {
-	padding: var(--space-3);
+  padding: var(--space-3);
 }
 
 .loading_text {

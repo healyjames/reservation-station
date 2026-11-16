@@ -13,7 +13,8 @@ type ButtonProps = {
   onClick?: (e: MouseEvent) => void;
   children: ComponentChildren;
   class?: string;
-}
+  'aria-label'?: string;
+};
 
 const variantClassMap: Record<string, string> = {
   primary: styles.primary,
@@ -35,6 +36,7 @@ const Button: FunctionComponent<ButtonProps> = ({
   onClick,
   children,
   class: className,
+  'aria-label': ariaLabel,
 }) => (
   <button
     type={type}
@@ -50,6 +52,7 @@ const Button: FunctionComponent<ButtonProps> = ({
       .filter(Boolean)
       .join(' ')}
     disabled={disabled || isLoading}
+    aria-label={ariaLabel}
     onClick={(e) => {
       if (!disabled && !isLoading && onClick) onClick(e as MouseEvent);
     }}

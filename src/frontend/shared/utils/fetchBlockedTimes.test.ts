@@ -27,6 +27,21 @@ describe('fetchBlockedTimes', () => {
     expect(result.error).toBe(false);
   });
 
+  it("returns the server's slots for the date, including from the cache", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ blocked_times: ['12:30'], slots: ['12:00', '12:30', '13:00'] }),
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const first = await fetchBlockedTimes({ tenantId: 'tenant-ft-slots-1', date: TEST_DATE, guests: 2, maxCovers: 40 });
+    const cached = await fetchBlockedTimes({ tenantId: 'tenant-ft-slots-1', date: TEST_DATE, guests: 2, maxCovers: 40 });
+
+    expect(first.daySlots).toEqual(['12:00', '12:30', '13:00']);
+    expect(cached).toEqual({ blockedTimes: ['12:30'], daySlots: ['12:00', '12:30', '13:00'], aborted: false, error: false });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
   it('cache miss: different guest count triggers a new fetch when maxCovers is greater than zero', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -71,22 +86,22 @@ describe('fetchBlockedTimes', () => {
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
-  it('network error: returns { blockedTimes: [], aborted: false, error: true }', async () => {
+  it('network error: returns { blockedTimes: [], daySlots: null, aborted: false, error: true }', async () => {
     const mockFetch = vi.fn().mockRejectedValue(new Error('Network failure'));
     vi.stubGlobal('fetch', mockFetch);
 
     const result = await fetchBlockedTimes({ tenantId: 'tenant-ft-neterr-1', date: TEST_DATE, guests: 2, maxCovers: 40 });
 
-    expect(result).toEqual({ blockedTimes: [], aborted: false, error: true });
+    expect(result).toEqual({ blockedTimes: [], daySlots: null, aborted: false, error: true });
   });
 
-  it('non-ok response: returns { blockedTimes: [], aborted: false, error: true }', async () => {
+  it('non-ok response: returns { blockedTimes: [], daySlots: null, aborted: false, error: true }', async () => {
     const mockFetch = vi.fn().mockResolvedValue({ ok: false });
     vi.stubGlobal('fetch', mockFetch);
 
     const result = await fetchBlockedTimes({ tenantId: 'tenant-ft-nonok-1', date: TEST_DATE, guests: 2, maxCovers: 40 });
 
-    expect(result).toEqual({ blockedTimes: [], aborted: false, error: true });
+    expect(result).toEqual({ blockedTimes: [], daySlots: null, aborted: false, error: true });
   });
 
   it('AbortError: second in-flight call aborts the first', async () => {
@@ -109,8 +124,8 @@ describe('fetchBlockedTimes', () => {
 
     const [firstResult, secondResult] = await Promise.all([firstPromise, secondPromise]);
 
-    expect(firstResult).toEqual({ blockedTimes: [], aborted: true, error: false });
-    expect(secondResult).toEqual({ blockedTimes: ['19:00'], aborted: false, error: false });
+    expect(firstResult).toEqual({ blockedTimes: [], daySlots: null, aborted: true, error: false });
+    expect(secondResult).toEqual({ blockedTimes: ['19:00'], daySlots: null, aborted: false, error: false });
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 

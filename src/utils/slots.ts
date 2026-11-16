@@ -20,6 +20,25 @@ export function generateTimeSlots(openTime = DEFAULT_OPEN_TIME, closeTime = DEFA
   return slots;
 }
 
+type TimeBlock = { start_time: string | null; end_time: string | null };
+
+/**
+ * True when `time` falls inside a partial block `[start_time, end_time)`. Full-day rows (NULL times)
+ * never match; callers handle those separately. Rows where `end_time <= start_time` can no longer be
+ * created, but legacy ones are honoured as wrapping past midnight.
+ */
+export function isTimeInBlock(time: string, block: TimeBlock): boolean {
+  if (block.start_time === null || block.end_time === null) return false;
+  const t = toMinutes(time);
+  const start = toMinutes(block.start_time);
+  const end = toMinutes(block.end_time);
+  return end <= start ? t >= start || t < end : t >= start && t < end;
+}
+
+export function isTimeInAnyBlock(time: string, blocks: TimeBlock[]): boolean {
+  return blocks.some((block) => isTimeInBlock(time, block));
+}
+
 export function calculateConcurrentGuests(slotTime: string, reservations: SlotReservation[], timeLimitMinutes: number): number {
   const slotMinutes = toMinutes(slotTime);
   return reservations.reduce((sum, r) => {
@@ -28,4 +47,16 @@ export function calculateConcurrentGuests(slotTime: string, reservations: SlotRe
     // Only count it if the slot falls within that window.
     return rMin <= slotMinutes && slotMinutes < rMin + timeLimitMinutes ? sum + r.guests : sum;
   }, 0);
+}
+
+/**
+ * Highest occupancy at any moment during a sitting that starts at `startTime` and lasts
+ * `timeLimitMinutes`. Occupancy only rises when a booking starts, so the peak is at the sitting's
+ * start or at an existing booking's start inside it. Same rule as `capacityGuard` in src/db/capacity.ts.
+ */
+export function peakConcurrentGuests(startTime: string, reservations: SlotReservation[], timeLimitMinutes: number): number {
+  const start = toMinutes(startTime);
+  const end = start + timeLimitMinutes;
+  const points = [startTime, ...reservations.map((r) => r.reservation_time).filter((t) => toMinutes(t) > start && toMinutes(t) < end)];
+  return Math.max(...points.map((p) => calculateConcurrentGuests(p, reservations, timeLimitMinutes)));
 }

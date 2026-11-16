@@ -66,15 +66,28 @@ function parseCsv(text: string): string[][] {
     const c = text[i];
     if (inQuotes) {
       if (c === '"') {
-        if (text[i + 1] === '"') { field += '"'; i++; } else inQuotes = false;
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else inQuotes = false;
       } else field += c;
     } else if (c === '"') inQuotes = true;
-    else if (c === ',') { row.push(field); field = ''; }
-    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-    else if (c === '\r') { /* skip */ }
-    else field += c;
+    else if (c === ',') {
+      row.push(field);
+      field = '';
+    } else if (c === '\n') {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = '';
+    } else if (c === '\r') {
+      /* skip */
+    } else field += c;
   }
-  if (field.length || row.length) { row.push(field); rows.push(row); }
+  if (field.length || row.length) {
+    row.push(field);
+    rows.push(row);
+  }
   return rows.filter((r) => r.length > 1 || (r.length === 1 && r[0] !== ''));
 }
 
@@ -151,7 +164,10 @@ async function sendViaResend(apiKey: string, msg: { to: string; from: string; re
 async function main() {
   const argv = process.argv.slice(2);
   const has = (f: string) => argv.includes(f);
-  const val = (f: string) => { const i = argv.indexOf(f); return i >= 0 ? argv[i + 1] : undefined; };
+  const val = (f: string) => {
+    const i = argv.indexOf(f);
+    return i >= 0 ? argv[i + 1] : undefined;
+  };
 
   const env = loadEnv();
   const secret = env.JWT_SECRET;
@@ -184,8 +200,17 @@ async function main() {
     let sent = 0;
     for (const t of list) {
       const { url, template } = build(t, baseUrl, secret);
-      if (dry) { console.log(`  [would send] ${t.email}\n      ${url}`); continue; }
-      await sendViaResend(env.RESEND_API_KEY, { to: t.email, from, reply_to: CONTACT_EMAIL, subject: template.subject, html: template.html });
+      if (dry) {
+        console.log(`  [would send] ${t.email}\n      ${url}`);
+        continue;
+      }
+      await sendViaResend(env.RESEND_API_KEY, {
+        to: t.email,
+        from,
+        reply_to: CONTACT_EMAIL,
+        subject: template.subject,
+        html: template.html,
+      });
       sent++;
       console.log(`  ✉️  ${t.email}`);
     }
@@ -209,4 +234,7 @@ async function main() {
   console.log(`\n✅ Wrote ${targets.length} UPDATE(s) to: ${outPath}`);
 }
 
-main().catch((e) => { console.error('❌', e.message); process.exit(1); });
+main().catch((e) => {
+  console.error('❌', e.message);
+  process.exit(1);
+});

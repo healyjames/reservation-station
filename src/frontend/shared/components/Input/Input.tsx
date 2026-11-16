@@ -22,7 +22,7 @@ type InputProps = {
   onInput?: (e: Event) => void;
   onChange?: (e: Event) => void;
   class?: string;
-}
+};
 
 const Input: FunctionComponent<InputProps> = ({
   type = 'text',

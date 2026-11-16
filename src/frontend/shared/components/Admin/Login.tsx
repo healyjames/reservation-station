@@ -7,7 +7,7 @@ import styles from './Login.module.css';
 type LoginProps = {
   auth: UseAuthReturn;
   onLoginSuccess: () => void;
-}
+};
 
 const Login: FunctionComponent<LoginProps> = ({ auth, onLoginSuccess }) => {
   const email = useSignal('');

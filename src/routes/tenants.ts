@@ -50,7 +50,12 @@ tenants.get('/:id', async (c) => {
   const tenant = await c.env.maximum_bookings_db
     .prepare(isUuid ? `SELECT ${publicColumns} FROM Tenants WHERE id = ?` : `SELECT ${publicColumns} FROM Tenants WHERE tenant_code = ?`)
     .bind(id)
-    .first<Pick<Tenant, 'id' | 'name' | 'tenant_code' | 'max_guests' | 'max_covers' | 'status' | 'concurrent_guests_time_limit' | 'booking_delay_minutes'>>();
+    .first<
+      Pick<
+        Tenant,
+        'id' | 'name' | 'tenant_code' | 'max_guests' | 'max_covers' | 'status' | 'concurrent_guests_time_limit' | 'booking_delay_minutes'
+      >
+    >();
 
   if (!tenant) return c.json({ error: 'Tenant not found' }, 404);
 

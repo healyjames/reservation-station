@@ -18,7 +18,7 @@ type BookingManageAppProps = {
   reservationId: string | null;
   bookingEmail: string | null;
   bookingToken: string | null;
-}
+};
 
 export const BookingManageApp: FunctionComponent<BookingManageAppProps> = ({ reservationId, bookingEmail, bookingToken }) => {
   const hook = useManageBooking(reservationId, bookingEmail, bookingToken);
@@ -58,7 +58,9 @@ export const BookingManageApp: FunctionComponent<BookingManageAppProps> = ({ res
           selectedDate={hook.selectedDate as Signal<CalendarDate | null>}
           selectedTime={hook.selectedTime}
           blockedDates={hook.blockedDates as Signal<Set<string>>}
+          closedDates={hook.closedDates}
           blockedTimes={hook.blockedTimes}
+          daySlots={hook.daySlots}
           isFetchingTimes={hook.isFetchingTimes}
           goToOverview={hook.goToOverview}
           saveDatetime={hook.saveDatetime}

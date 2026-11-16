@@ -95,8 +95,8 @@ async function getAuthToken(email = TEST_EMAIL, password = TEST_PASSWORD): Promi
     body: JSON.stringify({ email, password }),
   });
   const body = (await res.json()) as any;
-  if (!body.token) throw new Error(`Login failed: ${JSON.stringify(body)}`);
-  return body.token;
+  if (!body.data?.token) throw new Error(`Login failed: ${JSON.stringify(body)}`);
+  return body.data.token;
 }
 
 // ─── Admin: GET /api/admin/me ─────────────────────────────────────────────────
@@ -278,6 +278,83 @@ describe('GET /api/admin/reservations', () => {
 });
 
 // ─── Admin: PATCH /api/admin/reservations/:id ────────────────────────────────
+
+describe('POST /api/admin/reservations - capacity', () => {
+  const body = { first_name: 'Walk', surname: 'In', reservation_date: '2099-06-15', reservation_time: '13:00', guests: 8 };
+
+  beforeEach(async () => {
+    await clearDb();
+    await seedTenant({ id: TENANT_ID, max_covers: 8, concurrent_guests_time_limit: 120 });
+    await seedAdminUser({ tenant_id: TENANT_ID });
+  });
+
+  it('returns 422 when the sitting would overlap a later booking and exceed max_covers', async () => {
+    await seedReservation({ reservation_date: '2099-06-15', reservation_time: '14:50', guests: 8 });
+    const res = await exports.default.fetch('http://localhost/api/admin/reservations', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${await getAuthToken()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    expect(res.status).toBe(422);
+  });
+
+  it('returns 201 when the sitting ends exactly as the later booking starts', async () => {
+    await seedReservation({ reservation_date: '2099-06-15', reservation_time: '15:00', guests: 8 });
+    const res = await exports.default.fetch('http://localhost/api/admin/reservations', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${await getAuthToken()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    expect(res.status).toBe(201);
+  });
+});
+
+describe('Admin reservations - partial blocks are an intended override', () => {
+  const BLOCK_DATE = '2099-06-15';
+
+  async function seedBlock(times: { start_time: string | null; end_time: string | null }) {
+    await env.maximum_bookings_db
+      .prepare('INSERT INTO BlockedDates (id, tenant_id, date, start_time, end_time, created_date) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(crypto.randomUUID(), TENANT_ID, BLOCK_DATE, times.start_time, times.end_time, new Date().toISOString())
+      .run();
+  }
+
+  async function createBooking(reservation_time: string) {
+    return exports.default.fetch('http://localhost/api/admin/reservations', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${await getAuthToken()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ first_name: 'Walk', surname: 'In', reservation_date: BLOCK_DATE, reservation_time, guests: 2 }),
+    });
+  }
+
+  beforeEach(async () => {
+    await clearDb();
+    await env.maximum_bookings_db.prepare('DELETE FROM BlockedDates').run();
+    await seedTenant({ id: TENANT_ID });
+    await seedAdminUser({ tenant_id: TENANT_ID });
+  });
+
+  it('lets an admin create a booking inside a partial block', async () => {
+    await seedBlock({ start_time: '18:00', end_time: '20:00' });
+    expect((await createBooking('19:00')).status).toBe(201);
+  });
+
+  it('still rejects an admin booking on a full-day block', async () => {
+    await seedBlock({ start_time: null, end_time: null });
+    expect((await createBooking('19:00')).status).toBe(422);
+  });
+
+  it('lets an admin move a booking into a partial block', async () => {
+    await seedBlock({ start_time: '18:00', end_time: '20:00' });
+    await seedReservation({ id: RES_ID, tenant_id: TENANT_ID, reservation_date: BLOCK_DATE, reservation_time: '12:00' });
+    const res = await exports.default.fetch(`http://localhost/api/admin/reservations/${RES_ID}`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${await getAuthToken()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reservation_time: '19:00' }),
+    });
+    expect(res.status).toBe(200);
+  });
+});
 
 describe('PATCH /api/admin/reservations/:id', () => {
   beforeEach(async () => {
