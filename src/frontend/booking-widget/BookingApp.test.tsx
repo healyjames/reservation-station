@@ -3,6 +3,7 @@ import { render, fireEvent, act } from '@testing-library/preact';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { signal } from '@preact/signals';
 import { BookingApp } from './BookingApp';
+import { changeSelect } from '@shared/mock/changeSelect';
 import type { TenantConfig, BookingFormData } from '@shared/types';
 
 vi.mock('@shared/hooks/useTenant');
@@ -92,26 +93,58 @@ describe('BookingApp', () => {
     vi.useRealTimers();
   });
 
+  // "Today" is 15 June 2099, so the calendar opens on June 2099 and the 20th is selectable.
+  function useFixedClock() {
+    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] });
+    vi.setSystemTime(new Date(2099, 5, 15, 12));
+  }
+
+  it('shows a named loading status while the venue loads', () => {
+    vi.mocked(useTenant).mockReturnValue({
+      tenantConfig: signal<TenantConfig | null>(null),
+      tenantState: signal<'loading' | 'ready' | 'error'>('loading'),
+      tenantError: signal(''),
+    });
+    const { getByRole } = render(<BookingApp />);
+    expect(getByRole('status').textContent).toBe('Loading booking configuration');
+  });
+
+  it('shows the load error under an "Unable to load" heading', () => {
+    vi.mocked(useTenant).mockReturnValue({
+      tenantConfig: signal<TenantConfig | null>(null),
+      tenantState: signal<'loading' | 'ready' | 'error'>('error'),
+      tenantError: signal('Venue not found'),
+    });
+    const { getByRole, getByText } = render(<BookingApp />);
+    expect(getByRole('heading', { name: 'Unable to load' })).toBeTruthy();
+    expect(getByText('Venue not found')).toBeTruthy();
+  });
+
+  it('starts on the calendar step with named month buttons', async () => {
+    useFixedClock();
+    const { getByRole } = render(<BookingApp />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(getByRole('region', { name: 'June 2099' })).toBeTruthy();
+    expect(getByRole('button', { name: 'Previous month' })).toBeTruthy();
+    expect(getByRole('button', { name: 'Next month' })).toBeTruthy();
+    expect(fetchBlockedDatesMock).toHaveBeenCalledOnce();
+  });
+
   describe('handleGuestsChange debounce', () => {
-    // NOTE: This assertion is skipped because the guest <select> onChange handler does not
-    // fire via fireEvent in the nested BookingApp integration render under jsdom (a Preact
-    // event-proxy quirk — the identical Select works in Step1Form.test where it is the root
-    // component). The debounce behaviour is exercised directly in Step1Form.test. This test
-    // belongs to the guest-change-debounce feature and is unrelated to the blocked-date tooltip work.
-    it.skip('calls fetchBlockedTimes exactly once after multiple rapid guest changes settle', async () => {
-      const { container, getByLabelText } = render(<BookingApp />);
+    it('calls fetchBlockedTimes exactly once after multiple rapid guest changes settle', async () => {
+      useFixedClock();
+      const { getByRole, getByLabelText } = render(<BookingApp />);
 
       // Flush the Calendar's initial useEffect (calls onMonthChange)
       await act(async () => {
         await Promise.resolve();
       });
 
-      // Click the first selectable date cell to enter form-step1
-      const firstDateButton = container.querySelector('[role="button"]') as HTMLElement | null;
-      expect(firstDateButton).not.toBeNull();
-
+      // Select a day to enter form-step1
       await act(async () => {
-        fireEvent.click(firstDateButton!);
+        fireEvent.click(getByRole('button', { name: '20' }));
       });
 
       // handleDateSelect sets selectedDate and calls fetchBlockedTimes once.
@@ -122,21 +155,25 @@ describe('BookingApp', () => {
 
       // Fire 3 rapid guest changes — only the last should produce a fetch after debounce
       await act(async () => {
-        fireEvent.change(guestSelect, { target: { value: '3' } });
-        fireEvent.change(guestSelect, { target: { value: '4' } });
-        fireEvent.change(guestSelect, { target: { value: '5' } });
+        changeSelect(guestSelect as HTMLSelectElement, '3');
+        changeSelect(guestSelect as HTMLSelectElement, '4');
+        changeSelect(guestSelect as HTMLSelectElement, '5');
       });
 
       // Debounce timer has not fired yet
       expect(fetchBlockedTimesMock).toHaveBeenCalledTimes(0);
 
-      // Wait past the 250ms debounce window
+      // Nothing until the 250ms debounce window has passed, then exactly one call with the final value
       await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        vi.advanceTimersByTime(249);
       });
+      expect(fetchBlockedTimesMock).toHaveBeenCalledTimes(0);
 
-      // Exactly one call from the final debounced value
+      await act(async () => {
+        vi.advanceTimersByTime(1);
+      });
       expect(fetchBlockedTimesMock).toHaveBeenCalledTimes(1);
+      expect(fetchBlockedTimesMock).toHaveBeenLastCalledWith('tenant-debounce', { year: 2099, month: 5, day: 20 }, 5, 40);
     });
 
     it('does not call fetchBlockedTimes on guest change when no date is selected', async () => {

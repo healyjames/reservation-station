@@ -8,7 +8,8 @@ import type { CalendarRange, CalendarRangeMode } from './CalendarDay';
 type DayPredicate = (year: number, month: number, day: number) => boolean;
 type DayCallback = (year: number, month: number, day: number) => void;
 
-type OwnedAttributes = 'class' | 'className' | 'children' | 'role' | 'aria-label' | 'aria-labelledby';
+// onSelect is the day callback below, not the DOM onSelect handler.
+type OwnedAttributes = 'class' | 'className' | 'children' | 'role' | 'aria-label' | 'aria-labelledby' | 'onSelect';
 
 export type CalendarProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, OwnedAttributes> & {
   /** Classes for the grid. Other attributes (`id`, `onMouseLeave`, `data-*`…) go on it too. */

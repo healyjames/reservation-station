@@ -7,11 +7,9 @@ import { useTenant } from '@shared/hooks/useTenant';
 import { useAvailability, bustBlockedDatesCache, bustBlockedTimesCache } from '@shared/hooks/useAvailability';
 import { useBookingForm } from '@shared/hooks/useBookingForm';
 import { Calendar, Step1Form, Step2Form, Success } from '@shared/components/BookingWidget';
-import { Spinner, MessageCard } from '@shared/components';
+import { Alert, Loading } from '@shared/components/ui';
 
 import { isStandaloneMode } from '@shared/utils/userJourney';
-
-const loadingStyles = 'display:grid;place-items:center;padding:var(--space-12)';
 
 export const BookingApp: FunctionComponent = () => {
   const step = useSignal<BookingStep>('calendar');
@@ -37,17 +35,17 @@ export const BookingApp: FunctionComponent = () => {
 
   if (tenantState.value === 'loading') {
     return (
-      <div style={loadingStyles}>
-        <Spinner size="md" label="Loading booking configuration" />
+      <div class="grid place-items-center p-12">
+        <Loading label="Loading booking configuration" />
       </div>
     );
   }
 
   if (tenantState.value === 'error') {
     return (
-      <MessageCard variant="error" title="Unable to load">
+      <Alert variant="error" title="Unable to load" headingLevel={2}>
         <p>{tenantError.value}</p>
-      </MessageCard>
+      </Alert>
     );
   }
 

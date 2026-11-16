@@ -3,8 +3,9 @@ import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
 import { MONTH_NAMES } from '@constants';
-import { CalendarGrid, Tooltip, Button } from '@shared/components';
-import styles from './Calendar.module.css';
+import { Alert, Button, Calendar as CalendarGrid, FloatingTooltip, Join } from '@shared/components/ui';
+import { ChevronLeft, ChevronRight } from '@shared/components/ui/icons';
+import { cx } from '@shared/utils/cx';
 
 type CalendarProps = {
   year: number;
@@ -21,6 +22,8 @@ type CalendarProps = {
   allowPastDates?: boolean;
 };
 
+const BLOCKED_TIP_MS = 3000;
+
 export const Calendar: FunctionComponent<CalendarProps> = ({
   year,
   month,
@@ -35,8 +38,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
   tenantName,
   allowPastDates = false,
 }) => {
-  const tooltipVisible = useSignal(false);
-  const tooltipAnchorRect = useSignal<DOMRect | null>(null);
+  const tooltipAnchor = useSignal<HTMLElement | null>(null);
   const tooltipMessage = useSignal('');
   const today = new Date();
   const todayYear = today.getFullYear();
@@ -46,6 +48,11 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
   useEffect(() => {
     onMonthChange(year, month);
   }, []);
+
+  // Day cells are reused across months, so an open tip would end up on the same day number of the new month.
+  useEffect(() => {
+    tooltipAnchor.value = null;
+  }, [year, month]);
 
   function isBeforeToday(y: number, m: number, d: number): boolean {
     if (y !== todayYear) return y < todayYear;
@@ -83,84 +90,67 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
     onMonthChange(newYear, newMonth);
   }
 
-  function handleBlockedSelect(y: number, m: number, d: number, el: HTMLDivElement) {
-    const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const cd = closedDates ?? new Set<string>();
-    tooltipMessage.value = cd.has(dateStr)
+  function handleBlockedSelect(y: number, m: number, d: number, el: HTMLElement) {
+    tooltipMessage.value = isDateClosed(y, m, d)
       ? 'Closed'
       : 'Online bookings are no longer available for this date. Please call the venue instead';
-    tooltipAnchorRect.value = el.getBoundingClientRect();
-    tooltipVisible.value = true;
-    setTimeout(() => {
-      tooltipVisible.value = false;
-    }, 3000);
+    tooltipAnchor.value = el;
+  }
+
+  function closeTooltip() {
+    tooltipAnchor.value = null;
   }
 
   const onCurrentMonth = year === todayYear && month === todayMonth;
+  const tooltipOpen = tooltipAnchor.value !== null;
 
   return (
-    <div class={styles.container} role="region" aria-labelledby="calendar-title">
+    <div class="bg-base-100 p-6 max-[480px]:p-4" role="region" aria-labelledby="calendar-title">
       {isStandalone && (
-        <div class={styles.welcome}>
-          <h1 class={styles.welcome_title}>{tenantName ? `${tenantName} Reservations` : 'Make a Reservation'}</h1>
-          <p class={styles.welcome_subtitle}>Select a date below to check availability and book your table.</p>
+        <div class="border-base-300 mb-6 border-b px-4 pt-8 pb-6 text-center">
+          <h1 class="mt-0 mb-2 text-[1.75rem] leading-tight font-bold">
+            {tenantName ? `${tenantName} Reservations` : 'Make a Reservation'}
+          </h1>
+          <p class="text-base-content/70 m-0">Select a date below to check availability and book your table.</p>
         </div>
       )}
-      <div class={styles.header}>
-        <div class={styles.nav}>
+
+      <div class="mb-6 flex justify-center">
+        <Join>
           <Button
-            type="button"
-            class={styles.nav_button}
+            class="join-item"
+            shape="square"
             aria-label="Previous month"
             disabled={(!allowPastDates && onCurrentMonth) || isFetchingDates}
             onClick={prevMonth}
-            size="sm"
-            variant="ghost"
           >
-            &#8592;
+            <ChevronLeft />
           </Button>
-          <h2 id="calendar-title">
+          <h2 id="calendar-title" class="join-item border-base-300 m-0 flex items-center px-4 text-[2rem] leading-tight">
             {MONTH_NAMES[month]} {year}
           </h2>
-          <Button
-            type="button"
-            class={styles.nav_button}
-            aria-label="Next month"
-            disabled={isFetchingDates}
-            onClick={nextMonth}
-            size="sm"
-            variant="ghost"
-          >
-            &#8594;
+          <Button class="join-item" shape="square" aria-label="Next month" disabled={isFetchingDates} onClick={nextMonth}>
+            <ChevronRight />
           </Button>
-        </div>
+        </Join>
       </div>
 
       {blockedDatesError && (
-        <div
-          role="alert"
-          style={`display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:8px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:13px;color:#664d03;${isStandalone && 'max-width: 800px; margin: 1rem auto;'}`}
+        <Alert
+          variant="warning"
+          live="assertive"
+          class={isStandalone ? 'mx-auto my-4 max-w-[800px]' : 'mb-2'}
+          action={
+            <Button size="sm" variant="primary" onClick={() => onMonthChange(year, month)}>
+              Retry
+            </Button>
+          }
         >
-          <span style="flex:1">{blockedDatesError}</span>
-          <Button type="button" size="sm" variant="primary" onClick={() => onMonthChange(year, month)}>
-            Retry
-          </Button>
-        </div>
+          {blockedDatesError}
+        </Alert>
       )}
 
-      <div
-        style={{
-          ...(isFetchingDates && {
-            opacity: 0.5,
-            pointerEvents: 'none',
-          }),
-          ...(isStandalone && {
-            padding: '1rem',
-            maxWidth: '800px',
-            margin: '0 auto',
-          }),
-        }}
-      >
+      <div class={cx(isFetchingDates && 'pointer-events-none opacity-50', isStandalone && 'mx-auto max-w-[800px] p-4')}>
         <CalendarGrid
           year={year}
           month={month}
@@ -175,14 +165,13 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
         />
       </div>
 
-      <Tooltip
-        visible={tooltipVisible.value}
-        message={tooltipMessage.value}
-        anchorRect={tooltipAnchorRect.value}
-        onClose={() => {
-          tooltipVisible.value = false;
-        }}
-      />
+      <FloatingTooltip open={tooltipOpen} anchor={tooltipAnchor.value} timeout={BLOCKED_TIP_MS} onClose={closeTooltip}>
+        {tooltipMessage.value}
+      </FloatingTooltip>
+      {/* A description added to the focused day is not announced, so the tip's message is also written here. */}
+      <p role="status" class="sr-only">
+        {tooltipOpen ? tooltipMessage.value : ''}
+      </p>
     </div>
   );
 };
