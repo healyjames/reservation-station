@@ -64,4 +64,7 @@ export type { JoinProps } from './Join';
 export { default as Drawer, DrawerToggle } from './Drawer';
 export type { DrawerProps, DrawerToggleProps } from './Drawer';
 
+export { default as Calendar } from './Calendar';
+export type { CalendarProps, CalendarRange, CalendarRangeMode } from './Calendar';
+
 // Icons are imported from '@shared/components/ui/icons', not re-exported here: names like Menu and X would clash with components.
