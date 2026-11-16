@@ -45,8 +45,8 @@ describe('buildCustomerConfirmationEmail', () => {
     expect(buildCustomerConfirmationEmail(customerData).html).toContain('Jane');
   });
 
-  it('html includes reservation date', () => {
-    expect(buildCustomerConfirmationEmail(customerData).html).toContain('2099-07-15');
+  it('html includes the formatted reservation date', () => {
+    expect(buildCustomerConfirmationEmail(customerData).html).toContain('Wed 15 Jul');
   });
 
   it('html includes reservation time', () => {
@@ -77,8 +77,8 @@ describe('buildCustomerAmendmentEmail', () => {
     expect(buildCustomerAmendmentEmail(customerData).html).toContain('Jane');
   });
 
-  it('html includes reservation date', () => {
-    expect(buildCustomerAmendmentEmail(customerData).html).toContain('2099-07-15');
+  it('html includes the formatted reservation date', () => {
+    expect(buildCustomerAmendmentEmail(customerData).html).toContain('Wed 15 Jul');
   });
 
   it('html includes reservation time', () => {
@@ -109,8 +109,8 @@ describe('buildCustomerCancellationEmail', () => {
     expect(buildCustomerCancellationEmail(customerData).html).toContain('Jane');
   });
 
-  it('html includes reservation date', () => {
-    expect(buildCustomerCancellationEmail(customerData).html).toContain('2099-07-15');
+  it('html includes the formatted reservation date', () => {
+    expect(buildCustomerCancellationEmail(customerData).html).toContain('Wed 15 Jul');
   });
 
   it('html includes reservation time', () => {
@@ -133,16 +133,22 @@ describe('buildTenantConfirmationEmail', () => {
     expect(buildTenantConfirmationEmail(tenantData).html).toBeTruthy();
   });
 
-  it('subject includes tenant name', () => {
-    expect(buildTenantConfirmationEmail(tenantData).subject).toContain('The Red Cow');
+  it('subject identifies the customer and the formatted date', () => {
+    const { subject } = buildTenantConfirmationEmail(tenantData);
+    expect(subject).toContain('Jane Doe');
+    expect(subject).toContain('Wed 15 Jul at 19:00');
+  });
+
+  it('html includes tenant name', () => {
+    expect(buildTenantConfirmationEmail(tenantData).html).toContain('The Red Cow');
   });
 
   it('html includes customer first name', () => {
     expect(buildTenantConfirmationEmail(tenantData).html).toContain('Jane');
   });
 
-  it('html includes reservation date', () => {
-    expect(buildTenantConfirmationEmail(tenantData).html).toContain('2099-07-15');
+  it('html includes the formatted reservation date', () => {
+    expect(buildTenantConfirmationEmail(tenantData).html).toContain('Wed 15 Jul');
   });
 
   it('html includes reservation time', () => {
@@ -159,16 +165,22 @@ describe('buildTenantAmendmentEmail', () => {
     expect(buildTenantAmendmentEmail(tenantData).html).toBeTruthy();
   });
 
-  it('subject includes tenant name', () => {
-    expect(buildTenantAmendmentEmail(tenantData).subject).toContain('The Red Cow');
+  it('subject identifies the customer and the formatted date', () => {
+    const { subject } = buildTenantAmendmentEmail(tenantData);
+    expect(subject).toContain('Jane Doe');
+    expect(subject).toContain('Wed 15 Jul at 19:00');
+  });
+
+  it('html includes tenant name', () => {
+    expect(buildTenantAmendmentEmail(tenantData).html).toContain('The Red Cow');
   });
 
   it('html includes customer first name', () => {
     expect(buildTenantAmendmentEmail(tenantData).html).toContain('Jane');
   });
 
-  it('html includes reservation date', () => {
-    expect(buildTenantAmendmentEmail(tenantData).html).toContain('2099-07-15');
+  it('html includes the formatted reservation date', () => {
+    expect(buildTenantAmendmentEmail(tenantData).html).toContain('Wed 15 Jul');
   });
 
   it('html includes reservation time', () => {
@@ -185,16 +197,22 @@ describe('buildTenantCancellationEmail', () => {
     expect(buildTenantCancellationEmail(tenantData).html).toBeTruthy();
   });
 
-  it('subject includes tenant name', () => {
-    expect(buildTenantCancellationEmail(tenantData).subject).toContain('The Red Cow');
+  it('subject identifies the customer and the formatted date', () => {
+    const { subject } = buildTenantCancellationEmail(tenantData);
+    expect(subject).toContain('Jane Doe');
+    expect(subject).toContain('Wed 15 Jul at 19:00');
+  });
+
+  it('html includes tenant name', () => {
+    expect(buildTenantCancellationEmail(tenantData).html).toContain('The Red Cow');
   });
 
   it('html includes customer first name', () => {
     expect(buildTenantCancellationEmail(tenantData).html).toContain('Jane');
   });
 
-  it('html includes reservation date', () => {
-    expect(buildTenantCancellationEmail(tenantData).html).toContain('2099-07-15');
+  it('html includes the formatted reservation date', () => {
+    expect(buildTenantCancellationEmail(tenantData).html).toContain('Wed 15 Jul');
   });
 
   it('html includes reservation time', () => {

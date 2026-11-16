@@ -113,7 +113,10 @@ function d1(sql: string, location: 'local' | 'remote'): any[] {
   return parsed[0]?.results ?? [];
 }
 
-function fetchRows(location: 'local' | 'remote', opts: { ids?: string[]; tenantId?: string; id?: string; requireNullHash?: boolean }): Row[] {
+function fetchRows(
+  location: 'local' | 'remote',
+  opts: { ids?: string[]; tenantId?: string; id?: string; requireNullHash?: boolean },
+): Row[] {
   const where: string[] = [];
   if (opts.requireNullHash) where.push('r.manage_token_hash IS NULL');
   if (opts.tenantId) where.push(`r.tenant_id = '${opts.tenantId}'`);
@@ -206,15 +209,7 @@ async function main() {
   const target = loadTargetIds(idsFile);
   const tenantId = tenantIdFlag || target.tenantId;
 
-  const mode = has('--send')
-    ? 'send'
-    : has('--backfill')
-      ? 'backfill'
-      : has('--verify')
-        ? 'verify'
-        : has('--test')
-          ? 'test'
-          : 'preview';
+  const mode = has('--send') ? 'send' : has('--backfill') ? 'backfill' : has('--verify') ? 'verify' : has('--test') ? 'test' : 'preview';
   console.log(`Mode: ${mode} | DB: ${location} | baseUrl: ${baseUrl}${dryRun ? ' | DRY-RUN' : ''}`);
 
   if (mode === 'preview') {
@@ -265,7 +260,13 @@ async function main() {
     d1(`UPDATE Reservations SET manage_token_hash = '${hash}' WHERE id = '${row.id}';`, location);
     console.log(`\nSending TEST to ${recipient} (booking of ${row.first_name}, from: ${from})`);
     console.log(`Manage URL:\n  ${url}`);
-    await sendViaResend(env.RESEND_API_KEY, { to: recipient, from, reply_to: row.contact_email, subject: template.subject, html: template.html });
+    await sendViaResend(env.RESEND_API_KEY, {
+      to: recipient,
+      from,
+      reply_to: row.contact_email,
+      subject: template.subject,
+      html: template.html,
+    });
     console.log('✅ Test email sent.');
     return;
   }
@@ -304,7 +305,13 @@ async function main() {
       }
       if (!env.RESEND_API_KEY) throw new Error('RESEND_API_KEY missing from .env');
       const from = `"${row.tenant_name} via Maximum Bookings" <${row.contact_email}>`;
-      await sendViaResend(env.RESEND_API_KEY, { to: row.email, from, reply_to: row.contact_email, subject: template.subject, html: template.html });
+      await sendViaResend(env.RESEND_API_KEY, {
+        to: row.email,
+        from,
+        reply_to: row.contact_email,
+        subject: template.subject,
+        html: template.html,
+      });
       recordSent(lpath, ledger, row.id);
       sent++;
       console.log(`  ✉️  ${row.email}  ${url}`);
@@ -312,7 +319,11 @@ async function main() {
       console.log(`  🔑 backfilled ${row.id}`);
     }
   }
-  console.log(mode === 'send' ? `\n✅ Backfilled ${backfilled}, sent ${sent} email(s). Ledger updated.` : `\n✅ Backfilled ${backfilled} hash(es). No emails sent.`);
+  console.log(
+    mode === 'send'
+      ? `\n✅ Backfilled ${backfilled}, sent ${sent} email(s). Ledger updated.`
+      : `\n✅ Backfilled ${backfilled} hash(es). No emails sent.`,
+  );
 }
 
 main().catch((e) => {

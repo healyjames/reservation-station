@@ -11,7 +11,7 @@
   dietary_requirements?: string;
   created_date?: string;
   modified_date?: string;
-}
+};
 
 export type CreateReservationPayload = {
   tenant_id: string;
@@ -23,4 +23,4 @@ export type CreateReservationPayload = {
   reservation_time: string;
   guests: number;
   dietary_requirements?: string;
-}
+};

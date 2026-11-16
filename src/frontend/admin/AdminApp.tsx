@@ -11,6 +11,7 @@ type AdminView = 'login' | 'dashboard' | 'settings';
 export const AdminApp: FunctionComponent = () => {
   const auth = useAuth();
   const view = useSignal<AdminView>('login');
+  const openSpecificDayHours = useSignal(false);
 
   useEffect(() => {
     if (auth.isLoading.value) return;
@@ -52,6 +53,11 @@ export const AdminApp: FunctionComponent = () => {
           auth={auth}
           onLogout={onLogout}
           onGoSettings={() => {
+            openSpecificDayHours.value = false;
+            view.value = 'settings';
+          }}
+          onGoSpecificDayHours={() => {
+            openSpecificDayHours.value = true;
             view.value = 'settings';
           }}
         />
@@ -60,6 +66,7 @@ export const AdminApp: FunctionComponent = () => {
       return (
         <Settings
           auth={auth}
+          startOnSpecificDayHours={openSpecificDayHours.value}
           onLogout={onLogout}
           onGoDashboard={() => {
             view.value = 'dashboard';

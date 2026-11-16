@@ -5,7 +5,7 @@ import { formatDate, getFullName } from '@shared/utils';
 
 type SuccessProps = {
   reservation: Reservation;
-}
+};
 
 export const Success: FunctionComponent<SuccessProps> = ({ reservation }) => (
   <StandaloneLayout title="Cancel your booking">

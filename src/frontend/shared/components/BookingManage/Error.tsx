@@ -4,7 +4,7 @@ import styles from './Error.module.css';
 
 type ErrorProps = {
   message: string;
-}
+};
 
 export const Error: FunctionComponent<ErrorProps> = ({ message }) => (
   <StandaloneLayout title="Manage your booking">

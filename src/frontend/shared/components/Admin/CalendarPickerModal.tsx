@@ -12,15 +12,9 @@ type CalendarPickerModalProps = {
   currentDate: Date;
   tenantId: string;
   onDateSelect: (date: Date) => void;
-}
+};
 
-const CalendarPickerModal: FunctionComponent<CalendarPickerModalProps> = ({
-  open,
-  onClose,
-  currentDate,
-  tenantId,
-  onDateSelect,
-}) => {
+const CalendarPickerModal: FunctionComponent<CalendarPickerModalProps> = ({ open, onClose, currentDate, tenantId, onDateSelect }) => {
   const calYear = useSignal(currentDate.getFullYear());
   const calMonth = useSignal(currentDate.getMonth());
   const selectedDate = useSignal<CalendarDate | null>({

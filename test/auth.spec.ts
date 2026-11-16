@@ -75,12 +75,12 @@ describe('POST /api/auth/login', () => {
     });
     const body = (await res.json()) as any;
     expect(res.status).toBe(200);
-    expect(typeof body.token).toBe('string');
-    expect(body.token.length).toBeGreaterThan(0);
-    expect(body.tenant).toBeDefined();
-    expect(body.tenant.id).toBe(TENANT_ID);
-    expect(body.tenant.name).toBe('Test Venue');
-    expect(body.tenant.tenant_code).toBe('testvenue');
+    expect(typeof body.data.token).toBe('string');
+    expect(body.data.token.length).toBeGreaterThan(0);
+    expect(body.data.tenant).toBeDefined();
+    expect(body.data.tenant.id).toBe(TENANT_ID);
+    expect(body.data.tenant.name).toBe('Test Venue');
+    expect(body.data.tenant.tenant_code).toBe('testvenue');
   });
 
   it('returns 401 when password is incorrect', async () => {
@@ -180,7 +180,7 @@ describe('POST /api/auth/login', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: TEST_EMAIL, password: TEST_PASSWORD }),
     });
-    const { token } = (await res.json()) as any;
+    const { token } = ((await res.json()) as any).data;
 
     // JWTs are not encrypted - decode the payload directly without verifying the signature
     const [, payloadB64] = token.split('.');

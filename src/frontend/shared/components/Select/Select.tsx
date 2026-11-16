@@ -4,7 +4,7 @@ import styles from './Select.module.css';
 type SelectOption = {
   value: string | number;
   label: string;
-}
+};
 
 type SelectProps = {
   id?: string;
@@ -17,7 +17,7 @@ type SelectProps = {
   error?: string;
   onChange?: (e: Event) => void;
   class?: string;
-}
+};
 
 const Select: FunctionComponent<SelectProps> = ({
   id,

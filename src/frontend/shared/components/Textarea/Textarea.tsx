@@ -13,7 +13,7 @@ type TextareaProps = {
   hint?: string;
   onInput?: (e: Event) => void;
   class?: string;
-}
+};
 
 const Textarea: FunctionComponent<TextareaProps> = ({
   id,

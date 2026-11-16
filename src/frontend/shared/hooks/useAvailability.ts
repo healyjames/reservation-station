@@ -13,6 +13,8 @@ type UseAvailabilityReturn = {
   blockedDatesError: Signal<string>;
   isFetchingDates: Signal<boolean>;
   blockedTimes: Signal<string[]>;
+  /** The selected date's bookable start times from the server, or null to fall back to the weekly hours. */
+  daySlots: Signal<string[] | null>;
   isFetchingTimes: Signal<boolean>;
   fetchBlockedDates: (tenantId: string, year: number, month: number, forceFresh?: boolean) => Promise<void>;
   fetchBlockedTimes: (tenantId: string, date: CalendarDate, guests: number, maxCovers?: number) => Promise<void>;
@@ -24,6 +26,7 @@ export function useAvailability(): UseAvailabilityReturn {
   const blockedDatesError = useSignal('');
   const isFetchingDates = useSignal(false);
   const blockedTimes = useSignal<string[]>([]);
+  const daySlots = useSignal<string[] | null>(null);
   const isFetchingTimes = useSignal(false);
 
   async function fetchBlockedDates(tenantId: string, year: number, month: number, forceFresh = false): Promise<void> {
@@ -46,13 +49,24 @@ export function useAvailability(): UseAvailabilityReturn {
   async function fetchBlockedTimes(tenantId: string, date: CalendarDate, guests: number, maxCovers = 0): Promise<void> {
     isFetchingTimes.value = true;
     try {
-      const { blockedTimes: result, aborted } = await sharedFetchBlockedTimes({ tenantId, date, guests, maxCovers });
-      if (aborted) return;
-      blockedTimes.value = result;
+      const result = await sharedFetchBlockedTimes({ tenantId, date, guests, maxCovers });
+      if (result.aborted) return;
+      blockedTimes.value = result.blockedTimes;
+      daySlots.value = result.daySlots;
     } finally {
       isFetchingTimes.value = false;
     }
   }
 
-  return { blockedDates, closedDates, blockedDatesError, isFetchingDates, blockedTimes, isFetchingTimes, fetchBlockedDates, fetchBlockedTimes };
+  return {
+    blockedDates,
+    closedDates,
+    blockedDatesError,
+    isFetchingDates,
+    blockedTimes,
+    daySlots,
+    isFetchingTimes,
+    fetchBlockedDates,
+    fetchBlockedTimes,
+  };
 }

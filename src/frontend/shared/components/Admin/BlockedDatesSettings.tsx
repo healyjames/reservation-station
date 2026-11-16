@@ -23,11 +23,11 @@ type RangePoint = {
   m: number;
   d: number;
   unblockMode: boolean;
-}
+};
 
 type BlockedDatesSettingsProps = {
   token: string;
-}
+};
 
 const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ token }) => {
   const viewYear = useSignal(new Date().getFullYear());
@@ -290,7 +290,9 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
           <span class={styles.bd_legend_item}>
             <span class={`${styles.bd_legend_swatch} ${styles.bd_legend_swatch_unblock}`} /> Unblock range
           </span>
-          <span class={`${styles.bd_legend_item} ${styles.bd_legend_hint}`}>Click to toggle · Click two days to block or unblock a range</span>
+          <span class={`${styles.bd_legend_item} ${styles.bd_legend_hint}`}>
+            Click to toggle · Click two days to block or unblock a range
+          </span>
         </div>
       </div>
     </div>

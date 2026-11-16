@@ -8,7 +8,7 @@ type OverviewProps = {
   inlineError: string;
   isCancelling: boolean;
   onCancel: () => void;
-}
+};
 
 export const Overview: FunctionComponent<OverviewProps> = ({ reservation, inlineError, isCancelling, onCancel }) => {
   const details = [

@@ -1,17 +1,9 @@
 // @vitest-environment jsdom
-import { render, within, act } from '@testing-library/preact';
+import { render, within, waitFor } from '@testing-library/preact';
 import { describe, it, expect, vi } from 'vitest';
 import { Step1Form } from './Step1Form';
+import { changeSelect } from '@shared/mock/changeSelect';
 import type { BookingFormData, CalendarDate, TenantConfig } from '@shared/types';
-
-// @testing-library/preact renames fireEvent.change to 'input' once preact/compat is loaded (Modal/Tooltip via the barrel). Compat only maps
-// onChange->onInput for input/textarea, so a <select> onChange never fires. Dispatch a real 'change' event instead.
-function selectOption(select: HTMLSelectElement, value: string) {
-  act(() => {
-    select.value = value;
-    select.dispatchEvent(new Event('change', { bubbles: true }));
-  });
-}
 
 const testDate: CalendarDate = { year: 2024, month: 0, day: 8 };
 
@@ -113,33 +105,33 @@ describe('Step1Form', () => {
     expect(getByText(/no times available for this date with 4 guests/i)).toBeTruthy();
   });
 
-  it('shows a call-the-venue alert and disables Next when the large-party sentinel is selected (limited)', () => {
+  it('shows a call-the-venue alert and disables Next when the large-party sentinel is selected (limited)', async () => {
     const { getByLabelText, getByRole, getByText } = renderStep1Form({
       tenantOverrides: { max_guests: 4, max_covers: 20 },
       formData: makeFormData({ guests: 4, time: '18:00' }),
     });
 
     const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
-    selectOption(guestSelect, 'large');
+    changeSelect(guestSelect, 'large');
 
-    expect(getByText(/for bookings of 5 or more guests, please call the venue directly/i)).toBeTruthy();
+    await waitFor(() => expect(getByText(/for bookings of 5 or more guests, please call the venue directly/i)).toBeTruthy());
     expect((getByRole('button', { name: /next/i }) as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('shows a call-the-venue alert and disables Next when 10+ is selected (unlimited)', () => {
+  it('shows a call-the-venue alert and disables Next when 10+ is selected (unlimited)', async () => {
     const { getByLabelText, getByRole, getByText } = renderStep1Form({
       tenantOverrides: { max_guests: 0, max_covers: 40 },
       formData: makeFormData({ guests: 4, time: '18:00' }),
     });
 
     const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
-    selectOption(guestSelect, 'large');
+    changeSelect(guestSelect, 'large');
 
-    expect(getByText(/for bookings of 10 or more guests, please call the venue directly/i)).toBeTruthy();
+    await waitFor(() => expect(getByText(/for bookings of 10 or more guests, please call the venue directly/i)).toBeTruthy());
     expect((getByRole('button', { name: /next/i }) as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('hides the Time input when the large-party sentinel is selected', () => {
+  it('hides the Time input when the large-party sentinel is selected', async () => {
     const { getByLabelText, queryByLabelText } = renderStep1Form({
       tenantOverrides: { max_guests: 4, max_covers: 20 },
       formData: makeFormData({ guests: 4, time: '18:00' }),
@@ -148,8 +140,8 @@ describe('Step1Form', () => {
     expect(getByLabelText(/time/i)).toBeTruthy();
 
     const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
-    selectOption(guestSelect, 'large');
+    changeSelect(guestSelect, 'large');
 
-    expect(queryByLabelText(/time/i)).toBeNull();
+    await waitFor(() => expect(queryByLabelText(/time/i)).toBeNull());
   });
 });

@@ -13,7 +13,7 @@ type EditDetailsProps = {
   errorMessage: Signal<string>;
   goToOverview: () => void;
   saveEditDetails: (data: EditData) => Promise<void>;
-}
+};
 
 export const EditDetails: FunctionComponent<EditDetailsProps> = ({
   editData,

@@ -1,23 +1,17 @@
 import { useSignal } from '@preact/signals';
 import type { Signal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
-import type { Reservation } from '@shared/types';
+import type { AdminBlockedDate, Reservation } from '@shared/types';
 import { adminFetch } from '@shared/utils/adminFetch';
 import { padTwo } from '@shared/utils/dates';
 
 const REFRESH_COOLDOWN_MS = 3 * 60 * 1000;
 
-type AdminBlockedDateRow = {
-  id: string;
-  date: string;
-  start_time: string | null;
-  end_time: string | null;
-  reason?: string | null;
-};
+const BLOCK_SAVE_ERROR = 'Could not update the block on this day. Please try again.';
 
 type MonthCacheEntry = {
   reservationsByDate: Map<string, Reservation[]>;
-  blockedRowsByDate: Map<string, AdminBlockedDateRow[]>;
+  blockedRowsByDate: Map<string, AdminBlockedDate[]>;
   fetchedAt: number;
 };
 
@@ -29,6 +23,9 @@ export type UseBookingsReturn = {
   guestCount: Signal<number>;
   isDayBlocked: Signal<boolean>;
   isBlockLoading: Signal<boolean>;
+  /** The visible day's time-range blocks (full-day blocks excluded), earliest first. */
+  dayBlocks: Signal<AdminBlockedDate[]>;
+  blockErrorMessage: Signal<string>;
   fetchBookings: (date: Date) => Promise<void>;
   prevDay: () => void;
   nextDay: () => void;
@@ -45,6 +42,8 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
   const guestCount = useSignal(0);
   const isDayBlocked = useSignal(false);
   const isBlockLoading = useSignal(false);
+  const dayBlocks = useSignal<AdminBlockedDate[]>([]);
+  const blockErrorMessage = useSignal('');
   const monthCache = useSignal<Map<string, MonthCacheEntry>>(new Map());
   const inFlightMonthKey = useSignal<string | null>(null);
   const lastRefreshAt = useSignal(0);
@@ -61,25 +60,48 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
     return new Map(monthCache.value);
   }
 
+  function clearVisibleDay(): void {
+    reservations.value = [];
+    guestCount.value = 0;
+    isDayBlocked.value = false;
+    dayBlocks.value = [];
+  }
+
   function applyVisibleDay(date: Date): void {
     const entry = monthCache.value.get(monthKeyFromDate(date));
     if (!entry) {
-      reservations.value = [];
-      guestCount.value = 0;
-      isDayBlocked.value = false;
+      clearVisibleDay();
       return;
     }
     const dateKey = dateKeyFromDate(date);
     const dayReservations = entry.reservationsByDate.get(dateKey) ?? [];
-    const dayBlocks = entry.blockedRowsByDate.get(dateKey) ?? [];
+    const dayBlockedRows = entry.blockedRowsByDate.get(dateKey) ?? [];
     reservations.value = dayReservations;
     guestCount.value = dayReservations.reduce((sum, row) => sum + (row.guests || 0), 0);
-    isDayBlocked.value = dayBlocks.some((row) => row.start_time === null);
+    isDayBlocked.value = dayBlockedRows.some((row) => row.start_time === null);
+    dayBlocks.value = dayBlockedRows
+      .filter((row) => row.start_time !== null)
+      .sort((a, b) => (a.start_time ?? '').localeCompare(b.start_time ?? ''));
   }
 
-  function buildMonthEntry(monthReservations: Reservation[], monthBlockedRows: AdminBlockedDateRow[]): MonthCacheEntry {
+  /** Replaces the cached blocked rows for `date` (the day the request was made for) and re-renders the visible day. */
+  function updateBlockedRows(date: Date, update: (rows: AdminBlockedDate[]) => AdminBlockedDate[]): void {
+    const monthKey = monthKeyFromDate(date);
+    const dateKey = dateKeyFromDate(date);
+    const entry = monthCache.value.get(monthKey);
+    if (entry) {
+      const blockedRowsByDate = new Map(entry.blockedRowsByDate);
+      blockedRowsByDate.set(dateKey, update(entry.blockedRowsByDate.get(dateKey) ?? []));
+      const nextCache = cloneCache();
+      nextCache.set(monthKey, { ...entry, blockedRowsByDate });
+      monthCache.value = nextCache;
+    }
+    applyVisibleDay(currentDate.value);
+  }
+
+  function buildMonthEntry(monthReservations: Reservation[], monthBlockedRows: AdminBlockedDate[]): MonthCacheEntry {
     const reservationsByDate = new Map<string, Reservation[]>();
-    const blockedRowsByDate = new Map<string, AdminBlockedDateRow[]>();
+    const blockedRowsByDate = new Map<string, AdminBlockedDate[]>();
 
     for (const row of monthReservations) {
       const list = reservationsByDate.get(row.reservation_date) ?? [];
@@ -134,7 +156,7 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
       }
 
       const monthReservations = (await reservationsRes.json()) as Reservation[];
-      const monthBlockedRows = (await blockedRes.json()) as AdminBlockedDateRow[];
+      const monthBlockedRows = (await blockedRes.json()) as AdminBlockedDate[];
       const nextCache = cloneCache();
       nextCache.set(monthKey, buildMonthEntry(monthReservations, monthBlockedRows));
       monthCache.value = nextCache;
@@ -187,6 +209,7 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
 
     currentDate.value = date;
     errorMessage.value = '';
+    if (requestedDateKey !== currentDateKey) blockErrorMessage.value = '';
 
     if (!monthCache.value.has(requestedMonthKey)) {
       await loadMonth(date);
@@ -203,13 +226,12 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
 
   async function goToDate(date: Date): Promise<void> {
     currentDate.value = date;
+    blockErrorMessage.value = '';
     if (monthCache.value.has(monthKeyFromDate(date))) {
       applyVisibleDay(date);
       return;
     }
-    reservations.value = [];
-    guestCount.value = 0;
-    isDayBlocked.value = false;
+    clearVisibleDay();
     await loadMonth(date);
   }
 
@@ -247,51 +269,44 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
     applyVisibleDay(currentDate.value);
   }
 
-  async function toggleDayBlock(): Promise<void> {
+  /** Runs a blocked-dates request for the visible day, tracking the loading and error state. Resolves true on success. */
+  async function saveBlockChange(request: (token: string, date: Date) => Promise<boolean>): Promise<boolean> {
     const tok = getToken();
-    if (!tok) return;
+    if (!tok) return false;
 
     isBlockLoading.value = true;
-    const dateKey = dateKeyFromDate(currentDate.value);
-    const monthKey = monthKeyFromDate(currentDate.value);
-
+    blockErrorMessage.value = '';
     try {
-      if (isDayBlocked.value) {
-        const res = await adminFetch(`/api/admin/blocked-dates/date/${dateKey}`, tok, { method: 'DELETE' });
-        if (!res.ok) return;
-
-        const nextCache = cloneCache();
-        const entry = nextCache.get(monthKey);
-        if (entry) {
-          entry.blockedRowsByDate.set(
-            dateKey,
-            (entry.blockedRowsByDate.get(dateKey) ?? []).filter((row) => row.start_time !== null),
-          );
-          nextCache.set(monthKey, entry);
-          monthCache.value = nextCache;
-        }
-        applyVisibleDay(currentDate.value);
-      } else {
-        const res = await adminFetch('/api/admin/blocked-dates', tok, {
-          method: 'POST',
-          body: JSON.stringify({ date: dateKey }),
-        });
-        if (!res.ok) return;
-
-        const created = (await res.json()) as AdminBlockedDateRow;
-        const nextCache = cloneCache();
-        const entry = nextCache.get(monthKey);
-        if (entry) {
-          const existing = entry.blockedRowsByDate.get(dateKey) ?? [];
-          entry.blockedRowsByDate.set(dateKey, [...existing, created]);
-          nextCache.set(monthKey, entry);
-          monthCache.value = nextCache;
-        }
-        applyVisibleDay(currentDate.value);
-      }
+      const saved = await request(tok, currentDate.value);
+      if (!saved) blockErrorMessage.value = BLOCK_SAVE_ERROR;
+      return saved;
+    } catch {
+      blockErrorMessage.value = BLOCK_SAVE_ERROR;
+      return false;
     } finally {
       isBlockLoading.value = false;
     }
+  }
+
+  async function toggleDayBlock(): Promise<void> {
+    await saveBlockChange(async (tok, date) => {
+      const dateKey = dateKeyFromDate(date);
+
+      if (isDayBlocked.value) {
+        const res = await adminFetch(`/api/admin/blocked-dates/date/${dateKey}`, tok, { method: 'DELETE' });
+        if (!res.ok) return false;
+
+        updateBlockedRows(date, (rows) => rows.filter((row) => row.start_time !== null));
+        return true;
+      }
+
+      const res = await adminFetch('/api/admin/blocked-dates', tok, { method: 'POST', body: JSON.stringify({ date: dateKey }) });
+      if (!res.ok) return false;
+
+      const created = (await res.json()) as AdminBlockedDate;
+      updateBlockedRows(date, (rows) => [...rows, created]);
+      return true;
+    });
   }
 
   async function refreshMonth(): Promise<void> {
@@ -316,6 +331,8 @@ export function useBookings(getToken: () => string | null): UseBookingsReturn {
     guestCount,
     isDayBlocked,
     isBlockLoading,
+    dayBlocks,
+    blockErrorMessage,
     fetchBookings,
     prevDay,
     nextDay,

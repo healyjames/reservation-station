@@ -8,9 +8,13 @@ Maximum Bookings uses a **rolling occupancy model** to manage venue capacity. Ca
 
 ### Core Principle
 
-> At any point in time, the sum of all active bookings (those whose sitting window overlaps with a given time slot) must not exceed `max_covers`.
+> At no moment may the guests seated in the venue exceed `max_covers`.
 
-A booking occupies capacity for a fixed duration defined by `concurrent_guests_time_limit`. Two bookings are **concurrent** if the absolute difference between their start times is less than `concurrent_guests_time_limit` minutes.
+A booking starting at `T` occupies capacity for its whole **sitting**, `[T, T + concurrent_guests_time_limit)`. The end is exclusive, so a sitting that ends at 15:00 does not overlap one that starts at 15:00.
+
+**Occupancy at a moment `P`** is the sum of guests of every booking with `start <= P < start + limit`.
+
+**A new or moved booking fits** when, for every moment of its sitting, occupancy + its guests ≤ `max_covers`. Occupancy only rises when a booking starts, so it is enough to check the new booking's start and every existing booking start that falls inside its sitting. This means a booking is rejected if it would overlap a *later* booking and overflow, not just an earlier one.
 
 ---
 
@@ -50,7 +54,9 @@ A tenant can set a **booking delay** (`booking_delay_minutes`) to prevent last-m
 
 ## Examples
 
-### Example 1 — Full capacity blocks the window only
+"Largest new party" is the biggest party that can book a sitting starting at that time.
+
+### Example 1 — A full booking blocks every overlapping sitting
 
 **Configuration:** `max_covers = 8`, `concurrent_guests_time_limit = 120 min`
 
@@ -62,21 +68,21 @@ A tenant can set a **booking delay** (`booking_delay_minutes`) to prevent last-m
 
 | Time window | Active covers |
 |---|---|
-| 20:00–22:00 | 8 |
+| 20:00–21:59 | 8 |
 
 **Availability:**
 
-| Time | Remaining capacity |
+| New booking at | Largest new party |
 |---|---|
-| Before 20:00 | 8 (full capacity available) |
-| 20:00–21:59 | 0 (fully booked) |
-| 22:00+ | 8 (fully available again) |
+| 18:00 or earlier | 8 (sitting ends as A arrives) |
+| 18:30–21:30 | 0 (sitting overlaps A) |
+| 22:00+ | 8 |
 
-A booking at 18:00 is allowed. A booking at 20:30 is not. A booking at 22:00 is allowed again.
+A booking at 18:00 is allowed. A booking at 19:00 is not, because its sitting runs until 21:00 and A is seated from 20:00. A booking at 22:00 is allowed again.
 
 ---
 
-### Example 2 — Partial capacity reduces availability in the window
+### Example 2 — Partial capacity reduces availability for overlapping sittings
 
 **Configuration:** `max_covers = 8`, `concurrent_guests_time_limit = 120 min`
 
@@ -88,13 +94,14 @@ A booking at 18:00 is allowed. A booking at 20:30 is not. A booking at 22:00 is 
 
 | Time window | Active covers |
 |---|---|
-| 20:00–22:00 | 6 |
+| 20:00–21:59 | 6 |
 
 **Availability:**
 
-| Time | Remaining capacity |
+| New booking at | Largest new party |
 |---|---|
-| 20:00–21:59 | 2 (only parties of 1–2 can book) |
+| 18:00 or earlier | 8 |
+| 18:30–21:30 | 2 (only parties of 1–2 can book) |
 | 22:00+ | 8 |
 
 ---
@@ -108,7 +115,7 @@ A booking at 18:00 is allowed. A booking at 20:30 is not. A booking at 22:00 is 
 | A | 20:00 | 6 |
 | B | 21:00 | 2 |
 
-Booking B at 21:00 is concurrent with Booking A (|21:00 - 20:00| = 60 min < 120 min).
+B's sitting (21:00–22:59) overlaps A's (20:00–21:59).
 
 **Resulting occupancy:**
 
@@ -121,12 +128,13 @@ Booking B at 21:00 is concurrent with Booking A (|21:00 - 20:00| = 60 min < 120 
 
 **Availability:**
 
-| Time | Remaining capacity |
-|---|---|
-| 20:00–20:59 | 2 |
-| 21:00–21:59 | 0 (fully booked) |
-| 22:00–22:59 | 6 |
-| 23:00+ | 8 |
+| New booking at | Largest new party | Why |
+|---|---|---|
+| 18:00 or earlier | 8 | Sitting ends by 20:00 |
+| 18:30–19:00 | 2 | Overlaps A only |
+| 19:30–21:30 | 0 | Overlaps 21:00–21:59, when A + B are seated |
+| 22:00–22:30 | 6 | Overlaps B only |
+| 23:00+ | 8 | |
 
 ---
 
@@ -134,51 +142,44 @@ Booking B at 21:00 is concurrent with Booking A (|21:00 - 20:00| = 60 min < 120 
 
 ### Core concurrent calculation
 
-**`src/utils/slots.ts` — `calculateConcurrentGuests`**
+**`src/utils/slots.ts`**
 
-```ts
-export function calculateConcurrentGuests(
-  slotTime: string,           // "HH:MM"
-  reservations: SlotReservation[],
-  timeLimitMinutes: number
-): number
-```
-
-Returns the total guests from all reservations whose start time is within `timeLimitMinutes` of `slotTime`. Two bookings are concurrent when `|slot - booking| < timeLimitMinutes`.
+- `calculateConcurrentGuests(slotTime, reservations, timeLimitMinutes)` — occupancy at one moment: guests of bookings with `start <= slot < start + limit`.
+- `peakConcurrentGuests(startTime, reservations, timeLimitMinutes)` — highest occupancy during a sitting starting at `startTime` (checks the start and each booking start inside the sitting).
 
 Also see `generateTimeSlots` in the same file for how available time slots are produced.
+
+**`src/db/capacity.ts` — `capacityGuard`** builds the same whole-sitting rule as a SQL `WHERE` condition, so the capacity check and the write happen in one statement.
 
 ---
 
 ### API: booking creation guard
 
-**`src/routes/reservations.ts` — `POST /api/reservations`**
+**`src/routes/reservations.ts` — `POST /api/reservations`** (also `POST /api/admin/reservations` and the customer `PATCH /api/reservations/:id`)
 
-When a reservation is submitted, the API:
-1. Fetches all existing reservations for `(tenant_id, reservation_date)`.
-2. Calls `calculateConcurrentGuests(reservation_time, dayReservations, concurrent_guests_time_limit)`.
-3. Rejects with **422** if `concurrent + new_guests > max_covers`.
-4. `max_covers = 0` skips the check entirely (unlimited).
+The `INSERT … SELECT … WHERE` (or `UPDATE … WHERE`) embeds `capacityGuard`, so occupancy is re-checked inside the same SQLite statement as the write. No row is written if the sitting would exceed `max_covers` at any moment, and the API returns **422**. `max_covers = 0` skips the check (unlimited). On PATCH the booking being amended is excluded from the count.
 
 ---
 
 ### API: blocked time slots
 
-**`src/routes/reservations.ts` — `GET /api/blocked-times`**
+**`src/routes/availability.ts` — `GET /api/reservations/blocked-times`**
 
-Returns the list of time strings that are unavailable for a given `(tenant_id, date, guests)` combination.
+Returns the list of time strings that are unavailable for a given `(tenant_id, date, guests)` combination, plus `slots`: every bookable start time on that date from the effective opening hours (special hours if set for the date, otherwise the weekly hours). `slots` is empty when the date is closed or fully blocked. The widget and the manage-booking page build their time pickers from `slots`, not from the weekly hours in the tenant config, so special hours show correctly.
 
-For each candidate time slot, calls `calculateConcurrentGuests` and marks the slot as blocked if `concurrent + requested_guests > max_covers`.
+For each candidate time slot, marks it blocked if `peakConcurrentGuests(slot) + requested_guests > max_covers` — the same rule the booking guard enforces, so the widget never offers a time the server will reject for capacity.
 
 Uses `max_covers` (concurrent capacity) — not `max_guests` (party size limit).
 
 ---
 
-### API: full availability grid
+### API: per-slot capacity for one day
 
-**`src/routes/reservations.ts` — `GET /api/availability`**
+**`src/routes/availability.ts` — `GET /api/reservations/availability`**
 
-Returns a full month's worth of dates and their available time slots. Each slot is evaluated using the same concurrent window logic. Dates where all time slots are blocked are marked as unavailable.
+Returns one day's default slots (`12:00`–`21:30`) with `concurrent_guests` and `available_capacity` at each slot's start time. It is a capacity read-out only.
+
+**Known gap:** it ignores blocked dates, opening hours and the whole-sitting rule, so a slot it reports as having capacity may still be rejected. No frontend calls it. Use `blocked-times` to decide what is bookable.
 
 ---
 
@@ -251,9 +252,93 @@ Tenant onboarding is a super-admin operation gated by `X-Admin-Key` / `SUPER_ADM
 
 Reservation creation validates in this order:
 1. Full-day block check — rejects if the date has a full-day `BlockedDates` entry.
-2. Partial-day time block check — rejects if the requested time falls within an admin-defined partial-day block.
-3. Opening hours check — rejects if the restaurant is closed that day, or if the time is outside configured hours (including midnight-crossing schedules).
-4. Capacity check — atomic INSERT with a WHERE clause that re-evaluates concurrent occupancy inside the same SQL statement, eliminating the SELECT-then-INSERT race condition.
+2. Partial-day time block check — rejects if the requested time falls within an admin-defined partial-day block (see [Blocked Dates](#blocked-dates)).
+3. Opening hours check — uses the **effective hours** for the date (see [Special Opening Hours](#special-opening-hours)). Rejects if the venue is closed that day, or if the time is outside those hours (including midnight-crossing weekly schedules).
+4. Capacity check — atomic INSERT with a WHERE clause (`capacityGuard`) that checks occupancy across the booking's whole sitting inside the same SQL statement, eliminating the SELECT-then-INSERT race condition.
+
+---
+
+## Blocked Dates
+
+A `BlockedDate` row closes a tenant to new bookings for a **whole day** (no times) or for a **time range** on one date (`start_time` and `end_time`).
+
+### Rules
+
+- A time range is `[start_time, end_time)`. The start is blocked and the end is bookable, so "last booking 17:30" is a block from `18:00` to closing time.
+- New blocks must use strict 24-hour `HH:MM` with `end_time > start_time`. A range cannot wrap past midnight and the latest possible end is `23:59` (there is no `24:00`). `reason` is optional, up to 200 characters.
+- Rows created before this rule where `end_time <= start_time` are still honoured as wrapping past midnight.
+- Blocks are not merged or de-duplicated. Overlapping ranges are allowed and a time is blocked if any range covers it.
+- "Only bookable 12:00–16:00" is expressed as two ranges: opening→`12:00` and `16:00`→closing.
+- **Blocks never touch existing reservations.** They only stop new bookings and moves.
+
+### Where blocks are enforced
+
+| Action | Full-day block | Time-range block |
+|---|---|---|
+| Customer creates a booking (`POST /api/reservations`) | Rejected, 422 | Rejected, 422 |
+| Customer moves a booking to a new date or time (`PATCH /api/reservations/:id`) | Rejected, 422 | Rejected, 422 |
+| Customer changes guests or details only (date and time unchanged) | Allowed | Allowed |
+| Widget time picker (`GET /api/reservations/blocked-times`) | All slots blocked | Slots in the range blocked |
+| Admin creates a booking (`POST /api/admin/reservations`) | Rejected, 422 | **Allowed** |
+| Admin edits a booking (`PATCH /api/admin/reservations/:id`) | **Allowed** | **Allowed** |
+
+The admin rows are an **intended override**: staff can place a booking inside a blocked time range (for example a private party during a blocked evening). Admin edits also skip the capacity check.
+
+`src/db/blocked-dates.ts` — `findBlockError` is the single check used by the customer POST and PATCH. `src/utils/slots.ts` — `isTimeInBlock` / `isTimeInAnyBlock` hold the range rule, shared with `blocked-times`.
+
+The widget caches `blocked-times` for 60 seconds, so a customer may briefly still see a newly blocked slot. Submitting it is rejected with 422.
+
+### Admin UI
+
+- **Dashboard day view** (`Dashboard.tsx`): "Block this day" toggles a full-day block. When the visible day has time ranges, a read-only "Changed hours on this day" banner (`DayHoursBanner.tsx`) lists them, and its "Change these hours" link opens Settings directly on the specific-day view.
+- **Settings › Opening Hours**: a "Change hours for a specific day" button swaps the weekly schedule for `SpecificDayHours.tsx`. The admin picks a day on the shared calendar, then adds a time range with the `DayTimeBlocks.tsx` form. The view lists the viewed month's ranges, each with Remove (`DELETE /api/admin/blocked-dates/:id`). The same list (`ChangedHoursList.tsx`, data from `useMonthTimeBlocks.ts`) also appears under the weekly schedule for the current month.
+- The From/Until choices are 30-minute steps bounded by that weekday's opening hours. Until only offers times after From, and its last option is closing time. The form enters blocked ranges only; there is no "bookable window" mode.
+- Opening hours are fetched from `GET /api/admin/opening-hours` when the specific-day view opens (`useOpeningHours.ts`). The admin login response does not carry them.
+- On a closed day, or a day whose hours run past midnight, the block form is replaced by an explanation. Existing ranges on that day can still be removed. Ranges that wrap past midnight can no longer be created anywhere. Setting special opening hours for the day makes the block form available.
+- With no opening hours configured, the default `12:00`–`22:00` is used.
+- **Settings › Blocked Dates** manages full-day blocks only and does not show time ranges.
+
+---
+
+## Special Opening Hours
+
+A `DateOverride` row gives one specific date its own opening hours. It **replaces** the weekly hours for that date only, so it can do what a block cannot: open earlier or later than normal, or open on a normally closed day. It can also close a normally open day.
+
+### Effective hours for a date
+
+Resolved by `src/db/opening-hours.ts` — `getEffectiveHours`, in this order:
+
+1. A full-day `BlockedDate` on the date: not bookable, whatever the hours say.
+2. A `DateOverride` for the date: its hours (or closed) apply, and the weekly row is ignored.
+3. The weekly `OpeningHours` row for that weekday.
+4. Nothing configured: open on the default `12:00`–`22:00`.
+
+Time-range blocks are then applied inside whichever hours won.
+
+### Rules
+
+- Special hours must be strict `HH:MM` with close after open. They cannot run past midnight.
+- One per date. Saving again replaces it. Removing it returns the date to its weekly hours.
+- **Existing reservations are never changed**, including ones that now fall outside the special hours.
+- Blocks vs special hours: use special hours to say when the venue is open that day ("Boxing Day 12:00–16:00"). Use a block to take a gap out of the day ("closed 15:00–17:00 for a private party"). Both can be set on the same date.
+
+### Where special hours are applied
+
+| Action | Uses effective hours? |
+|---|---|
+| Customer creates a booking (`POST /api/reservations`) | Yes — outside the hours or closed → 422 |
+| Widget calendar (`GET /api/reservations/blocked-dates`, `closed_dates`) | Yes — a specially opened day is not listed, a specially closed day is |
+| Widget and manage-booking time pickers (`GET /api/reservations/blocked-times`, `slots`) | Yes |
+| Customer moves a booking (`PATCH /api/reservations/:id`) | **No** — this route has never checked opening hours; only blocks and capacity. The time picker only offers valid times. Known gap. |
+| Admin creates or edits a booking | **No** — intended override, as for weekly hours |
+
+### Admin UI and API
+
+- **Settings › Opening Hours › "Change hours for a specific day"**: after picking a day, "Opening hours on this day" (`SpecialHoursForm.tsx`) shows the normal hours and sets, updates or removes special hours. Any day can be picked, including normally closed ones. The block form below it is then bounded by the special hours.
+- "Changed hours in <month>" lists special hours alongside blocked ranges, each with Remove.
+- **Bookings day view**: the "Changed hours on this day" banner shows special hours for the visible day (`useDateOverrides.ts`).
+- The UI only sets special hours (open with times). Closing a whole day is done with "Block this day". The API also accepts `is_closed: true`.
+- API: `GET /api/admin/date-overrides?month=YYYY-MM`, `PUT /api/admin/date-overrides/:date`, `DELETE /api/admin/date-overrides/:date` (`src/routes/date-overrides.ts`).
 
 ---
 
