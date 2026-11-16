@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, within, waitFor } from '@testing-library/preact';
+import { fireEvent, render, within, waitFor } from '@testing-library/preact';
 import { describe, it, expect, vi } from 'vitest';
 import { Step1Form } from './Step1Form';
 import { changeSelect } from '@shared/mock/changeSelect';
@@ -114,7 +114,10 @@ describe('Step1Form', () => {
     const guestSelect = getByLabelText(/number of guests/i) as HTMLSelectElement;
     changeSelect(guestSelect, 'large');
 
-    await waitFor(() => expect(getByText(/for bookings of 5 or more guests, please call the venue directly/i)).toBeTruthy());
+    await waitFor(() =>
+      expect(getByRole('alert').textContent).toMatch(/for bookings of 5 or more guests, please call the venue directly/i),
+    );
+    expect(getByText(/for bookings of 5 or more guests/i)).toBeTruthy();
     expect((getByRole('button', { name: /next/i }) as HTMLButtonElement).disabled).toBe(true);
   });
 
@@ -143,5 +146,61 @@ describe('Step1Form', () => {
     changeSelect(guestSelect, 'large');
 
     await waitFor(() => expect(queryByLabelText(/time/i)).toBeNull());
+  });
+
+  describe('navigation and loading', () => {
+    function renderWith(props: Partial<Parameters<typeof Step1Form>[0]> = {}) {
+      const onNext = vi.fn();
+      const onChangeDate = vi.fn();
+      const view = render(
+        <Step1Form
+          date={testDate}
+          tenantConfig={makeTenant()}
+          formData={makeFormData()}
+          blockedTimes={[]}
+          isFetchingTimes={false}
+          onGuestsChange={vi.fn()}
+          onTimeChange={vi.fn()}
+          onNext={onNext}
+          onChangeDate={onChangeDate}
+          {...props}
+        />,
+      );
+      return { ...view, onNext, onChangeDate };
+    }
+
+    it('shows the step indicator and closes back to the calendar from the named close button', () => {
+      const { getByText, getByRole, onChangeDate } = renderWith();
+      expect(getByText('Step 1 of 2')).toBeTruthy();
+      fireEvent.click(getByRole('button', { name: 'Close booking form' }));
+      expect(onChangeDate).toHaveBeenCalledOnce();
+    });
+
+    it('enables Next once guests and a time are chosen', () => {
+      const { getByRole, onNext } = renderWith();
+      const next = getByRole('button', { name: 'Next' }) as HTMLButtonElement;
+      expect(next.disabled).toBe(false);
+      fireEvent.click(next);
+      expect(onNext).toHaveBeenCalledOnce();
+    });
+
+    it('keeps Next disabled until a time is chosen', () => {
+      const { getByRole } = renderWith({ formData: makeFormData({ time: '' }) });
+      expect((getByRole('button', { name: 'Next' }) as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it('announces loading times instead of showing the time picker', () => {
+      const { getByRole, getByText, queryByLabelText } = renderWith({ isFetchingTimes: true });
+      expect(getByRole('status').textContent).toBe('Loading available times');
+      expect(queryByLabelText(/^time/i)).toBeNull();
+      // The caption "Time" stays above the loading status (followed by a hidden "*").
+      expect(getByText(/^Time\b/)).toBeTruthy();
+    });
+
+    it('marks the guests and time pickers as required', () => {
+      const { getByLabelText } = renderWith();
+      expect((getByLabelText(/number of guests/i) as HTMLSelectElement).required).toBe(true);
+      expect((getByLabelText(/^time/i) as HTMLSelectElement).required).toBe(true);
+    });
   });
 });

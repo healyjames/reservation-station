@@ -1,10 +1,10 @@
 ﻿import { useRef } from 'preact/hooks';
 import type { FunctionComponent } from 'preact';
-import type { TenantConfig } from '@shared/types';
-import { Input, Textarea, FormField, Button, MessageCard } from '@shared/components';
-import type { BookingFormData } from '@shared/types';
+import type { BookingFormData, TenantConfig } from '@shared/types';
+import { Alert, Button, Fieldset, Input, Textarea } from '@shared/components/ui';
+import { ArrowLeft } from '@shared/components/ui/icons';
 import { isStandaloneMode } from '@shared/utils';
-import styles from './Step2Form.module.css';
+import { cx } from '@shared/utils/cx';
 
 type Step2FormProps = {
   tenantConfig: TenantConfig;
@@ -25,42 +25,49 @@ export const Step2Form: FunctionComponent<Step2FormProps> = ({ formData, submitE
   }
 
   return (
-    <div class={styles.content} style={isStandaloneMode() ? 'max-width:520px;margin:2rem auto' : undefined}>
-      <div class={styles.nav}>
-        <div class={styles.stepIndicator}>Step 2 of 2</div>
-        <button type="button" class={styles.backBtn} id="prev-step-btn" aria-label="Previous step" onClick={onBack}>
-          &#8592;
-        </button>
+    <div class={cx('p-6 motion-safe:animate-slide-in', isStandaloneMode() && 'mx-auto my-8 max-w-[520px]')}>
+      <div class="mb-4 flex items-center justify-end gap-3">
+        <div class="bg-base-200 text-accent rounded-field px-4 py-2 text-sm font-semibold">Step 2 of 2</div>
+        <Button
+          variant="ghost"
+          shape="square"
+          class="[--btn-bg:var(--color-base-200)] hover:[--btn-bg:var(--color-base-300)]"
+          id="prev-step-btn"
+          aria-label="Previous step"
+          onClick={onBack}
+        >
+          <ArrowLeft />
+        </Button>
       </div>
 
-      <form id="booking-form-step2" class={styles.form} ref={formRef} onSubmit={handleSubmit}>
-        <FormField label="First Name" htmlFor="firstName" required>
+      <form id="booking-form-step2" class="grid gap-4" ref={formRef} onSubmit={handleSubmit}>
+        <Fieldset label="First Name" required>
           <Input
             id="firstName"
             name="firstName"
-            type="text"
             value={formData.firstName}
             maxLength={50}
             autocomplete="given-name"
             required
+            validator
             onInput={(e) => onFieldChange('firstName', (e.target as HTMLInputElement).value)}
           />
-        </FormField>
+        </Fieldset>
 
-        <FormField label="Surname" htmlFor="surname" required>
+        <Fieldset label="Surname" required>
           <Input
             id="surname"
             name="surname"
-            type="text"
             value={formData.surname}
             maxLength={50}
             autocomplete="family-name"
             required
+            validator
             onInput={(e) => onFieldChange('surname', (e.target as HTMLInputElement).value)}
           />
-        </FormField>
+        </Fieldset>
 
-        <FormField label="Email" htmlFor="email" required>
+        <Fieldset label="Email" required>
           <Input
             id="email"
             name="email"
@@ -68,11 +75,12 @@ export const Step2Form: FunctionComponent<Step2FormProps> = ({ formData, submitE
             value={formData.email}
             autocomplete="email"
             required
+            validator
             onInput={(e) => onFieldChange('email', (e.target as HTMLInputElement).value)}
           />
-        </FormField>
+        </Fieldset>
 
-        <FormField label="Phone Number" htmlFor="telephone" required>
+        <Fieldset label="Phone Number" required>
           <Input
             id="telephone"
             name="telephone"
@@ -83,28 +91,28 @@ export const Step2Form: FunctionComponent<Step2FormProps> = ({ formData, submitE
             pattern="\+?[\d\s\-]{7,15}"
             title="Please enter a valid phone number (7–15 digits, e.g. +44 7700 900000)"
             required
+            validator
             onInput={(e) => onFieldChange('telephone', (e.target as HTMLInputElement).value)}
           />
-        </FormField>
+        </Fieldset>
 
-        <FormField label="Dietary Requirements & Special Requests (Optional)" htmlFor="dietary">
+        <Fieldset label="Dietary Requirements & Special Requests (Optional)">
           <Textarea
             id="dietary"
             name="dietary"
             value={formData.dietary}
-            rows={3}
             maxLength={500}
             onInput={(e) => onFieldChange('dietary', (e.target as HTMLTextAreaElement).value)}
           />
-        </FormField>
+        </Fieldset>
 
         {submitError && (
-          <MessageCard variant="error" title="Error">
+          <Alert variant="error" title="Error" headingLevel={null} live="assertive">
             <p>{submitError}</p>
-          </MessageCard>
+          </Alert>
         )}
 
-        <Button type="submit" variant="primary" fullWidth isLoading={isSubmitting}>
+        <Button type="submit" variant="primary" block isLoading={isSubmitting}>
           {isSubmitting ? 'Booking...' : 'Book Now'}
         </Button>
       </form>

@@ -1,9 +1,11 @@
 ﻿import { useSignal } from '@preact/signals';
-import type { FunctionComponent } from 'preact';
+import type { ComponentChildren, FunctionComponent } from 'preact';
 import type { BookingFormData, CalendarDate, TenantConfig } from '@shared/types';
-import { FormField, SelectedDateInfo, Select, Button, Spinner } from '@shared/components';
+import { SelectedDateInfo } from '@shared/components';
+import { Alert, Button, Fieldset, Loading, Select } from '@shared/components/ui';
+import { ArrowRight, X } from '@shared/components/ui/icons';
 import { getAvailableSlots, isStandaloneMode } from '@shared/utils';
-import styles from './Step1Form.module.css';
+import { cx } from '@shared/utils/cx';
 
 const LARGE_PARTY_SENTINEL = 'large';
 
@@ -20,6 +22,20 @@ type Step1FormProps = {
   onNext: () => void;
   onChangeDate: () => void;
 };
+
+/** A field's caption over a message, for when there is no control to label (loading, or nothing to choose). */
+const FieldMessage: FunctionComponent<{ caption: string; children: ComponentChildren }> = ({ caption, children }) => (
+  // Spacing matches ui/Fieldset, so nothing shifts when a message turns into a control.
+  <div class="grid gap-1.5 py-1 text-sm">
+    <p class="mt-0 -mb-1 py-2 font-semibold">
+      {caption}
+      <span aria-hidden="true"> *</span>
+    </p>
+    {children}
+  </div>
+);
+
+const NO_AVAILABILITY = 'No availability remaining for this date. Please select a different date or call us to arrange your booking.';
 
 export const Step1Form: FunctionComponent<Step1FormProps> = ({
   date,
@@ -71,24 +87,30 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
   const isValid = !isLargeParty && formData.guests >= 2 && formData.guests <= effectiveMaxGuests && formData.time !== '';
 
   return (
-    <div class={styles.content} style={isStandaloneMode() ? 'max-width: 520px; margin: 2rem auto' : undefined}>
-      <div class={styles.nav}>
-        <div class={styles.stepIndicator}>Step 1 of 2</div>
-        <button type="button" class={styles.closeBtn} aria-label="Close booking form" onClick={onChangeDate}>
-          &#10006;
-        </button>
+    <div class={cx('p-6 motion-safe:animate-slide-in', isStandaloneMode() && 'mx-auto my-8 max-w-[520px]')}>
+      <div class="mb-4 flex items-center justify-end gap-3">
+        <div class="bg-base-200 text-accent rounded-field px-4 py-2 text-sm font-semibold">Step 1 of 2</div>
+        <Button
+          variant="ghost"
+          shape="square"
+          class="[--btn-bg:var(--color-base-200)] hover:[--btn-bg:var(--color-base-300)]"
+          aria-label="Close booking form"
+          onClick={onChangeDate}
+        >
+          <X />
+        </Button>
       </div>
 
       <SelectedDateInfo date={date} />
 
-      <form id="booking-form-step1" class={styles.form}>
-        <FormField label="Number of Guests" htmlFor="guests" required>
-          {effectiveMaxGuests < 2 ? (
-            <p class={`${styles.inlineHelper} ${styles.inlineHelperError}`}>
-              No availability remaining for this date. Please select a different date or call us to arrange your booking.
-            </p>
-          ) : (
-            <>
+      <form id="booking-form-step1" class="grid gap-4">
+        {effectiveMaxGuests < 2 ? (
+          <FieldMessage caption="Number of Guests">
+            <p class="text-error m-0">{NO_AVAILABILITY}</p>
+          </FieldMessage>
+        ) : (
+          <div class="grid gap-2">
+            <Fieldset label="Number of Guests" required>
               <Select
                 id="guests"
                 name="guests"
@@ -97,32 +119,31 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
                 required
                 onChange={handleGuestChange}
               />
-              {isLargeParty && (
-                <div
-                  role="alert"
-                  style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:13px;color:#664d03;max-width: 800px;"
-                >
-                  <p>
-                    <strong>For bookings of {callThreshold} or more guests, please call the venue directly.</strong>
-                  </p>
-                </div>
-              )}
-            </>
-          )}
-        </FormField>
+            </Fieldset>
+            {isLargeParty && (
+              <Alert variant="warning" live="assertive">
+                <p>
+                  <strong>For bookings of {callThreshold} or more guests, please call the venue directly.</strong>
+                </p>
+              </Alert>
+            )}
+          </div>
+        )}
 
-        {!isLargeParty && (
-          <FormField label="Time" htmlFor="time" required>
-            {isFetchingTimes ? (
-              <div class={styles.loadingIndicator}>
-                <Spinner size="sm" label="Loading available times" />
-                <span>Loading times...</span>
+        {!isLargeParty &&
+          (isFetchingTimes ? (
+            <FieldMessage caption="Time">
+              <div class="flex items-center gap-3">
+                <Loading size="sm" label="Loading available times" />
+                <span aria-hidden="true">Loading times...</span>
               </div>
-            ) : effectiveMaxGuests < 2 ? (
-              <p class={`${styles.inlineHelper} ${styles.inlineHelperError}`}>
-                No availability remaining for this date. Please select a different date or call us to arrange your booking.
-              </p>
-            ) : availableSlots.length > 0 ? (
+            </FieldMessage>
+          ) : effectiveMaxGuests < 2 ? (
+            <FieldMessage caption="Time">
+              <p class="text-error m-0">{NO_AVAILABILITY}</p>
+            </FieldMessage>
+          ) : availableSlots.length > 0 ? (
+            <Fieldset label="Time" required>
               <Select
                 id="time"
                 name="time"
@@ -132,16 +153,18 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
                 required
                 onChange={(e) => onTimeChange((e.target as HTMLSelectElement).value)}
               />
-            ) : (
-              <p class={`${styles.inlineHelper} ${styles.inlineHelperError}`}>
+            </Fieldset>
+          ) : (
+            <FieldMessage caption="Time">
+              <p class="text-error m-0">
                 No times available for this date with {formData.guests} guests. Try a different date or fewer guests.
               </p>
-            )}
-          </FormField>
-        )}
+            </FieldMessage>
+          ))}
 
-        <Button type="button" variant="primary" fullWidth disabled={!isValid} onClick={onNext}>
-          Next &rarr;
+        <Button variant="primary" block disabled={!isValid} onClick={onNext}>
+          Next
+          <ArrowRight />
         </Button>
       </form>
     </div>
