@@ -1,4 +1,4 @@
-import '@shared/styles/app.css';
+import '@shared/styles/public.css';
 import { render } from 'preact';
 import { CancelApp } from './CancelApp';
 

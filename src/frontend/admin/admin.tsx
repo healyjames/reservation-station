@@ -1,4 +1,4 @@
-import '@shared/styles/app.css';
+import '@shared/styles/admin.css';
 import { render } from 'preact';
 import { AdminApp } from './AdminApp';
 

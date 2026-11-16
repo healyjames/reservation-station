@@ -100,8 +100,8 @@
    SEMANTIC TOKENS
    ============================================================ */
 /* Tokens that public/js/theme.js used to set inline now come from the active daisyUI theme
-   (src/frontend/shared/styles/themes.css, chosen by <html data-theme>), so this file only resolves alongside the
-   shared/styles/app.css bundle that every entry imports. Removed in subtask 40. */
+   (src/frontend/shared/styles/themes-public.css or themes-admin.css, chosen by <html data-theme>), so this file only
+   resolves alongside the public.css or admin.css bundle that every entry imports. Removed in subtask 40. */
 :root {
   /* Primary */
   --primary-darkest: var(--clr-primary-a0);

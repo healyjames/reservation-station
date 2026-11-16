@@ -18,7 +18,7 @@ export type ThemeControllerProps = Omit<SwapCheckboxProps, OwnedProps> & {
 /**
  * "Dark mode" toggle: switches `<html data-theme>` between two daisyUI themes. Its initial state is read from the
  * current `data-theme` (set before first paint by public/js/theme.js); anything other than `lightTheme` counts as dark,
- * matching the dark default of theme.js and themes.css. It stores nothing.
+ * matching the dark default of theme.js and the theme files. It stores nothing.
  *
  * One instance per page: changes to `data-theme` made elsewhere are not tracked. It does not use daisyUI's CSS
  * `theme-controller` input, whose `:root:has(...)` state lives only in the checkbox and would fight theme.js.

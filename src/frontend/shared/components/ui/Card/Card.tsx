@@ -43,7 +43,7 @@ const Card: FunctionComponent<CardProps> = ({
   ...rest
 }) => (
   <Root {...rest} class={cx('card', bordered && 'card-border', className)}>
-    {/* app.css restores browser margins on headings and paragraphs; card-body's gap does the spacing, so direct
+    {/* base.css restores browser margins on headings and paragraphs; card-body's gap does the spacing, so direct
         children drop theirs. daisyUI grows `.card-body p` to fill spare height, which a `p` title must not. */}
     <div class="card-body *:my-0">
       {title && TitleTag && <TitleTag class="card-title grow-0">{title}</TitleTag>}

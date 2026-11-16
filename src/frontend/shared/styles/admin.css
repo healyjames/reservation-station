@@ -1,0 +1,22 @@
+/*
+ * CSS entry for the admin area. The public pages have their own entry, public.css.
+ * Tailwind only generates classes found in the files listed below. Admin reuses the widget calendar (BookingWidget).
+ * The legacy components admin still uses (Button, FormField, Modal...) are styled by their CSS modules, not Tailwind,
+ * so they are not scanned; give a legacy component a Tailwind class only after adding its folder here.
+ */
+@import 'tailwindcss' source(none);
+
+@source '../../admin';
+@source '../components/Admin';
+@source '../components/BookingWidget';
+@source '../components/ui';
+@source '../hooks';
+@source '../utils';
+@source not '../../**/*.test.{ts,tsx}';
+
+/* daisyUI components only; the built-in themes are not shipped. */
+@plugin 'daisyui' {
+  themes: false;
+}
+@import './themes-admin.css';
+@import './base.css';

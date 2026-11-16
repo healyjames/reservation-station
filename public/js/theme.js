@@ -1,4 +1,5 @@
-// Pick the daisyUI theme before first paint. The themes are defined in src/frontend/shared/styles/themes.css.
+// Pick the daisyUI theme before first paint. The themes are defined in src/frontend/shared/styles/themes-public.css
+// (palettes) and themes-admin.css (admin).
 // Public pages: ?theme=<palette>&mode=<light|dark>, giving data-theme="<palette>-<mode>".
 // Admin (script tag has data-theme-scope="admin"): ignores ?theme= and uses admin-<mode>.
 // Mode defaults to dark; the URL decides it, not the OS preference.

@@ -1,7 +1,7 @@
 /*
- * Themes. Generated from the palettes that public/js/theme.js used to inline (6 palettes x light/dark), plus the admin themes.
- * theme.js now only sets <html data-theme>. Status colours come from the --clr-* palette in public/styles.css.
- * *-content colours are chosen for contrast (black or white).
+ * Public page themes (widget, manage, cancel): 6 palettes x light/dark, generated from the palettes that public/js/theme.js
+ * used to inline. theme.js only sets <html data-theme>. Status colours come from the --clr-* palette in public/styles.css.
+ * *-content colours are chosen for contrast (black or white). Imported only by public.css.
  */
 
 @plugin 'daisyui/theme' {
@@ -494,87 +494,4 @@
   --legacy-primary-lightest: #36443a;
   --legacy-primary-darker: #5a6b5e;
   --legacy-grey-lightest: #1a1a1a;
-}
-
-/* Admin themes. Copies of default-* for now (plan open question 1: admin palette). */
-@plugin 'daisyui/theme' {
-  name: 'admin-light';
-  default: false;
-  prefersdark: false;
-  color-scheme: light;
-  --color-base-100: #f3ede8;
-  --color-base-200: #faf7f5;
-  --color-base-300: #c8b8ae;
-  --color-base-content: #1c1412;
-  --color-primary: #266663;
-  --color-primary-content: #ffffff;
-  --color-secondary: #1c1412;
-  --color-secondary-content: #ffffff;
-  --color-accent: #548380;
-  --color-accent-content: #000000;
-  --color-neutral: #1c1412;
-  --color-neutral-content: #f3ede8;
-  --color-info: #4077d1;
-  --color-info-content: #000000;
-  --color-success: #47d5a6;
-  --color-success-content: #000000;
-  --color-warning: #d7ac61;
-  --color-warning-content: #000000;
-  --color-error: #d94a4a;
-  --color-error-content: #000000;
-  --radius-selector: 0.25rem;
-  --radius-field: 0.25rem;
-  --radius-box: 0.5rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
-  --border: 1px;
-  --depth: 0;
-  --noise: 0;
-  /* Exact legacy shades for the public/styles.css bridge. Remove in subtask 40. */
-  --legacy-primary-light: #3e7471;
-  --legacy-primary-lighter: #548380;
-  --legacy-primary-lightest: #69928f;
-  --legacy-primary-darker: #1c1412;
-  --legacy-grey-lightest: #f5f5f5;
-}
-
-@plugin 'daisyui/theme' {
-  name: 'admin-dark';
-  default: false;
-  prefersdark: false;
-  color-scheme: dark;
-  --color-base-100: #121212;
-  --color-base-200: #282828;
-  --color-base-300: #0a0a0a;
-  --color-base-content: #e9efee;
-  --color-primary: #266663;
-  --color-primary-content: #ffffff;
-  --color-secondary: #bdcfce;
-  --color-secondary-content: #000000;
-  --color-accent: #548380;
-  --color-accent-content: #000000;
-  --color-neutral: #e9efee;
-  --color-neutral-content: #121212;
-  --color-info: #4077d1;
-  --color-info-content: #000000;
-  --color-success: #47d5a6;
-  --color-success-content: #000000;
-  --color-warning: #d7ac61;
-  --color-warning-content: #000000;
-  --color-error: #d94a4a;
-  --color-error-content: #000000;
-  --radius-selector: 0.25rem;
-  --radius-field: 0.25rem;
-  --radius-box: 0.5rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
-  --border: 1px;
-  --depth: 0;
-  --noise: 0;
-  /* Exact legacy shades for the public/styles.css bridge. Remove in subtask 40. */
-  --legacy-primary-light: #3e7471;
-  --legacy-primary-lighter: #548380;
-  --legacy-primary-lightest: #69928f;
-  --legacy-primary-darker: #bdcfce;
-  --legacy-grey-lightest: #2e1e1c;
 }

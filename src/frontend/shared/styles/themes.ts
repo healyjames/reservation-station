@@ -1,5 +1,5 @@
-// The daisyUI theme names defined in ./themes.css. Keep in step with PALETTES in public/js/theme.js (plain JS, so it
-// cannot import this).
+// The daisyUI theme names defined in ./themes-public.css and ./themes-admin.css. Keep in step with PALETTES in
+// public/js/theme.js (plain JS, so it cannot import this).
 
 export type ThemeMode = 'light' | 'dark';
 

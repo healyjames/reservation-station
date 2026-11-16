@@ -1,11 +1,7 @@
-@import 'tailwindcss' source(none);
-@source '../../**/*.{ts,tsx,html}';
-
-/* daisyUI components only; the built-in themes are not shipped. Our themes live in themes.css. */
-@plugin 'daisyui' {
-  themes: false;
-}
-@import './themes.css';
+/*
+ * Shared by public.css and admin.css: font, animations, the browser defaults the UI relies on, and the scrollbar reset.
+ * Import it after the daisyUI plugin and the theme file.
+ */
 
 @theme {
   --font-sans: 'Google Sans', sans-serif;

@@ -1,0 +1,43 @@
+/*
+ * CSS entry for the public pages (booking widget, manage booking, cancel). Admin has its own entry, admin.css.
+ * Tailwind only generates classes found in the files listed below, so admin-only components never reach these pages.
+ * When a public page starts using another ui/ component, add its folder here.
+ */
+@import 'tailwindcss' source(none);
+
+@source '../../index.html';
+@source '../../booking-widget';
+@source '../../booking';
+@source '../../cancel';
+@source '../components/BookingWidget';
+@source '../components/BookingManage';
+@source '../components/Cancel';
+@source '../components/StandaloneLayout';
+@source '../components/BookingDetailsList';
+@source '../components/SelectedDateInfo';
+@source '../components/ui/Alert';
+@source '../components/ui/Button';
+@source '../components/ui/Calendar';
+@source '../components/ui/Card';
+@source '../components/ui/Fieldset';
+@source '../components/ui/Input';
+@source '../components/ui/Join';
+@source '../components/ui/List';
+@source '../components/ui/Loading';
+@source '../components/ui/Select';
+@source '../components/ui/Status';
+@source '../components/ui/Textarea';
+@source '../components/ui/Tooltip';
+@source '../components/ui/icons';
+@source '../hooks';
+@source '../utils';
+@source not '../../**/*.test.{ts,tsx}';
+/* Admin-only daisyUI components. Plain words in public copy and props ("book your table", the Menu icon's name) would otherwise generate them. */
+@source not inline('badge drawer menu modal navbar stat swap table toggle');
+
+/* daisyUI components only; the built-in themes are not shipped. */
+@plugin 'daisyui' {
+  themes: false;
+}
+@import './themes-public.css';
+@import './base.css';

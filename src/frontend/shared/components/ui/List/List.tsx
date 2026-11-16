@@ -33,7 +33,7 @@ const VALUE_CLASSES: Record<ListLayout, string> = {
 
 /** daisyUI list as a description list: one `list-row` per term/value pair. */
 const List: FunctionComponent<ListProps> = ({ items, layout = 'inline', class: className, ...rest }) => (
-  // app.css restores browser margins on dl/dd; spacing around the list is the consumer's.
+  // base.css restores browser margins on dl/dd; spacing around the list is the consumer's.
   <dl {...rest} class={cx('list m-0', className)}>
     {items
       .filter((item): item is ListItem => Boolean(item))
