@@ -1,11 +1,13 @@
-﻿import { useRef } from 'preact/hooks';
+import { useRef } from 'preact/hooks';
 import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { Signal } from '@preact/signals';
 import type { TenantConfig } from '@shared/types';
-import { StandaloneLayout, Input, Select, Textarea, FormField, Button, MessageCard } from '@shared/components';
 import type { EditData } from '@shared/types';
-import styles from './EditDetails.module.css';
+import { StandaloneLayout } from '@shared/components';
+import { Button, Fieldset, Input, Select, Textarea } from '@shared/components/ui';
+import { ArrowLeft } from '@shared/components/ui/icons';
+import { ErrorAlert } from './ErrorAlert';
 
 type EditDetailsProps = {
   editData: Signal<EditData | null>;
@@ -59,17 +61,13 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
   return (
     <StandaloneLayout title="Edit Details">
       <p>Update your contact information and guest count.</p>
-      {errorMessage.value && (
-        <MessageCard variant="error" title="Something went wrong">
-          <p>{errorMessage.value}</p>
-        </MessageCard>
-      )}
-      <form class={styles.form} ref={formRef} onSubmit={handleSubmit}>
-        <FormField label="First Name" htmlFor="edit-first-name" required>
+      <ErrorAlert message={errorMessage.value} />
+      <form class="flex flex-col gap-4" ref={formRef} onSubmit={handleSubmit}>
+        <Fieldset label="First Name" required>
           <Input
             id="edit-first-name"
+            validator
             name="first_name"
-            type="text"
             value={firstName.value}
             maxLength={50}
             autocomplete="given-name"
@@ -78,12 +76,12 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
               firstName.value = (e.target as HTMLInputElement).value;
             }}
           />
-        </FormField>
-        <FormField label="Surname" htmlFor="edit-surname" required>
+        </Fieldset>
+        <Fieldset label="Surname" required>
           <Input
             id="edit-surname"
+            validator
             name="surname"
-            type="text"
             value={surname.value}
             maxLength={50}
             autocomplete="family-name"
@@ -92,10 +90,11 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
               surname.value = (e.target as HTMLInputElement).value;
             }}
           />
-        </FormField>
-        <FormField label="Phone Number" htmlFor="edit-telephone" required>
+        </Fieldset>
+        <Fieldset label="Phone Number" required>
           <Input
             id="edit-telephone"
+            validator
             name="telephone"
             type="tel"
             value={telephone.value}
@@ -108,10 +107,11 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
               telephone.value = (e.target as HTMLInputElement).value;
             }}
           />
-        </FormField>
-        <FormField label="Email" htmlFor="edit-email" required>
+        </Fieldset>
+        <Fieldset label="Email" required>
           <Input
             id="edit-email"
+            validator
             name="email"
             type="email"
             value={email.value}
@@ -121,20 +121,19 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
               email.value = (e.target as HTMLInputElement).value;
             }}
           />
-        </FormField>
-        <FormField label="Dietary Requirements & Special Requests (Optional)" htmlFor="edit-dietary">
+        </Fieldset>
+        <Fieldset label="Dietary Requirements & Special Requests (Optional)">
           <Textarea
             id="edit-dietary"
             name="dietary_requirements"
             value={dietary.value}
-            rows={3}
             maxLength={500}
             onInput={(e) => {
               dietary.value = (e.target as HTMLTextAreaElement).value;
             }}
           />
-        </FormField>
-        <FormField label="Number of Guests" htmlFor="edit-guests">
+        </Fieldset>
+        <Fieldset label="Number of Guests">
           <Select
             id="edit-guests"
             name="guests"
@@ -145,10 +144,11 @@ export const EditDetails: FunctionComponent<EditDetailsProps> = ({
               guests.value = parseInt((e.target as HTMLSelectElement).value, 10);
             }}
           />
-        </FormField>
-        <div class={styles.action_group}>
-          <Button type="button" variant="secondary" onClick={goToOverview}>
-            ← Back
+        </Fieldset>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <Button onClick={goToOverview}>
+            <ArrowLeft />
+            Back
           </Button>
           <Button type="submit" variant="primary" isLoading={isSaving.value}>
             {isSaving.value ? 'Saving...' : 'Save Changes'}

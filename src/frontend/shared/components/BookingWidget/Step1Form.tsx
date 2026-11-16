@@ -1,8 +1,8 @@
 ﻿import { useSignal } from '@preact/signals';
-import type { ComponentChildren, FunctionComponent } from 'preact';
+import type { FunctionComponent } from 'preact';
 import type { BookingFormData, CalendarDate, TenantConfig } from '@shared/types';
 import { SelectedDateInfo } from '@shared/components';
-import { Alert, Button, Fieldset, Loading, Select } from '@shared/components/ui';
+import { Alert, Button, Fieldset, FieldsetMessage, Loading, Select } from '@shared/components/ui';
 import { ArrowRight, X } from '@shared/components/ui/icons';
 import { getAvailableSlots, isStandaloneMode } from '@shared/utils';
 import { cx } from '@shared/utils/cx';
@@ -22,18 +22,6 @@ type Step1FormProps = {
   onNext: () => void;
   onChangeDate: () => void;
 };
-
-/** A field's caption over a message, for when there is no control to label (loading, or nothing to choose). */
-const FieldMessage: FunctionComponent<{ caption: string; children: ComponentChildren }> = ({ caption, children }) => (
-  // Spacing matches ui/Fieldset, so nothing shifts when a message turns into a control.
-  <div class="grid gap-1.5 py-1 text-sm">
-    <p class="mt-0 -mb-1 py-2 font-semibold">
-      {caption}
-      <span aria-hidden="true"> *</span>
-    </p>
-    {children}
-  </div>
-);
 
 const NO_AVAILABILITY = 'No availability remaining for this date. Please select a different date or call us to arrange your booking.';
 
@@ -105,9 +93,9 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
 
       <form id="booking-form-step1" class="grid gap-4">
         {effectiveMaxGuests < 2 ? (
-          <FieldMessage caption="Number of Guests">
+          <FieldsetMessage label="Number of Guests" required>
             <p class="text-error m-0">{NO_AVAILABILITY}</p>
-          </FieldMessage>
+          </FieldsetMessage>
         ) : (
           <div class="grid gap-2">
             <Fieldset label="Number of Guests" required>
@@ -132,16 +120,16 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
 
         {!isLargeParty &&
           (isFetchingTimes ? (
-            <FieldMessage caption="Time">
+            <FieldsetMessage label="Time" required>
               <div class="flex items-center gap-3">
                 <Loading size="sm" label="Loading available times" />
                 <span aria-hidden="true">Loading times...</span>
               </div>
-            </FieldMessage>
+            </FieldsetMessage>
           ) : effectiveMaxGuests < 2 ? (
-            <FieldMessage caption="Time">
+            <FieldsetMessage label="Time" required>
               <p class="text-error m-0">{NO_AVAILABILITY}</p>
-            </FieldMessage>
+            </FieldsetMessage>
           ) : availableSlots.length > 0 ? (
             <Fieldset label="Time" required>
               <Select
@@ -155,11 +143,11 @@ export const Step1Form: FunctionComponent<Step1FormProps> = ({
               />
             </Fieldset>
           ) : (
-            <FieldMessage caption="Time">
+            <FieldsetMessage label="Time" required>
               <p class="text-error m-0">
                 No times available for this date with {formData.guests} guests. Try a different date or fewer guests.
               </p>
-            </FieldMessage>
+            </FieldsetMessage>
           ))}
 
         <Button variant="primary" block disabled={!isValid} onClick={onNext}>

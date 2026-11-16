@@ -1,9 +1,10 @@
 ﻿import type { FunctionComponent } from 'preact';
 import type { Signal } from '@preact/signals';
 import type { Reservation } from '@shared/types';
-import { StandaloneLayout, BookingDetailsList, Button, MessageCard } from '@shared/components';
+import { StandaloneLayout, BookingDetailsList } from '@shared/components';
+import { Button } from '@shared/components/ui';
 import { formatDate, getFullName, getGuestsLabel } from '@shared/utils';
-import styles from './Overview.module.css';
+import { ErrorAlert } from './ErrorAlert';
 
 type OverviewProps = {
   reservation: Signal<Reservation | null>;
@@ -32,21 +33,15 @@ export const Overview: FunctionComponent<OverviewProps> = ({
   return (
     <StandaloneLayout title="Manage your booking">
       <p>View, edit, or cancel your reservation.</p>
-      {errorMessage.value && (
-        <MessageCard variant="error" title="Something went wrong">
-          <p>{errorMessage.value}</p>
-        </MessageCard>
-      )}
+      <ErrorAlert message={errorMessage.value} />
       <BookingDetailsList details={details} />
-      <div class={styles.action_group}>
+      <div class="grid gap-3 sm:grid-cols-2">
         <Button variant="primary" onClick={goToEditDetails}>
           Edit Details
         </Button>
-        <Button variant="secondary" onClick={() => goToChangeDatetime()}>
-          Change Date &amp; Time
-        </Button>
+        <Button onClick={() => goToChangeDatetime()}>Change Date &amp; Time</Button>
       </div>
-      <Button variant="danger" fullWidth onClick={goToCancelConfirm}>
+      <Button variant="error" block onClick={goToCancelConfirm}>
         Cancel Booking
       </Button>
     </StandaloneLayout>

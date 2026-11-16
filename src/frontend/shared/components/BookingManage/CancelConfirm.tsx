@@ -2,9 +2,10 @@
 import type { FunctionComponent } from 'preact';
 import type { Signal } from '@preact/signals';
 import type { Reservation } from '@shared/types';
-import { StandaloneLayout, BookingDetailsList, Button, MessageCard } from '@shared/components';
+import { StandaloneLayout, BookingDetailsList } from '@shared/components';
+import { Button } from '@shared/components/ui';
 import { formatDate, getFullName, getGuestsLabel } from '@shared/utils';
-import styles from './CancelConfirm.module.css';
+import { ErrorAlert } from './ErrorAlert';
 
 type CancelConfirmProps = {
   reservation: Signal<Reservation | null>;
@@ -33,17 +34,13 @@ export const CancelConfirm: FunctionComponent<CancelConfirmProps> = ({ reservati
   return (
     <StandaloneLayout title="Cancel Booking">
       <p>Are you sure you want to cancel this reservation?</p>
-      {errorMessage.value && (
-        <MessageCard variant="error" title="Something went wrong">
-          <p>{errorMessage.value}</p>
-        </MessageCard>
-      )}
+      <ErrorAlert message={errorMessage.value} />
       <BookingDetailsList details={details} />
-      <div class={styles.action_group}>
+      <div class="grid gap-3 sm:grid-cols-2">
         <Button variant="ghost" onClick={goToOverview}>
           Keep My Booking
         </Button>
-        <Button variant="danger" isLoading={isCancelling.value} onClick={handleCancel}>
+        <Button variant="error" isLoading={isCancelling.value} onClick={handleCancel}>
           {isCancelling.value ? 'Cancelling...' : 'Cancel My Booking'}
         </Button>
       </div>

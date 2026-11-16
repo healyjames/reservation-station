@@ -1,21 +1,17 @@
-﻿import { useSignal } from '@preact/signals';
+import { useEffect } from 'preact/hooks';
+import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { Signal } from '@preact/signals';
 import type { TenantConfig, CalendarDate } from '@shared/types';
 import { MONTH_NAMES } from '@constants';
-import {
-  StandaloneLayout,
-  CalendarGrid,
-  Tooltip,
-  SelectedDateInfo,
-  Select,
-  Button,
-  Spinner,
-  MessageCard,
-  FormField,
-} from '@shared/components';
+import { StandaloneLayout, SelectedDateInfo } from '@shared/components';
+import { Button, Calendar, Fieldset, FieldsetMessage, FloatingTooltip, Join, Loading, Select } from '@shared/components/ui';
+import { ArrowLeft, ChevronLeft, ChevronRight } from '@shared/components/ui/icons';
 import { getAvailableSlots } from '@shared/utils';
-import styles from './ChangeDateTime.module.css';
+import { ErrorAlert } from './ErrorAlert';
+
+const BLOCKED_MESSAGE = 'Bookings currently unavailable for this date';
+const BLOCKED_TIP_MS = 3000;
 
 type ChangeDateTimeProps = {
   tenantConfig: Signal<TenantConfig | null>;
@@ -53,9 +49,13 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
   fetchBlockedDatesForMonth,
   selectDate,
 }) => {
-  const tooltipVisible = useSignal(false);
-  const tooltipAnchorRect = useSignal<DOMRect | null>(null);
+  const tooltipAnchor = useSignal<HTMLElement | null>(null);
   const isSaving = useSignal(false);
+
+  // Day cells are reused across months, so an open tip would end up on the same day number of the new month.
+  useEffect(() => {
+    tooltipAnchor.value = null;
+  }, [calYear.value, calMonth.value]);
 
   const today = new Date();
   const todayYear = today.getFullYear();
@@ -79,16 +79,13 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
     return blockedDates.value.has(dateStr);
   }
 
-  function handleBlockedSelect(_y: number, _m: number, _d: number, el: HTMLDivElement) {
-    tooltipAnchorRect.value = el.getBoundingClientRect();
-    tooltipVisible.value = true;
-    setTimeout(() => {
-      tooltipVisible.value = false;
-    }, 3000);
+  function handleBlockedSelect(_y: number, _m: number, _d: number, el: HTMLElement) {
+    tooltipAnchor.value = el;
   }
 
   async function prevMonth() {
     if (calYear.value === todayYear && calMonth.value === todayMonth) return;
+    tooltipAnchor.value = null;
     let newMonth = calMonth.value - 1;
     let newYear = calYear.value;
     if (newMonth < 0) {
@@ -101,6 +98,7 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
   }
 
   async function nextMonth() {
+    tooltipAnchor.value = null;
     let newMonth = calMonth.value + 1;
     let newYear = calYear.value;
     if (newMonth > 11) {
@@ -117,6 +115,7 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
   const timeOptions = available.map((s) => ({ value: s, label: s }));
   const canSave = !!(selectedDate.value && selectedTime.value);
   const onCurrentMonth = calYear.value === todayYear && calMonth.value === todayMonth;
+  const tooltipOpen = tooltipAnchor.value !== null;
 
   async function handleSave() {
     isSaving.value = true;
@@ -126,30 +125,26 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
 
   return (
     <StandaloneLayout title="Change Date & Time">
-      <p class={styles.subtitle}>Choose a new date and time for your reservation.</p>
-      {errorMessage.value && (
-        <MessageCard variant="error" title="Something went wrong">
-          <p>{errorMessage.value}</p>
-        </MessageCard>
-      )}
+      <p class="m-0">Choose a new date and time for your reservation.</p>
+      <ErrorAlert message={errorMessage.value} />
 
       {selectedDate.value && <SelectedDateInfo date={selectedDate.value} hideLabel={true} />}
 
-      <div class={styles.container} role="region" aria-label="Date picker">
-        <div class={styles.header}>
-          <h2>
+      <div class="bg-base-100 rounded-field w-full p-6 max-[480px]:p-4" role="region" aria-label="Date picker">
+        <div class="mb-6 flex items-center justify-between">
+          <h2 class="m-0 text-2xl">
             {MONTH_NAMES[calMonth.value]} {calYear.value}
           </h2>
-          <div class={styles.nav}>
-            <button type="button" class={styles.nav_btn} aria-label="Previous month" disabled={onCurrentMonth} onClick={prevMonth}>
-              &#8592;
-            </button>
-            <button type="button" class={styles.nav_btn} aria-label="Next month" onClick={nextMonth}>
-              &#8594;
-            </button>
-          </div>
+          <Join>
+            <Button class="join-item" shape="square" aria-label="Previous month" disabled={onCurrentMonth} onClick={prevMonth}>
+              <ChevronLeft />
+            </Button>
+            <Button class="join-item" shape="square" aria-label="Next month" onClick={nextMonth}>
+              <ChevronRight />
+            </Button>
+          </Join>
         </div>
-        <CalendarGrid
+        <Calendar
           year={calYear.value}
           month={calMonth.value}
           selectedDate={selectedDate.value}
@@ -158,48 +153,54 @@ export const ChangeDateTime: FunctionComponent<ChangeDateTimeProps> = ({
           onSelect={(y, m, d) => selectDate(y, m, d)}
           onBlockedSelect={handleBlockedSelect}
         />
-        <Tooltip
-          visible={tooltipVisible.value}
-          message="Bookings currently unavailable for this date"
-          anchorRect={tooltipAnchorRect.value}
+        <FloatingTooltip
+          open={tooltipOpen}
+          anchor={tooltipAnchor.value}
+          timeout={BLOCKED_TIP_MS}
           onClose={() => {
-            tooltipVisible.value = false;
+            tooltipAnchor.value = null;
           }}
-        />
+        >
+          {BLOCKED_MESSAGE}
+        </FloatingTooltip>
+        {/* A description added to the focused day is not announced, so the tip's message is also written here. */}
+        <p role="status" class="sr-only">
+          {tooltipOpen ? BLOCKED_MESSAGE : ''}
+        </p>
       </div>
 
-      {selectedDate.value && (
-        <div>
-          <FormField label="Time" htmlFor="mb-time-select">
-            {isFetchingTimes.value ? (
-              <div class={`${styles.loading_indicator} ${styles.compact_loading}`}>
-                <Spinner size="sm" label="Loading available times" />
-                <span>Loading times...</span>
-              </div>
-            ) : available.length > 0 ? (
-              <Select
-                id="mb-time-select"
-                value={selectedTime.value}
-                options={timeOptions}
-                placeholder="Select a time"
-                onChange={(e) => {
-                  selectedTime.value = (e.target as HTMLSelectElement).value;
-                }}
-              />
-            ) : (
-              <p class={`${styles.inline_helper} ${styles.inline_helper_error}`}>
-                No times available for this date. Please try a different date.
-              </p>
-            )}
-          </FormField>
-        </div>
-      )}
+      {selectedDate.value &&
+        (isFetchingTimes.value ? (
+          <FieldsetMessage label="Time">
+            <div class="flex items-center gap-3">
+              <Loading size="sm" label="Loading available times" />
+              <span aria-hidden="true">Loading times...</span>
+            </div>
+          </FieldsetMessage>
+        ) : available.length > 0 ? (
+          <Fieldset label="Time">
+            <Select
+              id="mb-time-select"
+              value={selectedTime.value}
+              options={timeOptions}
+              placeholder="Select a time"
+              onChange={(e) => {
+                selectedTime.value = (e.target as HTMLSelectElement).value;
+              }}
+            />
+          </Fieldset>
+        ) : (
+          <FieldsetMessage label="Time">
+            <p class="text-error m-0">No times available for this date. Please try a different date.</p>
+          </FieldsetMessage>
+        ))}
 
-      <div class={styles.action_group}>
-        <Button type="button" variant="secondary" onClick={goToOverview}>
-          ← Back
+      <div class="grid gap-3 sm:grid-cols-2">
+        <Button onClick={goToOverview}>
+          <ArrowLeft />
+          Back
         </Button>
-        <Button type="button" variant="primary" disabled={!canSave} isLoading={isSaving.value} onClick={handleSave}>
+        <Button variant="primary" disabled={!canSave} isLoading={isSaving.value} onClick={handleSave}>
           {isSaving.value ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>

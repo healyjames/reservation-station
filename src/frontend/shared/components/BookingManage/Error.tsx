@@ -1,6 +1,6 @@
 ﻿import type { FunctionComponent } from 'preact';
-import { StandaloneLayout, MessageCard } from '@shared/components';
-import styles from './Error.module.css';
+import { StandaloneLayout } from '@shared/components';
+import { Alert } from '@shared/components/ui';
 
 type ErrorProps = {
   message: string;
@@ -8,10 +8,10 @@ type ErrorProps = {
 
 export const Error: FunctionComponent<ErrorProps> = ({ message }) => (
   <StandaloneLayout title="Manage your booking">
-    <div class={styles.content}>
-      <MessageCard variant="error" title="Unable to load booking">
+    <div class="p-6 motion-safe:animate-slide-in">
+      <Alert variant="error" title="Unable to load booking" headingLevel={2}>
         <p>{message}</p>
-      </MessageCard>
+      </Alert>
     </div>
   </StandaloneLayout>
 );

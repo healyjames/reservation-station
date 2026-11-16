@@ -19,8 +19,8 @@ export type { SwapCheckboxProps, SwapProps, SwapState } from './Swap';
 export { default as ThemeController } from './ThemeController';
 export type { ThemeControllerProps } from './ThemeController';
 
-export { default as Fieldset } from './Fieldset';
-export type { FieldsetProps } from './Fieldset';
+export { default as Fieldset, FieldsetMessage } from './Fieldset';
+export type { FieldsetMessageProps, FieldsetProps } from './Fieldset';
 
 export { default as Input } from './Input';
 export type { InputProps, InputType } from './Input';

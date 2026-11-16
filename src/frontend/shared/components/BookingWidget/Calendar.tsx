@@ -71,6 +71,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
 
   function prevMonth() {
     if (!allowPastDates && year === todayYear && month === todayMonth) return;
+    closeTooltip();
     let newMonth = month - 1;
     let newYear = year;
     if (newMonth < 0) {
@@ -81,6 +82,7 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
   }
 
   function nextMonth() {
+    closeTooltip();
     let newMonth = month + 1;
     let newYear = year;
     if (newMonth > 11) {
