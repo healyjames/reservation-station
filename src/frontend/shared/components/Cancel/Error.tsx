@@ -1,5 +1,6 @@
 ﻿import type { FunctionComponent } from 'preact';
-import { StandaloneLayout, MessageCard } from '@shared/components';
+import { StandaloneLayout } from '@shared/components';
+import { Alert } from '@shared/components/ui';
 
 type ErrorProps = {
   message: string;
@@ -7,8 +8,8 @@ type ErrorProps = {
 
 export const Error: FunctionComponent<ErrorProps> = ({ message }) => (
   <StandaloneLayout title="Cancel your booking">
-    <MessageCard variant="error" title="Unable to cancel booking">
+    <Alert variant="error" title="Unable to cancel booking" headingLevel={2}>
       <p>{message}</p>
-    </MessageCard>
+    </Alert>
   </StandaloneLayout>
 );

@@ -1,6 +1,7 @@
 ﻿import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
-import { StandaloneLayout, BookingDetailsList, Button, MessageCard } from '@shared/components';
+import { StandaloneLayout, BookingDetailsList } from '@shared/components';
+import { Alert, Button } from '@shared/components/ui';
 import { formatDate, getFullName, getGuestsLabel } from '@shared/utils';
 
 type OverviewProps = {
@@ -26,14 +27,14 @@ export const Overview: FunctionComponent<OverviewProps> = ({ reservation, inline
       <p>Please review the booking below. If this is the one you want to cancel, use the button at the bottom of the page.</p>
 
       {inlineError && (
-        <MessageCard variant="error" title="Something went wrong">
+        <Alert variant="error" title="Something went wrong" headingLevel={null} live="assertive">
           <p>{inlineError}</p>
-        </MessageCard>
+        </Alert>
       )}
 
       <BookingDetailsList details={details} />
 
-      <Button variant="danger" fullWidth isLoading={isCancelling} onClick={onCancel}>
+      <Button variant="error" block isLoading={isCancelling} onClick={onCancel}>
         {isCancelling ? 'Cancelling...' : 'Cancel My Booking'}
       </Button>
     </StandaloneLayout>
