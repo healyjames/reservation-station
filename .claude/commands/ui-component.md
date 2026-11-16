@@ -15,7 +15,7 @@ Builds the component only. Switching screens over to it is a separate subtask.
 4. **Write** `ui/<Name>/<Name>.tsx`, `index.ts` and `<Name>.test.tsx`. Add it to `ui/index.ts` and add a row to `documentation/UI_COMPONENTS.md` (prop names only, consumers).
 5. **Tests.** Apply the `testing` skill.
 6. **Verify.**
-   - `npx vitest run --config vitest.frontend.config.ts ui/<Name>`
+   - `npx vitest run --project frontend ui/<Name>`
    - `npx tsc --noEmit -p tsconfig.frontend.json` (compare with the error list before your change; only new errors are yours)
    - `npm run build`, then grep the built `dist/assets/*.css` for every literal class in the component's `Record`s
    - `npx prettier --check --end-of-line auto` on the new files
