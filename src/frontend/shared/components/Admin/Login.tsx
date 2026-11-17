@@ -1,14 +1,15 @@
 ﻿import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
-import { FormField, Input } from '@shared/components';
 import type { UseAuthReturn } from '@shared/hooks/useAuth';
-import styles from './Login.module.css';
+import { Alert, Button, Card, Fieldset, Input } from '@shared/components/ui';
+import BrandMark from './BrandMark';
 
 type LoginProps = {
   auth: UseAuthReturn;
   onLoginSuccess: () => void;
 };
 
+/** Staff sign-in: the form on the left, a decorative brand panel on the right from md up. */
 const Login: FunctionComponent<LoginProps> = ({ auth, onLoginSuccess }) => {
   const email = useSignal('');
   const password = useSignal('');
@@ -33,75 +34,73 @@ const Login: FunctionComponent<LoginProps> = ({ auth, onLoginSuccess }) => {
   }
 
   return (
-    <div class={styles.login_layout}>
-      <main class={styles.login_panel} role="main">
-        <div class={styles.login_panel_inner}>
-          <header class={styles.login_header}>
-            <div class={styles.login_logo} aria-hidden="true">
-              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" />
-              </svg>
-            </div>
-            <h1>Staff Sign In</h1>
-            <p>Maximum Bookings Admin</p>
-          </header>
+    <div class="grid min-h-screen md:grid-cols-2">
+      <main class="bg-base-100 flex items-center justify-center p-8">
+        <Card as="section" aria-labelledby="login-title" class="w-full max-w-[360px] [--card-p:0]">
+          <div class="grid gap-6">
+            <header class="grid justify-items-center gap-3 text-center">
+              <div class="bg-base-300 text-primary flex size-12 items-center justify-center rounded-full">
+                <BrandMark class="size-6" />
+              </div>
+              <h1 id="login-title" class="m-0 text-2xl font-bold">
+                Staff Sign In
+              </h1>
+              <p class="text-base-content/70 m-0 text-sm">Maximum Bookings Admin</p>
+            </header>
 
-          {auth.showExpiredBanner.value && (
-            <div class={`${styles.alert} ${styles.alert_info}`} role="status">
-              Your session has expired. Please sign in again.
-            </div>
-          )}
+            {auth.showExpiredBanner.value && (
+              <Alert variant="info" live="polite">
+                Your session has expired. Please sign in again.
+              </Alert>
+            )}
 
-          {errorMessage.value && (
-            <div class={`${styles.alert} ${styles.alert_error}`} role="alert" aria-live="assertive">
-              {errorMessage.value}
-            </div>
-          )}
+            {errorMessage.value && (
+              <Alert variant="error" live="assertive">
+                {errorMessage.value}
+              </Alert>
+            )}
 
-          <form class={styles.form} noValidate onSubmit={handleSubmit}>
-            <FormField label="Email address" htmlFor="login-email" required>
-              <Input
-                type="email"
-                id="login-email"
-                name="email"
-                autocomplete="username"
-                required
-                placeholder="you@example.com"
-                value={email.value}
-                onInput={(e) => {
-                  email.value = (e.target as HTMLInputElement).value;
-                }}
-              />
-            </FormField>
-            <FormField label="Password" htmlFor="login-password" required>
-              <Input
-                type="password"
-                id="login-password"
-                name="password"
-                autocomplete="current-password"
-                required
-                placeholder="••••••••"
-                value={password.value}
-                onInput={(e) => {
-                  password.value = (e.target as HTMLInputElement).value;
-                }}
-              />
-            </FormField>
-            <button
-              type="submit"
-              class={`${styles.btn_primary}${isSubmitting.value ? ` ${styles.loading}` : ''}`}
-              disabled={isSubmitting.value}
-            >
-              {isSubmitting.value ? 'Signing in…' : 'Sign in'}
-            </button>
-          </form>
+            <form class="flex flex-col gap-4" noValidate onSubmit={handleSubmit}>
+              <Fieldset label="Email address" required>
+                <Input
+                  type="email"
+                  id="login-email"
+                  name="email"
+                  autocomplete="username"
+                  required
+                  placeholder="you@example.com"
+                  value={email.value}
+                  onInput={(e) => {
+                    email.value = (e.target as HTMLInputElement).value;
+                  }}
+                />
+              </Fieldset>
+              <Fieldset label="Password" required>
+                <Input
+                  type="password"
+                  id="login-password"
+                  name="password"
+                  autocomplete="current-password"
+                  required
+                  placeholder="••••••••"
+                  value={password.value}
+                  onInput={(e) => {
+                    password.value = (e.target as HTMLInputElement).value;
+                  }}
+                />
+              </Fieldset>
+              <Button type="submit" variant="primary" block isLoading={isSubmitting.value}>
+                {isSubmitting.value ? 'Signing in…' : 'Sign in'}
+              </Button>
+            </form>
 
-          <footer class={styles.login_footer}>
-            <p>Staff access only. Not a member? Contact your manager.</p>
-          </footer>
-        </div>
+            <footer class="text-base-content/70 text-center text-[0.8rem]">
+              <p class="m-0">Staff access only. Not a member? Contact your manager.</p>
+            </footer>
+          </div>
+        </Card>
       </main>
-      <aside class={styles.login_brand} aria-hidden="true" />
+      <aside class="from-base-300 to-primary/40 hidden bg-linear-135 md:block" aria-hidden="true" />
     </div>
   );
 };
