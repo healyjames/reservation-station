@@ -4,9 +4,9 @@ import type { Reservation } from '@shared/types';
 import type { UseAuthReturn } from '@shared/hooks/useAuth';
 import { useEffect } from 'preact/hooks';
 import { useBookings } from '@shared/hooks/useBookings';
-import { navigateAdmin } from '@shared/utils/adminRoute';
 import { useDateOverrides } from '@shared/hooks/useDateOverrides';
-import { ToggleSwitch } from '@shared/components';
+import { Alert, Button, Card, Loading, Toggle } from '@shared/components/ui';
+import { Plus, RefreshCw } from '@shared/components/ui/icons';
 import DateNav from './DateNav';
 import ReservationList from './ReservationList';
 import BookingCards from './BookingCards';
@@ -14,7 +14,6 @@ import BookingModal from './BookingModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import CalendarPickerModal from './CalendarPickerModal';
 import DayHoursBanner from './DayHoursBanner';
-import styles from './Dashboard.module.css';
 
 type DashboardProps = {
   auth: UseAuthReturn;
@@ -72,73 +71,70 @@ const Dashboard: FunctionComponent<DashboardProps> = ({ auth }) => {
         }}
       />
 
-      <div class={styles.day_actions_row}>
-        <div class={styles.toggle_list} id="day-block-container">
-          <div class={styles.toggle_list_item}>
-            <div class={styles.toggle_list_item_content}>
-              <p class={styles.toggle_list_item_header}>
-                <strong>Block this day</strong>
-              </p>
-              <p class={styles.toggle_list_item_subtext}>
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_auto]">
+        <Card id="day-block-container" class="bg-base-200 [--card-p:1rem_1.25rem]">
+          <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <div>
+              <p class="m-0 font-semibold">Block this day</p>
+              <p id="block-day-description" class="text-base-content/70 m-0 text-xs">
                 Customers will no longer be able to make reservations on this date. Existing reservations will not be affected.
               </p>
             </div>
-            <div class={styles.toggle_list_item_switch}>
-              <div class={styles.form_group_check}>
-                <ToggleSwitch
-                  ariaLabel="Block this day"
-                  checked={bookings.isDayBlocked.value}
-                  disabled={bookings.isBlockLoading.value}
-                  onChange={() => bookings.toggleDayBlock()}
-                />
-              </div>
-            </div>
+            <Toggle
+              aria-describedby="block-day-description"
+              label="Block this day"
+              hideLabel
+              checked={bookings.isDayBlocked.value}
+              disabled={bookings.isBlockLoading.value}
+              onChange={() => bookings.toggleDayBlock()}
+            />
           </div>
-        </div>
+        </Card>
 
-        <div class={styles.new_booking_card}>
-          <div class={styles.toggle_list_item_content}>
-            <p class={styles.toggle_list_item_header}>
-              <strong>New booking</strong>
-            </p>
-            <p class={styles.toggle_list_item_subtext}>Manually add a reservation for this date.</p>
+        <Card class="bg-base-200 [--card-p:1rem_1.25rem]">
+          <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <div>
+              <p class="m-0 font-semibold">New booking</p>
+              <p class="text-base-content/70 m-0 text-xs">Manually add a reservation for this date.</p>
+            </div>
+            <Button variant="primary" onClick={openCreate}>
+              <Plus />
+              New Booking
+            </Button>
           </div>
-          <div class={styles.action_buttons}>
-            <button class={styles.btn_primary} onClick={openCreate}>
-              + New Booking
-            </button>
-          </div>
-        </div>
-        <button
-          type="button"
-          class={styles.btn_secondary}
+        </Card>
+
+        <Button
+          class="md:col-span-2 xl:col-span-1 xl:h-auto"
+          disabled={bookings.isLoading.value || bookings.isBlockLoading.value}
           onClick={() => {
             void bookings.refreshMonth();
             void dateOverrides.loadMonth(visibleMonthKey, true);
           }}
-          disabled={bookings.isLoading.value || bookings.isBlockLoading.value}
         >
+          <RefreshCw />
           Refresh
-        </button>
+        </Button>
       </div>
 
       {bookings.blockErrorMessage.value && (
-        <p class={styles.block_error} role="alert">
+        <Alert variant="error" live="assertive">
           {bookings.blockErrorMessage.value}
-        </p>
+        </Alert>
       )}
 
-      <DayHoursBanner
-        blocks={bookings.dayBlocks.value}
-        specialHours={dateOverrides.overridesByDate.value.get(visibleDateKey) ?? null}
-        onGoSettings={() => navigateAdmin('settings/opening-hours/specific-day')}
-      />
+      <DayHoursBanner blocks={bookings.dayBlocks.value} specialHours={dateOverrides.overridesByDate.value.get(visibleDateKey) ?? null} />
 
-      <div id="bookings-list" aria-busy={bookings.isLoading.value}>
-        {bookings.isLoading.value && <p class={styles.loading_text}>Loading…</p>}
-        {!bookings.isLoading.value && bookings.errorMessage.value && <p class={styles.error_text}>{bookings.errorMessage.value}</p>}
+      <div id="bookings-list" class="min-w-0" aria-busy={bookings.isLoading.value}>
+        {bookings.isLoading.value && (
+          <p class="text-base-content/70 flex items-center justify-center gap-3 py-8">
+            <Loading size="sm" label={null} />
+            Loading…
+          </p>
+        )}
+        {!bookings.isLoading.value && bookings.errorMessage.value && <Alert variant="error">{bookings.errorMessage.value}</Alert>}
         {!bookings.isLoading.value && !bookings.errorMessage.value && reservations.length === 0 && (
-          <p class={styles.empty_state}>No bookings for this date.</p>
+          <p class="text-base-content/70 py-8 text-center italic">No bookings for this date.</p>
         )}
         {!bookings.isLoading.value && reservations.length > 0 && (
           <>

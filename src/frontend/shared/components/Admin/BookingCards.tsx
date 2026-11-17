@@ -1,7 +1,6 @@
 ﻿import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
 import BookingCard from './BookingCard';
-import styles from './BookingCards.module.css';
 
 type BookingCardsProps = {
   reservations: Reservation[];
@@ -9,8 +8,9 @@ type BookingCardsProps = {
   onDelete: (reservation: Reservation) => void;
 };
 
+/** The day's bookings as cards, below md. From md up, ReservationList shows them as a table instead. */
 const BookingCards: FunctionComponent<BookingCardsProps> = ({ reservations, onEdit, onDelete }) => (
-  <div class={styles.booking_cards}>
+  <div class="grid gap-3 md:hidden">
     {reservations.map((r) => (
       <BookingCard key={r.id} reservation={r} onEdit={onEdit} onDelete={onDelete} />
     ))}

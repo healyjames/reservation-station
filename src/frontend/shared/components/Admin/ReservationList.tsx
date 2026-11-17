@@ -1,7 +1,7 @@
 ﻿import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
-import { Button } from '@shared/components';
-import styles from './ReservationList.module.css';
+import { Table } from '@shared/components/ui';
+import BookingActions from './BookingActions';
 
 type ReservationListProps = {
   reservations: Reservation[];
@@ -9,43 +9,36 @@ type ReservationListProps = {
   onDelete: (reservation: Reservation) => void;
 };
 
+/** The day's bookings as a table, from md up. Below md, BookingCards shows them instead. */
 const ReservationList: FunctionComponent<ReservationListProps> = ({ reservations, onEdit, onDelete }) => (
-  <table class={`${styles.admin_table} ${styles.booking_table}`}>
+  <Table class="hidden md:block" caption="Bookings for this day" hideCaption>
     <thead>
       <tr>
         <th scope="col">Time</th>
         <th scope="col">Name</th>
         <th scope="col">Guests</th>
         <th scope="col">Notes</th>
-        <th scope="col">Actions</th>
+        <th scope="col" class="text-end">
+          Actions
+        </th>
       </tr>
     </thead>
     <tbody>
       {reservations.map((r) => (
         <tr key={r.id}>
-          <td>{r.reservation_time}</td>
+          <td class="tabular-nums">{r.reservation_time}</td>
           <td>
             {r.first_name} {r.surname}
           </td>
           <td>{r.guests}</td>
           <td>{r.dietary_requirements || '–'}</td>
-          <td class={styles.actions_cell}>
-            <Button variant="action-edit" size="sm" onClick={() => onEdit(r)} aria-label={`Edit booking for ${r.first_name} ${r.surname}`}>
-              Edit
-            </Button>
-            <Button
-              variant="action-delete"
-              size="sm"
-              onClick={() => onDelete(r)}
-              aria-label={`Delete booking for ${r.first_name} ${r.surname}`}
-            >
-              Delete
-            </Button>
+          <td>
+            <BookingActions reservation={r} onEdit={onEdit} onDelete={onDelete} />
           </td>
         </tr>
       ))}
     </tbody>
-  </table>
+  </Table>
 );
 
 export default ReservationList;

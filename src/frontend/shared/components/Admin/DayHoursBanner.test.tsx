@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { render, within, fireEvent } from '@testing-library/preact';
-import { describe, it, expect, vi } from 'vitest';
+import { render, within } from '@testing-library/preact';
+import { describe, it, expect } from 'vitest';
 import type { AdminBlockedDate, AdminDateOverride } from '@shared/types';
 import DayHoursBanner from './DayHoursBanner';
 
@@ -10,7 +10,7 @@ function makeBlock(overrides: Partial<AdminBlockedDate> = {}): AdminBlockedDate 
 
 describe('DayHoursBanner', () => {
   it('renders nothing on a day with no changed hours', () => {
-    const { container } = render(<DayHoursBanner blocks={[]} onGoSettings={vi.fn()} />);
+    const { container } = render(<DayHoursBanner blocks={[]} />);
     expect(container.innerHTML).toBe('');
   });
 
@@ -18,7 +18,6 @@ describe('DayHoursBanner', () => {
     const { getByRole } = render(
       <DayHoursBanner
         blocks={[makeBlock({ id: 'a', start_time: '12:00', end_time: '13:00' }), makeBlock({ id: 'b', reason: 'Closing early' })]}
-        onGoSettings={vi.fn()}
       />,
     );
 
@@ -39,7 +38,7 @@ describe('DayHoursBanner', () => {
       close_time: '16:00',
       reason: 'Boxing Day',
     };
-    const { getByRole, queryByRole } = render(<DayHoursBanner blocks={[]} specialHours={specialHours} onGoSettings={vi.fn()} />);
+    const { getByRole, queryByRole } = render(<DayHoursBanner blocks={[]} specialHours={specialHours} />);
 
     const banner = getByRole('note', { name: /changed hours on this day/i });
     expect(banner.textContent).toContain('Special opening hours: 12:00 – 16:00');
@@ -47,12 +46,11 @@ describe('DayHoursBanner', () => {
     expect(queryByRole('list')).toBeNull();
   });
 
-  it('takes the admin to the settings for these hours from the banner', () => {
-    const onGoSettings = vi.fn();
-    const { getByRole } = render(<DayHoursBanner blocks={[makeBlock()]} onGoSettings={onGoSettings} />);
+  it('links to the specific-day hours from the banner', () => {
+    const { getByRole } = render(<DayHoursBanner blocks={[makeBlock()]} />);
 
-    fireEvent.click(getByRole('button', { name: /change these hours/i }));
+    const link = getByRole('link', { name: /change these hours/i });
 
-    expect(onGoSettings).toHaveBeenCalledTimes(1);
+    expect(link.getAttribute('href')).toBe('#/settings/opening-hours/specific-day');
   });
 });

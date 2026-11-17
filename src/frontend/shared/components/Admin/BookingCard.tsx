@@ -1,7 +1,7 @@
 ﻿import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
-import { Badge, Button } from '@shared/components';
-import styles from './BookingCard.module.css';
+import { Badge, Card } from '@shared/components/ui';
+import BookingActions from './BookingActions';
 
 type BookingCardProps = {
   reservation: Reservation;
@@ -10,26 +10,19 @@ type BookingCardProps = {
 };
 
 const BookingCard: FunctionComponent<BookingCardProps> = ({ reservation: r, onEdit, onDelete }) => (
-  <div class={styles.booking_card}>
-    <div class={styles.card_time_guests}>
-      <span class={styles.card_time}>{r.reservation_time}</span>
-      <Badge variant="default">
-        <strong>{r.guests}</strong> guest{r.guests !== 1 ? 's' : ''}
+  <Card class="bg-base-200 [--card-p:1rem]" data-booking-id={r.id}>
+    <div class="flex items-center justify-between gap-3">
+      <span class="text-lg font-semibold tabular-nums">{r.reservation_time}</span>
+      <Badge>
+        <strong>{r.guests}</strong>&nbsp;guest{r.guests !== 1 ? 's' : ''}
       </Badge>
     </div>
-    <div class={styles.card_name}>
+    <div class="text-base">
       {r.first_name} {r.surname}
     </div>
-    {r.dietary_requirements && <div class={styles.card_dietary}>{r.dietary_requirements}</div>}
-    <div class={styles.card_actions}>
-      <Button variant="action-edit" size="sm" onClick={() => onEdit(r)} aria-label={`Edit booking for ${r.first_name} ${r.surname}`}>
-        Edit
-      </Button>
-      <Button variant="action-delete" size="sm" onClick={() => onDelete(r)} aria-label={`Delete booking for ${r.first_name} ${r.surname}`}>
-        Delete
-      </Button>
-    </div>
-  </div>
+    {r.dietary_requirements && <div class="text-base-content/70">{r.dietary_requirements}</div>}
+    <BookingActions reservation={r} onEdit={onEdit} onDelete={onDelete} />
+  </Card>
 );
 
 export default BookingCard;

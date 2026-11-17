@@ -1,14 +1,7 @@
 ﻿import type { FunctionComponent } from 'preact';
 import type { Signal } from '@preact/signals';
-import styles from './DateNav.module.css';
-
-function pad(n: number): string {
-  return String(n).padStart(2, '0');
-}
-
-function dateToString(d: Date): string {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
+import { Badge, Button, Join, Stat } from '@shared/components/ui';
+import { ChevronLeft, ChevronRight } from '@shared/components/ui/icons';
 
 function isToday(d: Date): boolean {
   const t = new Date();
@@ -23,35 +16,31 @@ type DateNavProps = {
   onOpenCalendar?: () => void;
 };
 
+/** The Bookings day: previous/next day, the date (opens the date picker), a "Today" badge and the day's covers. */
 const DateNav: FunctionComponent<DateNavProps> = ({ currentDate, guestCount, onPrev, onNext, onOpenCalendar }) => {
   const d = currentDate.value;
   const displayDate = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long' });
-  const todayFlag = isToday(d);
 
   return (
-    <div class={styles.date_nav}>
-      <button class={styles.btn_action} onClick={onPrev} aria-label="Previous day">
-        &#8592;
-      </button>
-      <div class={styles.date_nav_center}>
-        <button
-          type="button"
-          class={styles.current_date_display}
+    <div class="flex flex-wrap items-center justify-center gap-4">
+      <Join aria-label="Day">
+        <Button class="join-item h-auto" shape="square" aria-label="Previous day" onClick={onPrev}>
+          <ChevronLeft />
+        </Button>
+        <Button
+          class="join-item h-auto min-w-0 gap-3 py-2 text-xl md:min-w-[350px] md:text-[2.5rem]"
           id="current-date-display"
           onClick={onOpenCalendar}
-          aria-label="Open date picker"
-          title="Click to open calendar"
         >
           {displayDate}
-          {todayFlag && <span class={styles.today_label}> today</span>}
-        </button>
-        <span id="summary-text" class={styles.day_summary}>
-          {guestCount} cover{guestCount !== 1 ? 's' : ''}
-        </span>
-      </div>
-      <button class={styles.btn_action} onClick={onNext} aria-label="Next day">
-        &#8594;
-      </button>
+          {isToday(d) && <Badge variant="primary">Today</Badge>}
+          <span class="sr-only">, choose a date</span>
+        </Button>
+        <Button class="join-item h-auto" shape="square" aria-label="Next day" onClick={onNext}>
+          <ChevronRight />
+        </Button>
+      </Join>
+      <Stat id="summary-text" class="bg-base-200 [&_.stat]:px-4 [&_.stat]:py-2" title="Covers" value={guestCount} />
     </div>
   );
 };
