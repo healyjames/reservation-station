@@ -1,4 +1,4 @@
-﻿import { useSignal } from '@preact/signals';
+import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import { useEffect } from 'preact/hooks';
 import type { OpeningHoursEntry } from '@shared/types';
@@ -27,14 +27,17 @@ const DAY_ORDER: Array<{ label: string; dow: number }> = [
   { label: 'Sunday', dow: 0 },
 ];
 
-type OpeningHoursView = 'weekly' | 'specific-day';
+export type OpeningHoursView = 'weekly' | 'specific-day';
 
 type OpeningHoursSettingsProps = {
   token: string;
-  initialView?: OpeningHoursView;
+  /** The weekly schedule, or the view for changing one specific day. The admin route decides it. */
+  view?: OpeningHoursView;
+  /** Asks to show the other view; the admin app does this by changing the route. */
+  onViewChange: (view: OpeningHoursView) => void;
 };
 
-const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ token, initialView = 'weekly' }) => {
+const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ token, view = 'weekly', onViewChange }) => {
   const days = useSignal<DayConfig[]>(
     DAY_ORDER.map(({ label, dow }) => ({
       label,
@@ -44,7 +47,6 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
       closeTime: '22:00',
     })),
   );
-  const view = useSignal<OpeningHoursView>(initialView);
   const isLoading = useSignal(true);
   const isSaving = useSignal(false);
   const bannerMessage = useSignal('');
@@ -59,8 +61,12 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
 
   useEffect(() => {
     loadHours();
-    loadChangedHours();
   }, []);
+
+  // Also when coming back from the specific-day view, where ranges may have been added or removed.
+  useEffect(() => {
+    if (view === 'weekly') loadChangedHours();
+  }, [view]);
 
   async function loadHours() {
     isLoading.value = true;
@@ -120,17 +126,8 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
     }
   }
 
-  if (view.value === 'specific-day') {
-    return (
-      <SpecificDayHours
-        token={token}
-        onBack={() => {
-          view.value = 'weekly';
-          // Ranges may have been added or removed in the specific-day view.
-          loadChangedHours();
-        }}
-      />
-    );
+  if (view === 'specific-day') {
+    return <SpecificDayHours token={token} onBack={() => onViewChange('weekly')} />;
   }
 
   if (isLoading.value) {
@@ -254,12 +251,7 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
             weekly opening hours.
           </p>
         </div>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            view.value = 'specific-day';
-          }}
-        >
+        <Button variant="secondary" onClick={() => onViewChange('specific-day')}>
           Change hours for a specific day
         </Button>
       </section>

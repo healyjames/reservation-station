@@ -61,7 +61,7 @@ export type { NavbarElement, NavbarProps } from './Navbar';
 export { default as Join } from './Join';
 export type { JoinProps } from './Join';
 
-export { default as Drawer, DrawerToggle } from './Drawer';
+export { default as Drawer, DrawerToggle, isDrawerDocked } from './Drawer';
 export type { DrawerProps, DrawerToggleProps } from './Drawer';
 
 export { default as Calendar } from './Calendar';

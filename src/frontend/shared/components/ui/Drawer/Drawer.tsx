@@ -8,7 +8,8 @@ import type { SwapProps } from '../Swap';
 /** Tailwind's lg breakpoint, where the drawer docks. Keep in step with the lg classes below. */
 const DOCKED_QUERY = '(width >= 64rem)';
 
-const isDocked = () => window.matchMedia?.(DOCKED_QUERY).matches ?? false;
+/** True from lg up, where the drawer is docked beside the page rather than an overlay. */
+export const isDrawerDocked = () => window.matchMedia?.(DOCKED_QUERY).matches ?? false;
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -50,7 +51,7 @@ const Drawer: FunctionComponent<DrawerProps> = ({ sideId, open, onOpenChange, si
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || event.defaultPrevented || isDocked()) return;
+      if (event.key !== 'Escape' || event.defaultPrevented || isDrawerDocked()) return;
       if (event.target instanceof Element && event.target.closest('dialog')) return;
       const panel = panelRef.current;
       if (panel?.contains(document.activeElement)) {
@@ -85,7 +86,7 @@ const Drawer: FunctionComponent<DrawerProps> = ({ sideId, open, onOpenChange, si
   }, [open]);
 
   const toggle = () => {
-    focusPanelRef.current = !open && !isDocked();
+    focusPanelRef.current = !open && !isDrawerDocked();
     onOpenChange(!open);
   };
 
