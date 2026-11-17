@@ -1,9 +1,8 @@
-﻿import { useSignal } from '@preact/signals';
+import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
-import { Modal, Button } from '@shared/components';
+import { Alert, Button, List, Modal } from '@shared/components/ui';
 import { adminFetch } from '@shared/utils/adminFetch';
-import styles from './DeleteConfirmModal.module.css';
 
 type DeleteConfirmModalProps = {
   reservation: Reservation;
@@ -40,7 +39,7 @@ const DeleteConfirmModal: FunctionComponent<DeleteConfirmModalProps> = ({ reserv
       <Button variant="secondary" onClick={onClose}>
         Cancel
       </Button>
-      <Button variant="danger" isLoading={isDeleting.value} onClick={handleDelete}>
+      <Button variant="error" isLoading={isDeleting.value} onClick={handleDelete}>
         Delete booking
       </Button>
     </>
@@ -48,52 +47,26 @@ const DeleteConfirmModal: FunctionComponent<DeleteConfirmModalProps> = ({ reserv
 
   return (
     <Modal open onClose={onClose} title="Delete booking" footer={footer}>
-      <p class={styles.confirm_text}>Are you sure you want to delete this booking? This action cannot be undone.</p>
+      <p class="mt-0">Are you sure you want to delete this booking? This action cannot be undone.</p>
 
       {errorMessage.value && (
-        <div class={styles.alert_error} role="alert" aria-live="assertive">
+        <Alert variant="error" live="assertive" class="mb-4">
           {errorMessage.value}
-        </div>
+        </Alert>
       )}
 
-      <dl class={styles.booking_details}>
-        <div class={styles.detail_row}>
-          <dt>Name</dt>
-          <dd>
-            {reservation.first_name} {reservation.surname}
-          </dd>
-        </div>
-        <div class={styles.detail_row}>
-          <dt>Date</dt>
-          <dd>{reservation.reservation_date}</dd>
-        </div>
-        <div class={styles.detail_row}>
-          <dt>Time</dt>
-          <dd>{reservation.reservation_time}</dd>
-        </div>
-        <div class={styles.detail_row}>
-          <dt>Guests</dt>
-          <dd>{reservation.guests}</dd>
-        </div>
-        {reservation.dietary_requirements && (
-          <div class={styles.detail_row}>
-            <dt>Dietary requirements & special requests</dt>
-            <dd>{reservation.dietary_requirements}</dd>
-          </div>
-        )}
-        {reservation.telephone && (
-          <div class={styles.detail_row}>
-            <dt>Telephone</dt>
-            <dd>{reservation.telephone}</dd>
-          </div>
-        )}
-        {reservation.email && (
-          <div class={styles.detail_row}>
-            <dt>Email</dt>
-            <dd>{reservation.email}</dd>
-          </div>
-        )}
-      </dl>
+      <List
+        class="rounded-box border-base-300 bg-base-200 border"
+        items={[
+          { term: 'Name', value: `${reservation.first_name} ${reservation.surname}` },
+          { term: 'Date', value: reservation.reservation_date },
+          { term: 'Time', value: reservation.reservation_time },
+          { term: 'Guests', value: reservation.guests },
+          reservation.dietary_requirements && { term: 'Dietary requirements & special requests', value: reservation.dietary_requirements },
+          reservation.telephone && { term: 'Telephone', value: reservation.telephone },
+          reservation.email && { term: 'Email', value: reservation.email },
+        ]}
+      />
     </Modal>
   );
 };

@@ -1,9 +1,9 @@
-﻿import { useSignal } from '@preact/signals';
+import { useSignal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
 import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
 import { Calendar } from '@shared/components/BookingWidget/Calendar';
-import Modal from '@shared/components/Modal/Modal';
+import { Modal } from '@shared/components/ui';
 import { fetchBlockedDatesForMonth } from '@shared/utils/fetchBlockedDatesForMonth';
 
 type CalendarPickerModalProps = {

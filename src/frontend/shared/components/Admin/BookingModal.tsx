@@ -1,9 +1,8 @@
-﻿import { useSignal } from '@preact/signals';
+import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { Reservation } from '@shared/types';
-import { Modal, Button, FormField, Input, Textarea } from '@shared/components';
+import { Alert, Button, Fieldset, Input, Modal, Textarea } from '@shared/components/ui';
 import { adminFetch } from '@shared/utils/adminFetch';
-import styles from './BookingModal.module.css';
 
 type BookingModalProps = {
   mode: 'create' | 'edit';
@@ -99,114 +98,106 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
   return (
     <Modal open onClose={onClose} title={title} footer={footer}>
       {errorMessage.value && (
-        <div class={`${styles.alert} ${styles.alert_error}`} role="alert" aria-live="assertive">
+        <Alert variant="error" live="assertive" class="mb-4">
           {errorMessage.value}
-        </div>
+        </Alert>
       )}
-      <form id="booking-modal-form" noValidate onSubmit={handleSubmit}>
-        <div class={styles.form_row}>
-          <FormField label="First name" htmlFor="bm-first-name" required>
-            <Input
-              id="bm-first-name"
-              name="first_name"
-              value={firstName.value}
-              required
-              autocomplete="off"
-              onInput={(e) => {
-                firstName.value = (e.target as HTMLInputElement).value;
-              }}
-            />
-          </FormField>
-          <FormField label="Surname" htmlFor="bm-surname" required>
-            <Input
-              id="bm-surname"
-              name="surname"
-              value={surname.value}
-              required
-              autocomplete="off"
-              onInput={(e) => {
-                surname.value = (e.target as HTMLInputElement).value;
-              }}
-            />
-          </FormField>
-        </div>
-        <div class={styles.form_row}>
-          <FormField label="Telephone" htmlFor="bm-telephone">
-            <Input
-              id="bm-telephone"
-              type="tel"
-              name="telephone"
-              value={telephone.value}
-              autocomplete="off"
-              onInput={(e) => {
-                telephone.value = (e.target as HTMLInputElement).value;
-              }}
-            />
-          </FormField>
-          <FormField label="Email" htmlFor="bm-email">
-            <Input
-              id="bm-email"
-              type="email"
-              name="email"
-              value={email.value}
-              autocomplete="off"
-              onInput={(e) => {
-                email.value = (e.target as HTMLInputElement).value;
-              }}
-            />
-          </FormField>
-        </div>
-        <div class={styles.form_row}>
-          <FormField label="Date" htmlFor="bm-date" required>
-            <Input
-              id="bm-date"
-              type="date"
-              name="reservation_date"
-              value={reservationDate.value}
-              required
-              onChange={(e) => {
-                reservationDate.value = (e.target as HTMLInputElement).value;
-              }}
-            />
-          </FormField>
-          <FormField label="Time" htmlFor="bm-time" required>
-            <Input
-              id="bm-time"
-              type="time"
-              name="reservation_time"
-              value={reservationTime.value}
-              required
-              onChange={(e) => {
-                reservationTime.value = (e.target as HTMLInputElement).value;
-              }}
-            />
-          </FormField>
-        </div>
-        <div class={styles.fields}>
-          <FormField label="Guests" htmlFor="bm-guests" required>
-            <Input
-              id="bm-guests"
-              type="number"
-              name="guests"
-              value={guests.value}
-              required
-              onChange={(e) => {
-                guests.value = parseInt((e.target as HTMLInputElement).value, 10) || 1;
-              }}
-            />
-          </FormField>
-          <FormField label="Dietary requirements" htmlFor="bm-dietary">
-            <Textarea
-              id="bm-dietary"
-              name="dietary_requirements"
-              value={dietary.value}
-              rows={2}
-              onInput={(e) => {
-                dietary.value = (e.target as HTMLTextAreaElement).value;
-              }}
-            />
-          </FormField>
-        </div>
+      <form id="booking-modal-form" class="grid gap-x-4 sm:grid-cols-2" noValidate onSubmit={handleSubmit}>
+        <Fieldset label="First name" required>
+          <Input
+            id="bm-first-name"
+            name="first_name"
+            value={firstName.value}
+            required
+            autocomplete="off"
+            onInput={(e) => {
+              firstName.value = (e.target as HTMLInputElement).value;
+            }}
+          />
+        </Fieldset>
+        <Fieldset label="Surname" required>
+          <Input
+            id="bm-surname"
+            name="surname"
+            value={surname.value}
+            required
+            autocomplete="off"
+            onInput={(e) => {
+              surname.value = (e.target as HTMLInputElement).value;
+            }}
+          />
+        </Fieldset>
+        <Fieldset label="Telephone">
+          <Input
+            id="bm-telephone"
+            type="tel"
+            name="telephone"
+            value={telephone.value}
+            autocomplete="off"
+            onInput={(e) => {
+              telephone.value = (e.target as HTMLInputElement).value;
+            }}
+          />
+        </Fieldset>
+        <Fieldset label="Email">
+          <Input
+            id="bm-email"
+            type="email"
+            name="email"
+            value={email.value}
+            autocomplete="off"
+            onInput={(e) => {
+              email.value = (e.target as HTMLInputElement).value;
+            }}
+          />
+        </Fieldset>
+        <Fieldset label="Date" required>
+          <Input
+            id="bm-date"
+            type="date"
+            name="reservation_date"
+            value={reservationDate.value}
+            required
+            onChange={(e) => {
+              reservationDate.value = (e.target as HTMLInputElement).value;
+            }}
+          />
+        </Fieldset>
+        <Fieldset label="Time" required>
+          <Input
+            id="bm-time"
+            type="time"
+            name="reservation_time"
+            value={reservationTime.value}
+            required
+            onChange={(e) => {
+              reservationTime.value = (e.target as HTMLInputElement).value;
+            }}
+          />
+        </Fieldset>
+        <Fieldset label="Guests" required class="sm:col-span-2">
+          <Input
+            id="bm-guests"
+            type="number"
+            name="guests"
+            value={guests.value}
+            required
+            onChange={(e) => {
+              guests.value = parseInt((e.target as HTMLInputElement).value, 10) || 1;
+            }}
+          />
+        </Fieldset>
+        <Fieldset label="Dietary requirements" class="sm:col-span-2">
+          <Textarea
+            id="bm-dietary"
+            name="dietary_requirements"
+            value={dietary.value}
+            rows={2}
+            onInput={(e) => {
+              dietary.value = (e.target as HTMLTextAreaElement).value;
+            }}
+          />
+        </Fieldset>
       </form>
     </Modal>
   );
