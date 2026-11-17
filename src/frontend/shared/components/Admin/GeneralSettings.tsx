@@ -1,11 +1,10 @@
-﻿import { useSignal } from '@preact/signals';
+import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import { useEffect } from 'preact/hooks';
 import type { Signal } from '@preact/signals';
-import { Button, FormField, Input } from '@shared/components';
+import { Alert, Button, Fieldset, Input, Loading } from '@shared/components/ui';
 import type { TenantConfig } from '@shared/types';
 import { adminFetch } from '@shared/utils/adminFetch';
-import styles from './GeneralSettings.module.css';
 
 type GeneralSettingsProps = {
   tenantConfig: Signal<TenantConfig | null>;
@@ -84,24 +83,29 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
   }
 
   if (isLoading.value) {
-    return <p class={styles.loading_text}>Loading settings…</p>;
+    return (
+      <p class="text-base-content/70 flex items-center gap-3">
+        <Loading size="sm" label={null} />
+        Loading settings…
+      </p>
+    );
   }
 
+  // The page title comes from AdminLayout's h1.
   return (
-    <div class={styles.settings_panel}>
-      <h2>Settings</h2>
+    <div class="grid max-w-[540px] gap-6">
       {errorMessage.value && (
-        <div class={`${styles.alert} ${styles.alert_error}`} role="alert" aria-live="assertive">
+        <Alert variant="error" live="assertive">
           {errorMessage.value}
-        </div>
+        </Alert>
       )}
       {successMessage.value && (
-        <div class={`${styles.alert} ${styles.alert_success}`} role="status" aria-live="polite">
+        <Alert variant="success" live="polite">
           {successMessage.value}
-        </div>
+        </Alert>
       )}
-      <form class={styles.form_container} noValidate onSubmit={handleSubmit}>
-        <FormField label="Name" htmlFor="sf-name" required>
+      <form class="grid gap-4" noValidate onSubmit={handleSubmit}>
+        <Fieldset label="Name" htmlFor="sf-name" required>
           <Input
             type="text"
             id="sf-name"
@@ -113,8 +117,8 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
               name.value = (e.target as HTMLInputElement).value;
             }}
           />
-        </FormField>
-        <FormField label="Max party size (per booking)" htmlFor="sf-max-guests">
+        </Fieldset>
+        <Fieldset label="Max party size (per booking)" htmlFor="sf-max-guests">
           <Input
             type="number"
             id="sf-max-guests"
@@ -125,8 +129,8 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
               maxGuests.value = parseInt((e.target as HTMLInputElement).value, 10) || 0;
             }}
           />
-        </FormField>
-        <FormField label="Max venue capacity" htmlFor="sf-max-capacity">
+        </Fieldset>
+        <Fieldset label="Max venue capacity" htmlFor="sf-max-capacity">
           <Input
             type="number"
             id="sf-max-capacity"
@@ -137,8 +141,8 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
               maxCovers.value = parseInt((e.target as HTMLInputElement).value, 10) || 0;
             }}
           />
-        </FormField>
-        <FormField
+        </Fieldset>
+        <Fieldset
           label="Guest time window (minutes)"
           htmlFor="sf-time-window"
           tooltip="How long a guest is considered to be present for the purposes of calculating concurrent guests. For example, if set to 60, a guest who books at 6:00pm will be considered present until 7:00pm."
@@ -153,8 +157,8 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
               timeWindow.value = parseInt((e.target as HTMLInputElement).value, 10) || 0;
             }}
           />
-        </FormField>
-        <FormField
+        </Fieldset>
+        <Fieldset
           label="Booking delay (hours)"
           htmlFor="sf-booking-delay"
           tooltip="Prevents last-minute bookings. Customers cannot book a time within this many hours from now. For example, 1.5 means the earliest bookable time is 90 minutes ahead. Set to 0 to disable."
@@ -171,8 +175,8 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
               bookingDelayMinutes.value = Math.max(0, Math.round(hours * 60));
             }}
           />
-        </FormField>
-        <FormField label="Notification email address" htmlFor="sf-contact-email" required>
+        </Fieldset>
+        <Fieldset label="Notification email address" htmlFor="sf-contact-email" required>
           <Input
             type="email"
             id="sf-contact-email"
@@ -184,12 +188,15 @@ const GeneralSettings: FunctionComponent<GeneralSettingsProps> = ({ tenantConfig
             }}
             disabled
           />
-        </FormField>
-        <div class={`${styles.alert} ${styles.alert_warning}`} role="note">
-          <strong>⚠ Important:</strong> This email address is used for reservation notification emails sent to your guests when they make,
-          amend, or cancel a booking. Changing it may affect email delivery. If you need to update this address, please contact support.
-        </div>
-        <Button variant="primary" type="submit" isLoading={isSaving.value}>
+        </Fieldset>
+        {/* Alert owns its role, so the note role sits on a wrapper. */}
+        <section role="note" aria-label="About the notification email">
+          <Alert variant="warning" title="Important" headingLevel={null}>
+            This email address is used for reservation notification emails sent to your guests when they make, amend, or cancel a booking.
+            Changing it may affect email delivery. If you need to update this address, please contact support.
+          </Alert>
+        </section>
+        <Button variant="primary" type="submit" class="justify-self-start" isLoading={isSaving.value}>
           Save settings
         </Button>
       </form>
