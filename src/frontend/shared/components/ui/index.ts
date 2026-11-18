@@ -41,7 +41,7 @@ export { default as Card } from './Card';
 export type { CardElement, CardProps, CardTitleTag } from './Card';
 
 export { default as List } from './List';
-export type { ListItem, ListLayout, ListProps } from './List';
+export type { ListItem, ListLayout, ListProps, ListRow } from './List';
 
 export { default as Stat } from './Stat';
 export type { StatProps } from './Stat';
