@@ -2,12 +2,11 @@ import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import { useEffect } from 'preact/hooks';
 import type { OpeningHoursEntry } from '@shared/types';
-import { ToggleSwitch, Button } from '@shared/components';
+import { Alert, Button, Card, Input, Loading, Table, Toggle } from '@shared/components/ui';
 import { adminFetch } from '@shared/utils/adminFetch';
 import { useMonthTimeBlocks } from '@shared/hooks/useMonthTimeBlocks';
 import ChangedHoursList from './ChangedHoursList';
 import SpecificDayHours from './SpecificDayHours';
-import styles from './OpeningHoursSettings.module.css';
 
 type DayConfig = {
   label: string;
@@ -131,23 +130,36 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
   }
 
   if (isLoading.value) {
-    return <p class={styles.loading_text}>Loading opening hours…</p>;
+    return (
+      <p class="text-base-content/70 flex items-center gap-3">
+        <Loading size="sm" label={null} />
+        Loading opening hours…
+      </p>
+    );
   }
 
-  return (
-    <div>
-      <h3 class={styles.oh_section_title}>Opening Hours</h3>
-      {bannerMessage.value && (
-        <div
-          class={`${styles.alert} ${styles.oh_banner} ${bannerType.value === 'success' ? styles.alert_success : styles.alert_error}`}
-          role="status"
-          aria-live="polite"
-        >
-          {bannerMessage.value}
-        </div>
-      )}
+  // Both layouts stay in the DOM (CSS shows one), so every control is named with its day.
+  const closedLabel = (day: string) => (
+    <>
+      Closed <span class="sr-only">on {day}</span>
+    </>
+  );
 
-      <table class={`${styles.admin_table} ${styles.oh_schedule}`}>
+  // The page title comes from AdminLayout's h1.
+  return (
+    <div class="grid gap-6">
+      {bannerMessage.value &&
+        (bannerType.value === 'success' ? (
+          <Alert variant="success" live="polite">
+            {bannerMessage.value}
+          </Alert>
+        ) : (
+          <Alert variant="error" live="assertive">
+            {bannerMessage.value}
+          </Alert>
+        ))}
+
+      <Table class="hidden md:block" caption="Weekly opening hours" hideCaption>
         <thead>
           <tr>
             <th scope="col">Day</th>
@@ -158,116 +170,120 @@ const OpeningHoursSettings: FunctionComponent<OpeningHoursSettingsProps> = ({ to
         </thead>
         <tbody>
           {days.value.map((d) => (
-            <tr key={d.dow} class={styles.oh_row} data-dow={String(d.dow)}>
-              <td class={styles.oh_day_name}>{d.label}</td>
-              <td class={styles.oh_time_cell}>
-                <input
+            <tr key={d.dow} data-dow={String(d.dow)}>
+              <th scope="row" class="font-medium">
+                {d.label}
+              </th>
+              <td>
+                <Input
                   type="time"
-                  class={styles.oh_open_time}
+                  class="max-w-36"
                   step={1800}
+                  aria-label={`${d.label} start time`}
                   value={d.openTime}
                   disabled={d.isClosed}
-                  style={d.isClosed ? 'opacity:0.25' : undefined}
-                  onChange={(e) => updateDay(d.dow, { openTime: (e.target as HTMLInputElement).value })}
+                  onInput={(e) => updateDay(d.dow, { openTime: (e.target as HTMLInputElement).value })}
                 />
               </td>
-              <td class={styles.oh_time_cell}>
-                <input
+              <td>
+                <Input
                   type="time"
-                  class={styles.oh_close_time}
+                  class="max-w-36"
                   step={1800}
+                  aria-label={`${d.label} end time`}
                   value={d.closeTime}
                   disabled={d.isClosed}
-                  style={d.isClosed ? 'opacity:0.25' : undefined}
-                  onChange={(e) => updateDay(d.dow, { closeTime: (e.target as HTMLInputElement).value })}
+                  onInput={(e) => updateDay(d.dow, { closeTime: (e.target as HTMLInputElement).value })}
                 />
               </td>
-              <td class={styles.oh_closed_cell}>
-                <div class={`${styles.oh_closed_label} ${styles.form_group_check}`}>
-                  <ToggleSwitch
-                    id={`oh-toggle-${d.dow}`}
-                    checked={d.isClosed}
-                    label="Closed"
-                    onChange={(checked) => updateDay(d.dow, { isClosed: checked })}
-                  />
-                </div>
+              <td>
+                {/* The column header shows "Closed"; the name still says the day. */}
+                <Toggle
+                  id={`oh-toggle-${d.dow}`}
+                  hideLabel
+                  checked={d.isClosed}
+                  label={closedLabel(d.label)}
+                  onChange={(checked) => updateDay(d.dow, { isClosed: checked })}
+                />
               </td>
             </tr>
           ))}
         </tbody>
-      </table>
+      </Table>
 
-      <div class={styles.oh_cards}>
+      <div class="grid gap-3 md:hidden">
         {days.value.map((d) => (
-          <div key={d.dow} class={styles.oh_card} data-dow={String(d.dow)}>
-            <div class={styles.oh_card_header}>
-              <span class={styles.oh_card_day}>{d.label}</span>
-              <ToggleSwitch
+          <Card key={d.dow} class="bg-base-200 [--card-p:1rem]" data-dow={String(d.dow)}>
+            <div class="flex items-center justify-between gap-3">
+              <span class="font-semibold">{d.label}</span>
+              <Toggle
                 id={`oh-card-toggle-${d.dow}`}
                 checked={d.isClosed}
-                label="Closed"
+                label={closedLabel(d.label)}
                 onChange={(checked) => updateDay(d.dow, { isClosed: checked })}
               />
             </div>
-            <div class={styles.oh_card_times} style={d.isClosed ? 'opacity:0.4' : undefined}>
-              <div class={styles.oh_card_time_field}>
-                <label class={styles.oh_card_time_label}>Start</label>
-                <input
+            <div class="grid grid-cols-2 gap-3">
+              <div class="grid gap-1">
+                <label htmlFor={`oh-card-open-${d.dow}`} class="text-xs font-semibold uppercase">
+                  {/* Shown as START; read as "Monday start time". */}
+                  <span class="sr-only">{d.label}</span> start <span class="sr-only">time</span>
+                </label>
+                <Input
                   type="time"
-                  class={styles.oh_card_open_time}
+                  id={`oh-card-open-${d.dow}`}
                   step={1800}
                   value={d.openTime}
                   disabled={d.isClosed}
-                  onChange={(e) => updateDay(d.dow, { openTime: (e.target as HTMLInputElement).value })}
+                  onInput={(e) => updateDay(d.dow, { openTime: (e.target as HTMLInputElement).value })}
                 />
               </div>
-              <div class={styles.oh_card_time_field}>
-                <label class={styles.oh_card_time_label}>End</label>
-                <input
+              <div class="grid gap-1">
+                <label htmlFor={`oh-card-close-${d.dow}`} class="text-xs font-semibold uppercase">
+                  <span class="sr-only">{d.label}</span> end <span class="sr-only">time</span>
+                </label>
+                <Input
                   type="time"
-                  class={styles.oh_card_close_time}
+                  id={`oh-card-close-${d.dow}`}
                   step={1800}
                   value={d.closeTime}
                   disabled={d.isClosed}
-                  onChange={(e) => updateDay(d.dow, { closeTime: (e.target as HTMLInputElement).value })}
+                  onInput={(e) => updateDay(d.dow, { closeTime: (e.target as HTMLInputElement).value })}
                 />
               </div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
-      <Button variant="primary" isLoading={isSaving.value} onClick={handleSave}>
+      <Button variant="primary" class="justify-self-start" isLoading={isSaving.value} onClick={handleSave}>
         Save Changes
       </Button>
 
-      <section class={styles.oh_specific_day} aria-labelledby="oh-specific-day-heading">
-        <div>
-          <p class={styles.oh_specific_day_heading} id="oh-specific-day-heading">
-            <strong>Need different hours on a specific day?</strong>
-          </p>
-          <p class={styles.oh_specific_day_text}>
-            Close early on Christmas Eve, open for lunch only on Boxing Day, or open on a day you are normally closed, without changing your
-            weekly opening hours.
-          </p>
-        </div>
-        <Button variant="secondary" onClick={() => onViewChange('specific-day')}>
-          Change hours for a specific day
-        </Button>
-      </section>
+      <Card
+        as="section"
+        aria-labelledby="oh-specific-day-heading"
+        class="bg-base-200 [--card-p:1rem]"
+        title={<span id="oh-specific-day-heading">Need different hours on a specific day?</span>}
+        titleAs="h2"
+        actions={<Button onClick={() => onViewChange('specific-day')}>Change hours for a specific day</Button>}
+      >
+        <p class="text-base-content/70 m-0 text-sm">
+          Close early on Christmas Eve, open for lunch only on Boxing Day, or open on a day you are normally closed, without changing your
+          weekly opening hours.
+        </p>
+      </Card>
 
-      <div class={styles.oh_changed_hours}>
-        <ChangedHoursList
-          year={changedHours.viewYear.value}
-          month={changedHours.viewMonth.value}
-          blocks={changedHours.monthBlocks.value}
-          overrides={changedHours.monthOverrides.value}
-          isSaving={changedHours.isSaving.value}
-          errorMessage={changedHours.saveError.value || changedHours.loadError.value}
-          onRemove={(id) => void changedHours.removeBlock(id)}
-          onRemoveOverride={(date) => void changedHours.removeSpecialHours(date)}
-        />
-      </div>
+      <ChangedHoursList
+        year={changedHours.viewYear.value}
+        month={changedHours.viewMonth.value}
+        blocks={changedHours.monthBlocks.value}
+        overrides={changedHours.monthOverrides.value}
+        isSaving={changedHours.isSaving.value}
+        errorMessage={changedHours.saveError.value || changedHours.loadError.value}
+        onRemove={(id) => void changedHours.removeBlock(id)}
+        onRemoveOverride={(date) => void changedHours.removeSpecialHours(date)}
+      />
     </div>
   );
 };

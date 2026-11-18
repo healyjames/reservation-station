@@ -1,9 +1,10 @@
 import type { FunctionComponent } from 'preact';
+import { useId } from 'preact/hooks';
 import type { AdminBlockedDate, AdminDateOverride } from '@shared/types';
-import { Button } from '@shared/components';
+import { Alert, Button, List } from '@shared/components/ui';
+import { Trash2 } from '@shared/components/ui/icons';
 import { formatDate } from '@shared/utils';
 import { MONTH_NAMES } from '@constants';
-import styles from './ChangedHoursList.module.css';
 
 type ChangedHoursListProps = {
   year: number;
@@ -44,6 +45,7 @@ const ChangedHoursList: FunctionComponent<ChangedHoursListProps> = ({
   onRemoveOverride,
 }) => {
   const title = `Changed hours in ${MONTH_NAMES[month]} ${year}`;
+  const headingId = useId();
 
   const rows: ChangedHoursRow[] = [
     ...overrides.map((override) => ({
@@ -69,29 +71,39 @@ const ChangedHoursList: FunctionComponent<ChangedHoursListProps> = ({
   ].sort((a, b) => a.date.localeCompare(b.date) || a.order.localeCompare(b.order));
 
   return (
-    <section aria-label={title}>
-      <h4 class={styles.title}>{title}</h4>
+    <section aria-labelledby={headingId} class="grid gap-3">
+      <h2 id={headingId} class="m-0 text-lg font-semibold">
+        {title}
+      </h2>
       {errorMessage && (
-        <p class={styles.error} role="alert">
+        <Alert variant="error" live="assertive">
           {errorMessage}
-        </p>
+        </Alert>
       )}
       {rows.length === 0 ? (
-        <p class={styles.empty}>No days have changed hours this month.</p>
+        <p class="text-base-content/70 m-0 text-sm">No days have changed hours this month.</p>
       ) : (
-        <ul class={styles.list} aria-label={title}>
-          {rows.map((row) => (
-            <li key={row.key} class={styles.list_item}>
-              <span>{formatDate(row.date)}</span>
-              <span class={styles.list_kind}>{row.kind}</span>
-              {row.times && <span class={styles.list_range}>{row.times}</span>}
-              {row.reason && <span class={styles.list_reason}>{row.reason}</span>}
-              <Button variant="action-delete" size="sm" disabled={isSaving} aria-label={row.removeLabel} onClick={row.onRemove}>
+        <List
+          class="rounded-box bg-base-200"
+          aria-label={title}
+          rows={rows.map((row) => ({
+            key: row.key,
+            content: (
+              <>
+                <span class="font-medium">{formatDate(row.date)}</span>
+                <span class="text-base-content/70">{row.kind}</span>
+                {row.times && <span class="tabular-nums">{row.times}</span>}
+                {row.reason && <span class="text-base-content/70">{row.reason}</span>}
+              </>
+            ),
+            action: (
+              <Button variant="ghost" size="sm" class="text-error" disabled={isSaving} aria-label={row.removeLabel} onClick={row.onRemove}>
+                <Trash2 />
                 Remove
               </Button>
-            </li>
-          ))}
-        </ul>
+            ),
+          }))}
+        />
       )}
     </section>
   );

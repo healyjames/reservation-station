@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, fireEvent, waitFor, within } from '@testing-library/preact';
+import { act, render, fireEvent, waitFor, within } from '@testing-library/preact';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { adminFetch } from '@shared/utils/adminFetch';
 import { useState } from 'preact/hooks';
@@ -113,5 +113,69 @@ describe('OpeningHoursSettings', () => {
 
     expect(onViewChange).toHaveBeenCalledWith('specific-day');
     expect(queryByRole('heading', { name: /change hours on a specific day/i })).toBeNull();
+  });
+
+  describe('weekly schedule', () => {
+    const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    it('names every time input and Closed switch with its day, in the table and in the cards', async () => {
+      const { findByRole, getAllByLabelText, getAllByRole } = render(<Routed />);
+      const table = await findByRole('table', { name: 'Weekly opening hours' });
+
+      for (const day of DAYS) {
+        for (const name of [`${day} start time`, `${day} end time`, `Closed on ${day}`]) {
+          const controls = getAllByLabelText(name);
+          expect(controls, name).toHaveLength(2);
+          expect(
+            controls.filter((control) => table.contains(control)),
+            name,
+          ).toHaveLength(1);
+        }
+      }
+      expect(getAllByRole('checkbox')).toHaveLength(14);
+    });
+
+    it("disables a closed day's times in both layouts", async () => {
+      const { findByRole, getAllByLabelText } = render(<Routed />);
+      await findByRole('table', { name: 'Weekly opening hours' });
+      fireEvent.click(getAllByLabelText('Closed on Monday')[0]);
+      const times = [...getAllByLabelText('Monday start time'), ...getAllByLabelText('Monday end time')] as HTMLInputElement[];
+      expect(times.map((input) => input.disabled)).toEqual([true, true, true, true]);
+      expect((getAllByLabelText('Tuesday start time')[0] as HTMLInputElement).disabled).toBe(false);
+    });
+
+    it('saves the edited week and announces it', async () => {
+      const { findByRole, getAllByLabelText, getByRole } = render(<Routed />);
+      await findByRole('table', { name: 'Weekly opening hours' });
+      fireEvent.input(getAllByLabelText('Friday end time')[0], { target: { value: '23:30' } });
+      fireEvent.click(getAllByLabelText('Closed on Sunday')[1]);
+
+      await act(async () => {
+        fireEvent.click(getByRole('button', { name: 'Save Changes' }));
+      });
+
+      const put = adminFetchMock.mock.calls.find(([, , options]) => options?.method === 'PUT')!;
+      const body = JSON.parse(put[2]!.body as string) as Array<Record<string, unknown>>;
+      expect(body.find((day) => day.day_of_week === 5)).toMatchObject({ is_closed: false, close_time: '23:30' });
+      expect(body.find((day) => day.day_of_week === 0)).toMatchObject({ is_closed: true, open_time: null, close_time: null });
+      expect((await findByRole('status')).textContent).toBe('Opening hours saved.');
+    });
+
+    it('announces a failed load', async () => {
+      adminFetchMock.mockImplementation(async (url) => (url === '/api/admin/opening-hours' ? makeResponse({}, 500) : makeResponse([])));
+      const { findByRole } = render(<Routed />);
+      expect((await findByRole('alert')).textContent).toBe('Failed to load opening hours.');
+    });
+
+    it('leaves the page title to the layout and gives each section an h2', async () => {
+      const { findByRole, getAllByRole, getByRole } = render(<Routed />);
+      await findByRole('table', { name: 'Weekly opening hours' });
+      expect(getAllByRole('heading').map((h) => [h.tagName, h.textContent])).toEqual([
+        ['H2', 'Need different hours on a specific day?'],
+        ['H2', 'Changed hours in June 2099'],
+      ]);
+      expect(getByRole('region', { name: 'Need different hours on a specific day?' })).toBeTruthy();
+      expect(getByRole('region', { name: 'Changed hours in June 2099' })).toBeTruthy();
+    });
   });
 });
