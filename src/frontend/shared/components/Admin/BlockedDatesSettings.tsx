@@ -1,10 +1,11 @@
-﻿import { useSignal } from '@preact/signals';
+import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import { useEffect } from 'preact/hooks';
-import { CalendarGrid } from '@shared/components';
+import { Alert, Button, Calendar, Card, Join, Loading, Status } from '@shared/components/ui';
+import { ChevronLeft, ChevronRight } from '@shared/components/ui/icons';
+import { cx } from '@shared/utils/cx';
 import { MONTH_NAMES } from '@constants';
 import { adminFetch } from '@shared/utils/adminFetch';
-import styles from './BlockedDatesSettings.module.css';
 
 function pad(n: number): string {
   return String(n).padStart(2, '0');
@@ -206,12 +207,6 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
 
   const today = new Date();
 
-  function isDisabled(y: number, m: number, d: number): boolean {
-    if (y !== today.getFullYear()) return y < today.getFullYear();
-    if (m !== today.getMonth()) return m < today.getMonth();
-    return d < today.getDate();
-  }
-
   function isBlockedFn(y: number, m: number, d: number): boolean {
     return blockedSet.value.has(toDateStr(y, m, d));
   }
@@ -243,59 +238,80 @@ const BlockedDatesSettings: FunctionComponent<BlockedDatesSettingsProps> = ({ to
 
   const isCurrent = viewYear.value === today.getFullYear() && viewMonth.value === today.getMonth();
 
+  // The page title (Blocked dates) comes from AdminLayout's h1.
   return (
-    <div class={styles.bd_settings}>
-      <h3 class={styles.bd_section_title}>Blocked Dates</h3>
+    <Card as="section" aria-labelledby="bd-month-title" bordered class="bg-base-100 max-w-[36rem] [--card-p:1rem]">
       {errorMessage.value && (
-        <div class={styles.error_text} role="alert">
+        <Alert variant="error" live="assertive">
           {errorMessage.value}
-        </div>
+        </Alert>
       )}
-      <div class={`${styles.date_picker_popup} ${styles.date_picker_popup_inline}`}>
-        <div class={styles.date_picker_header}>
-          <button class={styles.bd_prev_btn} aria-label="Previous month" disabled={isCurrent} onClick={prevMonth}>
-            &#8592;
-          </button>
-          <span class={styles.bd_month_label}>
+
+      <div class="flex justify-center">
+        <Join>
+          <Button class="join-item" shape="square" aria-label="Previous month" disabled={isCurrent} onClick={prevMonth}>
+            <ChevronLeft />
+          </Button>
+          <h2
+            id="bd-month-title"
+            class="join-item border-base-300 m-0 flex min-w-[11rem] items-center justify-center px-4 text-lg font-semibold"
+          >
             {MONTH_NAMES[viewMonth.value]} {viewYear.value}
-          </span>
-          <button class={styles.bd_next_btn} aria-label="Next month" onClick={nextMonth}>
-            &#8594;
-          </button>
-        </div>
-        {isLoading.value && <div class={`${styles.bd_calendar_loading} ${styles.loading_text}`}>Loading…</div>}
-        <div style={isLoading.value ? 'visibility:hidden' : undefined} class={styles.bd_calendar_grid_wrapper}>
-          <CalendarGrid
-            year={viewYear.value}
-            month={viewMonth.value}
-            isDisabled={isDisabled}
-            isBlocked={isBlockedFn}
-            isRangeStart={isRangeStartFn}
-            isInRange={isInRangeFn}
-            isRangeEnd={isRangeEndFn}
-            rangeMode={rangeStart.value?.unblockMode ? 'unblock' : 'block'}
-            onSelect={handleDayClick}
-            onHoverDate={(y, m, d) => {
-              hoverDate.value = { y, m, d, unblockMode: rangeStart.value?.unblockMode ?? false };
-            }}
-            onLeaveGrid={() => {
-              hoverDate.value = null;
-            }}
-          />
-        </div>
-        <div class={styles.bd_legend}>
-          <span class={styles.bd_legend_item}>
-            <span class={`${styles.bd_legend_swatch} ${styles.bd_legend_swatch_blocked}`} /> Blocked
-          </span>
-          <span class={styles.bd_legend_item}>
-            <span class={`${styles.bd_legend_swatch} ${styles.bd_legend_swatch_unblock}`} /> Unblock range
-          </span>
-          <span class={`${styles.bd_legend_item} ${styles.bd_legend_hint}`}>
-            Click to toggle · Click two days to block or unblock a range
-          </span>
-        </div>
+          </h2>
+          <Button class="join-item" shape="square" aria-label="Next month" onClick={nextMonth}>
+            <ChevronRight />
+          </Button>
+        </Join>
       </div>
-    </div>
+
+      <div class="relative" aria-busy={isLoading.value}>
+        {isLoading.value && (
+          <p class="text-base-content/70 absolute inset-0 m-0 flex items-center justify-center gap-3">
+            <Loading size="sm" label={null} />
+            Loading…
+          </p>
+        )}
+        <Calendar
+          class={cx(isLoading.value && 'invisible')}
+          year={viewYear.value}
+          month={viewMonth.value}
+          isBlocked={isBlockedFn}
+          isRangeStart={isRangeStartFn}
+          isInRange={isInRangeFn}
+          isRangeEnd={isRangeEndFn}
+          rangeMode={rangeStart.value?.unblockMode ? 'unblock' : 'block'}
+          onSelect={handleDayClick}
+          onHoverDate={(y, m, d) => {
+            hoverDate.value = { y, m, d, unblockMode: rangeStart.value?.unblockMode ?? false };
+          }}
+          onMouseLeave={() => {
+            hoverDate.value = null;
+          }}
+        />
+      </div>
+
+      {/* The swatches are decorative: each sits beside its own text. */}
+      <div class="border-base-300 text-base-content/70 flex flex-wrap items-center gap-x-4 gap-y-2 border-t pt-3 text-sm">
+        <span class="flex items-center gap-2">
+          {/* Drawn like a blocked day; `color` is required but the stripes cover it. */}
+          <Status
+            color="primary"
+            size="xl"
+            class="border-base-300 border opacity-55 bg-[repeating-linear-gradient(-45deg,var(--color-base-200),var(--color-base-200)_3px,var(--color-base-100)_3px,var(--color-base-100)_7px)]"
+          />
+          Blocked
+        </span>
+        <span class="flex items-center gap-2">
+          <Status color="primary" size="xl" />
+          Block range
+        </span>
+        <span class="flex items-center gap-2">
+          <Status color="error" size="xl" />
+          Unblock range
+        </span>
+        <span class="italic">Click to toggle · Click two days to block or unblock a range</span>
+      </div>
+    </Card>
   );
 };
 
