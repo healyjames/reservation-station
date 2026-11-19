@@ -20,6 +20,8 @@ type CalendarProps = {
   isStandalone?: boolean;
   tenantName?: string;
   allowPastDates?: boolean;
+  /** The month heading's level: 2 in the booking widget, 3 where the calendar sits under a section heading. */
+  headingLevel?: 2 | 3;
 };
 
 const BLOCKED_TIP_MS = 3000;
@@ -37,7 +39,9 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
   isStandalone = false,
   tenantName,
   allowPastDates = false,
+  headingLevel = 2,
 }) => {
+  const MonthHeading = headingLevel === 3 ? 'h3' : 'h2';
   const tooltipAnchor = useSignal<HTMLElement | null>(null);
   const tooltipMessage = useSignal('');
   const today = new Date();
@@ -128,9 +132,9 @@ export const Calendar: FunctionComponent<CalendarProps> = ({
           >
             <ChevronLeft />
           </Button>
-          <h2 id="calendar-title" class="join-item border-base-300 m-0 flex items-center px-4 text-[2rem] leading-tight">
+          <MonthHeading id="calendar-title" class="join-item border-base-300 m-0 flex items-center px-4 text-[2rem] leading-tight">
             {MONTH_NAMES[month]} {year}
-          </h2>
+          </MonthHeading>
           <Button class="join-item" shape="square" aria-label="Next month" disabled={isFetchingDates} onClick={nextMonth}>
             <ChevronRight />
           </Button>

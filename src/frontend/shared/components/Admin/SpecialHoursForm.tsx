@@ -1,9 +1,8 @@
 import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { AdminDateOverride, SpecialHoursInput } from '@shared/types';
-import { Button, FormField, Input, Select } from '@shared/components';
+import { Button, Card, Fieldset, Input, Select } from '@shared/components/ui';
 import { getSpecialHoursOptions } from '@shared/utils';
-import styles from './SpecialHoursForm.module.css';
 
 const MAX_REASON_LENGTH = 200;
 
@@ -41,24 +40,28 @@ const SpecialHoursForm: FunctionComponent<SpecialHoursFormProps> = ({ normalHour
   }
 
   return (
-    <section class={styles.card} aria-labelledby="special-hours-heading">
-      <div>
-        <p class={styles.heading} id="special-hours-heading">
-          <strong>Opening hours on this day</strong>
-        </p>
-        <p class={styles.subtext}>
-          Normal hours: {normalHours}.{' '}
-          {hasSpecialHours
-            ? specialHours.is_closed
-              ? 'This day is set to closed.'
-              : `Special hours are set: ${specialHours.open_time} – ${specialHours.close_time}.`
-            : 'Set special hours to open at different times, or to open on a day you are normally closed.'}{' '}
-          Existing reservations will not be affected.
-        </p>
-      </div>
+    <Card
+      as="section"
+      aria-labelledby="special-hours-heading"
+      class="bg-base-200 [--card-p:1rem] [--cardtitle-fs:0.9375rem]"
+      title={<span id="special-hours-heading">Opening hours on this day</span>}
+      titleAs="h4"
+    >
+      <p class="text-base-content/70 text-sm">
+        Normal hours: {normalHours}.{' '}
+        {hasSpecialHours
+          ? specialHours.is_closed
+            ? 'This day is set to closed.'
+            : `Special hours are set: ${specialHours.open_time} – ${specialHours.close_time}.`
+          : 'Set special hours to open at different times, or to open on a day you are normally closed.'}{' '}
+        Existing reservations will not be affected.
+      </p>
 
-      <form class={styles.form} onSubmit={handleSubmit}>
-        <FormField label="Opens" htmlFor="special-open">
+      <form
+        class="grid grid-cols-2 items-end gap-3 md:grid-cols-[minmax(7rem,1fr)_minmax(7rem,1fr)_minmax(10rem,2fr)_auto]"
+        onSubmit={handleSubmit}
+      >
+        <Fieldset label="Opens" htmlFor="special-open">
           <Select
             id="special-open"
             name="special-open"
@@ -67,8 +70,8 @@ const SpecialHoursForm: FunctionComponent<SpecialHoursFormProps> = ({ normalHour
             placeholder="Opens"
             onChange={handleOpenChange}
           />
-        </FormField>
-        <FormField label="Closes" htmlFor="special-close">
+        </Fieldset>
+        <Fieldset label="Closes" htmlFor="special-close">
           <Select
             id="special-close"
             name="special-close"
@@ -80,8 +83,8 @@ const SpecialHoursForm: FunctionComponent<SpecialHoursFormProps> = ({ normalHour
               closeTime.value = (e.target as HTMLSelectElement).value;
             }}
           />
-        </FormField>
-        <FormField label="Note (optional)" htmlFor="special-reason" class={styles.reason}>
+        </Fieldset>
+        <Fieldset label="Note (optional)" htmlFor="special-reason" class="col-span-2 md:col-span-1">
           <Input
             id="special-reason"
             name="special-reason"
@@ -92,8 +95,8 @@ const SpecialHoursForm: FunctionComponent<SpecialHoursFormProps> = ({ normalHour
               reason.value = (e.target as HTMLInputElement).value;
             }}
           />
-        </FormField>
-        <div class={styles.actions}>
+        </Fieldset>
+        <div class="col-span-2 mb-1 flex flex-wrap gap-2 md:col-span-1">
           <Button type="submit" variant="primary" disabled={!isValid} isLoading={isLoading}>
             {hasSpecialHours ? 'Update special hours' : 'Set special hours'}
           </Button>
@@ -104,7 +107,7 @@ const SpecialHoursForm: FunctionComponent<SpecialHoursFormProps> = ({ normalHour
           )}
         </div>
       </form>
-    </section>
+    </Card>
   );
 };
 

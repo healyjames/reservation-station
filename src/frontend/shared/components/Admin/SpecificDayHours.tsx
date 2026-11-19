@@ -1,7 +1,8 @@
 import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
-import { Button } from '@shared/components';
+import { Alert, Button } from '@shared/components/ui';
+import { ArrowLeft } from '@shared/components/ui/icons';
 import { Calendar } from '@shared/components/BookingWidget/Calendar';
 import { useMonthTimeBlocks } from '@shared/hooks/useMonthTimeBlocks';
 import { useOpeningHours } from '@shared/hooks/useOpeningHours';
@@ -10,7 +11,6 @@ import { DEFAULT_CLOSE_TIME, DEFAULT_OPEN_TIME } from '@constants';
 import ChangedHoursList from './ChangedHoursList';
 import DayTimeBlocks from './DayTimeBlocks';
 import SpecialHoursForm from './SpecialHoursForm';
-import styles from './SpecificDayHours.module.css';
 
 type SpecificDayHoursProps = {
   token: string;
@@ -37,28 +37,32 @@ const SpecificDayHours: FunctionComponent<SpecificDayHoursProps> = ({ token, onB
     return `${weekly?.open_time ?? DEFAULT_OPEN_TIME} – ${weekly?.close_time ?? DEFAULT_CLOSE_TIME}`;
   }
 
+  // The page title (Opening hours) comes from AdminLayout's h1.
   return (
-    <div class={styles.view}>
+    <div class="grid gap-5">
       <div>
         <Button variant="ghost" size="sm" onClick={onBack}>
-          &#8592; Back to opening hours
+          <ArrowLeft />
+          Back to opening hours
         </Button>
       </div>
 
       <div>
-        <h3 class={styles.title}>Change hours on a specific day</h3>
-        <p class={styles.intro}>
+        <h2 class="mt-0 mb-2 text-lg font-semibold">Change hours on a specific day</h2>
+        <p class="text-base-content/70 m-0 text-sm">
           Pick a day, then set special opening hours for it or block the times you do not want to take bookings for. Your normal weekly
           opening hours stay as they are.
         </p>
       </div>
 
-      <div class={styles.calendar}>
+      {/* The shared calendar is sized for the booking widget; keep it compact here. */}
+      <div class="max-w-[30rem]">
         <Calendar
           year={viewYear.value}
           month={viewMonth.value}
           selectedDate={selected}
           blockedDates={new Set()}
+          headingLevel={3}
           blockedDatesError={loadError.value}
           isFetchingDates={isFetching.value}
           onMonthChange={async (year, month) => {
@@ -73,12 +77,12 @@ const SpecificDayHours: FunctionComponent<SpecificDayHoursProps> = ({ token, onB
       </div>
 
       {selected ? (
-        <div class={styles.day}>
-          <h4 class={styles.day_title}>{formatDateForDisplay(selected)}</h4>
+        <div class="grid gap-3">
+          <h3 class="m-0 text-base font-semibold">{formatDateForDisplay(selected)}</h3>
           {saveError.value && (
-            <p class={styles.error} role="alert">
+            <Alert variant="error" live="assertive">
               {saveError.value}
-            </p>
+            </Alert>
           )}
           <SpecialHoursForm
             key={`hours-${selectedKey}-${selectedOverride?.open_time ?? ''}-${selectedOverride?.close_time ?? ''}`}
@@ -101,7 +105,7 @@ const SpecificDayHours: FunctionComponent<SpecificDayHoursProps> = ({ token, onB
           />
         </div>
       ) : (
-        <p class={styles.hint}>Select a day on the calendar to change its hours.</p>
+        <p class="text-base-content/70 m-0 text-sm">Select a day on the calendar to change its hours.</p>
       )}
 
       <ChangedHoursList

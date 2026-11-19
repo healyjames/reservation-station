@@ -1,9 +1,9 @@
 import { useSignal } from '@preact/signals';
 import type { FunctionComponent } from 'preact';
 import type { AdminBlockedDate, AdminDateOverride, CalendarDate, OpeningHoursEntry, TimeBlockInput } from '@shared/types';
-import { Button, FormField, Input, Select } from '@shared/components';
+import { Alert, Button, Card, Fieldset, Input, List, Select } from '@shared/components/ui';
+import { Trash2 } from '@shared/components/ui/icons';
 import { getBlockTimeOptions } from '@shared/utils';
-import styles from './DayTimeBlocks.module.css';
 
 const MAX_REASON_LENGTH = 200;
 
@@ -62,20 +62,24 @@ const DayTimeBlocks: FunctionComponent<DayTimeBlocksProps> = ({
   }
 
   return (
-    <section class={styles.card} aria-labelledby="day-time-blocks-heading">
-      <div class={styles.intro}>
-        <p class={styles.heading} id="day-time-blocks-heading">
-          <strong>Block a time range</strong>
-        </p>
-        <p class={styles.subtext}>
-          Customers will not be able to book a table starting in this range. The end time itself stays bookable. Existing reservations will
-          not be affected.
-        </p>
-      </div>
+    <Card
+      as="section"
+      aria-labelledby="day-time-blocks-heading"
+      class="bg-base-200 [--card-p:1rem] [--cardtitle-fs:0.9375rem]"
+      title={<span id="day-time-blocks-heading">Block a time range</span>}
+      titleAs="h4"
+    >
+      <p class="text-base-content/70 text-sm">
+        Customers will not be able to book a table starting in this range. The end time itself stays bookable. Existing reservations will
+        not be affected.
+      </p>
 
       {canBlock ? (
-        <form class={styles.form} onSubmit={handleSubmit}>
-          <FormField label="From" htmlFor="block-start">
+        <form
+          class="grid grid-cols-2 items-end gap-3 md:grid-cols-[minmax(7rem,1fr)_minmax(7rem,1fr)_minmax(10rem,2fr)_auto]"
+          onSubmit={handleSubmit}
+        >
+          <Fieldset label="From" htmlFor="block-start">
             <Select
               id="block-start"
               name="block-start"
@@ -84,8 +88,8 @@ const DayTimeBlocks: FunctionComponent<DayTimeBlocksProps> = ({
               placeholder="Start"
               onChange={handleStartChange}
             />
-          </FormField>
-          <FormField label="Until" htmlFor="block-end">
+          </Fieldset>
+          <Fieldset label="Until" htmlFor="block-end">
             <Select
               id="block-end"
               name="block-end"
@@ -97,8 +101,8 @@ const DayTimeBlocks: FunctionComponent<DayTimeBlocksProps> = ({
                 endTime.value = (e.target as HTMLSelectElement).value;
               }}
             />
-          </FormField>
-          <FormField label="Reason (optional)" htmlFor="block-reason" class={styles.reason}>
+          </Fieldset>
+          <Fieldset label="Reason (optional)" htmlFor="block-reason" class="col-span-2 md:col-span-1">
             <Input
               id="block-reason"
               name="block-reason"
@@ -109,13 +113,13 @@ const DayTimeBlocks: FunctionComponent<DayTimeBlocksProps> = ({
                 reason.value = (e.target as HTMLInputElement).value;
               }}
             />
-          </FormField>
-          <Button type="submit" variant="primary" disabled={!isValid} isLoading={isLoading} class={styles.submit}>
+          </Fieldset>
+          <Button type="submit" variant="primary" disabled={!isValid} isLoading={isLoading} class="col-span-2 mb-1 md:col-span-1">
             Block time range
           </Button>
         </form>
       ) : (
-        <p class={styles.unavailable}>
+        <p class="text-base-content/70 text-sm">
           {hoursLoaded
             ? 'Time ranges can only be blocked on days the venue is open, with opening hours that end before midnight. This day is closed or its hours run past midnight. Set special opening hours for this day to open it.'
             : 'Opening hours are not loaded yet. Use Refresh if this message does not go away.'}
@@ -123,35 +127,44 @@ const DayTimeBlocks: FunctionComponent<DayTimeBlocksProps> = ({
       )}
 
       {errorMessage && (
-        <p class={styles.error} role="alert">
+        <Alert variant="error" live="assertive">
           {errorMessage}
-        </p>
+        </Alert>
       )}
 
       {blocks.length === 0 ? (
-        <p class={styles.empty}>No time ranges are blocked on this day.</p>
+        <p class="text-base-content/70 text-sm">No time ranges are blocked on this day.</p>
       ) : (
-        <ul class={styles.list} aria-label="Blocked time ranges">
-          {blocks.map((block) => (
-            <li key={block.id} class={styles.list_item}>
-              <span class={styles.range}>
-                {block.start_time} – {block.end_time}
-              </span>
-              {block.reason && <span class={styles.block_reason}>{block.reason}</span>}
+        <List
+          class="rounded-box bg-base-100"
+          aria-label="Blocked time ranges"
+          rows={blocks.map((block) => ({
+            key: block.id,
+            content: (
+              <>
+                <span class="font-medium tabular-nums">
+                  {block.start_time} – {block.end_time}
+                </span>
+                {block.reason && <span class="text-base-content/70">{block.reason}</span>}
+              </>
+            ),
+            action: (
               <Button
-                variant="action-delete"
+                variant="ghost"
                 size="sm"
+                class="text-error"
                 disabled={isLoading}
                 aria-label={`Remove block ${block.start_time} to ${block.end_time}`}
                 onClick={() => onRemove(block.id)}
               >
+                <Trash2 />
                 Remove
               </Button>
-            </li>
-          ))}
-        </ul>
+            ),
+          }))}
+        />
       )}
-    </section>
+    </Card>
   );
 };
 

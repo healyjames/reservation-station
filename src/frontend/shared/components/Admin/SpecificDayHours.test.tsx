@@ -293,6 +293,22 @@ describe('SpecificDayHours', () => {
     expect(await findByRole('button', { name: /retry/i })).toBeTruthy();
   });
 
+  it('nests its headings under the layout title, without skipping a level', async () => {
+    const { getByRole, getAllByRole, findByRole } = await renderLoaded();
+    fireEvent.click(getByRole('button', { name: '10' }));
+    await findByRole('region', { name: 'Block a time range' });
+
+    expect(getAllByRole('heading').map((h) => [h.tagName, h.textContent])).toEqual([
+      ['H2', 'Change hours on a specific day'],
+      ['H3', 'June 2099'],
+      ['H3', 'Wednesday, 10 June 2099'],
+      ['H4', 'Opening hours on this day'],
+      ['H4', 'Block a time range'],
+      ['H2', 'Changed hours in June 2099'],
+    ]);
+    expect(getByRole('region', { name: 'Opening hours on this day' })).toBeTruthy();
+  });
+
   it('goes back to the weekly opening hours', async () => {
     const { getByRole, onBack } = await renderLoaded();
 
