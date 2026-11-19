@@ -14,7 +14,7 @@ A multi-tenant restaurant reservation system built on Cloudflare's developer pla
 │  ────────────────────────            ─────────────────   │
 │  src/frontend/* HTML entries         Hono route modules  │
 │  dist/assets/* Vite bundles          /api/tenants        │
-│  public/*.css + fonts + theme.js     /api/reservations   │
+│  public/ fonts + theme.js            /api/reservations   │
 │                                           │              │
 │                                    D1 SQLite database    │
 └──────────────────────────────────────────────────────────┘
@@ -37,18 +37,19 @@ src/
   frontend/
     index.html           # Canonical root booking entry
     booking-widget/      # Named booking widget surface
-    booking/manage/      # Booking management surface
-    admin/               # Admin surface
+    booking/             # Booking management surface
+    admin/               # Admin surface (drawer layout, hash routes such as #/settings/general)
     cancel/              # Cancellation surface
     shared/              # Shared hooks, components, utils, types
+      components/ui/     # Owned daisyUI building blocks (Button, Modal, Fieldset...); see documentation/UI_COMPONENTS.md
+      styles/            # Tailwind v4 + daisyUI CSS: public.css and admin.css entries, base.css, themes-*.css
 
 public/
-  shared.css             # Shared global tokens/layout styles
-  styles.css             # Booking widget global styles
-  admin/styles/admin.css # Admin global styles
   fonts/                 # Self-hosted Google Sans variable fonts
-  js/theme.js            # Blocking theme bootstrap
+  js/theme.js            # Blocking theme bootstrap: sets <html data-theme> before first paint
 ```
+
+Styling is Tailwind CSS v4 with daisyUI 5. Each surface imports one CSS entry: the public pages use `shared/styles/public.css` and admin uses `shared/styles/admin.css`. Themes are daisyUI themes in `themes-public.css` (6 palettes, light and dark) and `themes-admin.css`. `public/js/theme.js` picks one before first paint: public pages from `?theme=<palette>&mode=<light|dark>`, admin from `?mode=`, else its saved mode (admin ignores `?theme=`); both default to dark and sets `data-theme` on `<html>`.
 
 ### Key Dependencies
 
@@ -58,6 +59,7 @@ public/
 | `hono` | Lightweight API framework for Workers |
 | `zod` | Request body validation + schema-derived TypeScript types |
 | `vite` | Multi-entry frontend build |
+| `tailwindcss`, `daisyui` | Utility CSS and the component classes and themes behind `shared/components/ui` |
 | `wrangler` | CLI for local dev, D1 migrations, and deployment |
 
 ---
