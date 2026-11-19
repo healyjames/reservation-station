@@ -1,5 +1,5 @@
 import { useSignal } from '@preact/signals';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useRef } from 'preact/hooks';
 import type { FunctionComponent } from 'preact';
 import type { CalendarDate } from '@shared/types';
 import { Calendar } from '@shared/components/BookingWidget/Calendar';
@@ -25,6 +25,8 @@ const CalendarPickerModal: FunctionComponent<CalendarPickerModalProps> = ({ open
   const blockedDates = useSignal<Set<string>>(new Set());
   const blockedDatesError = useSignal('');
   const isFetchingDates = useSignal(false);
+  // The open effect and the calendar's own mount both load the month; only the latest request may settle the state.
+  const latestRequest = useRef(0);
 
   useEffect(() => {
     if (open) {
@@ -40,18 +42,19 @@ const CalendarPickerModal: FunctionComponent<CalendarPickerModalProps> = ({ open
   }, [open]);
 
   async function fetchBlockedDates(year: number, month: number): Promise<void> {
+    const request = ++latestRequest.current;
     blockedDatesError.value = '';
     isFetchingDates.value = true;
     try {
       const { adminBlocked, closed, aborted, error } = await fetchBlockedDatesForMonth(tenantId, year, month);
-      if (aborted) return;
+      if (aborted || request !== latestRequest.current) return;
       if (error) {
         blockedDatesError.value = 'Could not load availability. Please try again.';
         return;
       }
       blockedDates.value = new Set([...adminBlocked, ...closed]);
     } finally {
-      isFetchingDates.value = false;
+      if (request === latestRequest.current) isFetchingDates.value = false;
     }
   }
 
@@ -79,6 +82,7 @@ const CalendarPickerModal: FunctionComponent<CalendarPickerModalProps> = ({ open
         onMonthChange={handleMonthChange}
         onDateSelect={handleDateSelect}
         allowPastDates
+        headingLevel={3}
       />
     </Modal>
   );

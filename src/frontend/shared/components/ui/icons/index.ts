@@ -12,7 +12,6 @@ export { default as CircleCheck } from './CircleCheck';
 export { default as Clock } from './Clock';
 export { default as Info } from './Info';
 export { default as LogOut } from './LogOut';
-export { default as Menu } from './Menu';
 export { default as Moon } from './Moon';
 export { default as PanelLeftClose } from './PanelLeftClose';
 export { default as PanelLeftOpen } from './PanelLeftOpen';

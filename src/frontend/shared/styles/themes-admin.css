@@ -36,12 +36,6 @@
   --border: 1px;
   --depth: 0;
   --noise: 0;
-  /* Exact legacy shades for the public/styles.css bridge. Remove in subtask 40. */
-  --legacy-primary-light: #3e7471;
-  --legacy-primary-lighter: #548380;
-  --legacy-primary-lightest: #69928f;
-  --legacy-primary-darker: #1c1412;
-  --legacy-grey-lightest: #f5f5f5;
 }
 
 @plugin 'daisyui/theme' {
@@ -77,10 +71,4 @@
   --border: 1px;
   --depth: 0;
   --noise: 0;
-  /* Exact legacy shades for the public/styles.css bridge. Remove in subtask 40. */
-  --legacy-primary-light: #3e7471;
-  --legacy-primary-lighter: #548380;
-  --legacy-primary-lightest: #69928f;
-  --legacy-primary-darker: #bdcfce;
-  --legacy-grey-lightest: #2e1e1c;
 }

@@ -22,7 +22,6 @@ describe('icons', () => {
         'Clock',
         'Info',
         'LogOut',
-        'Menu',
         'Moon',
         'PanelLeftClose',
         'PanelLeftOpen',

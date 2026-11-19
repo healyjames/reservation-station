@@ -2,17 +2,18 @@
 import { render, within } from '@testing-library/preact';
 import { describe, it, expect } from 'vitest';
 import Join from './Join';
+import { ChevronLeft, ChevronRight } from '../icons';
 
 describe('Join', () => {
   it('is a group named by aria-label, with its children in order', () => {
     const { getByRole } = render(
       <Join aria-label="Month">
         <button type="button" class="join-item" aria-label="Previous month">
-          ←
+          <ChevronLeft />
         </button>
         <span class="join-item">June 2026</span>
         <button type="button" class="join-item" aria-label="Next month">
-          →
+          <ChevronRight />
         </button>
       </Join>,
     );
@@ -22,7 +23,7 @@ describe('Join', () => {
         .getAllByRole('button')
         .map((b) => b.getAttribute('aria-label')),
     ).toEqual(['Previous month', 'Next month']);
-    expect(group.textContent).toBe('←June 2026→');
+    expect(group.textContent).toBe('June 2026');
   });
 
   it('is a group without a name too', () => {

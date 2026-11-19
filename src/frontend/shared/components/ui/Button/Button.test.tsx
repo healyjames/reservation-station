@@ -2,6 +2,7 @@
 import { render, fireEvent } from '@testing-library/preact';
 import { describe, it, expect, vi } from 'vitest';
 import Button from './Button';
+import { ChevronLeft } from '../icons';
 
 describe('Button', () => {
   it('renders its children as the accessible name', () => {
@@ -10,7 +11,11 @@ describe('Button', () => {
   });
 
   it('forwards aria-label so icon-only buttons are named', () => {
-    const { getByRole } = render(<Button aria-label="Previous month">←</Button>);
+    const { getByRole } = render(
+      <Button aria-label="Previous month">
+        <ChevronLeft />
+      </Button>,
+    );
     expect(getByRole('button', { name: 'Previous month' })).toBeTruthy();
   });
 

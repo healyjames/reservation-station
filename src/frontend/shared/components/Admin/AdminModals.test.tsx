@@ -182,6 +182,28 @@ describe('CalendarPickerModal', () => {
     await waitFor(() => expect(within(modal).getByRole('tooltip')).toBeTruthy());
   });
 
+  it('keeps the days disabled until the latest month load settles, ignoring an older one', async () => {
+    type Result = Awaited<ReturnType<typeof fetchBlockedDatesForMonth>>;
+    const pending: Array<(result: Result) => void> = [];
+    vi.mocked(fetchBlockedDatesForMonth).mockImplementation(() => new Promise<Result>((resolve) => pending.push(resolve)));
+    const result = (blocked: string[]) => ({ adminBlocked: new Set(blocked), closed: new Set<string>(), aborted: false, error: false });
+
+    await act(async () => {
+      render(<CalendarPickerModal open onClose={vi.fn()} currentDate={new Date(2099, 5, 15)} tenantId="t1" onDateSelect={vi.fn()} />);
+    });
+    const modal = dialog('Go to date');
+    expect(pending.length).toBeGreaterThan(1);
+    expect(within(modal).getByRole('heading', { level: 3, name: 'June 2099' })).toBeTruthy();
+
+    // The older request finishing first must not enable the days or set its blocked dates.
+    await act(async () => pending[0](result(['2099-06-20'])));
+    expect(within(modal).queryByRole('button', { name: '21' })).toBeNull();
+
+    await act(async () => pending[pending.length - 1](result(['2099-06-25'])));
+    expect(within(modal).getByRole('button', { name: '20' })).toBeTruthy();
+    expect(within(modal).getByRole('gridcell', { name: '25' }).dataset.blocked).toBe('true');
+  });
+
   it('closes only the tooltip on the first Esc, leaving the dialog open', async () => {
     const onClose = vi.fn();
     await act(async () => {

@@ -24,7 +24,6 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
   const dietary = useSignal(reservation?.dietary_requirements ?? '');
   const errorMessage = useSignal('');
   const isSubmitting = useSignal(false);
-  const isDeleting = useSignal(false);
 
   const title = mode === 'edit' ? 'Edit Booking' : 'New Booking';
 
@@ -66,26 +65,6 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
       errorMessage.value = 'Unable to connect. Please try again.';
     } finally {
       isSubmitting.value = false;
-    }
-  }
-
-  async function handleDelete() {
-    if (!reservation) return;
-    errorMessage.value = '';
-    isDeleting.value = true;
-    try {
-      const r = await adminFetch(`/api/admin/reservations/${reservation.id}`, token, { method: 'DELETE' });
-      if (r.ok) {
-        onSuccess();
-        onClose();
-        return;
-      }
-      const data = (await r.json().catch(() => ({}))) as { error?: string };
-      errorMessage.value = data.error ?? `Delete failed (${r.status})`;
-    } catch {
-      errorMessage.value = 'Unable to connect. Please try again.';
-    } finally {
-      isDeleting.value = false;
     }
   }
 
