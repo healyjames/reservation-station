@@ -25,7 +25,7 @@ function makeResponse<T>(body: T, status = 200): Response {
 
 describe('BlockedDatesSettings', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2099-06-05T12:00:00.000Z'));
     adminFetchMock.mockReset();
   });

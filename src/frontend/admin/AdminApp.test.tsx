@@ -75,7 +75,7 @@ describe('AdminApp', () => {
     signIn(true);
     const { getByRole } = render(<AdminApp />);
     expect(getByRole('heading', { level: 1, name: 'Blocked dates' })).toBeTruthy();
-    expect(getByRole('link', { name: 'Blocked Dates' }).getAttribute('aria-current')).toBe('page');
+    expect(getByRole('link', { name: 'Blocked dates' }).getAttribute('aria-current')).toBe('page');
   });
 
   it('swaps the page when the hash changes', () => {
@@ -87,7 +87,7 @@ describe('AdminApp', () => {
     expect(getByRole('heading', { level: 1, name: 'Opening hours' })).toBeTruthy();
   });
 
-  it('routes the Opening Hours specific-day button through the URL', async () => {
+  it('routes the Opening hours specific-day button through the URL', async () => {
     window.location.hash = '#/settings/opening-hours';
     signIn(true);
     const { findByRole } = render(<AdminApp />);

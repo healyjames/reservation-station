@@ -22,9 +22,9 @@ A booking starting at `T` occupies capacity for its whole **sitting**, `[T, T + 
 
 | Field | Meaning | Where set |
 |---|---|---|
-| `max_covers` | Maximum concurrent guests (venue physical capacity). `0` = unlimited. | Admin › General › Max venue capacity |
-| `concurrent_guests_time_limit` | Duration in minutes that each booking occupies capacity (e.g. 120 = 2-hour sitting). | Admin › General › Guest time window (minutes) |
-| `max_guests` | Maximum party size per individual booking. `0` = unlimited. | Admin › General › Max party size (per booking) |
+| `max_covers` | Maximum concurrent guests (venue physical capacity). `0` = unlimited. | Admin › General settings › Max venue capacity |
+| `concurrent_guests_time_limit` | Duration in minutes that each booking occupies capacity (e.g. 120 = 2-hour sitting). | Admin › General settings › Guest time window (minutes) |
+| `max_guests` | Maximum party size per individual booking. `0` = unlimited. | Admin › General settings › Max party size (per booking) |
 
 `max_covers` and `max_guests` are independent controls:
 - `max_covers` limits how many guests can be *in the venue at once*.
@@ -38,7 +38,7 @@ A tenant can set a **booking delay** (`booking_delay_minutes`) to prevent last-m
 
 | Field | Meaning | Where set |
 |---|---|---|
-| `booking_delay_minutes` | Minutes of lead time before the earliest bookable slot. `0` = no delay. Stored in minutes; the admin UI exposes it in hours (e.g. `1.5` hours → `90` minutes). | Admin › General › Booking delay (hours) |
+| `booking_delay_minutes` | Minutes of lead time before the earliest bookable slot. `0` = no delay. Stored in minutes; the admin UI exposes it in hours (e.g. `1.5` hours → `90` minutes). | Admin › General settings › Booking delay (hours) |
 
 **Example:** with `booking_delay_minutes = 90`, at 18:00 the earliest selectable slot is 19:30 (next 30-minute boundary at/after now + 90 min).
 
@@ -291,12 +291,12 @@ The widget caches `blocked-times` for 60 seconds, so a customer may briefly stil
 ### Admin UI
 
 - **Bookings day view** (`Dashboard.tsx`): "Block this day" toggles a full-day block. When the visible day has time ranges, a read-only "Changed hours on this day" banner (`DayHoursBanner.tsx`) lists them, and its "Change these hours" link opens the specific-day view (`#/settings/opening-hours/specific-day`).
-- **Opening Hours** (admin drawer, `#/settings/opening-hours`): a "Change hours for a specific day" button opens `SpecificDayHours.tsx` at `#/settings/opening-hours/specific-day`, in place of the weekly schedule; "Back to opening hours" returns. The admin picks a day on the shared calendar, then adds a time range with the `DayTimeBlocks.tsx` form. The view lists the viewed month's ranges, each with Remove (`DELETE /api/admin/blocked-dates/:id`). The same list (`ChangedHoursList.tsx`, data from `useMonthTimeBlocks.ts`) also appears under the weekly schedule for the current month.
+- **Opening hours** (admin drawer, `#/settings/opening-hours`): a "Change hours for a specific day" button opens `SpecificDayHours.tsx` at `#/settings/opening-hours/specific-day`, in place of the weekly schedule; "Back to opening hours" returns. The admin picks a day on the shared calendar, then adds a time range with the `DayTimeBlocks.tsx` form. The view lists the viewed month's ranges, each with Remove (`DELETE /api/admin/blocked-dates/:id`). The same list (`ChangedHoursList.tsx`, data from `useMonthTimeBlocks.ts`) also appears under the weekly schedule for the current month.
 - The From/Until choices are 30-minute steps bounded by that weekday's opening hours. Until only offers times after From, and its last option is closing time. The form enters blocked ranges only; there is no "bookable window" mode.
 - Opening hours are fetched from `GET /api/admin/opening-hours` when the specific-day view opens (`useOpeningHours.ts`). The admin login response does not carry them.
 - On a closed day, or a day whose hours run past midnight, the block form is replaced by an explanation. Existing ranges on that day can still be removed. Ranges that wrap past midnight can no longer be created anywhere. Setting special opening hours for the day makes the block form available.
 - With no opening hours configured, the default `12:00`–`22:00` is used.
-- **Blocked Dates** (admin drawer, `#/settings/blocked-dates`) manages full-day blocks only and does not show time ranges.
+- **Blocked dates** (admin drawer, `#/settings/blocked-dates`) manages full-day blocks only and does not show time ranges.
 
 ---
 
@@ -334,7 +334,7 @@ Time-range blocks are then applied inside whichever hours won.
 
 ### Admin UI and API
 
-- **Opening Hours › "Change hours for a specific day"** (`#/settings/opening-hours/specific-day`): after picking a day, "Opening hours on this day" (`SpecialHoursForm.tsx`) shows the normal hours and sets, updates or removes special hours. Any day can be picked, including normally closed ones. The block form below it is then bounded by the special hours.
+- **Opening hours › "Change hours for a specific day"** (`#/settings/opening-hours/specific-day`): after picking a day, "Opening hours on this day" (`SpecialHoursForm.tsx`) shows the normal hours and sets, updates or removes special hours. Any day can be picked, including normally closed ones. The block form below it is then bounded by the special hours.
 - "Changed hours in <month>" lists special hours alongside blocked ranges, each with Remove.
 - **Bookings day view**: the "Changed hours on this day" banner shows special hours for the visible day (`useDateOverrides.ts`).
 - The UI only sets special hours (open with times). Closing a whole day is done with "Block this day". The API also accepts `is_closed: true`.

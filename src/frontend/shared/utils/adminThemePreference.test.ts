@@ -1,37 +1,22 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ADMIN_MODE_STORAGE_KEY, readAdminMode, saveAdminMode } from './adminThemePreference';
+import { ADMIN_MODE_STORAGE_KEY, saveAdminMode } from './adminThemePreference';
 
+// Reading the saved mode is public/js/theme.js's job; shared/styles/themeNames.test.ts covers it.
 afterEach(() => {
   vi.restoreAllMocks();
   window.localStorage.clear();
 });
 
-describe('adminThemePreference', () => {
-  it('reads back a saved mode', () => {
+describe('saveAdminMode', () => {
+  it('saves the mode under the key theme.js reads', () => {
     saveAdminMode('light');
-    expect(readAdminMode()).toBe('light');
+    expect(window.localStorage.getItem(ADMIN_MODE_STORAGE_KEY)).toBe('light');
     saveAdminMode('dark');
-    expect(readAdminMode()).toBe('dark');
+    expect(window.localStorage.getItem(ADMIN_MODE_STORAGE_KEY)).toBe('dark');
   });
 
-  it('reads nothing saved as null', () => {
-    expect(readAdminMode()).toBeNull();
-  });
-
-  it('reads an unknown value as null', () => {
-    window.localStorage.setItem(ADMIN_MODE_STORAGE_KEY, 'purple');
-    expect(readAdminMode()).toBeNull();
-  });
-
-  it('reads null when storage throws', () => {
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-      throw new Error('blocked');
-    });
-    expect(readAdminMode()).toBeNull();
-  });
-
-  it('does not throw when saving to storage throws', () => {
+  it('does not throw when storage is unavailable', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('blocked');
     });

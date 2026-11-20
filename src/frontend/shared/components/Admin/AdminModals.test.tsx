@@ -76,6 +76,29 @@ describe('BookingModal', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  it('lets Guests be cleared while typing, and settles on a whole number of at least 1', async () => {
+    vi.mocked(adminFetch).mockResolvedValue(response(200));
+    renderModal('edit');
+    const modal = dialog('Edit Booking');
+    const guests = within(modal).getByLabelText('Guests') as HTMLInputElement;
+
+    fireEvent.input(guests, { target: { value: '' } });
+    expect(guests.value).toBe('');
+    fireEvent.input(guests, { target: { value: '6' } });
+    expect(guests.value).toBe('6');
+
+    act(() => guests.focus());
+    fireEvent.input(guests, { target: { value: '0' } });
+    act(() => guests.blur());
+    expect(guests.value).toBe('1');
+
+    fireEvent.input(guests, { target: { value: '' } });
+    await act(async () => {
+      fireEvent.click(within(modal).getByRole('button', { name: 'Save changes' }));
+    });
+    expect(JSON.parse(vi.mocked(adminFetch).mock.calls[0][2]!.body as string).guests).toBe(1);
+  });
+
   it('announces a failed save and stays open', async () => {
     vi.mocked(adminFetch).mockResolvedValue(response(422, { error: 'That time is fully booked' }));
     const { onClose } = renderModal('edit');

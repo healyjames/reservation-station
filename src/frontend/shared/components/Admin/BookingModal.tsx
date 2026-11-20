@@ -20,12 +20,16 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
   const email = useSignal(reservation?.email ?? '');
   const reservationDate = useSignal(reservation?.reservation_date ?? defaultDate ?? '');
   const reservationTime = useSignal(reservation?.reservation_time ?? '');
-  const guests = useSignal<number>(reservation?.guests ?? 2);
+  // Kept as typed so the field can be cleared while editing; clampGuests turns it into a party size.
+  const guests = useSignal(String(reservation?.guests ?? 2));
   const dietary = useSignal(reservation?.dietary_requirements ?? '');
   const errorMessage = useSignal('');
   const isSubmitting = useSignal(false);
 
   const title = mode === 'edit' ? 'Edit Booking' : 'New Booking';
+
+  /** A whole number of at least 1; an empty or invalid entry counts as 1. Number() also reads `1e1` as 10. */
+  const clampGuests = (value: string) => Math.max(1, Math.trunc(Number(value)) || 1);
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
@@ -38,7 +42,7 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
       email: email.value,
       reservation_date: reservationDate.value,
       reservation_time: reservationTime.value,
-      guests: Number(guests.value),
+      guests: clampGuests(guests.value),
       dietary_requirements: dietary.value,
     };
     try {
@@ -137,7 +141,7 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
             name="reservation_date"
             value={reservationDate.value}
             required
-            onChange={(e) => {
+            onInput={(e) => {
               reservationDate.value = (e.target as HTMLInputElement).value;
             }}
           />
@@ -149,7 +153,7 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
             name="reservation_time"
             value={reservationTime.value}
             required
-            onChange={(e) => {
+            onInput={(e) => {
               reservationTime.value = (e.target as HTMLInputElement).value;
             }}
           />
@@ -159,10 +163,14 @@ const BookingModal: FunctionComponent<BookingModalProps> = ({ mode, reservation,
             id="bm-guests"
             type="number"
             name="guests"
+            min={1}
             value={guests.value}
             required
-            onChange={(e) => {
-              guests.value = parseInt((e.target as HTMLInputElement).value, 10) || 1;
+            onInput={(e) => {
+              guests.value = (e.target as HTMLInputElement).value;
+            }}
+            onBlur={() => {
+              guests.value = String(clampGuests(guests.value));
             }}
           />
         </Fieldset>

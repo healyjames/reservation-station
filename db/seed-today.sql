@@ -1,6 +1,8 @@
+-- LOCAL DEVELOPMENT ONLY. NEVER run this against production (never with --remote).
+-- It creates test admin logins with a published password and deletes and recreates seed bookings.
+--
 -- Seed three test tenants (with an admin login and weekly opening hours each) plus today's bookings.
--- Run locally:  npx wrangler d1 execute maximum_bookings_db --local --file=./db/seed-today.sql
--- Run remote:   npx wrangler d1 execute maximum_bookings_db --remote --file=./db/seed-today.sql
+-- Run:  npx wrangler d1 execute maximum_bookings_db --local --file=./db/seed-today.sql
 --
 -- Safe to re-run: tenants, admins and opening hours are only inserted if missing, and the seed reservations
 -- are deleted and recreated for the current (UTC) date each time.

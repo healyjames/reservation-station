@@ -54,9 +54,9 @@ describe('AdminLayout', () => {
     const nav = getByRole('navigation', { name: 'Admin' });
     const links = {
       Bookings: '#/bookings',
-      General: '#/settings/general',
-      'Opening Hours': '#/settings/opening-hours',
-      'Blocked Dates': '#/settings/blocked-dates',
+      'General settings': '#/settings/general',
+      'Opening hours': '#/settings/opening-hours',
+      'Blocked dates': '#/settings/blocked-dates',
     };
     for (const [name, href] of Object.entries(links)) {
       expect(within(nav).getByRole('link', { name }).getAttribute('href')).toBe(href);
@@ -65,10 +65,10 @@ describe('AdminLayout', () => {
 
   it.each([
     ['bookings', 'Bookings'],
-    ['settings/general', 'General'],
-    ['settings/opening-hours', 'Opening Hours'],
-    ['settings/opening-hours/specific-day', 'Opening Hours'],
-    ['settings/blocked-dates', 'Blocked Dates'],
+    ['settings/general', 'General settings'],
+    ['settings/opening-hours', 'Opening hours'],
+    ['settings/opening-hours/specific-day', 'Opening hours'],
+    ['settings/blocked-dates', 'Blocked dates'],
   ] as const)('marks only the current page on %s', (route, current) => {
     const { getAllByRole } = renderLayout(route);
     const marked = getAllByRole('link').filter((link) => link.getAttribute('aria-current') === 'page');
@@ -95,7 +95,7 @@ describe('AdminLayout', () => {
     fireEvent.click(toggle);
 
     act(() => {
-      fireEvent.click(getByRole('link', { name: 'General' }));
+      fireEvent.click(getByRole('link', { name: 'General settings' }));
     });
 
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
@@ -108,7 +108,7 @@ describe('AdminLayout', () => {
     const { getByRole } = renderLayout();
     const toggle = getByRole('button', { name: 'Navigation' });
     fireEvent.click(toggle);
-    const link = getByRole('link', { name: 'General' });
+    const link = getByRole('link', { name: 'General settings' });
     link.focus();
 
     act(() => {

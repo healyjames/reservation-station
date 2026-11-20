@@ -54,7 +54,7 @@ export type MenuItemProps = Omit<JSX.HTMLAttributes<HTMLElement>, ItemOwnedAttri
  * One menu entry. The collapsed-drawer tooltip is daisyUI's CSS `data-tip` on the `<li>` (hover and keyboard focus). Esc
  * hides it until the pointer leaves and focus moves away (WCAG 1.4.13 dismissible; like ui/Tooltip, the tip itself is not
  * hoverable). The Esc is not consumed: the tip only repeats the name, and the overlay drawer also closes on Esc. The tip
- * is generated content, so a screen reader may read the label twice while collapsed (accepted; checked in subtask 33).
+ * is generated content, so a screen reader may read the label twice while collapsed (accepted after a screen reader check).
  */
 export const MenuItem: FunctionComponent<MenuItemProps> = ({
   label,

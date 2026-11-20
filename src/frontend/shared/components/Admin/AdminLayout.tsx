@@ -9,14 +9,15 @@ import { saveAdminMode } from '@shared/utils/adminThemePreference';
 const SIDE_ID = 'admin-navigation';
 const APP_TITLE = 'Maximum Bookings Admin';
 
-const NAV_ITEMS: Array<{ route: AdminRoute; label: string; icon: ComponentChildren }> = [
-  { route: 'bookings', label: 'Bookings', icon: <CalendarDays /> },
-  { route: 'settings/general', label: 'General', icon: <SlidersHorizontal /> },
-  { route: 'settings/opening-hours', label: 'Opening Hours', icon: <Clock /> },
-  { route: 'settings/blocked-dates', label: 'Blocked Dates', icon: <CalendarX /> },
+// Each item is named after its page's heading, so the link and the page it opens read the same.
+const NAV_ITEMS: Array<{ route: AdminRoute; icon: ComponentChildren }> = [
+  { route: 'bookings', icon: <CalendarDays /> },
+  { route: 'settings/general', icon: <SlidersHorizontal /> },
+  { route: 'settings/opening-hours', icon: <Clock /> },
+  { route: 'settings/blocked-dates', icon: <CalendarX /> },
 ];
 
-/** The specific-day view belongs to Opening Hours, so that item stays current there. */
+/** The specific-day view belongs to Opening hours, so that item stays current there. */
 const isCurrent = (item: AdminRoute, route: AdminRoute) =>
   item === route || (item === 'settings/opening-hours' && route === 'settings/opening-hours/specific-day');
 
@@ -65,7 +66,7 @@ const AdminLayout: FunctionComponent<AdminLayoutProps> = ({ venueName, route, on
               {NAV_ITEMS.map((item) => (
                 <MenuItem
                   key={item.route}
-                  label={item.label}
+                  label={ADMIN_ROUTE_TITLES[item.route]}
                   icon={item.icon}
                   href={toAdminHash(item.route)}
                   active={isCurrent(item.route, route)}

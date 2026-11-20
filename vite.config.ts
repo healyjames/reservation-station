@@ -15,7 +15,8 @@ const trailingSlashRedirect = (): Plugin => ({
     server.middlewares.use((req, res, next) => {
       const [path, query = ''] = (req.url ?? '').split('?');
       if (!PAGE_DIRS.includes(path.slice(1))) return next();
-      res.statusCode = 301;
+      // 302, not 301: browsers cache permanent redirects, which would outlive a change to this list.
+      res.statusCode = 302;
       res.setHeader('Location', `${path}/${query ? `?${query}` : ''}`);
       res.end();
     });
